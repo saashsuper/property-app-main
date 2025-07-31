@@ -1,0 +1,53 @@
+# Laravel & PHP
+/vendor/
+/node_modules/
+/public/build/
+/public/hot/
+/public/storage/
+/storage/*.key
+/storage/app/public/
+/storage/framework/cache/data/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
+/storage/logs/
+.env
+.env.*
+.phpunit.result.cache
+.phpunit.cache
+Homestead.json
+Homestead.yaml
+auth.json
+npm-debug.log
+yarn-error.log
+composer.phar
+composer.lock
+yarn.lock
+package-lock.json
+/ddev/
+/.ddev/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.bak
+*.tmp
+*.log
+
+# Ignore test coverage
+coverage/
+
+# Ignore user uploads
+/public/uploads/
+
+# IDE config
+.idea/
+.vscode/
+/.fleet/
+
+# Misc
+*.sqlite
+*.sqlite3
