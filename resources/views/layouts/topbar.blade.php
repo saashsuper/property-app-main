@@ -6,19 +6,19 @@
                 <div class="navbar-brand-box horizontal-logo">
                     <a href="index" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="22">
+                            <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" height="22">
+                            <img src="{{ URL::asset('build/images/logos/proman-logo-dark.svg') }}" alt="PROMAN" height="22">
                         </span>
                     </a>
 
                     <a href="index" class="logo logo-light">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="22">
+                            <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" height="22">
+                            <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="22">
                         </span>
                     </a>
                 </div>
@@ -508,7 +508,7 @@
                                                 <td class="text-end cart-subtotal">$1306.52</td>
                                             </tr>
                                             <tr>
-                                                <td>Discount <span class="text-muted">(Steex15)</span>:</td>
+                                                <td>Discount <span class="text-muted">(PROMAN15)</span>:</td>
                                                 <td class="text-end cart-discount">- $195.98</td>
                                             </tr>
                                             <tr>

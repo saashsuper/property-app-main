@@ -19,10 +19,15 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('user_role_id')->nullable();
+            $table->string('avatar')->nullable();
             $table->rememberToken();
-            $table->timestamps();
+            require_once __DIR__.'/helpers/CommonColumns.php';
+            $commonColumns = require __DIR__.'/helpers/CommonColumns.php';
+            $commonColumns->addCommonColumns($table);
+            // Foreign key will be added after user_roles table is created
         });
-        User::create(['name' => 'admin','email' => 'admin@themesbrand.com','password' => Hash::make('12345678'),'email_verified_at'=>'2023-07-10 05:46:38','created_at' => now(),]);
+        User::create(['name' => 'admin','email' => 'admin@proman.com','password' => Hash::make('12345678'),'email_verified_at'=>'2023-07-10 05:46:38','created_at' => now(),]);
     }
 
     /**

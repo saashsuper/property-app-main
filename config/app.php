@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Steex - Laravel 10 Admin & Dashboard Template'),
+    'name' => env('APP_NAME', 'PROMAN - Property Management System'),
 
     /*
     |--------------------------------------------------------------------------
@@ -168,6 +168,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\DatabaseServiceProvider::class,
     ])->toArray(),
 
     /*

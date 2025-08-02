@@ -2,20 +2,20 @@
     <div class="app-menu navbar-menu">
         <!-- LOGO -->
         <div class="navbar-brand-box">
-            <a href="index" class="logo logo-dark">
+            <a href="{{ route('root') }}" class="logo logo-dark">
                 <span class="logo-sm">
-                    <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="22">
+                    <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
                 </span>
                 <span class="logo-lg">
-                    <img src="{{ URL::asset('build/images/logo-dark.png') }}" alt="" height="22">
+                    <img src="{{ URL::asset('build/images/logos/proman-logo-dark.svg') }}" alt="PROMAN" height="22">
                 </span>
             </a>
-            <a href="index" class="logo logo-light">
+            <a href="{{ route('root') }}" class="logo logo-light">
                 <span class="logo-sm">
-                    <img src="{{ URL::asset('build/images/logo-sm.png') }}" alt="" height="22">
+                    <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
                 </span>
                 <span class="logo-lg">
-                    <img src="{{ URL::asset('build/images/logo-light.png') }}" alt="" height="22">
+                    <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="22">
                 </span>
             </a>
             <button type="button" class="btn btn-sm p-0 fs-3xl header-item float-end btn-vertical-sm-hover"
@@ -39,7 +39,30 @@
                         <div class="collapse menu-dropdown" id="sidebarDashboards">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="index" class="nav-link" data-key="t-starter"> @lang('translation.starter')</a>
+                                    <a href="{{ route('root') }}" class="nav-link" data-key="t-starter"> @lang('translation.starter')</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('blocks.index') }}" class="nav-link">Blocks Management</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link collapsed" href="#sidebarBlocks" data-bs-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="sidebarBlocks">
+                            <i class="ri-building-line"></i> <span>Blocks</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarBlocks">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="{{ route('blocks.index') }}" class="nav-link">List Blocks</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('blocks.create') }}" class="nav-link">Create Block</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('block-types.index') }}" class="nav-link">Block Types</a>
                                 </li>
                             </ul>
                         </div>

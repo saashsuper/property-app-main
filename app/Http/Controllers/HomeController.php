@@ -28,15 +28,32 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-        if (view()->exists($request->path())) {
-            return view($request->path());
+        // If user is not authenticated, redirect to login
+        if (!Auth::check()) {
+            return redirect()->route('login');
         }
-        return abort(404);
+        
+        // Check if the requested path corresponds to an existing view
+        $path = $request->path();
+        
+        // Handle specific routes that should work
+        if (in_array($path, ['blocks', 'block-types', 'blocks/create', 'block-types/create'])) {
+            // These routes are handled by our controllers, so redirect to root
+            return redirect()->route('root');
+        }
+        
+        // Check if a view exists for this path
+        if (view()->exists($path)) {
+            return view($path);
+        }
+        
+        // If no view exists, redirect to dashboard
+        return redirect()->route('root');
     }
 
     public function root()
     {
-        return view('index');
+        return view('dashboard.index');
     }
 
     /*Language Translation*/

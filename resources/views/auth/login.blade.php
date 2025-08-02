@@ -13,6 +13,10 @@
                                 <div class="card auth-card bg-secondary h-100 border-0 shadow-none d-none d-sm-block mb-0">
                                     <div class="card-body py-5 d-flex justify-content-between flex-column">
                                         <div class="text-center">
+                                            <!-- PROMAN Logo on left side -->
+                                            <div class="mb-4 d-flex justify-content-center align-items-center">
+                                                <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="80" class="img-fluid mx-auto">
+                                            </div>
                                             <h3 class="text-white">Start your journey with us.</h3>
                                             <p class="text-white opacity-75 fs-base">It brings together your tasks,
                                                 projects, timelines, files and more</p>
@@ -26,7 +30,7 @@
                                                     class="effect-circle-2 position-relative mx-auto rounded-circle d-flex align-items-center justify-content-center">
                                                     <div
                                                         class="effect-circle-3 mx-auto rounded-circle position-relative text-white fs-4xl d-flex align-items-center justify-content-center">
-                                                        Welcome to <span class="text-primary ms-1">Steex</span>
+                                                        Welcome to <span class="text-primary ms-1">PROMAN</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -84,8 +88,8 @@
                                                 &copy;
                                                 <script>
                                                     document.write(new Date().getFullYear())
-                                                </script> Steex. Crafted with <i
-                                                    class="mdi mdi-heart text-danger"></i> by Themesbrand
+                                                </script> PROMAN. Crafted with <i
+                                                    class="mdi mdi-heart text-danger"></i> by PROMAN
                                             </p>
                                         </div>
                                     </div>
@@ -96,8 +100,12 @@
                                 <div class="card mb-0 border-0 shadow-none mb-0">
                                     <div class="card-body p-sm-5 m-lg-4">
                                         <div class="text-center mt-5">
+                                            <!-- PROMAN Logo -->
+                                            <div class="mb-4 d-flex justify-content-center align-items-center">
+                                                <img src="{{ URL::asset('build/images/logos/proman-logo.svg') }}" alt="PROMAN" height="60" class="img-fluid mx-auto">
+                                            </div>
                                             <h5 class="fs-3xl">Welcome Back</h5>
-                                            <p class="text-muted">Sign in to continue to Steex.</p>
+                                            <p class="text-muted">Sign in to continue to PROMAN.</p>
                                         </div>
                                         <div class="p-2 mt-5">
                                             <form action="{{ route('login') }}" method="post">
@@ -108,7 +116,7 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="text"
                                                         class="form-control @error('email') is-invalid @enderror"
-                                                        value="{{ old('email', 'admin@themesbrand.com') }}" id="email"
+                                                        value="{{ old('email', 'admin@proman.com') }}" id="email"
                                                         name="email" placeholder="Enter your email">
                                                     @error('email')
                                                         <span class="invalid-feedback" role="alert">
