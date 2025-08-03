@@ -69,6 +69,52 @@
                     </li>
 
                     <li class="nav-item">
+                        <a class="nav-link menu-link collapsed" href="#sidebarWorkOrders" data-bs-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="sidebarWorkOrders">
+                            <i class="ri-file-list-line"></i> <span>Work Orders</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarWorkOrders">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="{{ route('work-orders.index') }}" class="nav-link">General Work Orders</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('work-orders.create') }}" class="nav-link">Create Work Order</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('block-work-orders.index') }}" class="nav-link">Block Work Orders</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('block-work-orders.create') }}" class="nav-link">Create Block Work Order</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link menu-link collapsed" href="#sidebarIssues" data-bs-toggle="collapse"
+                            role="button" aria-expanded="false" aria-controls="sidebarIssues">
+                            <i class="ri-error-warning-line"></i> <span>Issues</span>
+                        </a>
+                        <div class="collapse menu-dropdown" id="sidebarIssues">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="{{ route('block-issues.index') }}" class="nav-link">Block Issues</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('block-issues.create') }}" class="nav-link">Create Block Issue</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('issues.index') }}" class="nav-link">General Issues</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('issues.create') }}" class="nav-link">Create Issue</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="nav-link menu-link collapsed" href="#sidebarLayouts" data-bs-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="sidebarLayouts">
                             <i class="ph-layout"></i><span>@lang('translation.layouts')</span> <span
