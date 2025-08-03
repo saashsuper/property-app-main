@@ -24,8 +24,6 @@ composer.phar
 composer.lock
 yarn.lock
 package-lock.json
-/ddev/
-/.ddev/
 
 # OS & Editor
 .DS_Store

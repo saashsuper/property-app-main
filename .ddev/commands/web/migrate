@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: Run Laravel migrations
+## Usage: migrate
+## Example: "ddev migrate"
+
+php artisan migrate 

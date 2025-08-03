@@ -1,0 +1,10 @@
+#!/bin/bash
+
+## Description: Switch to local environment configuration
+## Usage: use-local-env
+## Example: "ddev use-local-env"
+
+echo "Switching to local environment configuration..."
+cp .env.local .env
+echo "✅ Now using local environment (127.0.0.1:32828)"
+echo "Use this for running Laravel commands from your host machine" 

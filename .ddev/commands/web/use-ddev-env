@@ -1,0 +1,10 @@
+#!/bin/bash
+
+## Description: Switch to DDEV environment configuration
+## Usage: use-ddev-env
+## Example: "ddev use-ddev-env"
+
+echo "Switching to DDEV environment configuration..."
+cp .env.ddev .env
+echo "✅ Now using DDEV environment (db:3306)"
+echo "Use this for running Laravel commands inside DDEV container" 

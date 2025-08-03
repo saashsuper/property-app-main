@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: Run Laravel fresh migrations
+## Usage: migrate-fresh
+## Example: "ddev migrate-fresh"
+
+php artisan migrate:fresh 
