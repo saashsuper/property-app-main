@@ -58,12 +58,14 @@
                                 <li class="nav-item">
                                     <a href="{{ route('blocks.index') }}" class="nav-link">List Blocks</a>
                                 </li>
+                                @admin
                                 <li class="nav-item">
                                     <a href="{{ route('blocks.create') }}" class="nav-link">Create Block</a>
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('block-types.index') }}" class="nav-link">Block Types</a>
                                 </li>
+                                @endadmin
                             </ul>
                         </div>
                     </li>
@@ -114,33 +116,7 @@
                         </div>
                     </li>
 
-                    <li class="nav-item">
-                        <a class="nav-link menu-link collapsed" href="#sidebarLayouts" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarLayouts">
-                            <i class="ph-layout"></i><span>@lang('translation.layouts')</span> <span
-                                class="badge badge-pill bg-danger" data-key="t-hot">Hot</span>
-                        </a>
-                        <div class="collapse menu-dropdown" id="sidebarLayouts">
-                            <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="layouts-horizontal" target="_blank" class="nav-link"
-                                        data-key="t-horizontal">@lang('translation.horizontal')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="layouts-detached" target="_blank" class="nav-link"
-                                        data-key="t-detached">@lang('translation.detached')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="layouts-two-column" target="_blank" class="nav-link"
-                                        data-key="t-two-column">@lang('translation.two-column')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="layouts-vertical-hovered" target="_blank" class="nav-link"
-                                        data-key="t-hovered">@lang('translation.hovered')</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </li>
+
                     <li class="menu-title"><i class="ri-more-fill"></i> <span
                             data-key="t-pages">@lang('translation.pages')</span></li>
 
@@ -289,6 +265,37 @@
                     </li>
 
                 </ul>
+
+                <!-- Layouts Section - Moved to end -->
+                <li class="menu-title"><i class="ri-layout-line"></i> <span>Layouts</span></li>
+                <li class="nav-item">
+                    <a class="nav-link menu-link collapsed" href="#sidebarLayouts" data-bs-toggle="collapse"
+                        role="button" aria-expanded="false" aria-controls="sidebarLayouts">
+                        <i class="ph-layout"></i><span>@lang('translation.layouts')</span> <span
+                            class="badge badge-pill bg-danger" data-key="t-hot">Hot</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarLayouts">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item">
+                                <a href="layouts-horizontal" target="_blank" class="nav-link"
+                                    data-key="t-horizontal">@lang('translation.horizontal')</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="layouts-detached" target="_blank" class="nav-link"
+                                    data-key="t-detached">@lang('translation.detached')</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="layouts-two-column" target="_blank" class="nav-link"
+                                    data-key="t-two-column">@lang('translation.two-column')</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="layouts-vertical-hovered" target="_blank" class="nav-link"
+                                    data-key="t-hovered">@lang('translation.hovered')</a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
             </div>
             <!-- Sidebar -->
         </div>

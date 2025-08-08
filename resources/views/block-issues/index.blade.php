@@ -118,8 +118,8 @@
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <div class="fw-medium">{{ $issue->title ?? 'N/A' }}</div>
-                                                    <small class="text-muted">{{ Str::limit($issue->description ?? $issue->issue ?? 'No description', 50) }}</small>
+                                                    <div class="fw-medium">{{ $issue->issue ?? 'N/A' }}</div>
+                                                    <small class="text-muted">{{ Str::limit($issue->issue_details ?? 'No description', 50) }}</small>
                                                 </div>
                                             </div>
                                         </td>

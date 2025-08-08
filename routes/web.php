@@ -20,16 +20,35 @@ Auth::routes(['verify' => true]);
 Route::get('index/{locale}',[App\Http\Controllers\HomeController::class, 'lang']);
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
 
+// Dashboard Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('api/dashboard/stats', [App\Http\Controllers\DashboardController::class, 'getDashboardStats'])->name('api.dashboard.stats');
+    Route::get('api/dashboard/issues-stats', [App\Http\Controllers\DashboardController::class, 'getIssuesStats'])->name('api.dashboard.issues-stats');
+    Route::get('api/dashboard/recent-issues', [App\Http\Controllers\DashboardController::class, 'getRecentIssues'])->name('api.dashboard.recent-issues');
+    Route::get('api/dashboard/recent-blocks', [App\Http\Controllers\DashboardController::class, 'getRecentBlocks'])->name('api.dashboard.recent-blocks');
+});
+
 // Block Management Routes
 Route::middleware(['auth'])->group(function () {
-    // Block Types
-    Route::resource('block-types', App\Http\Controllers\BlockTypeController::class);
+    // Block Types - Admin only
+    Route::resource('block-types', App\Http\Controllers\BlockTypeController::class)->middleware('role:Admin');
     Route::get('api/block-types', [App\Http\Controllers\BlockTypeController::class, 'getBlockTypes'])->name('api.block-types');
     
-    // Blocks
-    Route::resource('blocks', App\Http\Controllers\BlockController::class);
+    // Blocks - Admin only for create, edit, delete
+    Route::get('blocks', [App\Http\Controllers\BlockController::class, 'index'])->name('blocks.index');
+    Route::get('blocks/{block}', [App\Http\Controllers\BlockController::class, 'show'])->name('blocks.show');
     Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
     Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
+    
+    // Admin-only block routes
+    Route::middleware(['role:Admin'])->group(function () {
+        Route::get('blocks/create', [App\Http\Controllers\BlockController::class, 'create'])->name('blocks.create');
+        Route::post('blocks', [App\Http\Controllers\BlockController::class, 'store'])->name('blocks.store');
+        Route::get('blocks/{block}/edit', [App\Http\Controllers\BlockController::class, 'edit'])->name('blocks.edit');
+        Route::put('blocks/{block}', [App\Http\Controllers\BlockController::class, 'update'])->name('blocks.update');
+        Route::delete('blocks/{block}', [App\Http\Controllers\BlockController::class, 'destroy'])->name('blocks.destroy');
+    });
     
     // Work Orders
     Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class);

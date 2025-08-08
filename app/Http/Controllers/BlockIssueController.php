@@ -25,8 +25,8 @@ class BlockIssueController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('ref_no', 'like', "%{$search}%")
-                  ->orWhere('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('issue', 'like', "%{$search}%")
+                  ->orWhere('issue_details', 'like', "%{$search}%")
                   ->orWhereHas('block', function ($blockQuery) use ($search) {
                       $blockQuery->where('name', 'like', "%{$search}%");
                   });
@@ -79,10 +79,10 @@ class BlockIssueController extends Controller
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
             'ref_no' => 'required|string|max:100|unique:block_issues',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'priority' => 'required|integer|min:1|max:5',
-            'status' => 'required|integer|min:1|max:5',
+            'issue' => 'required|string|max:255',
+            'issue_details' => 'required|string',
+            'priority_id' => 'required|integer|min:1|max:5',
+            'issue_status_id' => 'required|integer|min:1|max:5',
             'assigned_to' => 'nullable|exists:users,id',
             'reported_by' => 'nullable|exists:users,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -151,10 +151,10 @@ class BlockIssueController extends Controller
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
             'ref_no' => 'required|string|max:100|unique:block_issues,ref_no,' . $blockIssue->id,
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'priority' => 'required|integer|min:1|max:5',
-            'status' => 'required|integer|min:1|max:5',
+            'issue' => 'required|string|max:255',
+            'issue_details' => 'required|string',
+            'priority_id' => 'required|integer|min:1|max:5',
+            'issue_status_id' => 'required|integer|min:1|max:5',
             'assigned_to' => 'nullable|exists:users,id',
             'reported_by' => 'nullable|exists:users,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',

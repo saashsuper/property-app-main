@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\UserRole;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -22,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'avatar',
+        'user_role_id',
     ];
 
     /**
@@ -42,4 +44,28 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the user's role
+     */
+    public function userRole()
+    {
+        return $this->belongsTo('App\Models\UserRole', 'user_role_id');
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin()
+    {
+        return $this->userRole && $this->userRole->name === 'Admin';
+    }
+
+    /**
+     * Check if user has a specific role
+     */
+    public function hasRole($roleName)
+    {
+        return $this->userRole && $this->userRole->name === $roleName;
+    }
 }

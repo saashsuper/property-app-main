@@ -89,7 +89,7 @@
                                         <img src="{{ URL::asset('build/images/users/avatar-2.jpg') }}"
                                             class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                         <div class="flex-1">
-                                            <h6 class="m-0">Angela Bernier</h6>
+                                            <h6 class="m-0">Property Manager</h6>
                                             <span class="fs-2xs mb-0 text-muted">Manager</span>
                                         </div>
                                     </div>
@@ -100,8 +100,8 @@
                                         <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}"
                                             class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                         <div class="flex-1">
-                                            <h6 class="m-0">David Grasso</h6>
-                                            <span class="fs-2xs mb-0 text-muted">Web Designer</span>
+                                            <h6 class="m-0">Contract Manager</h6>
+                                            <span class="fs-2xs mb-0 text-muted">Contract Management</span>
                                         </div>
                                     </div>
                                 </a>
@@ -111,8 +111,8 @@
                                         <img src="{{ URL::asset('build/images/users/avatar-5.jpg') }}"
                                             class="me-3 rounded-circle avatar-xs" alt="user-pic">
                                         <div class="flex-1">
-                                            <h6 class="m-0">Mike Bunch</h6>
-                                            <span class="fs-2xs mb-0 text-muted">React Developer</span>
+                                            <h6 class="m-0">System Admin</h6>
+                                            <span class="fs-2xs mb-0 text-muted">Administrator</span>
                                         </div>
                                     </div>
                                 </a>
@@ -753,15 +753,20 @@
                             <img class="rounded-circle header-profile-user"
                                 src="{{ URL::asset('build/images/users/32/avatar-1.jpg') }}" alt="Header Avatar">
                             <span class="text-start ms-xl-2">
-                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">Richard
-                                    Marshall</span>
-                                <span class="d-none d-xl-block ms-1 fs-sm user-name-sub-text">Founder</span>
+                                <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::check() ? Auth::user()->name : 'Guest' }}</span>
+                                <span class="d-none d-xl-block ms-1 fs-sm user-name-sub-text">
+                                    @if(Auth::check() && Auth::user()->userRole)
+                                        {{ Auth::user()->userRole->name }}
+                                    @else
+                                        User
+                                    @endif
+                                </span>
                             </span>
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
-                        <h6 class="dropdown-header">Welcome Richard!</h6>
+                        <h6 class="dropdown-header">Welcome {{ Auth::check() ? Auth::user()->name : 'Guest' }}!</h6>
                         <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-account-circle text-muted fs-lg align-middle me-1"></i> <span
                                 class="align-middle"> @lang('translation.profile')</span></a>
@@ -777,7 +782,13 @@
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-wallet text-muted fs-lg align-middle me-1"></i> <span
-                                class="align-middle">Balance : <b>$8451.36</b></span></a>
+                                class="align-middle">Role : <b>
+                                    @if(Auth::check() && Auth::user()->userRole)
+                                        {{ Auth::user()->userRole->name }}
+                                    @else
+                                        User
+                                    @endif
+                                </b></span></a>
                         <a class="dropdown-item" href="javascript:void(0)"><span
                                 class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
                                 class="mdi mdi-cog-outline text-muted fs-lg align-middle me-1"></i> <span

@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             BlockTypesSeeder::class,
             BuildingTypesSeeder::class,
             BlockUnitTypesSeeder::class,
+            IssuesSeeder::class,
+            BlockIssuesSeeder::class,
         ]);
     }
 }

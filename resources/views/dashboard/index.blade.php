@@ -6,23 +6,6 @@
     <!-- add your css here -->
 @endsection
 @section('content')
-<div class="page-content">
-    <div class="container-fluid">
-        <!-- start page title -->
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                    <h4 class="mb-sm-0">Dashboard</h4>
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item active">Dashboard</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- end page title -->
-
         <div class="row">
             <div class="col-xl-3 col-md-6">
                 <div class="card">
@@ -102,6 +85,134 @@
             </div>
         </div>
 
+        <!-- Issue Statistics Cards -->
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">Open Issues</span>
+                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-soft-warning rounded-3">
+                                        <i class="ri-time-line font-size-20 text-warning"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">In Progress</span>
+                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('issue_status_id', 2)->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-soft-info rounded-3">
+                                        <i class="ri-loader-4-line font-size-20 text-info"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">Resolved</span>
+                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('issue_status_id', 3)->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-soft-success rounded-3">
+                                        <i class="ri-check-line font-size-20 text-success"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">High Priority</span>
+                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('priority_id', '>=', 3)->count() }}</h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <div class="avatar-sm">
+                                    <span class="avatar-title bg-soft-danger rounded-3">
+                                        <i class="ri-alert-line font-size-20 text-danger"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue Charts Row -->
+        <div class="row">
+            <div class="col-xl-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Issues by Status</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="issues_status_chart" data-colors='["#f1b44c", "#50a5f1", "#34c38f", "#f46a6a", "#74788d"]'></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Issues by Priority</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="issues_priority_chart" data-colors='["#34c38f", "#50a5f1", "#f1b44c", "#f46a6a", "#343a40"]'></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues Trend Chart -->
+        <div class="row">
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Issues Trend (Last 30 Days)</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="issues_trend_chart" data-colors='["#50a5f1", "#f1b44c", "#34c38f", "#f46a6a"]'></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Issues by Block</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="issues_by_block_chart" data-colors='["#50a5f1", "#f1b44c", "#34c38f", "#f46a6a", "#74788d", "#6f42c1"]'></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-xl-8">
                 <div class="card">
@@ -138,8 +249,6 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row mt-3">
                             <div class="col-md-6">
                                 <div class="card border">
                                     <div class="card-body text-center">
@@ -159,11 +268,11 @@
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
                                             <span class="avatar-title bg-soft-warning rounded-3">
-                                                <i class="ri-settings-line font-size-24 text-warning"></i>
+                                                <i class="ri-settings-3-line font-size-24 text-warning"></i>
                                             </span>
                                         </div>
                                         <h5 class="card-title">System Settings</h5>
-                                        <p class="card-text text-muted">Configure system settings and preferences</p>
+                                        <p class="card-text text-muted">Configure system preferences and settings</p>
                                         <a href="#" class="btn btn-warning">Settings</a>
                                     </div>
                                 </div>
@@ -172,7 +281,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="col-xl-4">
                 <div class="card">
                     <div class="card-header">
@@ -213,6 +321,40 @@
 
                 <div class="card">
                     <div class="card-header">
+                        <h4 class="card-title">Recent Issues</h4>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $recentIssues = \App\Models\BlockIssue::with('block')->latest()->take(5)->get();
+                        @endphp
+                        
+                        @if($recentIssues->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($recentIssues as $issue)
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ Str::limit($issue->issue ?? 'No title', 30) }}</h6>
+                                                <small class="text-muted">{{ $issue->block->name ?? 'N/A' }} - {{ $issue->ref_no }}</small>
+                                            </div>
+                                            <span class="badge bg-{{ $issue->status_color }}">{{ $issue->status_text }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ri-error-warning-line fs-2"></i>
+                                    <p class="mt-2">No issues found</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
                         <h4 class="card-title">System Status</h4>
                     </div>
                     <div class="card-body">
@@ -236,11 +378,11 @@
                 </div>
             </div>
         </div>
-    </div>
-</div>
 @endsection
 
 @section('script')
     <!-- add your js here -->
     <script src="{{ URL::asset('build/js/app.js') }}"></script>
+    <script src="{{ URL::asset('resources/libs/apexcharts/apexcharts.min.js') }}"></script>
+    <script src="{{ URL::asset('resources/js/pages/dashboard-issues.init.js') }}"></script>
 @endsection
