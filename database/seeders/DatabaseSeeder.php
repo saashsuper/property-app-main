@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
             BlockTypesSeeder::class,
             BuildingTypesSeeder::class,
             BlockUnitTypesSeeder::class,
+            BlockSeeder::class,
+            BlockBuildingsSeeder::class,
+            BlockUnitsSeeder::class,
             IssuesSeeder::class,
             BlockIssuesSeeder::class,
         ]);

@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedSmallInteger('issued_from')->nullable();
             $table->unsignedInteger('from_id')->nullable();
             $table->unsignedInteger('block_unit_id')->nullable();
-            $table->unsignedInteger('block_building_id')->nullable();
+            $table->unsignedBigInteger('block_building_id')->nullable();
             $table->unsignedSmallInteger('priority_id')->nullable();
             $table->timestamp('issued_date_time')->nullable();
             $table->unsignedInteger('contractor_id')->nullable();
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->dateTime('preferred_start_date_time')->nullable();
             $table->dateTime('preferred_end_date_time')->nullable();
             $table->date('deadline_date')->nullable();
-            $table->unsignedInteger('issued_by');
+            $table->unsignedBigInteger('issued_by');
             $table->unsignedSmallInteger('status');
             $table->string('ref_no', 100);
             $table->unsignedInteger('repair_category_id')->nullable();
@@ -40,8 +40,8 @@ return new class extends Migration
             $table->unsignedInteger('block_inspection_id')->nullable();
             $table->mediumText('comment')->nullable();
             $table->boolean('is_mobile')->default(false);
-            $table->unsignedInteger('created_by');
-            $table->unsignedInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('updated_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
