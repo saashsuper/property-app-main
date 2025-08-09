@@ -17,8 +17,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-primary rounded-3">
-                                        <i class="ri-building-line font-size-20 text-primary"></i>
+                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                        <i class="ph-buildings"></i>
                                     </span>
                                 </div>
                             </div>
@@ -36,8 +36,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-success rounded-3">
-                                        <i class="ri-layout-grid-line font-size-20 text-success"></i>
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                        <i class="ph-grid-four"></i>
                                     </span>
                                 </div>
                             </div>
@@ -55,8 +55,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-warning rounded-3">
-                                        <i class="ri-home-line font-size-20 text-warning"></i>
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                        <i class="ph-house-line"></i>
                                     </span>
                                 </div>
                             </div>
@@ -74,8 +74,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-danger rounded-3">
-                                        <i class="ri-error-warning-line font-size-20 text-danger"></i>
+                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                        <i class="ph-warning"></i>
                                     </span>
                                 </div>
                             </div>
@@ -97,8 +97,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-warning rounded-3">
-                                        <i class="ri-time-line font-size-20 text-warning"></i>
+                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                        <i class="ph-clock"></i>
                                     </span>
                                 </div>
                             </div>
@@ -116,8 +116,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-info rounded-3">
-                                        <i class="ri-loader-4-line font-size-20 text-info"></i>
+                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                        <i class="ph-spinner-gap"></i>
                                     </span>
                                 </div>
                             </div>
@@ -135,8 +135,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-success rounded-3">
-                                        <i class="ri-check-line font-size-20 text-success"></i>
+                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                        <i class="ph-check"></i>
                                     </span>
                                 </div>
                             </div>
@@ -154,8 +154,8 @@
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
-                                    <span class="avatar-title bg-soft-danger rounded-3">
-                                        <i class="ri-alert-line font-size-20 text-danger"></i>
+                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                        <i class="ph-warning"></i>
                                     </span>
                                 </div>
                             </div>
@@ -225,8 +225,8 @@
                                 <div class="card border">
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
-                                            <span class="avatar-title bg-soft-primary rounded-3">
-                                                <i class="ri-building-line font-size-24 text-primary"></i>
+                                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                                <i class="ph-buildings"></i>
                                             </span>
                                         </div>
                                         <h5 class="card-title">Manage Blocks</h5>
@@ -239,8 +239,8 @@
                                 <div class="card border">
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
-                                            <span class="avatar-title bg-soft-success rounded-3">
-                                                <i class="ri-add-line font-size-24 text-success"></i>
+                                            <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                                <i class="ph-plus"></i>
                                             </span>
                                         </div>
                                         <h5 class="card-title">Add New Block</h5>
@@ -253,8 +253,8 @@
                                 <div class="card border">
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
-                                            <span class="avatar-title bg-soft-info rounded-3">
-                                                <i class="ri-layout-grid-line font-size-24 text-info"></i>
+                                            <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                                <i class="ph-grid-four"></i>
                                             </span>
                                         </div>
                                         <h5 class="card-title">Block Types</h5>
@@ -267,8 +267,8 @@
                                 <div class="card border">
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
-                                            <span class="avatar-title bg-soft-warning rounded-3">
-                                                <i class="ri-settings-3-line font-size-24 text-warning"></i>
+                                            <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                                <i class="ph-gear-six"></i>
                                             </span>
                                         </div>
                                         <h5 class="card-title">System Settings</h5>
@@ -308,7 +308,7 @@
                         @else
                             <div class="text-center py-4">
                                 <div class="text-muted">
-                                    <i class="ri-building-line fs-2"></i>
+                                    <i class="ph-buildings fs-2"></i>
                                     <p class="mt-2">No blocks found</p>
                                     <a href="{{ route('blocks.create') }}" class="btn btn-primary btn-sm">
                                         Create Your First Block
@@ -345,7 +345,7 @@
                         @else
                             <div class="text-center py-4">
                                 <div class="text-muted">
-                                    <i class="ri-error-warning-line fs-2"></i>
+                                    <i class="ph-warning fs-2"></i>
                                     <p class="mt-2">No issues found</p>
                                 </div>
                             </div>
