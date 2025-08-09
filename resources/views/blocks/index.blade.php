@@ -248,7 +248,7 @@
                                 <td>
                                     <small>{{ $block->creator->name ?? 'System' }}</small>
                                 </td>
-                                <td>
+                                <td data-order="{{ $block->created_at->timestamp }}">
                                     <small>{{ $block->created_at->format('M d, Y') }}</small>
                                 </td>
                                 <td>
@@ -336,8 +336,11 @@ $(document).ready(function() {
     $('#blocks-table').DataTable({
         responsive: true,
         dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
+        order: [[9, 'desc']], // default sort by Created Date (0-based index)
+        columnDefs: [
+            { targets: [1, 10], orderable: false }, // Image, Actions
+            { targets: [6, 7], type: 'num' } // Units, Car Spaces
         ],
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -347,12 +350,7 @@ $(document).ready(function() {
             info: "Showing _START_ to _END_ of _TOTAL_ blocks",
             infoEmpty: "Showing 0 to 0 of 0 blocks",
             infoFiltered: "(filtered from _MAX_ total blocks)",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
         }
     });
 });
