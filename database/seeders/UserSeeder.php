@@ -14,7 +14,7 @@ class UserSeeder extends Seeder
         DB::table('users')->insertOrIgnore([
             [
                 'name' => 'Admin User',
-                'email' => 'admin@example.com',
+                'email' => 'admin@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 1,
                 'avatar' => null,
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'Manager User',
-                'email' => 'manager@example.com',
+                'email' => 'manager@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 2,
                 'avatar' => null,
@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'Regular User',
-                'email' => 'user@example.com',
+                'email' => 'user@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 3,
                 'avatar' => null,
@@ -47,7 +47,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'Contract Manager',
-                'email' => 'contract.manager@example.com',
+                'email' => 'contract.manager@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 9,
                 'avatar' => null,
@@ -58,7 +58,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'name' => 'Contract User',
-                'email' => 'contract.user@example.com',
+                'email' => 'contract.user@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 10,
                 'avatar' => null,

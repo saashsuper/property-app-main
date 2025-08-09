@@ -76,7 +76,7 @@ class BlockIssuesSeeder extends Seeder
                 'issue_details' => $issueDetails[array_rand($issueDetails)],
                 'contact_name' => 'Contact Person ' . $i,
                 'contact_mobile' => '+1' . rand(1000000000, 9999999999),
-                'contact_email' => 'contact' . $i . '@example.com',
+                'contact_email' => 'contact' . $i . '@proman.com',
                 'preferred_start_date_time' => $createdAt->addDays(rand(1, 7)),
                 'preferred_end_date_time' => $createdAt->addDays(rand(8, 14)),
                 'note_for_access' => 'Access note for issue ' . $i,

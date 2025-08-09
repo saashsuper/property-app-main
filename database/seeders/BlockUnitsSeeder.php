@@ -10,17 +10,21 @@ class BlockUnitsSeeder extends Seeder
     public function run(): void
     {
         $blockIds = DB::table('blocks')->pluck('id');
-        $buildingIds = DB::table('block_buildings')->pluck('id');
         $unitTypeId = DB::table('block_unit_types')->value('id');
 
-        if ($blockIds->isEmpty() || $buildingIds->isEmpty() || !$unitTypeId) {
-            $this->command->warn('Skipping BlockUnitsSeeder: missing blocks, block_buildings or block_unit_types');
+        if ($blockIds->isEmpty() || !$unitTypeId) {
+            $this->command->warn('Skipping BlockUnitsSeeder: missing blocks or block_unit_types');
             return;
         }
 
         $rows = [];
         foreach ($blockIds as $blockId) {
-            foreach ($buildingIds as $buildingId) {
+            $buildingIdsForBlock = DB::table('block_buildings')->where('block_id', $blockId)->pluck('id');
+            if ($buildingIdsForBlock->isEmpty()) {
+                // Skip blocks without buildings
+                continue;
+            }
+            foreach ($buildingIdsForBlock as $buildingId) {
                 for ($i = 1; $i <= 3; $i++) {
                     $rows[] = [
                         'block_id' => $blockId,
@@ -30,7 +34,7 @@ class BlockUnitsSeeder extends Seeder
                         'unit_name' => 'Unit ' . $i,
                         'owners_name' => 'Owner ' . $i,
                         'salutation' => 'Mr',
-                        'email' => 'owner' . $buildingId . '_' . $i . '@example.com',
+                        'email' => 'owner' . $buildingId . '_' . $i . '@proman.com',
                         'resident' => true,
                         'address1' => 'Address 1',
                         'address2' => null,

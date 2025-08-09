@@ -26,6 +26,10 @@ class BlockSeeder extends Seeder
             ['name' => 'Sunset Villas', 'company' => 'Riverstone Realty'],
             ['name' => 'Cedar Park Apartments', 'company' => 'Evergreen Properties'],
             ['name' => 'Oakwood Estate', 'company' => 'PrimeHome Management'],
+            ['name' => 'Riverside Court', 'company' => 'HarborView Realty'],
+            ['name' => 'Hillcrest Manor', 'company' => 'Summit Property Co.'],
+            ['name' => 'Parkview Gardens', 'company' => 'GreenLeaf Estates'],
+            ['name' => 'Stonebridge Place', 'company' => 'Bridgeway Homes'],
         ];
 
         $blocks = [];
