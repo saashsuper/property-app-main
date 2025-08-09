@@ -60,6 +60,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/block-work-orders', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrders'])->name('api.block-work-orders');
     Route::get('api/block-work-orders/{blockWorkOrder}', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrder'])->name('api.block-work-orders.show');
     
+    // Site Visits (Block Visits)
+    Route::resource('block-visits', App\Http\Controllers\BlockVisitController::class);
+
     // Block Issues
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);
     Route::get('api/block-issues', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssues'])->name('api.block-issues');
