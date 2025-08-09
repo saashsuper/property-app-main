@@ -11,62 +11,50 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('users')->insertOrIgnore([
+        $users = [
             [
                 'name' => 'Admin User',
                 'email' => 'admin@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 1,
-                'avatar' => null,
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'name' => 'Manager User',
                 'email' => 'manager@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 2,
-                'avatar' => null,
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'name' => 'Regular User',
                 'email' => 'user@proman.com',
                 'password' => Hash::make('password123'),
                 'user_role_id' => 3,
-                'avatar' => null,
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-                'created_at' => now(),
-                'updated_at' => now(),
             ],
             [
                 'name' => 'Contract Manager',
                 'email' => 'contract.manager@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 9,
-                'avatar' => null,
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_role_id' => 4, // ensure valid role id
             ],
             [
                 'name' => 'Contract User',
                 'email' => 'contract.user@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 10,
-                'avatar' => null,
-                'email_verified_at' => now(),
-                'remember_token' => Str::random(10),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_role_id' => 5, // ensure valid role id
             ],
-        ]);
+        ];
+
+        foreach ($users as $user) {
+            DB::table('users')->updateOrInsert(
+                ['email' => $user['email']],
+                array_merge($user, [
+                    'avatar' => null,
+                    'email_verified_at' => now(),
+                    'remember_token' => Str::random(10),
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ])
+            );
+        }
     }
 }
