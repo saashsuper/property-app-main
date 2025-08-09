@@ -23,6 +23,11 @@ class CheckRole
 
         $user = Auth::user();
         
+        // Always allow Admin to pass through any role check
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
+            return $next($request);
+        }
+        
         // If no specific roles are required, allow access
         if (empty($roles)) {
             return $next($request);

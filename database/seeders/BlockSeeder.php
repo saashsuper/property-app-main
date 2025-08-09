@@ -19,21 +19,30 @@ class BlockSeeder extends Seeder
             return;
         }
 
+        $blockNames = [
+            ['name' => 'Greenwood Residences', 'company' => 'Apex Property Group'],
+            ['name' => 'Maple Heights', 'company' => 'BlueSky Estates'],
+            ['name' => 'Lakeside Towers', 'company' => 'Urban Living Co.'],
+            ['name' => 'Sunset Villas', 'company' => 'Riverstone Realty'],
+            ['name' => 'Cedar Park Apartments', 'company' => 'Evergreen Properties'],
+            ['name' => 'Oakwood Estate', 'company' => 'PrimeHome Management'],
+        ];
+
         $blocks = [];
-        for ($i = 1; $i <= 5; $i++) {
+        foreach ($blockNames as $idx => $meta) {
             $blocks[] = [
-                'name' => 'Block ' . $i,
-                'management_company' => 'Company ' . $i,
+                'name' => $meta['name'],
+                'management_company' => $meta['company'],
                 'block_type_id' => $blockTypeId,
                 'user_id' => $userId,
-                'address1' => 'Address Line 1 - ' . $i,
+                'address1' => ($idx + 10) . ' Main Street',
                 'address2' => null,
                 'address3' => null,
                 'image_path' => null,
                 'image_name' => null,
                 'country_id' => 1,
                 'state_id' => 1,
-                'car_spaces' => 10,
+                'car_spaces' => 10 + $idx,
                 'inspection_count' => 0,
                 'no_of_units' => 0,
                 'created_by' => $userId,
