@@ -32,20 +32,9 @@
 
                     <li class="menu-title"><span>@lang('translation.menu')</span></li>
                     <li class="nav-item">
-                        <a class="nav-link menu-link collapsed" href="#sidebarDashboards" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarDashboards">
+                        <a class="nav-link menu-link" href="{{ route('root') }}">
                             <i class="ph-gauge"></i> <span>@lang('translation.dashboards')</span>
                         </a>
-                        <div class="collapse menu-dropdown" id="sidebarDashboards">
-                            <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="{{ route('root') }}" class="nav-link" data-key="t-starter"> @lang('translation.starter')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('blocks.index') }}" class="nav-link">Blocks Management</a>
-                                </li>
-                            </ul>
-                        </div>
                     </li>
 
                     <li class="nav-item">
