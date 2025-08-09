@@ -4,6 +4,46 @@
 @endsection
 @section('css')
     <!-- add your css here -->
+    <style>
+        /* Vertical timeline */
+        .timeline {
+            position: relative;
+            margin-left: 0.75rem;
+        }
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e9ecef;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1.25rem;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: 4px;
+            top: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #0d6efd;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 2px #e9ecef;
+        }
+        .timeline-time {
+            font-size: 0.8125rem;
+            color: #6c757d;
+        }
+    </style>
 @endsection
 @section('content')
 <div class="page-content">
@@ -33,16 +73,19 @@
                             <h4 class="card-title mb-0">Block Issue: {{ $blockIssue->ref_no }}</h4>
                             <div class="d-flex gap-2">
                                 <a href="{{ route('block-issues.edit', $blockIssue) }}" class="btn btn-primary btn-sm">
-                                    <i class="ri-edit-line me-1"></i> Edit
+                                    <i class="ph-pencil me-1"></i> Edit
                                 </a>
                                 <a href="{{ route('block-issues.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="ri-arrow-left-line me-1"></i> Back
+                                    <i class="ph-arrow-left me-1"></i> Back
                                 </a>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
+                            <!-- Left content wrapper -->
+                            <div class="col-lg-8 order-lg-1">
+                                <div class="row">
                             <!-- Basic Information -->
                             <div class="col-md-6">
                                 <h5 class="mb-3">Basic Information</h5>
@@ -60,8 +103,8 @@
                                                     @if($blockIssue->block)
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
-                                                                <span class="avatar-title bg-soft-info rounded-3">
-                                                                    <i class="ri-building-line font-size-16 text-info"></i>
+                                                                <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                                                    <i class="ph-buildings"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -108,8 +151,8 @@
                                                     @if($blockIssue->assignedTo)
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
-                                                                <span class="avatar-title bg-soft-success rounded-3">
-                                                                    <i class="ri-user-line font-size-16 text-success"></i>
+                                                                <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                                                    <i class="ph-user"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -128,8 +171,8 @@
                                                     @if($blockIssue->reportedBy)
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
-                                                                <span class="avatar-title bg-soft-warning rounded-3">
-                                                                    <i class="ri-user-line font-size-16 text-warning"></i>
+                                                                <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                                                    <i class="ph-user"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -148,8 +191,8 @@
                                                     @if($blockIssue->creator)
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
-                                                                <span class="avatar-title bg-soft-info rounded-3">
-                                                                    <i class="ri-user-line font-size-16 text-info"></i>
+                                                                <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                                                    <i class="ph-user"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -187,8 +230,8 @@
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-soft-primary rounded-3">
-                                                            <i class="ri-user-line font-size-16 text-primary"></i>
+                                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                                            <i class="ph-user"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -207,8 +250,8 @@
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-soft-success rounded-3">
-                                                            <i class="ri-phone-line font-size-16 text-success"></i>
+                                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                                            <i class="ph-phone"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -227,8 +270,8 @@
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-soft-warning rounded-3">
-                                                            <i class="ri-mail-line font-size-16 text-warning"></i>
+                                                        <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                                            <i class="ph-envelope"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -256,8 +299,8 @@
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-soft-info rounded-3">
-                                                            <i class="ri-calendar-line font-size-16 text-info"></i>
+                                                        <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                                            <i class="ph-calendar"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -276,8 +319,8 @@
                                             <div class="card-body">
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-soft-danger rounded-3">
-                                                            <i class="ri-calendar-line font-size-16 text-danger"></i>
+                                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                                            <i class="ph-calendar"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -293,6 +336,100 @@
                             </div>
                             @endif
 
+                            </div> <!-- /.row (inner) -->
+                            </div> <!-- /.col-lg-8 -->
+
+                            <!-- Status Timeline (Right side) -->
+                            <div class="col-lg-4 order-lg-2 mt-3 mt-lg-0">
+                                <h5 class="mb-3">Status Timeline</h5>
+                                <div class="card border">
+                                    <div class="card-body position-sticky" style="top: 1rem;">
+                                        @php
+                                            $timelineItems = [];
+                                            // Created
+                                            $timelineItems[] = [
+                                                'label' => 'Created',
+                                                'status' => $blockIssue->status_text,
+                                                'badge' => $blockIssue->status_color,
+                                                'time' => optional($blockIssue->created_at)->format('M d, Y H:i'),
+                                                'actor' => optional($blockIssue->reportedBy ?? $blockIssue->creator)->name,
+                                                'actor_email' => optional($blockIssue->reportedBy ?? $blockIssue->creator)->email
+                                            ];
+                                            // Issued (if available)
+                                            if (!empty($blockIssue->issued_date_time)) {
+                                                $timelineItems[] = [
+                                                    'label' => 'Issued',
+                                                    'status' => $blockIssue->status_text,
+                                                    'badge' => $blockIssue->status_color,
+                                                    'time' => optional($blockIssue->issued_date_time)->format('M d, Y H:i'),
+                                                    'actor' => optional($blockIssue->issuedBy)->name,
+                                                    'actor_email' => optional($blockIssue->issuedBy)->email
+                                                ];
+                                            }
+                                            // Preferred window (optional informational)
+                                            if (!empty($blockIssue->preferred_start_date_time)) {
+                                                $timelineItems[] = [
+                                                    'label' => 'Preferred Start',
+                                                    'status' => 'Scheduled',
+                                                    'badge' => 'info',
+                                                    'time' => optional($blockIssue->preferred_start_date_time)->format('M d, Y H:i'),
+                                                    'actor' => optional($blockIssue->reportedBy)->name,
+                                                    'actor_email' => optional($blockIssue->reportedBy)->email
+                                                ];
+                                            }
+                                            if (!empty($blockIssue->preferred_end_date_time)) {
+                                                $timelineItems[] = [
+                                                    'label' => 'Preferred End',
+                                                    'status' => 'Scheduled',
+                                                    'badge' => 'secondary',
+                                                    'time' => optional($blockIssue->preferred_end_date_time)->format('M d, Y H:i'),
+                                                    'actor' => optional($blockIssue->reportedBy)->name,
+                                                    'actor_email' => optional($blockIssue->reportedBy)->email
+                                                ];
+                                            }
+                                            // Last update (current status)
+                                            $timelineItems[] = [
+                                                'label' => 'Last Update',
+                                                'status' => $blockIssue->status_text,
+                                                'badge' => $blockIssue->status_color,
+                                                'time' => optional($blockIssue->updated_at)->format('M d, Y H:i'),
+                                                'actor' => optional($blockIssue->updater)->name,
+                                                'actor_email' => optional($blockIssue->updater)->email
+                                            ];
+                                        @endphp
+
+                                        <div class="timeline">
+                                            @foreach($timelineItems as $item)
+                                                <div class="timeline-item">
+                                                    <div class="d-flex flex-column gap-1">
+                                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                                            <span class="badge bg-{{ $item['badge'] }}">{{ $item['status'] }}</span>
+                                                            <strong>{{ $item['label'] }}</strong>
+                                                            <span class="timeline-time">{{ $item['time'] }}</span>
+                                                        </div>
+                                                        @if(!empty($item['actor']))
+                                                        <div class="d-flex align-items-center gap-2 ms-0">
+                                                            <div class="avatar-xxs">
+                                                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                                    <i class="ph-user"></i>
+                                                                </span>
+                                                            </div>
+                                                            <div class="small text-muted">
+                                                                <span class="d-block">{{ $item['actor'] }}</span>
+                                                                @if(!empty($item['actor_email']))
+                                                                    <span>{{ $item['actor_email'] }}</span>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Additional Notes -->
                             @if($blockIssue->note_for_access)
                             <div class="col-12">
@@ -302,8 +439,8 @@
                                     <div class="card-body">
                                         <div class="d-flex align-items-start">
                                             <div class="avatar-sm me-3">
-                                                <span class="avatar-title bg-soft-secondary rounded-3">
-                                                    <i class="ri-file-text-line font-size-16 text-secondary"></i>
+                                                <span class="avatar-title bg-secondary-subtle text-secondary rounded-circle fs-3">
+                                                    <i class="ph-file-text"></i>
                                                 </span>
                                             </div>
                                             <div>
