@@ -33,26 +33,26 @@
                     <li class="menu-title"><span>@lang('translation.menu')</span></li>
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="{{ route('root') }}">
-                            <i class="ph-gauge"></i> <span>@lang('translation.dashboards')</span>
+                            <i class="ph-gauge"></i> <span>@lang('translation.dashboard')</span>
                         </a>
                     </li>
 
                     <li class="nav-item">
                         <a class="nav-link menu-link collapsed" href="#sidebarBlocks" data-bs-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="sidebarBlocks">
-                            <i class="ri-building-line"></i> <span>Blocks</span>
+                            <i class="ph-buildings"></i> <span>@lang('translation.blocks')</span>
                         </a>
                         <div class="collapse menu-dropdown" id="sidebarBlocks">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="{{ route('blocks.index') }}" class="nav-link">List Blocks</a>
+                                    <a href="{{ route('blocks.index') }}" class="nav-link">@lang('translation.list-blocks')</a>
                                 </li>
                                 @admin
                                 <li class="nav-item">
-                                    <a href="{{ route('blocks.create') }}" class="nav-link">Create Block</a>
+                                    <a href="{{ route('blocks.create') }}" class="nav-link">@lang('translation.create-block')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-types.index') }}" class="nav-link">Block Types</a>
+                                    <a href="{{ route('block-types.index') }}" class="nav-link">@lang('translation.block-types')</a>
                                 </li>
                                 @endadmin
                             </ul>
@@ -62,44 +62,50 @@
                     <li class="nav-item">
                         <a class="nav-link menu-link collapsed" href="#sidebarWorkOrders" data-bs-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="sidebarWorkOrders">
-                            <i class="ri-file-list-line"></i> <span>Work Orders</span>
+                            <i class="ph-list-dashes"></i> <span>@lang('translation.work-orders')</span>
                         </a>
                         <div class="collapse menu-dropdown" id="sidebarWorkOrders">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="{{ route('work-orders.index') }}" class="nav-link">General Work Orders</a>
+                                    <a href="{{ route('work-orders.index') }}" class="nav-link">@lang('translation.general-work-orders')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('work-orders.create') }}" class="nav-link">Create Work Order</a>
+                                    <a href="{{ route('work-orders.create') }}" class="nav-link">@lang('translation.create-work-order')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-work-orders.index') }}" class="nav-link">Block Work Orders</a>
+                                    <a href="{{ route('block-work-orders.index') }}" class="nav-link">@lang('translation.block-work-orders')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-work-orders.create') }}" class="nav-link">Create Block Work Order</a>
+                                    <a href="{{ route('block-work-orders.create') }}" class="nav-link">@lang('translation.create-block-work-order')</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
                     <li class="nav-item">
+                        <a class="nav-link menu-link" href="{{ route('block-visits.index') }}">
+                            <i class="ph-map-pin"></i> <span>@lang('translation.site-visits')</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="nav-link menu-link collapsed" href="#sidebarIssues" data-bs-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="sidebarIssues">
-                            <i class="ri-error-warning-line"></i> <span>Issues</span>
+                            <i class="ph-warning"></i> <span>@lang('translation.issues')</span>
                         </a>
                         <div class="collapse menu-dropdown" id="sidebarIssues">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="{{ route('block-issues.index') }}" class="nav-link">Block Issues</a>
+                                    <a href="{{ route('block-issues.index') }}" class="nav-link">@lang('translation.block-issues')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-issues.create') }}" class="nav-link">Create Block Issue</a>
+                                    <a href="{{ route('block-issues.create') }}" class="nav-link">@lang('translation.create-block-issue')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('issues.index') }}" class="nav-link">General Issues</a>
+                                    <a href="{{ route('issues.index') }}" class="nav-link">@lang('translation.general-issues')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('issues.create') }}" class="nav-link">Create Issue</a>
+                                    <a href="{{ route('issues.create') }}" class="nav-link">@lang('translation.create-issue')</a>
                                 </li>
                             </ul>
                         </div>
