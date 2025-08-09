@@ -135,25 +135,6 @@
 }
 </style>
 @endsection
-<style>
-/* Show sorting indicators on sortable headers */
-table.dataTable thead th { position: relative; padding-right: 1.5rem !important; }
-table.dataTable thead .sorting:after,
-table.dataTable thead .sorting_asc:after,
-table.dataTable thead .sorting_desc:after {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: inline-block;
-  font-size: 0.75rem;
-  opacity: 0.6;
-}
-table.dataTable thead .sorting:after { content: "\2195"; }       /* ↕ */
-table.dataTable thead .sorting_asc:after { content: "\25B2"; opacity: 0.9; }  /* ▲ */
-table.dataTable thead .sorting_desc:after { content: "\25BC"; opacity: 0.9; } /* ▼ */
-table.dataTable thead .sorting_disabled:after { display: none; }
-</style>
 
 @section('content')
 @component('components.breadcrumb')
