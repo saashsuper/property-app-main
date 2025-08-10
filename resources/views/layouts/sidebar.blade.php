@@ -1,5 +1,51 @@
     <!-- ========== App Menu ========== -->
     <div class="app-menu navbar-menu">
+        @php
+            // Helper function to check if a route is active
+            function isActiveRoute($routeName) {
+                return request()->routeIs($routeName);
+            }
+            
+            // Helper function to check if any child routes are active
+            function hasActiveChild($routeNames) {
+                foreach ($routeNames as $routeName) {
+                    if (request()->routeIs($routeName)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            // Helper function to get menu classes
+            function getMenuClasses($routeName = null, $childRoutes = []) {
+                $classes = 'nav-link menu-link';
+                
+                if ($routeName && isActiveRoute($routeName)) {
+                    $classes .= ' active';
+                } elseif (!empty($childRoutes) && hasActiveChild($childRoutes)) {
+                    $classes .= ' active';
+                }
+                
+                if (!empty($childRoutes)) {
+                    $classes .= hasActiveChild($childRoutes) ? '' : ' collapsed';
+                }
+                
+                return $classes;
+            }
+            
+            // Helper function to get dropdown classes
+            function getDropdownClasses($childRoutes) {
+                $classes = 'collapse menu-dropdown';
+                return hasActiveChild($childRoutes) ? $classes . ' show' : $classes;
+            }
+            
+            // Helper function to get submenu link classes
+            function getSubmenuClasses($routeName) {
+                $classes = 'nav-link';
+                return isActiveRoute($routeName) ? $classes . ' active' : $classes;
+            }
+        @endphp
+        
         <!-- LOGO -->
         <div class="navbar-brand-box">
             <a href="{{ route('root') }}" class="logo logo-dark">
@@ -32,27 +78,27 @@
 
                     <li class="menu-title"><span>@lang('translation.menu')</span></li>
                     <li class="nav-item">
-                        <a class="nav-link menu-link" href="{{ route('root') }}">
+                        <a class="{{ getMenuClasses('root') }}" href="{{ route('root') }}">
                             <i class="ph-gauge"></i> <span>@lang('translation.dashboard')</span>
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link menu-link collapsed" href="#sidebarBlocks" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarBlocks">
+                        <a class="{{ getMenuClasses(null, ['blocks.*', 'block-types.*']) }}" href="#sidebarBlocks" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['blocks.*', 'block-types.*']) ? 'true' : 'false' }}" aria-controls="sidebarBlocks">
                             <i class="ph-buildings"></i> <span>@lang('translation.blocks')</span>
                         </a>
-                        <div class="collapse menu-dropdown" id="sidebarBlocks">
+                        <div class="{{ getDropdownClasses(['blocks.*', 'block-types.*']) }}" id="sidebarBlocks">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="{{ route('blocks.index') }}" class="nav-link">@lang('translation.list-blocks')</a>
+                                    <a href="{{ route('blocks.index') }}" class="{{ getSubmenuClasses('blocks.index') }}">@lang('translation.list-blocks')</a>
                                 </li>
                                 @admin
                                 <li class="nav-item">
-                                    <a href="{{ route('blocks.create') }}" class="nav-link">@lang('translation.create-block')</a>
+                                    <a href="{{ route('blocks.create') }}" class="{{ getSubmenuClasses('blocks.create') }}">@lang('translation.create-block')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-types.index') }}" class="nav-link">@lang('translation.block-types')</a>
+                                    <a href="{{ route('block-types.index') }}" class="{{ getSubmenuClasses('block-types.*') }}">@lang('translation.block-types')</a>
                                 </li>
                                 @endadmin
                             </ul>
@@ -60,52 +106,52 @@
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link menu-link collapsed" href="#sidebarWorkOrders" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarWorkOrders">
+                        <a class="{{ getMenuClasses(null, ['work-orders.*', 'block-work-orders.*']) }}" href="#sidebarWorkOrders" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['work-orders.*', 'block-work-orders.*']) ? 'true' : 'false' }}" aria-controls="sidebarWorkOrders">
                             <i class="ph-list-dashes"></i> <span>@lang('translation.work-orders')</span>
                         </a>
-                        <div class="collapse menu-dropdown" id="sidebarWorkOrders">
+                        <div class="{{ getDropdownClasses(['work-orders.*', 'block-work-orders.*']) }}" id="sidebarWorkOrders">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="{{ route('work-orders.index') }}" class="nav-link">@lang('translation.general-work-orders')</a>
+                                    <a href="{{ route('work-orders.index') }}" class="{{ getSubmenuClasses('work-orders.index') }}">@lang('translation.general-work-orders')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('work-orders.create') }}" class="nav-link">@lang('translation.create-work-order')</a>
+                                    <a href="{{ route('work-orders.create') }}" class="{{ getSubmenuClasses('work-orders.create') }}">@lang('translation.create-work-order')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-work-orders.index') }}" class="nav-link">@lang('translation.block-work-orders')</a>
+                                    <a href="{{ route('block-work-orders.index') }}" class="{{ getSubmenuClasses('block-work-orders.index') }}">@lang('translation.block-work-orders')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-work-orders.create') }}" class="nav-link">@lang('translation.create-block-work-order')</a>
+                                    <a href="{{ route('block-work-orders.create') }}" class="{{ getSubmenuClasses('block-work-orders.create') }}">@lang('translation.create-block-work-order')</a>
                                 </li>
                             </ul>
                         </div>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link menu-link" href="{{ route('block-visits.index') }}">
+                        <a class="{{ getMenuClasses('block-visits.*') }}" href="{{ route('block-visits.index') }}">
                             <i class="ph-map-pin"></i> <span>@lang('translation.site-visits')</span>
                         </a>
                     </li>
 
                     <li class="nav-item">
-                        <a class="nav-link menu-link collapsed" href="#sidebarIssues" data-bs-toggle="collapse"
-                            role="button" aria-expanded="false" aria-controls="sidebarIssues">
+                        <a class="{{ getMenuClasses(null, ['block-issues.*', 'issues.*']) }}" href="#sidebarIssues" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['block-issues.*', 'issues.*']) ? 'true' : 'false' }}" aria-controls="sidebarIssues">
                             <i class="ph-warning"></i> <span>@lang('translation.issues')</span>
                         </a>
-                        <div class="collapse menu-dropdown" id="sidebarIssues">
+                        <div class="{{ getDropdownClasses(['block-issues.*', 'issues.*']) }}" id="sidebarIssues">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
-                                    <a href="{{ route('block-issues.index') }}" class="nav-link">@lang('translation.block-issues')</a>
+                                    <a href="{{ route('block-issues.index') }}" class="{{ getSubmenuClasses('block-issues.index') }}">@lang('translation.block-issues')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('block-issues.create') }}" class="nav-link">@lang('translation.create-block-issue')</a>
+                                    <a href="{{ route('block-issues.create') }}" class="{{ getSubmenuClasses('block-issues.create') }}">@lang('translation.create-block-issue')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('issues.index') }}" class="nav-link">@lang('translation.general-issues')</a>
+                                    <a href="{{ route('issues.index') }}" class="{{ getSubmenuClasses('issues.index') }}">@lang('translation.general-issues')</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a href="{{ route('issues.create') }}" class="nav-link">@lang('translation.create-issue')</a>
+                                    <a href="{{ route('issues.create') }}" class="{{ getSubmenuClasses('issues.create') }}">@lang('translation.create-issue')</a>
                                 </li>
                             </ul>
                         </div>
