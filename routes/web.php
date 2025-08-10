@@ -37,9 +37,6 @@ Route::middleware(['auth'])->group(function () {
     
     // Blocks - Admin only for create, edit, delete
     Route::get('blocks', [App\Http\Controllers\BlockController::class, 'index'])->name('blocks.index');
-    Route::get('blocks/{block}', [App\Http\Controllers\BlockController::class, 'show'])->name('blocks.show');
-    Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
-    Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
     
     // Admin-only block routes
     Route::middleware(['role:Admin'])->group(function () {
@@ -49,6 +46,10 @@ Route::middleware(['auth'])->group(function () {
         Route::put('blocks/{block}', [App\Http\Controllers\BlockController::class, 'update'])->name('blocks.update');
         Route::delete('blocks/{block}', [App\Http\Controllers\BlockController::class, 'destroy'])->name('blocks.destroy');
     });
+    
+    Route::get('blocks/{block}', [App\Http\Controllers\BlockController::class, 'show'])->name('blocks.show');
+    Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
+    Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
     
     // Work Orders
     Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class);
