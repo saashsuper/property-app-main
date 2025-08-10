@@ -15,9 +15,11 @@
               <tr>
                 <th>Ref</th>
                 <th>Block</th>
+                <th>Block Type</th>
                 <th>Scheduled</th>
                 <th>Start</th>
                 <th>End</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -25,17 +27,49 @@
               @forelse($visits as $visit)
                 <tr>
                   <td><strong>{{ $visit->ref_no }}</strong></td>
-                  <td>{{ $visit->block->name ?? 'N/A' }}</td>
+                  <td>
+                    @if($visit->block)
+                      <a href="{{ route('blocks.show', $visit->block) }}" class="text-decoration-none">
+                        <strong>{{ $visit->block->name }}</strong>
+                        <br>
+                        <small class="text-muted">{{ $visit->block->management_company }}</small>
+                      </a>
+                    @else
+                      <span class="text-muted">N/A</span>
+                    @endif
+                  </td>
+                  <td>
+                    @if($visit->block && $visit->block->blockType)
+                      <span class="badge bg-primary">{{ $visit->block->blockType->name }}</span>
+                    @else
+                      <span class="text-muted">N/A</span>
+                    @endif
+                  </td>
                   <td>{{ optional($visit->scheduled_date_time)->format('M d, Y H:i') }}</td>
                   <td>{{ optional($visit->start_date_time)->format('M d, Y H:i') }}</td>
                   <td>{{ optional($visit->end_date_time)->format('M d, Y H:i') }}</td>
                   <td>
-                    <a href="{{ route('block-visits.show', $visit) }}" class="btn btn-sm btn-outline-primary">View</a>
-                    <a href="{{ route('block-visits.edit', $visit) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    @if($visit->start_date_time && $visit->end_date_time)
+                      <span class="badge bg-success">Completed</span>
+                    @elseif($visit->start_date_time)
+                      <span class="badge bg-warning">In Progress</span>
+                    @else
+                      <span class="badge bg-info">Scheduled</span>
+                    @endif
+                  </td>
+                  <td>
+                    <div class="btn-group" role="group">
+                      <a href="{{ route('block-visits.show', $visit) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="ph-eye"></i>
+                      </a>
+                      <a href="{{ route('block-visits.edit', $visit) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="ph-pencil"></i>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               @empty
-                <tr><td colspan="6" class="text-center">No visits found</td></tr>
+                <tr><td colspan="8" class="text-center">No visits found</td></tr>
               @endforelse
             </tbody>
           </table>

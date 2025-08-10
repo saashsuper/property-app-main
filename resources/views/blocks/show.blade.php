@@ -210,6 +210,12 @@
                                     <small class="text-muted">Issues</small>
                                 </div>
                             </div>
+                            <div class="col-6">
+                                <div class="mb-3">
+                                    <h4 class="text-info">{{ $block->blockVisits->count() }}</h4>
+                                    <small class="text-muted">Site Visits</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -236,6 +242,63 @@
                             </div>
                         @else
                             <p class="text-muted mb-0">No issues found</p>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Site Visits -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Site Visits</h5>
+                        <a href="{{ route('block-visits.create') }}" class="btn btn-sm btn-primary">
+                            <i class="ph-plus me-1"></i>New Visit
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        @if($block->blockVisits->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($block->blockVisits->take(3) as $visit)
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ $visit->ref_no }}</h6>
+                                                <small class="text-muted">
+                                                    @if($visit->scheduled_date_time)
+                                                        {{ $visit->scheduled_date_time->format('M d, Y H:i') }}
+                                                    @else
+                                                        Not scheduled
+                                                    @endif
+                                                </small>
+                                            </div>
+                                            <div class="text-end">
+                                                @if($visit->start_date_time && $visit->end_date_time)
+                                                    <span class="badge bg-success">Completed</span>
+                                                @elseif($visit->start_date_time)
+                                                    <span class="badge bg-warning">In Progress</span>
+                                                @else
+                                                    <span class="badge bg-info">Scheduled</span>
+                                                @endif
+                                                <br>
+                                                <small class="text-muted">{{ $visit->created_at->diffForHumans() }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @if($block->blockVisits->count() > 3)
+                                <div class="text-center mt-2">
+                                    <a href="{{ route('block-visits.index') }}" class="btn btn-sm btn-outline-primary">
+                                        View All {{ $block->blockVisits->count() }} Visits
+                                    </a>
+                                </div>
+                            @endif
+                        @else
+                            <p class="text-muted mb-0">No site visits found</p>
+                            <div class="text-center mt-2">
+                                <a href="{{ route('block-visits.create') }}" class="btn btn-sm btn-primary">
+                                    <i class="ph-plus me-1"></i>Schedule First Visit
+                                </a>
+                            </div>
                         @endif
                     </div>
                 </div>

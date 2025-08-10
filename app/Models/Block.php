@@ -98,6 +98,14 @@ class Block extends Model
     }
 
     /**
+     * Get the site visits for the block.
+     */
+    public function blockVisits()
+    {
+        return $this->hasMany(BlockVisit::class);
+    }
+
+    /**
      * Get the creator of the block.
      */
     public function creator()
