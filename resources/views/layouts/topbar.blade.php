@@ -308,235 +308,109 @@
 
                 <div class="dropdown topbar-head-dropdown ms-1 header-item">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-dark rounded-circle"
-                        id="page-header-cart-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                        id="page-header-issues-dropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                         aria-haspopup="true" aria-expanded="false">
-                        <i class='bi bi-bag fs-2xl'></i>
+                        <i class='ph-warning fs-2xl'></i>
                         <span
-                            class="position-absolute topbar-badge cartitem-badge fs-3xs translate-middle badge rounded-pill bg-info">5</span>
+                            class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-danger">
+                            {{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() + \App\Models\Issue::where('status', 'open')->count() }}
+                        </span>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-xl dropdown-menu-end p-0 product-list"
-                        aria-labelledby="page-header-cart-dropdown">
+                    <div class="dropdown-menu dropdown-menu-xl dropdown-menu-end p-0"
+                        aria-labelledby="page-header-issues-dropdown">
                         <div class="p-3 border-bottom">
                             <div class="row align-items-center">
                                 <div class="col">
-                                    <h6 class="m-0 fs-lg fw-semibold"> My Cart <span
-                                            class="badge bg-secondary fs-sm cartitem-badge ms-1">7</span></h6>
+                                    <h6 class="m-0 fs-lg fw-semibold"> Active Issues <span
+                                            class="badge bg-danger fs-sm ms-1">
+                                            {{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() + \App\Models\Issue::where('status', 'open')->count() }}
+                                        </span></h6>
                                 </div>
                                 <div class="col-auto">
-                                    <a href="#!">View All</a>
+                                    <a href="{{ route('block-issues.index') }}">View All</a>
                                 </div>
                             </div>
                         </div>
                         <div data-simplebar style="max-height: 300px;">
                             <div class="p-3">
-                                <div class="text-center empty-cart" id="empty-cart">
-                                    <div class="avatar-md mx-auto my-3">
-                                        <div class="avatar-title bg-info-subtle text-info fs-2 rounded-circle">
-                                            <i class='bx bx-cart'></i>
+                                @php
+                                    $recentBlockIssues = \App\Models\BlockIssue::with(['block', 'reportedBy'])
+                                        ->where('issue_status_id', 1)
+                                        ->latest()
+                                        ->take(3)
+                                        ->get();
+                                    
+                                    $recentGeneralIssues = \App\Models\Issue::with(['reportedBy'])
+                                        ->where('status', 'open')
+                                        ->latest()
+                                        ->take(3)
+                                        ->get();
+                                @endphp
+                                
+                                @if($recentBlockIssues->count() == 0 && $recentGeneralIssues->count() == 0)
+                                    <div class="text-center">
+                                        <div class="avatar-md mx-auto my-3">
+                                            <div class="avatar-title bg-success-subtle text-success fs-2 rounded-circle">
+                                                <i class='ph-check-circle'></i>
+                                            </div>
                                         </div>
+                                        <h5 class="mb-3">No Active Issues!</h5>
+                                        <p class="text-muted">All issues have been resolved.</p>
                                     </div>
-                                    <h5 class="mb-3">Your Cart is Empty!</h5>
-                                    <a href="#!" class="btn btn-success w-md mb-3">Shop Now</a>
-                                </div>
-
-                                <div class="d-block dropdown-item product text-wrap p-2">
-                                    <div class="d-flex">
-                                        <div class="avatar-sm me-3 flex-shrink-0">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{ URL::asset('build/images/products/32/img-1.png') }}"
-                                                    class="avatar-xs" alt="user-pic">
+                                @else
+                                    @foreach($recentBlockIssues as $issue)
+                                        <div class="d-block dropdown-item p-2 border-bottom">
+                                            <div class="d-flex">
+                                                <div class="avatar-xs me-3 flex-shrink-0">
+                                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-lg">
+                                                        <i class="ph-warning"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <a href="{{ route('block-issues.show', $issue->id) }}" class="text-reset">
+                                                        <h6 class="mt-0 mb-1 fs-md lh-base">
+                                                            <strong>{{ $issue->ref_no }}</strong> - {{ Str::limit($issue->issue, 50) }}
+                                                        </h6>
+                                                    </a>
+                                                    <p class="mb-0 fs-sm text-muted">
+                                                        Block: {{ $issue->block->name ?? 'N/A' }} | 
+                                                        Reported by: {{ $issue->reportedBy->name ?? 'N/A' }}
+                                                    </p>
+                                                    <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
+                                                        <span><i class="ph-clock"></i> {{ $issue->created_at->diffForHumans() }}</span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">Fashion</p>
-                                            <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="#!" class="text-reset">Blive Printed Men Round Neck</a>
-                                            </h6>
-                                            <div class="text-muted fw-medium d-none">$<span
-                                                    class="product-price">327.49</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus">–</button>
-                                                <input type="number" class="product-quantity" value="2"
-                                                    min="0" max="100" readonly>
-                                                <button type="button" class="plus">+</button>
+                                    @endforeach
+                                    
+                                    @foreach($recentGeneralIssues as $issue)
+                                        <div class="d-block dropdown-item p-2 border-bottom">
+                                            <div class="d-flex">
+                                                <div class="avatar-xs me-3 flex-shrink-0">
+                                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-lg">
+                                                        <i class="ph-exclamation-triangle"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <a href="{{ route('issues.show', $issue->id) }}" class="text-reset">
+                                                        <h6 class="mt-0 mb-1 fs-md lh-base">
+                                                            <strong>{{ $issue->ref_no }}</strong> - {{ Str::limit($issue->title, 50) }}
+                                                        </h6>
+                                                    </a>
+                                                    <p class="mb-0 fs-sm text-muted">
+                                                        Category: {{ $issue->category }} | 
+                                                        Reported by: {{ $issue->reportedBy->name ?? 'N/A' }}
+                                                    </p>
+                                                    <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
+                                                        <span><i class="ph-clock"></i> {{ $issue->created_at->diffForHumans() }}</span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button"
-                                                class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn"
-                                                data-bs-toggle="modal" data-bs-target="#removeCartModal"><i
-                                                    class="ri-close-fill fs-lg"></i></button>
-                                            <h5 class="mb-0">$ <span class="product-line-price">654.98</span></h5>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-block dropdown-item product text-wrap p-2">
-                                    <div class="d-flex">
-                                        <div class="avatar-sm me-3 flex-shrink-0">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{ URL::asset('build/images/products/img-5.png') }}"
-                                                    class="avatar-xs" alt="user-pic">
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">Sportwear</p>
-                                            <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="#!" class="text-reset">Willage Volleyball Ball</a>
-                                            </h6>
-                                            <div class="text-muted fw-medium d-none">$<span
-                                                    class="product-price">49.06</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus">–</button>
-                                                <input type="number" class="product-quantity" value="3"
-                                                    min="0" max="100" readonly>
-                                                <button type="button" class="plus">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button"
-                                                class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn"
-                                                data-bs-toggle="modal" data-bs-target="#removeCartModal"><i
-                                                    class="ri-close-fill fs-lg"></i></button>
-                                            <h5 class="mb-0">$ <span class="product-line-price">147.18</span></h5>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-block dropdown-item product text-wrap p-2">
-                                    <div class="d-flex">
-                                        <div class="avatar-sm me-3 flex-shrink-0">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{ URL::asset('build/images/products/32/img-10.png') }}"
-                                                    class="avatar-xs" alt="user-pic">
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">Fashion</p>
-                                            <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="#!" class="text-reset">Cotton collar tshirts for men</a>
-                                            </h6>
-                                            <div class="text-muted fw-medium d-none">$<span
-                                                    class="product-price">53.33</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus">–</button>
-                                                <input type="number" class="product-quantity" value="3"
-                                                    min="0" max="100" readonly>
-                                                <button type="button" class="plus">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button"
-                                                class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn"
-                                                data-bs-toggle="modal" data-bs-target="#removeCartModal"><i
-                                                    class="ri-close-fill fs-lg"></i></button>
-                                            <h5 class="mb-0">$ <span class="product-line-price">159.99</span></h5>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-block dropdown-item product text-wrap p-2">
-                                    <div class="d-flex">
-                                        <div class="avatar-sm me-3 flex-shrink-0">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{ URL::asset('build/images/products/32/img-11.png') }}"
-                                                    class="avatar-xs" alt="user-pic">
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">Fashion</p>
-                                            <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="#!" class="text-reset">Jeans blue men boxer</a>
-                                            </h6>
-                                            <div class="text-muted fw-medium d-none">$<span
-                                                    class="product-price">164.37</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus">–</button>
-                                                <input type="number" class="product-quantity" value="1"
-                                                    min="0" max="100" readonly>
-                                                <button type="button" class="plus">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button"
-                                                class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn"
-                                                data-bs-toggle="modal" data-bs-target="#removeCartModal"><i
-                                                    class="ri-close-fill fs-lg"></i></button>
-                                            <h5 class="mb-0">$ <span class="product-line-price">164.37</span></h5>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="d-block dropdown-item product text-wrap p-2">
-                                    <div class="d-flex">
-                                        <div class="avatar-sm me-3 flex-shrink-0">
-                                            <div class="avatar-title bg-light rounded">
-                                                <img src="{{ URL::asset('build/images/products/32/img-8.png') }}"
-                                                    class="avatar-xs" alt="user-pic">
-                                            </div>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <p class="mb-1 fs-sm text-muted">Fashion</p>
-                                            <h6 class="mt-0 mb-3 fs-md">
-                                                <a href="#!" class="text-reset">Full Sleeve Solid Men
-                                                    Sweatshirt</a>
-                                            </h6>
-                                            <div class="text-muted fw-medium d-none">$<span
-                                                    class="product-price">180.00</span></div>
-                                            <div class="input-step">
-                                                <button type="button" class="minus">–</button>
-                                                <input type="number" class="product-quantity" value="1"
-                                                    min="0" max="100" readonly>
-                                                <button type="button" class="plus">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="ps-2 d-flex flex-column justify-content-between align-items-end">
-                                            <button type="button"
-                                                class="btn btn-icon btn-sm btn-ghost-primary remove-cart-btn"
-                                                data-bs-toggle="modal" data-bs-target="#removeCartModal"><i
-                                                    class="ri-close-fill fs-lg"></i></button>
-                                            <h5 class="mb-0">$ <span class="product-line-price">180.00</span></h5>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="count-table">
-                                    <table class="table table-borderless mb-0  fw-semibold">
-                                        <tbody>
-                                            <tr>
-                                                <td>Sub Total :</td>
-                                                <td class="text-end cart-subtotal">$1306.52</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Discount <span class="text-muted">(PROMAN15)</span>:</td>
-                                                <td class="text-end cart-discount">- $195.98</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Shipping Charge :</td>
-                                                <td class="text-end cart-shipping">$65.00</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Estimated Tax (12.5%) : </td>
-                                                <td class="text-end cart-tax">$163.31</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-
+                                    @endforeach
+                                @endif
                             </div>
-                        </div>
-                        <div class="p-3 border-bottom-0 border-start-0 border-end-0 border-dashed border"
-                            id="checkout-elem">
-                            <div class="d-flex justify-content-between align-items-center pb-3">
-                                <h5 class="m-0 text-muted">Total:</h5>
-                                <div class="px-2">
-                                    <h5 class="m-0 cart-total">$1338.86</h5>
-                                </div>
-                            </div>
-
-                            <a href="javascript:void(0)" class="btn btn-info text-center w-100">
-                                Checkout
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -567,11 +441,17 @@
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-dark rounded-circle"
                         id="page-header-notifications-dropdown" data-bs-toggle="dropdown"
                         data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
-                        <i class='bi bi-bell fs-2xl'></i>
+                        <i class='ph-bell fs-2xl'></i>
                         <span
-                            class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-danger"><span
-                                class="notification-badge">4</span><span class="visually-hidden">unread
-                                messages</span></span>
+                            class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-info">
+                            @php
+                                $notificationCount = 0;
+                                $notificationCount += \App\Models\WorkOrder::where('status', 'pending')->count();
+                                $notificationCount += \App\Models\BlockVisit::whereNull('end_date_time')->count();
+                                $notificationCount += \App\Models\BlockIssue::where('issue_status_id', 1)->count();
+                            @endphp
+                            {{ $notificationCount }}
+                        </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end p-0"
                         aria-labelledby="page-header-notifications-dropdown">
@@ -581,166 +461,137 @@
                                 <div class="row align-items-center">
                                     <div class="col">
                                         <h6 class="mb-0 fs-lg fw-semibold"> Notifications <span
-                                                class="badge bg-danger-subtle text-danger fs-sm notification-badge">
-                                                4</span></h6>
+                                                class="badge bg-info-subtle text-info fs-sm notification-badge">
+                                                {{ $notificationCount }}
+                                            </span></h6>
                                         <p class="fs-md text-muted mt-1 mb-0">You have <span
-                                                class="fw-semibold notification-unread">3</span> unread messages</p>
+                                                class="fw-semibold notification-unread">{{ $notificationCount }}</span> pending items</p>
                                     </div>
                                     <div class="col-auto dropdown">
                                         <a href="javascript:void(0);" data-bs-toggle="dropdown"
-                                            class="link-secondary fs-md"><i class="bi bi-three-dots-vertical"></i></a>
+                                            class="link-secondary fs-md"><i class="ph-dots-three-vertical"></i></a>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">All Clear</a></li>
-                                            <li><a class="dropdown-item" href="#">Mark all as read</a></li>
-                                            <li><a class="dropdown-item" href="#">Archive All</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('work-orders.index') }}">View Work Orders</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('block-visits.index') }}">View Site Visits</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('block-issues.index') }}">View Issues</a></li>
                                         </ul>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
 
                         <div class="py-2 ps-2" id="notificationItemsTabContent">
                             <div data-simplebar style="max-height: 300px;" class="pe-2">
-                                <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">New
-                                </h6>
-                                <div
-                                    class="text-reset notification-item d-block dropdown-item position-relative unread-message">
-                                    <div class="d-flex">
-                                        <div class="avatar-xs me-3 flex-shrink-0">
-                                            <span class="avatar-title bg-info-subtle text-info rounded-circle fs-lg">
-                                                <i class="bx bx-badge-check"></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <a href="#!" class="stretched-link">
-                                                <h6 class="mt-0 fs-md mb-2 lh-base">Your <b>Elite</b> author Graphic
-                                                    Optimization <span class="text-secondary">reward</span> is ready!
-                                                </h6>
-                                            </a>
-                                            <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
-                                                <span><i class="mdi mdi-clock-outline"></i> Just 30 sec ago</span>
-                                            </p>
-                                        </div>
-                                        <div class="px-2 fs-base">
-                                            <div class="form-check notification-check">
-                                                <input class="form-check-input" type="checkbox" value=""
-                                                    id="all-notification-check01">
-                                                <label class="form-check-label"
-                                                    for="all-notification-check01"></label>
+                                @php
+                                    $pendingWorkOrders = \App\Models\WorkOrder::where('status', 'pending')
+                                        ->latest()
+                                        ->take(2)
+                                        ->get();
+                                    
+                                    $activeSiteVisits = \App\Models\BlockVisit::whereNull('end_date_time')
+                                        ->whereNotNull('start_date_time')
+                                        ->latest()
+                                        ->take(2)
+                                        ->get();
+                                    
+                                    $recentIssues = \App\Models\BlockIssue::where('issue_status_id', 1)
+                                        ->latest()
+                                        ->take(2)
+                                        ->get();
+                                @endphp
+
+                                @if($pendingWorkOrders->count() > 0)
+                                    <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">Pending Work Orders</h6>
+                                    @foreach($pendingWorkOrders as $workOrder)
+                                        <div class="text-reset notification-item d-block dropdown-item position-relative unread-message">
+                                            <div class="d-flex">
+                                                <div class="avatar-xs me-3 flex-shrink-0">
+                                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-lg">
+                                                        <i class="ph-list-dashes"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <a href="{{ route('work-orders.show', $workOrder->id) }}" class="stretched-link">
+                                                        <h6 class="mt-0 fs-md mb-2 lh-base">
+                                                            <strong>{{ $workOrder->code }}</strong> - {{ Str::limit($workOrder->fault_description, 60) }}
+                                                        </h6>
+                                                    </a>
+                                                    <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
+                                                        <span><i class="ph-clock"></i> {{ $workOrder->created_at->diffForHumans() }}</span>
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
+                                    @endforeach
+                                @endif
+
+                                @if($activeSiteVisits->count() > 0)
+                                    <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">Active Site Visits</h6>
+                                    @foreach($activeSiteVisits as $visit)
+                                        <div class="text-reset notification-item d-block dropdown-item position-relative unread-message">
+                                            <div class="d-flex">
+                                                <div class="avatar-xs me-3 flex-shrink-0">
+                                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-lg">
+                                                        <i class="ph-map-pin"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <a href="{{ route('block-visits.show', $visit->id) }}" class="stretched-link">
+                                                        <h6 class="mt-0 fs-md mb-2 lh-base">
+                                                            <strong>{{ $visit->ref_no }}</strong> - Site visit in progress
+                                                        </h6>
+                                                    </a>
+                                                    <p class="mb-0 fs-sm text-muted">
+                                                        Block: {{ $visit->block->name ?? 'N/A' }}
+                                                    </p>
+                                                    <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
+                                                        <span><i class="ph-clock"></i> Started {{ $visit->start_date_time->diffForHumans() }}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+
+                                @if($recentIssues->count() > 0)
+                                    <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">Recent Issues</h6>
+                                    @foreach($recentIssues as $issue)
+                                        <div class="text-reset notification-item d-block dropdown-item position-relative unread-message">
+                                            <div class="d-flex">
+                                                <div class="avatar-xs me-3 flex-shrink-0">
+                                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-lg">
+                                                        <i class="ph-warning"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <a href="{{ route('block-issues.show', $issue->id) }}" class="stretched-link">
+                                                        <h6 class="mt-0 fs-md mb-2 lh-base">
+                                                            <strong>{{ $issue->ref_no }}</strong> - {{ Str::limit($issue->issue, 50) }}
+                                                        </h6>
+                                                    </a>
+                                                    <p class="mb-0 fs-sm text-muted">
+                                                        Block: {{ $issue->block->name ?? 'N/A' }} | Priority: {{ $issue->priority_text }}
+                                                    </p>
+                                                    <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
+                                                        <span><i class="ph-clock"></i> {{ $issue->created_at->diffForHumans() }}</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+
+                                @if($notificationCount == 0)
+                                    <div class="text-center py-4">
+                                        <div class="avatar-md mx-auto mb-3">
+                                            <div class="avatar-title bg-success-subtle text-success fs-2 rounded-circle">
+                                                <i class="ph-check-circle"></i>
+                                            </div>
+                                        </div>
+                                        <h6 class="mb-1">All Caught Up!</h6>
+                                        <p class="text-muted mb-0">No pending notifications at the moment.</p>
                                     </div>
-                                </div>
-
-                                <div
-                                    class="text-reset notification-item d-block dropdown-item position-relative unread-message">
-                                    <div class="d-flex">
-                                        <div class="position-relative me-3 flex-shrink-0">
-                                            <img src="{{ URL::asset('build/images/users/32/avatar-2.jpg') }}"
-                                                class="rounded-circle avatar-xs" alt="user-pic">
-                                            <span
-                                                class="active-badge position-absolute start-100 translate-middle p-1 bg-success rounded-circle">
-                                                <span class="visually-hidden">New alerts</span>
-                                            </span>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <a href="#!" class="stretched-link">
-                                                <h6 class="mt-0 mb-1 fs-md fw-semibold">Angela Bernier</h6>
-                                            </a>
-                                            <div class="fs-sm text-muted">
-                                                <p class="mb-1">Answered to your comment on the cash flow forecast's
-                                                    graph 🔔.</p>
-                                            </div>
-                                            <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
-                                                <span><i class="mdi mdi-clock-outline"></i> 48 min ago</span>
-                                            </p>
-                                        </div>
-                                        <div class="px-2 fs-base">
-                                            <div class="form-check notification-check">
-                                                <input class="form-check-input" type="checkbox" value=""
-                                                    id="all-notification-check02">
-                                                <label class="form-check-label"
-                                                    for="all-notification-check02"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="text-reset notification-item d-block dropdown-item position-relative unread-message">
-                                    <div class="d-flex">
-                                        <div class="avatar-xs me-3 flex-shrink-0">
-                                            <span
-                                                class="avatar-title bg-danger-subtle text-danger rounded-circle fs-lg">
-                                                <i class='bx bx-message-square-dots'></i>
-                                            </span>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <a href="#!" class="stretched-link">
-                                                <h6 class="mt-0 mb-2 fs-md lh-base">You have received <b
-                                                        class="text-success">20</b> new messages in the conversation
-                                                </h6>
-                                            </a>
-                                            <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
-                                                <span><i class="mdi mdi-clock-outline"></i> 2 hrs ago</span>
-                                            </p>
-                                        </div>
-                                        <div class="px-2 fs-base">
-                                            <div class="form-check notification-check">
-                                                <input class="form-check-input" type="checkbox" value=""
-                                                    id="all-notification-check03">
-                                                <label class="form-check-label"
-                                                    for="all-notification-check03"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <h6 class="text-overflow text-muted fs-sm my-2 text-uppercase notification-title">Read
-                                    Before</h6>
-
-                                <div class="text-reset notification-item d-block dropdown-item position-relative">
-                                    <div class="d-flex">
-
-                                        <div class="position-relative me-3 flex-shrink-0">
-                                            <img src="{{ URL::asset('build/images/users/32/avatar-8.jpg') }}"
-                                                class="rounded-circle avatar-xs" alt="user-pic">
-                                            <span
-                                                class="active-badge position-absolute start-100 translate-middle p-1 bg-warning rounded-circle">
-                                                <span class="visually-hidden">New alerts</span>
-                                            </span>
-                                        </div>
-
-                                        <div class="flex-grow-1">
-                                            <a href="#!" class="stretched-link">
-                                                <h6 class="mt-0 mb-1 fs-md fw-semibold">Maureen Gibson</h6>
-                                            </a>
-                                            <div class="fs-sm text-muted">
-                                                <p class="mb-1">We talked about a project on linkedin.</p>
-                                            </div>
-                                            <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">
-                                                <span><i class="mdi mdi-clock-outline"></i> 4 hrs ago</span>
-                                            </p>
-                                        </div>
-                                        <div class="px-2 fs-base">
-                                            <div class="form-check notification-check">
-                                                <input class="form-check-input" type="checkbox" value=""
-                                                    id="all-notification-check04">
-                                                <label class="form-check-label"
-                                                    for="all-notification-check04"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="notification-actions" id="notification-actions">
-                                <div class="d-flex text-muted justify-content-center align-items-center">
-                                    Select <div id="select-content" class="text-body fw-semibold px-1">0</div> Result
-                                    <button type="button" class="btn btn-link link-danger p-0 ms-2"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#removeNotificationModal">Remove</button>
-                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -809,61 +660,3 @@
         </div>
     </div>
 </header>
-
-<!-- removeNotificationModal -->
-<div id="removeNotificationModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    id="NotificationModalbtn-close"></button>
-            </div>
-            <div class="modal-body p-md-5">
-                <div class="text-center">
-                    <div class="text-danger">
-                        <i class="bi bi-trash display-4"></i>
-                    </div>
-                    <div class="mt-4 fs-base">
-                        <h4 class="mb-1">Are you sure ?</h4>
-                        <p class="text-muted mx-4 mb-0">Are you sure you want to remove this Notification ?</p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn w-sm btn-danger" id="delete-notification">Yes, Delete
-                        It!</button>
-                </div>
-            </div>
-
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-<!-- removeCartModal -->
-<div id="removeCartModal" class="modal fade zoomIn" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"
-                    id="close-cartmodal"></button>
-            </div>
-            <div class="modal-body p-md-5">
-                <div class="text-center">
-                    <div class="text-danger">
-                        <i class="bi bi-trash display-5"></i>
-                    </div>
-                    <div class="mt-4">
-                        <h4>Are you sure ?</h4>
-                        <p class="text-muted mx-4 mb-0">Are you sure you want to remove this product ?</p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 justify-content-center mt-4 mb-2">
-                    <button type="button" class="btn w-sm btn-light" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn w-sm btn-danger" id="remove-cartproduct">Yes, Delete
-                        It!</button>
-                </div>
-            </div>
-
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
