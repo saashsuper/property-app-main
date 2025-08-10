@@ -21,7 +21,7 @@ class BlockTypeController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $blockTypes = $query->orderBy('name')->paginate(15);
+        $blockTypes = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return view('block-types.index', compact('blockTypes'));
     }
