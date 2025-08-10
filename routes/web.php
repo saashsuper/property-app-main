@@ -64,6 +64,11 @@ Route::middleware(['auth'])->group(function () {
     // Site Visits (Block Visits)
     Route::resource('block-visits', App\Http\Controllers\BlockVisitController::class);
 
+    // Block Inspections
+    Route::resource('block-inspections', App\Http\Controllers\BlockInspectionController::class);
+    Route::post('block-inspections/{blockInspection}/start', [App\Http\Controllers\BlockInspectionController::class, 'start'])->name('block-inspections.start');
+    Route::post('block-inspections/{blockInspection}/complete', [App\Http\Controllers\BlockInspectionController::class, 'complete'])->name('block-inspections.complete');
+
     // Block Issues
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);
     Route::get('api/block-issues', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssues'])->name('api.block-issues');

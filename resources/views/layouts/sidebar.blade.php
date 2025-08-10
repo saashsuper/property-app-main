@@ -135,6 +135,12 @@
                     </li>
 
                     <li class="nav-item">
+                        <a class="{{ getMenuClasses('block-inspections.*') }}" href="{{ route('block-inspections.index') }}">
+                            <i class="ph-clipboard-text"></i> <span>@lang('translation.block-inspections')</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
                         <a class="{{ getMenuClasses(null, ['block-issues.*', 'issues.*']) }}" href="#sidebarIssues" data-bs-toggle="collapse"
                             role="button" aria-expanded="{{ hasActiveChild(['block-issues.*', 'issues.*']) ? 'true' : 'false' }}" aria-controls="sidebarIssues">
                             <i class="ph-warning"></i> <span>@lang('translation.issues')</span>

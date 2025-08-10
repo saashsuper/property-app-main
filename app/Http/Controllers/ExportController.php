@@ -95,6 +95,8 @@ class ExportController extends Controller
                 return $this->getIssuesData($request);
             case 'block-visits':
                 return $this->getBlockVisitsData($request);
+            case 'block-inspections':
+                return $this->getBlockInspectionsData($request);
             default:
                 return [];
         }
@@ -129,6 +131,7 @@ class ExportController extends Controller
             'block-work-orders' => 'Block Work Orders',
             'issues' => 'Issues',
             'block-visits' => 'Site Visits',
+            'block-inspections' => 'Block Inspections',
         ];
 
         return $titles[$type] ?? ucfirst(str_replace('-', ' ', $type));
@@ -360,5 +363,49 @@ class ExportController extends Controller
         } else {
             return 'Scheduled';
         }
+    }
+
+    /**
+     * Get block inspections data for export
+     */
+    private function getBlockInspectionsData(Request $request)
+    {
+        $query = \App\Models\BlockInspection::with(['block', 'creator', 'inspectionTeams.user']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('ref_no', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('block', function ($blockQuery) use ($search) {
+                      $blockQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('job_status_id', $request->status);
+        }
+
+        $inspections = $query->orderBy('created_at', 'desc')->get();
+
+        return $inspections->map(function ($inspection) {
+            $leadInspector = $inspection->inspectionTeams->where('is_lead', true)->first();
+            
+            return [
+                'ID' => $inspection->id,
+                'Reference' => $inspection->ref_no,
+                'Block' => $inspection->block->name ?? 'N/A',
+                'Scheduled Date' => $inspection->scheduled_date_time->format('M d, Y H:i'),
+                'Start Date' => $inspection->start_date_time ? $inspection->start_date_time->format('M d, Y H:i') : 'N/A',
+                'End Date' => $inspection->end_date_time ? $inspection->end_date_time->format('M d, Y H:i') : 'N/A',
+                'Status' => $inspection->status_text,
+                'Lead Inspector' => $leadInspector ? $leadInspector->user->name : 'N/A',
+                'Team Size' => $inspection->inspectionTeams->count(),
+                'Notes' => $inspection->notes ?? 'N/A',
+                'Created By' => $inspection->creator->name ?? 'N/A',
+                'Created Date' => $inspection->created_at->format('M d, Y'),
+            ];
+        })->toArray();
     }
 }
