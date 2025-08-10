@@ -228,7 +228,7 @@
                                 Showing {{ $issues->firstItem() }} to {{ $issues->lastItem() }} of {{ $issues->total() }} results
                             </div>
                             <div>
-                                {{ $issues->appends(request()->query())->links() }}
+                                {{ $issues->appends(request()->query())->links('vendor.pagination.custom') }}
                             </div>
                         </div>
                         @endif

@@ -205,7 +205,7 @@
                                 of {{ $workOrders->total() }} work orders
                             </div>
                             <div>
-                                {{ $workOrders->appends(request()->query())->links() }}
+                                {{ $workOrders->appends(request()->query())->links('vendor.pagination.custom') }}
                             </div>
                         </div>
                     </div>

@@ -237,7 +237,7 @@
                                 Showing {{ $blockIssues->firstItem() }} to {{ $blockIssues->lastItem() }} of {{ $blockIssues->total() }} results
                             </div>
                             <div>
-                                {{ $blockIssues->appends(request()->query())->links() }}
+                                {{ $blockIssues->appends(request()->query())->links('vendor.pagination.custom') }}
                             </div>
                         </div>
                         @endif
