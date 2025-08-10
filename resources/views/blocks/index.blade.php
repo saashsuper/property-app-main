@@ -146,13 +146,11 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <div class="row align-items-center">
-                    <div class="col">
-                        <h4 class="card-title mb-0">Blocks List</h4>
-                    </div>
-                    <div class="col-auto">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Blocks List</h4>
+                    <div class="d-flex align-items-center gap-3">
                         <!-- Export Buttons -->
-                        <div class="btn-group me-3" role="group">
+                        <div class="btn-group" role="group">
                             <a href="{{ route('export.pdf', 'blocks') }}?{{ http_build_query(request()->query()) }}" 
                                class="btn btn-outline-danger btn-sm" title="Export to PDF">
                                 <i class="ph-file-pdf"></i>
@@ -167,7 +165,8 @@
                             </a>
                         </div>
 
-                        <form action="{{ route('blocks.index') }}" method="GET" class="d-flex me-3">
+                        <!-- Search Form -->
+                        <form action="{{ route('blocks.index') }}" method="GET" class="d-flex">
                             <div class="input-group" style="min-width: 250px;">
                                 <input type="text" class="form-control" name="search" 
                                        placeholder="Search blocks..." 
@@ -182,6 +181,8 @@
                                 @endif
                             </div>
                         </form>
+
+                        <!-- Add Button -->
                         @admin
                         <a href="{{ route('blocks.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Add New Block
