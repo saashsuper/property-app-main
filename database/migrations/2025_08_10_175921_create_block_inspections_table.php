@@ -23,9 +23,9 @@ return new class extends Migration
             $table->string('pdf_name', 100)->nullable();
             $table->unsignedSmallInteger('job_status_id')->default(1);
             $table->boolean('is_mobile')->default(false);
-            $table->unsignedMediumInteger('created_by')->nullable();
-            $table->unsignedMediumInteger('updated_by')->nullable();
-            $table->unsignedMediumInteger('deleted_by')->nullable();
+            $table->unsignedBigInteger('created_by')->nullable();
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

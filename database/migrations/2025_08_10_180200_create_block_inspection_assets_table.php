@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('block_inspection_id');
             $table->unsignedBigInteger('block_building_id');
             $table->unsignedSmallInteger('building_asset_id');
-            $table->unsignedInteger('block_inspection_value_id');
+            $table->unsignedBigInteger('block_inspection_value_id');
             $table->string('comments', 255);
             $table->timestamps();
             $table->softDeletes();

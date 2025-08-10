@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('block_inspection_teams', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('block_inspection_id');
-            $table->unsignedMediumInteger('user_id');
+            $table->unsignedBigInteger('user_id');
             $table->string('role', 50)->default('Inspector');
             $table->boolean('is_lead')->default(false);
             $table->timestamps();
