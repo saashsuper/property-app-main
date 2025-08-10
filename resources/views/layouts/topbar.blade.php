@@ -313,7 +313,7 @@
                         <i class='ph-warning fs-2xl'></i>
                         <span
                             class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-danger">
-                            {{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() + \App\Models\Issue::where('status', 'open')->count() }}
+                            {{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() + \App\Models\Issue::where('status', 1)->count() }}
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-xl dropdown-menu-end p-0"
@@ -323,7 +323,7 @@
                                 <div class="col">
                                     <h6 class="m-0 fs-lg fw-semibold"> Active Issues <span
                                             class="badge bg-danger fs-sm ms-1">
-                                            {{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() + \App\Models\Issue::where('status', 'open')->count() }}
+                                            {{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() + \App\Models\Issue::where('status', 1)->count() }}
                                         </span></h6>
                                 </div>
                                 <div class="col-auto">
@@ -341,7 +341,7 @@
                                         ->get();
                                     
                                     $recentGeneralIssues = \App\Models\Issue::with(['reportedBy'])
-                                        ->where('status', 'open')
+                                        ->where('status', 1)
                                         ->latest()
                                         ->take(3)
                                         ->get();
@@ -446,9 +446,10 @@
                             class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-info">
                             @php
                                 $notificationCount = 0;
-                                $notificationCount += \App\Models\WorkOrder::where('status', 'pending')->count();
+                                $notificationCount += \App\Models\WorkOrder::where('common_status_id', 1)->count();
                                 $notificationCount += \App\Models\BlockVisit::whereNull('end_date_time')->count();
                                 $notificationCount += \App\Models\BlockIssue::where('issue_status_id', 1)->count();
+                                $notificationCount += \App\Models\Issue::where('status', 1)->count();
                             @endphp
                             {{ $notificationCount }}
                         </span>
@@ -483,7 +484,7 @@
                         <div class="py-2 ps-2" id="notificationItemsTabContent">
                             <div data-simplebar style="max-height: 300px;" class="pe-2">
                                 @php
-                                    $pendingWorkOrders = \App\Models\WorkOrder::where('status', 'pending')
+                                    $pendingWorkOrders = \App\Models\WorkOrder::where('common_status_id', 1)
                                         ->latest()
                                         ->take(2)
                                         ->get();
