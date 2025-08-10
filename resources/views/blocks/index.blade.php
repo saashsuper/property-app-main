@@ -151,6 +151,22 @@
                         <h4 class="card-title mb-0">Blocks List</h4>
                     </div>
                     <div class="col-auto">
+                        <!-- Export Buttons -->
+                        <div class="btn-group me-3" role="group">
+                            <a href="{{ route('export.pdf', 'blocks') }}?{{ http_build_query(request()->query()) }}" 
+                               class="btn btn-outline-danger btn-sm" title="Export to PDF">
+                                <i class="ph-file-pdf"></i>
+                            </a>
+                            <a href="{{ route('export.excel', 'blocks') }}?{{ http_build_query(request()->query()) }}" 
+                               class="btn btn-outline-success btn-sm" title="Export to Excel">
+                                <i class="ph-file-xls"></i>
+                            </a>
+                            <a href="{{ route('export.print', 'blocks') }}?{{ http_build_query(request()->query()) }}" 
+                               class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
+                                <i class="ph-printer"></i>
+                            </a>
+                        </div>
+
                         <form action="{{ route('blocks.index') }}" method="GET" class="d-flex me-3">
                             <div class="input-group" style="min-width: 250px;">
                                 <input type="text" class="form-control" name="search" 

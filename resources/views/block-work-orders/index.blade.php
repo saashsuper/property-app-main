@@ -28,13 +28,27 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <h4 class="card-title mb-0">Block Work Orders Management</h4>
-                            </div>
-                            <div class="col-md-6 text-end">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="card-title mb-0">Block Work Orders Management</h4>
+                            <div class="d-flex align-items-center">
+                                <!-- Export Buttons -->
+                                <div class="btn-group me-3" role="group">
+                                    <a href="{{ route('export.pdf', 'block-work-orders') }}?{{ http_build_query(request()->query()) }}" 
+                                       class="btn btn-outline-danger btn-sm" title="Export to PDF">
+                                        <i class="ph-file-pdf"></i>
+                                    </a>
+                                    <a href="{{ route('export.excel', 'block-work-orders') }}?{{ http_build_query(request()->query()) }}" 
+                                       class="btn btn-outline-success btn-sm" title="Export to Excel">
+                                        <i class="ph-file-xls"></i>
+                                    </a>
+                                    <a href="{{ route('export.print', 'block-work-orders') }}?{{ http_build_query(request()->query()) }}" 
+                                       class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
+                                        <i class="ph-printer"></i>
+                                    </a>
+                                </div>
+
                                 <a href="{{ route('block-work-orders.create') }}" class="btn btn-primary">
-                                    <i class="ri-add-line align-middle me-1"></i> Create Block Work Order
+                                    <i class="ph-plus me-2"></i>Add New Block Work Order
                                 </a>
                             </div>
                         </div>

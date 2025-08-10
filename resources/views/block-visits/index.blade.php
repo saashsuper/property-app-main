@@ -6,7 +6,25 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h4 class="mb-0">Site Visits</h4>
-        <a href="{{ route('block-visits.create') }}" class="btn btn-primary"><i class="ph-plus me-1"></i> New Visit</a>
+        <div class="d-flex align-items-center">
+          <!-- Export Buttons -->
+          <div class="btn-group me-3" role="group">
+            <a href="{{ route('export.pdf', 'block-visits') }}?{{ http_build_query(request()->query()) }}" 
+               class="btn btn-outline-danger btn-sm" title="Export to PDF">
+              <i class="ph-file-pdf"></i>
+            </a>
+            <a href="{{ route('export.excel', 'block-visits') }}?{{ http_build_query(request()->query()) }}" 
+               class="btn btn-outline-success btn-sm" title="Export to Excel">
+              <i class="ph-file-xls"></i>
+            </a>
+            <a href="{{ route('export.print', 'block-visits') }}?{{ http_build_query(request()->query()) }}" 
+               class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
+              <i class="ph-printer"></i>
+            </a>
+          </div>
+
+          <a href="{{ route('block-visits.create') }}" class="btn btn-primary"><i class="ph-plus me-1"></i> New Visit</a>
+        </div>
       </div>
       <div class="card-body">
         <div class="table-responsive">

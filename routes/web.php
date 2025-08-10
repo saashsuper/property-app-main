@@ -72,6 +72,13 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('issues', App\Http\Controllers\IssueController::class);
     Route::get('api/issues', [App\Http\Controllers\IssueController::class, 'getIssues'])->name('api.issues');
     Route::get('api/issues/{issue}', [App\Http\Controllers\IssueController::class, 'getIssue'])->name('api.issues.show');
+    
+    // Export Routes
+    Route::prefix('export')->name('export.')->group(function () {
+        Route::get('pdf/{type}', [App\Http\Controllers\ExportController::class, 'exportPdf'])->name('pdf');
+        Route::get('excel/{type}', [App\Http\Controllers\ExportController::class, 'exportExcel'])->name('excel');
+        Route::get('print/{type}', [App\Http\Controllers\ExportController::class, 'exportPrint'])->name('print');
+    });
 });
 
 // Catch-all route for SPA - must be last

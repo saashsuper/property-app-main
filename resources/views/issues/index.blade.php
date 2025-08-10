@@ -29,10 +29,28 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="card-title mb-0">General Issues Management</h4>
-                            <a href="{{ route('issues.create') }}" class="btn btn-primary">
-                                <i class="ri-add-line me-1"></i> Create Issue
-                            </a>
+                            <h4 class="card-title mb-0">Issues Management</h4>
+                            <div class="d-flex align-items-center">
+                                <!-- Export Buttons -->
+                                <div class="btn-group me-3" role="group">
+                                    <a href="{{ route('export.pdf', 'issues') }}?{{ http_build_query(request()->query()) }}" 
+                                       class="btn btn-outline-danger btn-sm" title="Export to PDF">
+                                        <i class="ph-file-pdf"></i>
+                                    </a>
+                                    <a href="{{ route('export.excel', 'issues') }}?{{ http_build_query(request()->query()) }}" 
+                                       class="btn btn-outline-success btn-sm" title="Export to Excel">
+                                        <i class="ph-file-xls"></i>
+                                    </a>
+                                    <a href="{{ route('export.print', 'issues') }}?{{ http_build_query(request()->query()) }}" 
+                                       class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
+                                        <i class="ph-printer"></i>
+                                    </a>
+                                </div>
+
+                                <a href="{{ route('issues.create') }}" class="btn btn-primary">
+                                    <i class="ph-plus me-2"></i>Add New Issue
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="card-body">
