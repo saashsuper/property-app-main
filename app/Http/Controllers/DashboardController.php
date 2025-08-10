@@ -16,7 +16,30 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        return view('dashboard.index');
+        // Get initial dashboard statistics
+        $stats = [
+            'total_blocks' => Block::count(),
+            'total_block_types' => BlockType::count(),
+            'total_units' => BlockUnit::count(),
+            'total_issues' => BlockIssue::count(),
+            'open_issues' => BlockIssue::where('issue_status_id', 1)->count(),
+            'in_progress_issues' => BlockIssue::where('issue_status_id', 2)->count(),
+            'resolved_issues' => BlockIssue::where('issue_status_id', 3)->count(),
+            'high_priority_issues' => BlockIssue::where('priority_id', '>=', 3)->count(),
+        ];
+
+        // Get recent data for widgets
+        $recentBlocks = Block::with('blockType')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $recentIssues = BlockIssue::with('block')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('dashboard.index', compact('stats', 'recentBlocks', 'recentIssues'));
     }
 
     /**

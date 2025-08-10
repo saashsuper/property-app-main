@@ -13,7 +13,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Total Blocks</span>
-                                <h4 class="mb-0">{{ \App\Models\Block::count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['total_blocks'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -32,7 +32,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Block Types</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockType::count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['total_block_types'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -51,7 +51,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Total Units</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockUnit::count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['total_units'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -70,7 +70,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Active Issues</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockIssue::count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['total_issues'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -93,7 +93,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Open Issues</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('issue_status_id', 1)->count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['open_issues'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -112,7 +112,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">In Progress</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('issue_status_id', 2)->count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['in_progress_issues'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -131,7 +131,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Resolved</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('issue_status_id', 3)->count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['resolved_issues'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -150,7 +150,7 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">High Priority</span>
-                                <h4 class="mb-0">{{ \App\Models\BlockIssue::where('priority_id', '>=', 3)->count() }}</h4>
+                                <h4 class="mb-0">{{ $stats['high_priority_issues'] }}</h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <div class="avatar-sm">
@@ -287,10 +287,6 @@
                         <h4 class="card-title">Recent Blocks</h4>
                     </div>
                     <div class="card-body">
-                        @php
-                            $recentBlocks = \App\Models\Block::with('blockType')->latest()->take(5)->get();
-                        @endphp
-                        
                         @if($recentBlocks->count() > 0)
                             <div class="list-group list-group-flush">
                                 @foreach($recentBlocks as $block)
@@ -324,10 +320,6 @@
                         <h4 class="card-title">Recent Issues</h4>
                     </div>
                     <div class="card-body">
-                        @php
-                            $recentIssues = \App\Models\BlockIssue::with('block')->latest()->take(5)->get();
-                        @endphp
-                        
                         @if($recentIssues->count() > 0)
                             <div class="list-group list-group-flush">
                                 @foreach($recentIssues as $issue)

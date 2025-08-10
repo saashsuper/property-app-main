@@ -53,7 +53,9 @@ class HomeController extends Controller
 
     public function root()
     {
-        return view('dashboard.index');
+        // Use DashboardController to get proper statistics
+        $dashboardController = new \App\Http\Controllers\DashboardController();
+        return $dashboardController->index();
     }
 
     /*Language Translation*/
