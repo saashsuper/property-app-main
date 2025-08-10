@@ -221,7 +221,6 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Image</th>
                                 <th>Name</th>
                                 <th>Type</th>
                                 <th>Management Company</th>
@@ -237,15 +236,6 @@
                             @forelse($blocks as $block)
                             <tr>
                                 <td>{{ $block->id }}</td>
-                                <td>
-                                    @if($block->image_url)
-                                        <img src="{{ $block->image_url }}" alt="{{ $block->name }}" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
-                                    @else
-                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                            <i class="fas fa-building text-muted"></i>
-                                        </div>
-                                    @endif
-                                </td>
                                 <td>
                                     <strong>{{ $block->name }}</strong>
                                 </td>
