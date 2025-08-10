@@ -30,9 +30,9 @@
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="card-title mb-0">Work Orders Management</h4>
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center gap-3">
                                 <!-- Export Buttons -->
-                                <div class="btn-group me-3" role="group">
+                                <div class="btn-group" role="group">
                                     <a href="{{ route('export.pdf', 'work-orders') }}?{{ http_build_query(request()->query()) }}" 
                                        class="btn btn-outline-danger btn-sm" title="Export to PDF">
                                         <i class="ph-file-pdf"></i>
@@ -47,6 +47,7 @@
                                     </a>
                                 </div>
 
+                                <!-- Add Button -->
                                 <a href="{{ route('work-orders.create') }}" class="btn btn-primary">
                                     <i class="ph-plus me-2"></i>Add New Work Order
                                 </a>
