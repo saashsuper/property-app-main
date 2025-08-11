@@ -93,7 +93,7 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mb-3">
-                                            <label class="form-label fw-semibold">Inspection Count</label>
+                                            <label class="form-label fw-semibold">No. of Inspections in a Year</label>
                                             <p class="mb-0">{{ $block->inspection_count ?? 0 }}</p>
                                         </div>
                                     </div>

@@ -203,7 +203,7 @@
                                 
                                 <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label for="inspection_count" class="form-label">Inspection Count</label>
+                                        <label for="inspection_count" class="form-label">No. of Inspections in a Year</label>
                                         <input type="number" class="form-control @error('inspection_count') is-invalid @enderror" 
                                                id="inspection_count" name="inspection_count" value="{{ old('inspection_count') }}" min="0">
                                         @error('inspection_count')
