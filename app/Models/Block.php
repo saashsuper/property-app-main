@@ -66,6 +66,22 @@ class Block extends Model
     }
 
     /**
+     * Get the country that owns the block.
+     */
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * Get the state that owns the block.
+     */
+    public function state()
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    /**
      * Get the buildings for the block.
      */
     public function buildings()

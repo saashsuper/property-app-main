@@ -141,9 +141,16 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="country_id" class="form-label">Country ID <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control @error('country_id') is-invalid @enderror" 
-                                               id="country_id" name="country_id" value="{{ old('country_id', 1) }}" required>
+                                        <label for="country_id" class="form-label">Country <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('country_id') is-invalid @enderror" 
+                                                id="country_id" name="country_id" required>
+                                            <option value="">Select Country</option>
+                                            @foreach($countries as $country)
+                                                <option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                                                    {{ $country->country_name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                         @error('country_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -152,9 +159,18 @@
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="state_id" class="form-label">State ID <span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control @error('state_id') is-invalid @enderror" 
-                                               id="state_id" name="state_id" value="{{ old('state_id', 1) }}" required>
+                                        <label for="state_id" class="form-label">State/Province <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('state_id') is-invalid @enderror" 
+                                                id="state_id" name="state_id" required>
+                                            <option value="">Select State/Province</option>
+                                            @foreach($states as $state)
+                                                <option value="{{ $state->id }}" 
+                                                        data-country="{{ $state->country_id }}"
+                                                        {{ old('state_id') == $state->id ? 'selected' : '' }}>
+                                                    {{ $state->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                         @error('state_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -216,4 +232,41 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const countrySelect = document.getElementById('country_id');
+    const stateSelect = document.getElementById('state_id');
+    const stateOptions = stateSelect.querySelectorAll('option[data-country]');
+
+    function updateStates() {
+        const selectedCountryId = countrySelect.value;
+        
+        // Hide all state options
+        stateOptions.forEach(option => {
+            option.style.display = 'none';
+        });
+        
+        // Show only states for selected country
+        if (selectedCountryId) {
+            stateOptions.forEach(option => {
+                if (option.dataset.country === selectedCountryId) {
+                    option.style.display = '';
+                }
+            });
+        }
+        
+        // Reset state selection
+        stateSelect.value = '';
+    }
+
+    // Initial update
+    updateStates();
+
+    // Update states when country changes
+    countrySelect.addEventListener('change', updateStates);
+});
+</script>
+@endpush 

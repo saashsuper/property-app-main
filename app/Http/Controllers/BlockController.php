@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Block;
 use App\Models\BlockType;
+use App\Models\Country;
+use App\Models\State;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -47,7 +49,9 @@ class BlockController extends Controller
     public function create()
     {
         $blockTypes = BlockType::orderBy('name')->get();
-        return view('blocks.create', compact('blockTypes'));
+        $countries = Country::orderBy('country_name')->get();
+        $states = State::orderBy('name')->get();
+        return view('blocks.create', compact('blockTypes', 'countries', 'states'));
     }
 
     /**
@@ -115,7 +119,9 @@ class BlockController extends Controller
     public function edit(Block $block)
     {
         $blockTypes = BlockType::orderBy('name')->get();
-        return view('blocks.edit', compact('block', 'blockTypes'));
+        $countries = Country::orderBy('country_name')->get();
+        $states = State::orderBy('name')->get();
+        return view('blocks.edit', compact('block', 'blockTypes', 'countries', 'states'));
     }
 
     /**
@@ -215,5 +221,14 @@ class BlockController extends Controller
             'success' => true,
             'data' => $block
         ]);
+    }
+
+    /**
+     * Get states by country ID for dynamic dropdown
+     */
+    public function getStatesByCountry($countryId)
+    {
+        $states = State::where('country_id', $countryId)->orderBy('name')->get();
+        return response()->json($states);
     }
 }
