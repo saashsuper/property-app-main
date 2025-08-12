@@ -13,10 +13,18 @@ class RealUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear existing users data (except the default admin user)
-        DB::table('users')->where('id', '>', 1)->delete();
-
+        // Add users using insertOrIgnore to avoid conflicts
         $users = [
+            [
+                'id' => 1,
+                'user_role_id' => 1, // Super Admin
+                'name' => 'Admin User',
+                'email' => 'admin@proman.com',
+                'email_verified_at' => now(),
+                'password' => Hash::make('password'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
             [
                 'id' => 2,
                 'user_role_id' => 2, // Admin
