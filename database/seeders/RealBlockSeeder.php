@@ -271,7 +271,7 @@ class RealBlockSeeder extends Seeder
         ];
 
         foreach ($blocks as $block) {
-            DB::table('blocks')->insert($block);
+            DB::table('blocks')->insertOrIgnore($block);
         }
     }
 }
