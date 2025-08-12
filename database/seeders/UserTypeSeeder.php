@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-class UserRoleSeeder extends Seeder
+class UserTypeSeeder extends Seeder
 {
     public function run(): void
     {
