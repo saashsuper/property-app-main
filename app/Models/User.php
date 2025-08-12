@@ -58,7 +58,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isAdmin()
     {
-        return $this->userType && $this->userType->name === 'Admin';
+        return $this->userType && in_array($this->userType->name, ['Admin', 'Super Admin']);
     }
 
     /**
