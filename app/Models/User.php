@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\UserRole;
+use App\Models\UserType;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -46,11 +46,11 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * Get the user's role
+     * Get the user's type
      */
-    public function userRole()
+    public function userType()
     {
-        return $this->belongsTo('App\Models\UserRole', 'user_role_id');
+        return $this->belongsTo('App\Models\UserType', 'user_role_id');
     }
 
     /**
@@ -58,14 +58,22 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isAdmin()
     {
-        return $this->userRole && $this->userRole->name === 'Admin';
+        return $this->userType && $this->userType->name === 'Admin';
     }
 
     /**
-     * Check if user has a specific role
+     * Check if user has a specific type
      */
-    public function hasRole($roleName)
+    public function hasType($typeName)
     {
-        return $this->userRole && $this->userRole->name === $roleName;
+        return $this->userType && $this->userType->name === $typeName;
+    }
+
+    /**
+     * Scope a query to only include active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
     }
 }

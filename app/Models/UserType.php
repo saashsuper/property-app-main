@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class UserRole extends Model
+class UserType extends Model
 {
     use HasFactory, SoftDeletes;
+
+    protected $table = 'user_types';
 
     protected $fillable = [
         'name',
@@ -16,7 +18,7 @@ class UserRole extends Model
     ];
 
     /**
-     * Get the users that belong to this role
+     * Get the users that belong to this type
      */
     public function users()
     {

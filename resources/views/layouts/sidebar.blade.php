@@ -163,6 +163,31 @@
                         </div>
                     </li>
 
+                    <li class="nav-item">
+                        <a class="{{ getMenuClasses(null, ['users.*', 'user-types.*']) }}" href="#sidebarUsers" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['users.*', 'user-types.*']) ? 'true' : 'false' }}" aria-controls="sidebarUsers">
+                            <i class="ph-users"></i> <span>@lang('translation.users')</span>
+                        </a>
+                        <div class="{{ getDropdownClasses(['users.*', 'user-types.*']) }}" id="sidebarUsers">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="{{ route('users.index') }}" class="{{ getSubmenuClasses('users.index') }}">@lang('translation.list-users')</a>
+                                </li>
+                                @admin
+                                <li class="nav-item">
+                                    <a href="{{ route('users.create') }}" class="{{ getSubmenuClasses('users.create') }}">@lang('translation.create-user')</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('user-types.index') }}" class="{{ getSubmenuClasses('user-types.index') }}">@lang('translation.user-types')</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('user-types.create') }}" class="{{ getSubmenuClasses('user-types.create') }}">@lang('translation.create-user-type')</a>
+                                </li>
+                                @endadmin
+                            </ul>
+                        </div>
+                    </li>
+
 
                     <li class="menu-title"><i class="ri-more-fill"></i> <span
                             data-key="t-pages">@lang('translation.pages')</span></li>

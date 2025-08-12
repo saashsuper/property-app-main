@@ -80,6 +80,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/issues', [App\Http\Controllers\IssueController::class, 'getIssues'])->name('api.issues');
     Route::get('api/issues/{issue}', [App\Http\Controllers\IssueController::class, 'getIssue'])->name('api.issues.show');
     
+    // User Management
+    Route::resource('users', App\Http\Controllers\UserController::class);
+    Route::get('api/users', [App\Http\Controllers\UserController::class, 'getUsers'])->name('api.users');
+    Route::get('api/users/{user}', [App\Http\Controllers\UserController::class, 'getUser'])->name('api.users.show');
+    
+    // User Types
+    Route::resource('user-types', App\Http\Controllers\UserTypeController::class);
+    Route::get('api/user-types', [App\Http\Controllers\UserTypeController::class, 'getUserTypes'])->name('api.user-types');
+    Route::get('api/user-types/{userType}', [App\Http\Controllers\UserTypeController::class, 'getUserType'])->name('api.user-types.show');
+    
     // Export Routes
     Route::prefix('export')->name('export.')->group(function () {
         Route::get('pdf/{type}', [App\Http\Controllers\ExportController::class, 'exportPdf'])->name('pdf');

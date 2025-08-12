@@ -95,8 +95,12 @@ class ExportController extends Controller
                 return $this->getIssuesData($request);
             case 'block-visits':
                 return $this->getBlockVisitsData($request);
-            case 'block-inspections':
-                return $this->getBlockInspectionsData($request);
+                    case 'block-inspections':
+            return $this->getBlockInspectionsData($request);
+        case 'user-types':
+            return $this->getUserTypesData($request);
+        case 'users':
+            return $this->getUsersData($request);
             default:
                 return [];
         }
@@ -132,6 +136,8 @@ class ExportController extends Controller
             'issues' => 'Issues',
             'block-visits' => 'Site Visits',
             'block-inspections' => 'Block Inspections',
+            'user-types' => 'User Types',
+            'users' => 'Users',
         ];
 
         return $titles[$type] ?? ucfirst(str_replace('-', ' ', $type));
@@ -405,6 +411,70 @@ class ExportController extends Controller
                 'Notes' => $inspection->notes ?? 'N/A',
                 'Created By' => $inspection->creator->name ?? 'N/A',
                 'Created Date' => $inspection->created_at->format('M d, Y'),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get user types data for export
+     */
+    private function getUserTypesData(Request $request)
+    {
+        $query = \App\Models\UserType::withCount('users');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $userTypes = $query->orderBy('created_at', 'desc')->get();
+
+        return $userTypes->map(function ($userType) {
+            return [
+                'ID' => $userType->id,
+                'Name' => $userType->name,
+                'Description' => $userType->description ?? 'N/A',
+                'Users Count' => $userType->users_count,
+                'Created Date' => $userType->created_at->format('M d, Y'),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get users data for export
+     */
+    private function getUsersData(Request $request)
+    {
+        $query = \App\Models\User::with(['userType'])->active();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhereHas('userType', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('user_type_id')) {
+            $query->where('user_role_id', $request->user_type_id);
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->get();
+
+        return $users->map(function ($user) {
+            return [
+                'ID' => $user->id,
+                'Name' => $user->name,
+                'Email' => $user->email,
+                'User Type' => $user->userType->name ?? 'N/A',
+                'Email Verified' => $user->email_verified_at ? 'Yes' : 'No',
+                'Created Date' => $user->created_at->format('M d, Y'),
             ];
         })->toArray();
     }
