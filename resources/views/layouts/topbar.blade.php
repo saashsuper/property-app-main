@@ -607,8 +607,8 @@
                             <span class="text-start ms-xl-2">
                                 <span class="d-none d-xl-inline-block ms-1 fw-medium user-name-text">{{ Auth::check() ? Auth::user()->name : 'Guest' }}</span>
                                 <span class="d-none d-xl-block ms-1 fs-sm user-name-sub-text">
-                                    @if(Auth::check() && Auth::user()->userRole)
-                                        {{ Auth::user()->userRole->name }}
+                                    @if(Auth::check() && Auth::user()->userType)
+                                        {{ Auth::user()->userType->name }}
                                     @else
                                         User
                                     @endif
@@ -635,8 +635,8 @@
                         <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-wallet text-muted fs-lg align-middle me-1"></i> <span
                                 class="align-middle">Role : <b>
-                                    @if(Auth::check() && Auth::user()->userRole)
-                                        {{ Auth::user()->userRole->name }}
+                                    @if(Auth::check() && Auth::user()->userType)
+                                        {{ Auth::user()->userType->name }}
                                     @else
                                         User
                                     @endif

@@ -220,7 +220,6 @@
                     <table id="blocks-table" class="table table-bordered table-striped table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
                                 <th>Name</th>
                                 <th>Type</th>
                                 <th>Management Company</th>
@@ -235,7 +234,6 @@
                         <tbody>
                             @forelse($blocks as $block)
                             <tr>
-                                <td>{{ $block->id }}</td>
                                 <td>
                                     <strong>{{ $block->name }}</strong>
                                 </td>
@@ -292,7 +290,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="11" class="text-center py-4">
+                                <td colspan="9" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
                                         <p>No blocks found. 
@@ -344,9 +342,9 @@ $(document).ready(function() {
         responsive: true,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
-        order: [[9, 'desc']], // default sort by Created Date (0-based index)
+        order: [[8, 'desc']], // default sort by Created Date (0-based index)
         columnDefs: [
-            { targets: [1, 10], orderable: false }, // Image, Actions
+            { targets: [8], orderable: false }, // Actions
             { targets: [6, 7], type: 'num' } // Units, Car Spaces
         ],
         pageLength: 10,

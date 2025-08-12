@@ -4,19 +4,61 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class UserTypeSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
-        DB::table('user_types')->insertOrIgnore([
-            ['name' => 'Admin', 'description' => 'Administrator', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Manager', 'description' => 'Project Manager', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'User', 'description' => 'Regular User', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Contract Manager', 'description' => 'Contract Management Specialist', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Contract User', 'description' => 'Contract User with Limited Access', 'created_at' => now(), 'updated_at' => now()],
-        ]);
+        $userTypes = [
+            [
+                'id' => 1,
+                'name' => 'Super Admin',
+                'description' => 'Super Administrator with full system access',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 2,
+                'name' => 'Admin',
+                'description' => 'Administrator with management access',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 3,
+                'name' => 'Financial Admin',
+                'description' => 'Financial Administrator with financial management access',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 4,
+                'name' => 'Property manager',
+                'description' => 'Property Manager with property management access',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 5,
+                'name' => 'Office Administrator',
+                'description' => 'Office Administrator with administrative access',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 6,
+                'name' => 'Assistant Property Manager',
+                'description' => 'Assistant Property Manager with limited management access',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ];
+
+        foreach ($userTypes as $userType) {
+            DB::table('user_types')->insertOrIgnore($userType);
+        }
     }
 }

@@ -34,12 +34,12 @@ class CheckRole
         }
 
         // Check if user has a role
-        if (!$user->userRole) {
+        if (!$user->userType) {
             abort(403, 'Access denied. No role assigned.');
         }
 
         // Check if user's role is in the allowed roles
-        if (in_array($user->userRole->name, $roles)) {
+        if (in_array($user->userType->name, $roles)) {
             return $next($request);
         }
 

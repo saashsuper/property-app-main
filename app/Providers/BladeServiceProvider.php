@@ -23,7 +23,7 @@ class BladeServiceProvider extends ServiceProvider
     {
         // @role directive
         Blade::if('role', function ($role) {
-            return Auth::check() && Auth::user()->hasRole($role);
+            return Auth::check() && Auth::user()->hasType($role);
         });
 
         // @admin directive
@@ -37,7 +37,7 @@ class BladeServiceProvider extends ServiceProvider
                 return false;
             }
             
-            $userRole = Auth::user()->userRole;
+            $userRole = Auth::user()->userType;
             if (!$userRole) {
                 return false;
             }
