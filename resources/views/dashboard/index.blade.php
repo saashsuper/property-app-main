@@ -345,29 +345,7 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">System Status</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Database</span>
-                            <span class="badge bg-success">Connected</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Application</span>
-                            <span class="badge bg-success">Running</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span>Storage</span>
-                            <span class="badge bg-info">Available</span>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span>Last Updated</span>
-                            <small class="text-muted">{{ now()->format('M d, Y H:i') }}</small>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
 @endsection
