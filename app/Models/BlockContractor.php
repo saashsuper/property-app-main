@@ -47,6 +47,8 @@ class BlockContractor extends Model
         return $this->belongsTo(Block::class);
     }
 
+
+
     /**
      * Get the creator of the contractor.
      */

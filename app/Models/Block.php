@@ -20,9 +20,12 @@ class Block extends Model
         'management_company',
         'block_type_id',
         'user_id',
+        'block_manager_id',
         'address1',
         'address2',
         'address3',
+        'block_address',
+        'management_company_address',
         'image_path',
         'image_name',
         'country_id',
@@ -63,6 +66,14 @@ class Block extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the block manager for the block.
+     */
+    public function blockManager()
+    {
+        return $this->belongsTo(User::class, 'block_manager_id');
     }
 
     /**
@@ -181,5 +192,37 @@ class Block extends Model
         }
         
         return null;
+    }
+
+    /**
+     * Get the block address (maps to address1).
+     */
+    public function getBlockAddressAttribute()
+    {
+        return $this->address1;
+    }
+
+    /**
+     * Set the block address (maps to address1).
+     */
+    public function setBlockAddressAttribute($value)
+    {
+        $this->attributes['address1'] = $value;
+    }
+
+    /**
+     * Get the management company address (maps to address2).
+     */
+    public function getManagementCompanyAddressAttribute()
+    {
+        return $this->address2;
+    }
+
+    /**
+     * Set the management company address (maps to address2).
+     */
+    public function setManagementCompanyAddressAttribute($value)
+    {
+        $this->attributes['address2'] = $value;
     }
 }

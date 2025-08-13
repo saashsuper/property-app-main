@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User; // Added this import for the new edit method
 
 class BlockController extends Controller
 {
@@ -51,7 +52,13 @@ class BlockController extends Controller
         $blockTypes = BlockType::orderBy('name')->get();
         $countries = Country::orderBy('country_name')->get();
         $states = State::orderBy('name')->get();
-        return view('blocks.create', compact('blockTypes', 'countries', 'states'));
+        
+        // Get property managers (users with "Property manager" user type)
+        $propertyManagers = User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->orderBy('name')->get();
+        
+        return view('blocks.create', compact('blockTypes', 'countries', 'states', 'propertyManagers'));
     }
 
     /**
@@ -63,9 +70,9 @@ class BlockController extends Controller
             'name' => 'required|string|max:100',
             'management_company' => 'required|string|max:100',
             'block_type_id' => 'required|exists:block_types,id',
-            'address1' => 'required|string|max:100',
-            'address2' => 'nullable|string|max:100',
-            'address3' => 'nullable|string|max:100',
+            'block_manager_id' => 'nullable|exists:users,id',
+            'block_address' => 'required|string|max:500',
+            'management_company_address' => 'nullable|string|max:500',
             'country_id' => 'required|integer',
             'state_id' => 'required|integer',
             'car_spaces' => 'required|integer|min:0',
@@ -84,6 +91,11 @@ class BlockController extends Controller
         $data['user_id'] = Auth::id();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
+        
+        // Map new field names to existing database columns
+        $data['address1'] = $request->block_address;
+        $data['address2'] = $request->management_company_address;
+        $data['address3'] = null; // No longer used
 
         // Handle image upload
         if ($request->hasFile('image')) {
@@ -121,7 +133,41 @@ class BlockController extends Controller
         $blockTypes = BlockType::orderBy('name')->get();
         $countries = Country::orderBy('country_name')->get();
         $states = State::orderBy('name')->get();
-        return view('blocks.edit', compact('block', 'blockTypes', 'countries', 'states'));
+        
+        // Get property managers (users with "Property manager" user type)
+        $propertyManagers = User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->orderBy('name')->get();
+        
+        // Load all related data for tabs
+        $block->load([
+            'blockType', 
+            'user', 
+            'blockManager',
+            'creator', 
+            'updater',
+            'country',
+            'state',
+            'buildings',
+            'units',
+            'contractors',
+            'issues',
+            'blockVisits'
+        ]);
+        
+        // Get related data for other tabs
+        $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
+        $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
+        
+        return view('blocks.edit', compact(
+            'block', 
+            'blockTypes', 
+            'countries', 
+            'states',
+            'propertyManagers',
+            'blockWorkOrders',
+            'blockInspections'
+        ));
     }
 
     /**
@@ -133,9 +179,9 @@ class BlockController extends Controller
             'name' => 'required|string|max:100',
             'management_company' => 'required|string|max:100',
             'block_type_id' => 'required|exists:block_types,id',
-            'address1' => 'required|string|max:100',
-            'address2' => 'nullable|string|max:100',
-            'address3' => 'nullable|string|max:100',
+            'block_manager_id' => 'nullable|exists:users,id',
+            'block_address' => 'required|string|max:500',
+            'management_company_address' => 'nullable|string|max:500',
             'country_id' => 'required|integer',
             'state_id' => 'required|integer',
             'car_spaces' => 'required|integer|min:0',
@@ -152,6 +198,11 @@ class BlockController extends Controller
 
         $data = $request->except('image');
         $data['updated_by'] = Auth::id();
+        
+        // Map new field names to existing database columns
+        $data['address1'] = $request->block_address;
+        $data['address2'] = $request->management_company_address;
+        $data['address3'] = null; // No longer used
 
         // Handle image upload
         if ($request->hasFile('image')) {

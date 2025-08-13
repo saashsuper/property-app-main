@@ -223,6 +223,7 @@
                                 <th>Name</th>
                                 <th>Type</th>
                                 <th>Management Company</th>
+                                <th>Block Manager</th>
                                 <th>Address</th>
                                 <th>Units</th>
                                 <th>Car Spaces</th>
@@ -242,7 +243,12 @@
                                 </td>
                                 <td>{{ $block->management_company }}</td>
                                 <td>
-                                    <small class="text-muted">{{ $block->full_address }}</small>
+                                    <small class="text-muted">
+                                        <strong>Block:</strong> {{ $block->block_address ?? 'N/A' }}<br>
+                                        @if($block->management_company_address)
+                                            <strong>Company:</strong> {{ $block->management_company_address }}
+                                        @endif
+                                    </small>
                                 </td>
                                 <td>
                                     <span class="badge bg-info">{{ $block->no_of_units ?? 0 }}</span>

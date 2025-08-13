@@ -59,12 +59,20 @@
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="management_company" class="form-label">Management Company <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('management_company') is-invalid @enderror" 
-                                               id="management_company" name="management_company" value="{{ old('management_company') }}" required>
-                                        @error('management_company')
+                                        <label for="block_manager_id" class="form-label">Block Manager</label>
+                                        <select class="form-select @error('block_manager_id') is-invalid @enderror" 
+                                                id="block_manager_id" name="block_manager_id">
+                                            <option value="">Select Block Manager</option>
+                                            @foreach($propertyManagers as $propertyManager)
+                                                <option value="{{ $propertyManager->id }}" {{ old('block_manager_id') == $propertyManager->id ? 'selected' : '' }}>
+                                                    {{ $propertyManager->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('block_manager_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                        <div class="form-text">Select a property manager to oversee this block</div>
                                     </div>
                                 </div>
                             </div>
@@ -90,24 +98,10 @@
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="image" class="form-label">Block Image</label>
-                                        <input type="file" class="form-control @error('image') is-invalid @enderror" 
-                                               id="image" name="image" accept="image/*">
-                                        <div class="form-text">Accepted formats: JPEG, PNG, JPG, GIF (Max: 2MB)</div>
-                                        @error('image')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div class="mb-3">
-                                        <label for="address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('address1') is-invalid @enderror" 
-                                               id="address1" name="address1" value="{{ old('address1') }}" required>
-                                        @error('address1')
+                                        <label for="management_company" class="form-label">Management Company <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control @error('management_company') is-invalid @enderror" 
+                                               id="management_company" name="management_company" value="{{ old('management_company') }}" required>
+                                        @error('management_company')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
@@ -117,26 +111,30 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="address2" class="form-label">Address Line 2</label>
-                                        <input type="text" class="form-control @error('address2') is-invalid @enderror" 
-                                               id="address2" name="address2" value="{{ old('address2') }}">
-                                        @error('address2')
+                                        <label for="management_company_address" class="form-label">Management Company Address</label>
+                                        <textarea class="form-control @error('management_company_address') is-invalid @enderror" 
+                                                  id="management_company_address" name="management_company_address" rows="3">{{ old('management_company_address') }}</textarea>
+                                        @error('management_company_address')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                        <div class="form-text">Enter the management company's address</div>
                                     </div>
                                 </div>
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="address3" class="form-label">Address Line 3</label>
-                                        <input type="text" class="form-control @error('address3') is-invalid @enderror" 
-                                               id="address3" name="address3" value="{{ old('address3') }}">
-                                        @error('address3')
+                                        <label for="block_address" class="form-label">Block Address <span class="text-danger">*</span></label>
+                                        <textarea class="form-control @error('block_address') is-invalid @enderror" 
+                                                  id="block_address" name="block_address" rows="3" required>{{ old('block_address') }}</textarea>
+                                        @error('block_address')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                        <div class="form-text">Enter the complete address of the block</div>
                                     </div>
                                 </div>
                             </div>
+
+
 
                             <div class="row">
                                 <div class="col-md-6">
@@ -159,10 +157,10 @@
                                 
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label for="state_id" class="form-label">State/Province <span class="text-danger">*</span></label>
+                                        <label for="state_id" class="form-label">County/State <span class="text-danger">*</span></label>
                                         <select class="form-select @error('state_id') is-invalid @enderror" 
                                                 id="state_id" name="state_id" required>
-                                            <option value="">Select State/Province</option>
+                                            <option value="">Select County/State</option>
                                             @foreach($states as $state)
                                                 <option value="{{ $state->id }}" 
                                                         data-country="{{ $state->country_id }}"
@@ -181,7 +179,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label for="car_spaces" class="form-label">Car Spaces <span class="text-danger">*</span></label>
+                                        <label for="car_spaces" class="form-label">No. of Car Spaces <span class="text-danger">*</span></label>
                                         <input type="number" class="form-control @error('car_spaces') is-invalid @enderror" 
                                                id="car_spaces" name="car_spaces" value="{{ old('car_spaces', 0) }}" min="0" required>
                                         @error('car_spaces')
@@ -192,7 +190,7 @@
                                 
                                 <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label for="no_of_units" class="form-label">Number of Units</label>
+                                        <label for="no_of_units" class="form-label">No. of Units</label>
                                         <input type="number" class="form-control @error('no_of_units') is-invalid @enderror" 
                                                id="no_of_units" name="no_of_units" value="{{ old('no_of_units') }}" min="0">
                                         @error('no_of_units')
@@ -203,13 +201,31 @@
                                 
                                 <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label for="inspection_count" class="form-label">No. of Inspections in a Year</label>
+                                        <label for="inspection_count" class="form-label">Number of Inspections in a Year</label>
                                         <input type="number" class="form-control @error('inspection_count') is-invalid @enderror" 
                                                id="inspection_count" name="inspection_count" value="{{ old('inspection_count') }}" min="0">
                                         @error('inspection_count')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="image" class="form-label">Block Image</label>
+                                        <input type="file" class="form-control @error('image') is-invalid @enderror" 
+                                               id="image" name="image" accept="image/*">
+                                        <div class="form-text">Accepted formats: JPEG, PNG, JPG, GIF (Max: 2MB)</div>
+                                        @error('image')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <!-- Empty column for layout balance -->
                                 </div>
                             </div>
 
