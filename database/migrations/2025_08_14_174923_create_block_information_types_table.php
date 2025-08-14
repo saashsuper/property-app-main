@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('block_information', function (Blueprint $table) {
+        Schema::create('block_information_types', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255)->unique();
             $table->string('description', 500)->nullable();
@@ -45,6 +45,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('block_information');
+        Schema::dropIfExists('block_information_types');
     }
 };

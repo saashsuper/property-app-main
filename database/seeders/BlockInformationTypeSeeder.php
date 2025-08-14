@@ -6,14 +6,14 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class BlockInformationSeeder extends Seeder
+class BlockInformationTypeSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $blockInformation = [
+        $blockInformationTypes = [
             [
                 'name' => 'Building Age',
                 'description' => 'Age of the building in years',
@@ -241,8 +241,8 @@ class BlockInformationSeeder extends Seeder
             ],
         ];
 
-        foreach ($blockInformation as $info) {
-            DB::table('block_information')->insert($info);
+        foreach ($blockInformationTypes as $infoType) {
+            DB::table('block_information_types')->insert($infoType);
         }
     }
 };

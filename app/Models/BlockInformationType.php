@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BlockInformation extends Model
+class BlockInformationType extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $table = 'block_information';
+    protected $table = 'block_information_types';
 
     protected $fillable = [
         'name',
