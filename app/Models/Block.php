@@ -225,4 +225,20 @@ class Block extends Model
     {
         $this->attributes['address2'] = $value;
     }
+
+    /**
+     * Get the block information for this block
+     */
+    public function blockInformation()
+    {
+        return $this->hasMany(BlockInformation::class);
+    }
+
+    /**
+     * Get the block information types available
+     */
+    public function getBlockInformationTypesAttribute()
+    {
+        return \App\Models\BlockInformationType::active()->ordered()->get();
+    }
 }

@@ -98,5 +98,9 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
+// Block Information Routes
+Route::resource('block-information', App\Http\Controllers\BlockInformationController::class);
+Route::get('block-information/block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getBlockInformation'])->name('block-information.by-block');
+
 // Catch-all route for SPA - must be last
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->where('any', '.*')->name('index');

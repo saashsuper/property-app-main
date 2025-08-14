@@ -155,6 +155,10 @@ class BlockController extends Controller
             'blockVisits'
         ]);
         
+        // Load block information
+        $blockInformation = $block->blockInformation()->with('informationType')->get();
+        $blockInformationTypes = \App\Models\BlockInformationType::active()->ordered()->get();
+        
         // Get related data for other tabs
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
@@ -162,11 +166,14 @@ class BlockController extends Controller
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
+            'buildingTypes', 
             'countries', 
-            'states',
+            'states', 
             'propertyManagers',
-            'blockWorkOrders',
-            'blockInspections'
+            'blockInformation',
+            'blockInformationTypes',
+            'blockInspections', 
+            'blockWorkOrders'
         ));
     }
 
