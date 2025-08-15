@@ -9,6 +9,7 @@
     <meta content="PROMAN" name="author" />
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/proman-favicon.svg') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('layouts.head-css')
 </head>
 
@@ -41,6 +42,7 @@
 
     <!-- JAVASCRIPT -->
     @include('layouts.vendor-scripts')
+    @stack('scripts')
 </body>
 
 </html>

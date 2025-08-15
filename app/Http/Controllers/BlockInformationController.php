@@ -28,7 +28,7 @@ class BlockInformationController extends Controller
      */
     public function create()
     {
-        $blockInformationTypes = BlockInformationType::active()->ordered()->get();
+        $blockInformationTypes = BlockInformationType::ordered()->get();
         return view('block-information.create', compact('blockInformationTypes'));
     }
 
@@ -39,7 +39,18 @@ class BlockInformationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
-            'information_type_id' => 'required|exists:block_information_types,id',
+            'information_type_id' => [
+                'required',
+                'exists:block_information_types,id',
+                // Prevent duplicate for the same block
+                function ($attribute, $value, $fail) use ($request) {
+                    if (\App\Models\BlockInformation::where('block_id', $request->block_id)
+                        ->where('information_type_id', $value)
+                        ->exists()) {
+                        $fail('This information type has already been added for this block.');
+                    }
+                }
+            ],
             'description' => 'required|string|max:1000',
         ]);
 

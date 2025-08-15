@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\BlockBuildingController;
 
 
 /*
@@ -102,5 +103,15 @@ Route::middleware(['auth'])->group(function () {
 Route::resource('block-information', App\Http\Controllers\BlockInformationController::class);
 Route::get('block-information/block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getBlockInformation'])->name('block-information.by-block');
 
+// Block Building Management Routes
+Route::middleware(['auth'])->group(function () {
+    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin');
+    Route::post('/block-buildings', [BlockBuildingController::class, 'store'])->name('block-buildings.store');
+    Route::put('/block-buildings/{blockBuilding}', [BlockBuildingController::class, 'update'])->name('block-buildings.update');
+    Route::delete('/block-buildings/{blockBuilding}', [BlockBuildingController::class, 'destroy'])->name('block-buildings.destroy');
+    Route::get('/block-buildings/{blockBuilding}', [BlockBuildingController::class, 'show'])->name('block-buildings.show');
+});
+
 // Catch-all route for SPA - must be last
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->where('any', '.*')->name('index');
+Route::get('/blocks/{block}/information-table', [App\Http\Controllers\BlockController::class, 'blockInformationTable'])->name('blocks.information-table');

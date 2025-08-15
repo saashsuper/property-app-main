@@ -6,16 +6,15 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class BlockUnitTypeSeeder extends Seeder
+class BlockBuildingTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        // Use delete instead of truncate to avoid FK constraint errors
-        \DB::table('block_unit_types')->delete();
-        \DB::table('block_unit_types')->insert([
+        DB::table('block_building_types')->truncate();
+        DB::table('block_building_types')->insert([
             [
                 'id' => 1,
-                'name' => 'Apartment',
+                'name' => 'Multi Level Apartment',
                 'created_at' => Carbon::parse('2022-09-18 08:24:12'),
                 'updated_at' => Carbon::parse('2022-09-18 08:24:12'),
             ],
@@ -27,19 +26,13 @@ class BlockUnitTypeSeeder extends Seeder
             ],
             [
                 'id' => 3,
-                'name' => 'House',
+                'name' => 'Houses',
                 'created_at' => Carbon::parse('2022-09-18 08:24:12'),
                 'updated_at' => Carbon::parse('2022-09-18 08:24:12'),
             ],
             [
                 'id' => 4,
-                'name' => 'Commercial',
-                'created_at' => Carbon::parse('2022-09-18 08:24:12'),
-                'updated_at' => Carbon::parse('2022-09-18 08:24:12'),
-            ],
-            [
-                'id' => 5,
-                'name' => 'Parking Space',
+                'name' => 'Commercial Business Park',
                 'created_at' => Carbon::parse('2022-09-18 08:24:12'),
                 'updated_at' => Carbon::parse('2022-09-18 08:24:12'),
             ],

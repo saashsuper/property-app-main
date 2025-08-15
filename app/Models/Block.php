@@ -239,6 +239,6 @@ class Block extends Model
      */
     public function getBlockInformationTypesAttribute()
     {
-        return \App\Models\BlockInformationType::active()->ordered()->get();
+        return \App\Models\BlockInformationType::ordered()->get();
     }
 }

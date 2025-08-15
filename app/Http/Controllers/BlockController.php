@@ -133,13 +133,9 @@ class BlockController extends Controller
         $blockTypes = BlockType::orderBy('name')->get();
         $countries = Country::orderBy('country_name')->get();
         $states = State::orderBy('name')->get();
-        
-        // Get property managers (users with "Property manager" user type)
         $propertyManagers = User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->orderBy('name')->get();
-        
-        // Load all related data for tabs
         $block->load([
             'blockType', 
             'user', 
@@ -154,26 +150,22 @@ class BlockController extends Controller
             'issues',
             'blockVisits'
         ]);
-        
-        // Load block information
         $blockInformation = $block->blockInformation()->with('informationType')->get();
-        $blockInformationTypes = \App\Models\BlockInformationType::active()->ordered()->get();
-        
-        // Get related data for other tabs
+        $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
-        
+        $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
-            'buildingTypes', 
             'countries', 
             'states', 
             'propertyManagers',
             'blockInformation',
             'blockInformationTypes',
             'blockInspections', 
-            'blockWorkOrders'
+            'blockWorkOrders',
+            'blockBuildingTypes'
         ));
     }
 
@@ -288,5 +280,12 @@ class BlockController extends Controller
     {
         $states = State::where('country_id', $countryId)->orderBy('name')->get();
         return response()->json($states);
+    }
+
+    public function blockInformationTable(Block $block)
+    {
+        $blockInformation = $block->blockInformation()->with('informationType')->get();
+        // Return only the table body partial (no layout, no full view)
+        return response()->view('blocks.tabs.partials.block-info-table', compact('blockInformation'));
     }
 }

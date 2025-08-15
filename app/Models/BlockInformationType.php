@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class BlockInformationType extends Model
 {
@@ -21,5 +22,21 @@ class BlockInformationType extends Model
     public function getDisplayNameAttribute()
     {
         return ucwords(str_replace('_', ' ', $this->name));
+    }
+
+    /**
+     * Scope to get only active information types
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query;
+    }
+
+    /**
+     * Scope to order information types by name
+     */
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('name', 'asc');
     }
 }
