@@ -155,6 +155,7 @@ class BlockController extends Controller
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
+        $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
@@ -165,7 +166,8 @@ class BlockController extends Controller
             'blockInformationTypes',
             'blockInspections', 
             'blockWorkOrders',
-            'blockBuildingTypes'
+            'blockBuildingTypes',
+            'blockUnitTypes'
         ));
     }
 

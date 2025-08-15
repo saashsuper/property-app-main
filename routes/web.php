@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BlockBuildingController;
+use App\Http\Controllers\BlockUnitController;
 
 
 /*
@@ -110,6 +111,15 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/block-buildings/{blockBuilding}', [BlockBuildingController::class, 'update'])->name('block-buildings.update');
     Route::delete('/block-buildings/{blockBuilding}', [BlockBuildingController::class, 'destroy'])->name('block-buildings.destroy');
     Route::get('/block-buildings/{blockBuilding}', [BlockBuildingController::class, 'show'])->name('block-buildings.show');
+});
+
+// Block Unit Management Routes
+Route::middleware(['auth'])->group(function () {
+    Route::resource('block-units', BlockUnitController::class)->middleware('role:Admin');
+    Route::post('/block-units', [BlockUnitController::class, 'store'])->name('block-units.store');
+    Route::put('/block-units/{blockUnit}', [BlockUnitController::class, 'update'])->name('block-units.update');
+    Route::delete('/block-units/{blockUnit}', [BlockUnitController::class, 'destroy'])->name('block-units.destroy');
+    Route::get('/block-units/{blockUnit}', [BlockUnitController::class, 'show'])->name('block-units.show');
 });
 
 // Catch-all route for SPA - must be last
