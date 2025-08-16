@@ -10,7 +10,7 @@ class BlockBuildingTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('block_building_types')->truncate();
+        DB::table('block_building_types')->delete();
         DB::table('block_building_types')->insert([
             [
                 'id' => 1,

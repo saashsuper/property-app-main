@@ -8,13 +8,15 @@
         </div>
         
         @if($block->buildings && $block->buildings->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
+            <div class="table-responsive w-100">
+                <table class="table table-bordered table-hover w-100" id="building-info-table">
                     <thead class="table-light">
                         <tr>
                             <th>Building Name</th>
                             <th>Type</th>
                             <th>Floor</th>
+                            <th>Roof Type</th>
+                            <th>No of Lifts</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -25,6 +27,8 @@
                                 <td>{{ $building->name ?? 'N/A' }}</td>
                                 <td>{{ $building->buildingType->name ?? 'N/A' }}</td>
                                 <td>{{ $building->floor_no ?? 'N/A' }}</td>
+                                <td>{{ $building->roof_type ?? 'N/A' }}</td>
+                                <td>{{ $building->no_lift ?? 'N/A' }}</td>
                                 <td><span class="badge bg-success">Active</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="editBuilding({{ $building->id }})">Edit</button>
@@ -283,3 +287,42 @@ function saveActiveTab() {
     }
 }
 </script>
+@push('scripts')
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#building-info-table').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        language: {
+            search: "Search buildings:",
+            lengthMenu: "Show _MENU_ buildings per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ buildings",
+            infoEmpty: "Showing 0 to 0 of 0 buildings",
+            infoFiltered: "(filtered from _MAX_ total buildings)",
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        }
+    });
+});
+</script>
+@endpush
+
+<style>
+#building-info-table {
+    width: 100% !important;
+}
+</style>

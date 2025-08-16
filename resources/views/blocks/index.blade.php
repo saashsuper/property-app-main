@@ -235,33 +235,15 @@
                         <tbody>
                             @forelse($blocks as $block)
                             <tr>
-                                <td>
-                                    <strong>{{ $block->name }}</strong>
-                                </td>
-                                <td>
-                                    <span class="badge bg-primary">{{ $block->blockType->name ?? 'N/A' }}</span>
-                                </td>
+                                <td><strong>{{ $block->name }}</strong></td>
+                                <td><span class="badge bg-primary">{{ $block->blockType->name ?? 'N/A' }}</span></td>
                                 <td>{{ $block->management_company }}</td>
-                                <td>
-                                    <small class="text-muted">
-                                        <strong>Block:</strong> {{ $block->block_address ?? 'N/A' }}<br>
-                                        @if($block->management_company_address)
-                                            <strong>Company:</strong> {{ $block->management_company_address }}
-                                        @endif
-                                    </small>
-                                </td>
-                                <td>
-                                    <span class="badge bg-info">{{ $block->no_of_units ?? 0 }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary">{{ $block->car_spaces }}</span>
-                                </td>
-                                <td>
-                                    <small>{{ $block->creator->name ?? 'System' }}</small>
-                                </td>
-                                <td data-order="{{ $block->created_at->timestamp }}">
-                                    <small>{{ $block->created_at->format('M d, Y') }}</small>
-                                </td>
+                                <td>{{ $block->block_manager }}</td>
+                                <td>{{ $block->block_address }}</td>
+                                <td><span class="badge bg-info">{{ $block->no_of_units ?? 0 }}</span></td>
+                                <td><span class="badge bg-secondary">{{ $block->car_spaces }}</span></td>
+                                <td><small>{{ $block->creator->name ?? 'System' }}</small></td>
+                                <td data-order="{{ $block->created_at->timestamp }}"><small>{{ $block->created_at->format('M d, Y') }}</small></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -350,7 +332,7 @@ $(document).ready(function() {
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
         order: [[8, 'desc']], // default sort by Created Date (0-based index)
         columnDefs: [
-            { targets: [8], orderable: false }, // Actions
+            { targets: [9], orderable: false }, // Actions (last column)
             { targets: [6, 7], type: 'num' } // Units, Car Spaces
         ],
         pageLength: 10,
