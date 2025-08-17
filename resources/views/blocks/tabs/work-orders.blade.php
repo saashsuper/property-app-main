@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Work Orders</h6>
             <button class="btn btn-sm btn-primary">
-                <i class="ri-add-line align-bottom me-1"></i> Create Work Order
+                <i class="ph-plus align-bottom me-1"></i> Create Work Order
             </button>
         </div>
         
@@ -60,7 +60,7 @@
             </div>
         @else
             <div class="text-center py-4">
-                <i class="ri-file-list-line text-muted" style="font-size: 3rem;"></i>
+                                                    <i class="ph-file-text text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No work orders created for this block.</p>
                 <button class="btn btn-primary">Create First Work Order</button>
             </div>

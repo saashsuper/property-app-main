@@ -84,7 +84,7 @@
                                             </div>
                                             <h3 class="mt-2 fw-semibold">We're Currently Offline</h3>
                                             <p class="text-muted mb-4">We can't show you this images because you aren't connected to the internet. When you’re back online refresh the page or hit the button below</p>
-                                            <button class="btn btn-primary" onClick="window.location.href=window.location.href"><i class="ri-refresh-line align-bottom"></i> Refresh</button>
+                                            <button class="btn btn-primary" onClick="window.location.href=window.location.href"><i class="ph-arrows-clockwise align-bottom"></i> Refresh</button>
                                         </div>
                                     </div><!-- end card body -->
                                 </div><!-- end card -->

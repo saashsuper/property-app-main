@@ -31,10 +31,14 @@ class BlockIssue extends Model
         'block_unit_id',
         'contact_details',
         'issue',
+        'issue_type',
         'issue_details',
         'contact_name',
         'contact_mobile',
         'contact_email',
+        'contact_method_id',
+        'salutation',
+        'phone_number',
         'preferred_start_date_time',
         'preferred_end_date_time',
         'note_for_access',
@@ -117,6 +121,22 @@ class BlockIssue extends Model
     public function assignedTo()
     {
         return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    /**
+     * Get the contact method for the issue
+     */
+    public function contactMethod()
+    {
+        return $this->belongsTo(ContactMethod::class, 'contact_method_id');
+    }
+
+    /**
+     * Get the images for the issue
+     */
+    public function images()
+    {
+        return $this->hasMany(BlockIssueImage::class, 'block_issue_id');
     }
 
     /**

@@ -299,12 +299,12 @@
 
                             <!-- Submit Buttons -->
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('block-work-orders.index') }}" class="btn btn-secondary">
-                                    <i class="ri-arrow-left-line me-1"></i> Cancel
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ri-save-line me-1"></i> Create Block Work Order
-                                </button>
+                                                        <a href="{{ route('block-work-orders.index') }}" class="btn btn-secondary">
+                            <i class="ph-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk me-1"></i> Create Block Work Order
+                        </button>
                             </div>
                         </form>
                     </div>

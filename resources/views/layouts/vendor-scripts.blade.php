@@ -1,6 +1,22 @@
 <!-- JAVASCRIPT -->
 <script src="{{ URL::asset('build/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ URL::asset('build/libs/simplebar/simplebar.min.js') }}"></script>
+
+<!-- Dropzone for file uploads -->
+<script src="{{ URL::asset('build/libs/dropzone/dropzone-min.js') }}"></script>
+
+<!-- Toastify for notifications -->
+<script src="{{ URL::asset('build/libs/toastify-js/toastify.js') }}"></script>
+
+<!-- Flatpickr for date pickers -->
+<script src="{{ URL::asset('build/libs/flatpickr/flatpickr.min.js') }}"></script>
+
+<!-- Choices for select dropdowns -->
+<script src="{{ URL::asset('build/libs/choices.js/choices.min.js') }}"></script>
+
+<!-- AutoComplete for search suggestions -->
+<script src="{{ URL::asset('build/libs/@tarekraafat/autocomplete.js/autoComplete.min.js') }}"></script>
+
 <script src="{{ URL::asset('build/js/plugins.js') }}"></script>
 <script src="{{ URL::asset('build/js/app.js') }}"></script>
 

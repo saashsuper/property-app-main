@@ -66,7 +66,7 @@
             </a>
             <button type="button" class="btn btn-sm p-0 fs-3xl header-item float-end btn-vertical-sm-hover"
                 id="vertical-hover">
-                <i class="ri-record-circle-line"></i>
+                <i class="ph-record"></i>
             </button>
         </div>
         <div id="scrollbar">
@@ -189,7 +189,7 @@
                     </li>
 
 
-                    <li class="menu-title"><i class="ri-more-fill"></i> <span
+                    <li class="menu-title"><i class="ph-dots-three"></i> <span
                             data-key="t-pages">@lang('translation.pages')</span></li>
 
                     <li class="nav-item">
@@ -296,7 +296,7 @@
                     <li class="nav-item">
                         <a class="nav-link menu-link" href="#sidebarMultilevel" data-bs-toggle="collapse"
                             role="button" aria-expanded="false" aria-controls="sidebarMultilevel">
-                            <i class="ri-share-line"></i> <span>@lang('translation.multi-level')</span>
+                            <i class="ph-share"></i> <span>@lang('translation.multi-level')</span>
                         </a>
                         <div class="collapse menu-dropdown" id="sidebarMultilevel">
                             <ul class="nav nav-sm flex-column">
@@ -339,7 +339,7 @@
                 </ul>
 
                 <!-- Layouts Section - Moved to end -->
-                <li class="menu-title"><i class="ri-layout-line"></i> <span>Layouts</span></li>
+                <li class="menu-title"><i class="ph-layout"></i> <span>Layouts</span></li>
                 <li class="nav-item">
                     <a class="nav-link menu-link collapsed" href="#sidebarLayouts" data-bs-toggle="collapse"
                         role="button" aria-expanded="false" aria-controls="sidebarLayouts">

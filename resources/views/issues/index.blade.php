@@ -95,14 +95,14 @@
                                     </div>
                                     <div class="col-md-3">
                                         <button type="submit" class="btn btn-primary w-100">
-                                            <i class="ri-search-line me-1"></i> Search
+                                            <i class="ph-magnifying-glass me-1"></i> Search
                                         </button>
                                     </div>
                                 </form>
                             </div>
                             <div class="col-md-4 text-end">
                                 <a href="{{ route('issues.index') }}" class="btn btn-secondary">
-                                    <i class="ri-refresh-line me-1"></i> Clear Filters
+                                    <i class="ph-arrows-clockwise me-1"></i> Clear Filters
                                 </a>
                             </div>
                         </div>
@@ -134,7 +134,7 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-2">
                                                     <span class="avatar-title bg-soft-primary rounded-3">
-                                                        <i class="ri-error-warning-line font-size-16 text-primary"></i>
+                                                        <i class="ph-warning font-size-16 text-primary"></i>
                                                     </span>
                                                 </div>
                                                 <div>
@@ -157,7 +157,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <span class="avatar-title bg-soft-success rounded-3">
-                                                            <i class="ri-user-line font-size-16 text-success"></i>
+                                                            <i class="ph-user font-size-16 text-success"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -174,7 +174,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <span class="avatar-title bg-soft-warning rounded-3">
-                                                            <i class="ri-user-line font-size-16 text-warning"></i>
+                                                            <i class="ph-user font-size-16 text-warning"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -195,17 +195,17 @@
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                    <i class="ri-settings-3-line"></i>
+                                                    <i class="ph-gear-six"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('issues.show', $issue) }}">
-                                                            <i class="ri-eye-line me-2"></i> View
+                                                            <i class="ph-eye me-2"></i> View
                                                         </a>
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('issues.edit', $issue) }}">
-                                                            <i class="ri-edit-line me-2"></i> Edit
+                                                            <i class="ph-pencil me-2"></i> Edit
                                                         </a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
@@ -215,7 +215,7 @@
                                                             @method('DELETE')
                                                             <button type="submit" class="dropdown-item text-danger" 
                                                                     onclick="return confirm('Are you sure you want to delete this issue?')">
-                                                                <i class="ri-delete-bin-line me-2"></i> Delete
+                                                                <i class="ph-trash me-2"></i> Delete
                                                             </button>
                                                         </form>
                                                     </li>
@@ -227,10 +227,10 @@
                                     <tr>
                                         <td colspan="10" class="text-center py-4">
                                             <div class="text-muted">
-                                                <i class="ri-error-warning-line font-size-24 mb-2"></i>
+                                                <i class="ph-warning font-size-24 mb-2"></i>
                                                 <p>No issues found</p>
                                                 <a href="{{ route('issues.create') }}" class="btn btn-primary btn-sm">
-                                                    <i class="ri-add-line me-1"></i> Create First Issue
+                                                    <i class="ph-plus me-1"></i> Create First Issue
                                                 </a>
                                             </div>
                                         </td>

@@ -614,7 +614,7 @@
                             <input class="form-check-input" type="radio" name="data-sidebar-image" id="sidebarimg-none" value="none">
                             <label class="form-check-label p-0 avatar-sm h-auto" for="sidebarimg-none">
                                 <span class="avatar-md w-auto bg-light d-flex align-items-center justify-content-center">
-                                    <i class="ri-close-fill fs-3xl"></i>
+                                    <i class="ph-x fs-3xl"></i>
                                 </span>
                             </label>
                         </div>

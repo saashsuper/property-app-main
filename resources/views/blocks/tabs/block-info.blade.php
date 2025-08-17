@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Block Information</h6>
             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addBlockInformationModal">
-                <i class="ri-add-line align-bottom me-1"></i> Add Block Information
+                <i class="ph-plus align-bottom me-1"></i> Add Block Information
             </button>
         </div>
     </div>
@@ -30,12 +30,12 @@
                         <td>{{ $info->description ?? 'No description provided' }}</td>
                         <td>{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation({{ $info->id }})">
-                                <i class="ri-edit-line"></i> Edit
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="deleteBlockInformation({{ $info->id }})">
-                                <i class="ri-delete-bin-line"></i> Delete
-                            </button>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation({{ $info->id }})">
+                                        <i class="ph-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBlockInformation({{ $info->id }})">
+                                        <i class="ph-trash"></i> Delete
+                                    </button>
                         </td>
                     </tr>
                 @endforeach
@@ -107,12 +107,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="ri-close-line align-bottom me-1"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ri-save-line align-bottom me-1"></i> Save Information
-                    </button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="ph-x align-bottom me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk align-bottom me-1"></i> Save Information
+                        </button>
                 </div>
             </form>
         </div>
@@ -166,12 +166,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="ri-close-line align-bottom me-1"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ri-save-line align-bottom me-1"></i> Update Information
-                    </button>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="ph-x align-bottom me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk align-bottom me-1"></i> Update Information
+                        </button>
                 </div>
             </form>
         </div>

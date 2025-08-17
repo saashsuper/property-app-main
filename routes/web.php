@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
     Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
     Route::get('api/states/{countryId}', [App\Http\Controllers\BlockController::class, 'getStatesByCountry'])->name('api.states.by-country');
+    Route::get('api/blocks/{block}/units-autocomplete', [App\Http\Controllers\BlockController::class, 'getUnitsAutocomplete'])->name('api.blocks.units-autocomplete');
     
     // Work Orders
     Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class);
@@ -76,6 +77,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);
     Route::get('api/block-issues', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssues'])->name('api.block-issues');
     Route::get('api/block-issues/{blockIssue}', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssue'])->name('api.block-issues.show');
+    Route::get('api/contact-methods-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getContactMethodsAutocomplete'])->name('api.contact-methods-autocomplete');
+    Route::get('api/property-managers-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getPropertyManagersAutocomplete'])->name('api.property-managers-autocomplete');
     
     // General Issues
     Route::resource('issues', App\Http\Controllers\IssueController::class);

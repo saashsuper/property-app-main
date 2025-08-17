@@ -33,10 +33,10 @@
                             <h4 class="card-title mb-0">Block Work Order: {{ $blockWorkOrder->ref_no }}</h4>
                             <div class="d-flex gap-2">
                                 <a href="{{ route('block-work-orders.edit', $blockWorkOrder) }}" class="btn btn-primary btn-sm">
-                                    <i class="ri-edit-line me-1"></i> Edit
+                                    <i class="ph-pencil me-1"></i> Edit
                                 </a>
                                 <a href="{{ route('block-work-orders.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="ri-arrow-left-line me-1"></i> Back
+                                    <i class="ph-arrow-left me-1"></i> Back
                                 </a>
                             </div>
                         </div>
@@ -60,7 +60,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <span class="avatar-title bg-soft-primary rounded-3">
-                                                            <i class="ri-building-line font-size-16 text-primary"></i>
+                                                            <i class="ph-buildings font-size-16 text-primary"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -277,7 +277,7 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="alert alert-info mb-0">
-                                            <i class="ri-file-pdf-line me-2"></i>
+                                                                                            <i class="ph-file-pdf me-2"></i>
                                             <a href="{{ $blockWorkOrder->pdf_url }}" target="_blank" class="alert-link">
                                                 {{ $blockWorkOrder->pdf_name }}
                                             </a>

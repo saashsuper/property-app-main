@@ -19,7 +19,7 @@ class BlockController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Block::with(['blockType', 'user', 'creator'])->active();
+        $query = Block::with(['blockType', 'user', 'creator', 'units'])->active();
 
         // Search functionality
         if ($request->filled('search')) {
@@ -291,5 +291,37 @@ class BlockController extends Controller
         $blockInformation = $block->blockInformation()->with('informationType')->get();
         // Return only the table body partial (no layout, no full view)
         return response()->view('blocks.tabs.partials.block-info-table', compact('blockInformation'));
+    }
+
+    /**
+     * Get units for autocomplete
+     */
+    public function getUnitsAutocomplete(Request $request, Block $block)
+    {
+        $query = $request->get('query', '');
+        $limit = config('autocomplete.default_limit', 10);
+        
+        $units = $block->units()
+            ->where(function($q) use ($query) {
+                $q->where('unit_code', 'like', "%{$query}%")
+                  ->orWhere('unit_name', 'like', "%{$query}%")
+                  ->orWhere('owners_name', 'like', "%{$query}%");
+            })
+            ->limit($limit)
+            ->get(['id', 'unit_code', 'unit_name', 'owners_name', 'email', 'mobile_no', 'phone_number'])
+            ->map(function($unit) {
+                return [
+                    'id' => $unit->id,
+                    'text' => $unit->unit_code . ' - ' . $unit->unit_name,
+                    'contact_details' => $unit->owners_name ? 
+                        'Owner: ' . $unit->owners_name . 
+                        ($unit->email ? '\nEmail: ' . $unit->email : '') . 
+                        ($unit->mobile_no ? '\nMobile: ' . $unit->mobile_no : '') . 
+                        ($unit->phone_number ? '\nPhone: ' . $unit->phone_number : '') : 
+                        'No contact details available'
+                ];
+            });
+
+        return response()->json($units);
     }
 }

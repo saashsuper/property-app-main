@@ -177,12 +177,12 @@
                             <div class="row mt-4">
                                 <div class="col-12">
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('issues.index') }}" class="btn btn-secondary">
-                                            <i class="ri-arrow-left-line me-1"></i> Cancel
-                                        </a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ri-save-line me-1"></i> Update Issue
-                                        </button>
+                                                                <a href="{{ route('issues.index') }}" class="btn btn-secondary">
+                            <i class="ph-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk me-1"></i> Update Issue
+                        </button>
                                     </div>
                                 </div>
                             </div>

@@ -232,12 +232,12 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="{{ route('blocks.index') }}" class="btn btn-secondary">
-                                            <i class="ri-arrow-left-line align-bottom me-1"></i> Cancel
-                                        </a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="ri-save-line align-bottom me-1"></i> Create Block
-                                        </button>
+                                                                <a href="{{ route('blocks.index') }}" class="btn btn-secondary">
+                            <i class="ph-arrow-left align-bottom me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk align-bottom me-1"></i> Create Block
+                        </button>
                                     </div>
                                 </div>
                             </div>

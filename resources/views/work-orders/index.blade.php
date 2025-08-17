@@ -83,14 +83,14 @@
                                     </div>
                                     <div class="col-md-2">
                                         <button type="submit" class="btn btn-primary w-100">
-                                            <i class="ri-search-line"></i>
+                                            <i class="ph-magnifying-glass"></i>
                                         </button>
                                     </div>
                                 </form>
                             </div>
                             <div class="col-md-4 text-end">
                                 <a href="{{ route('work-orders.index') }}" class="btn btn-outline-secondary">
-                                    <i class="ri-refresh-line"></i> Clear Filters
+                                    <i class="ph-arrows-clockwise"></i> Clear Filters
                                 </a>
                             </div>
                         </div>
@@ -156,7 +156,7 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-2">
                                                     <span class="avatar-title bg-soft-primary rounded-3">
-                                                        <i class="ri-user-line font-size-16 text-primary"></i>
+                                                        <i class="ph-user font-size-16 text-primary"></i>
                                                     </span>
                                                 </div>
                                                 <div>
@@ -168,17 +168,17 @@
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                    <i class="ri-more-2-line"></i>
+                                                    <i class="ph-dots-three-vertical"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('work-orders.show', $workOrder) }}">
-                                                            <i class="ri-eye-line me-2"></i> View
+                                                            <i class="ph-eye me-2"></i> View
                                                         </a>
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('work-orders.edit', $workOrder) }}">
-                                                            <i class="ri-edit-line me-2"></i> Edit
+                                                            <i class="ph-pencil me-2"></i> Edit
                                                         </a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
@@ -188,7 +188,7 @@
                                                             @method('DELETE')
                                                             <button type="submit" class="dropdown-item text-danger" 
                                                                     onclick="return confirm('Are you sure you want to delete this work order?')">
-                                                                <i class="ri-delete-bin-line me-2"></i> Delete
+                                                                <i class="ph-trash me-2"></i> Delete
                                                             </button>
                                                         </form>
                                                     </li>
@@ -200,7 +200,7 @@
                                     <tr>
                                         <td colspan="9" class="text-center py-4">
                                             <div class="text-muted">
-                                                <i class="ri-file-list-line fs-2"></i>
+                                                <i class="ph-file-text fs-2"></i>
                                                 <p class="mt-2">No work orders found</p>
                                                 <a href="{{ route('work-orders.create') }}" class="btn btn-primary btn-sm">
                                                     Create Your First Work Order

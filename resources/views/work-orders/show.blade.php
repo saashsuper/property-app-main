@@ -33,10 +33,10 @@
                             <h4 class="card-title mb-0">Work Order: {{ $workOrder->code }}</h4>
                             <div class="d-flex gap-2">
                                 <a href="{{ route('work-orders.edit', $workOrder) }}" class="btn btn-primary btn-sm">
-                                    <i class="ri-edit-line me-1"></i> Edit
+                                    <i class="ph-pencil me-1"></i> Edit
                                 </a>
                                 <a href="{{ route('work-orders.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="ri-arrow-left-line me-1"></i> Back
+                                    <i class="ph-arrow-left me-1"></i> Back
                                 </a>
                             </div>
                         </div>

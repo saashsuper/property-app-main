@@ -11,6 +11,22 @@
 <link rel="stylesheet" href="{{ URL::asset('build/css/icons.min.css') }}" type="text/css" />
 <!-- App Css-->
 <link rel="stylesheet" href="{{ URL::asset('build/css/app.min.css') }}" type="text/css" />
+
+<!-- Dropzone CSS -->
+<link rel="stylesheet" href="{{ URL::asset('build/libs/dropzone/dropzone.css') }}" type="text/css" />
+
+<!-- Toastify CSS -->
+<link rel="stylesheet" href="{{ URL::asset('build/libs/toastify-js/toastify.css') }}" type="text/css" />
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="{{ URL::asset('build/libs/flatpickr/flatpickr.min.css') }}" type="text/css" />
+
+<!-- Choices CSS -->
+<link rel="stylesheet" href="{{ URL::asset('build/libs/choices.js/choices.min.css') }}" type="text/css" />
+
+<!-- AutoComplete CSS -->
+<link rel="stylesheet" href="{{ URL::asset('build/libs/@tarekraafat/autocomplete.js/css/autoComplete.css') }}" type="text/css" />
+
 <!-- custom Css-->
 <link rel="stylesheet" href="{{ URL::asset('build/css/custom.min.css') }}" type="text/css" />
 

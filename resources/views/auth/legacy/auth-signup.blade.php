@@ -106,7 +106,7 @@
                                                     <label class="form-label" for="password-input">Password <span class="text-danger">*</span></label>
                                                     <div class="position-relative auth-pass-inputgroup">
                                                         <input type="password" class="form-control password-input pe-5" onpaste="return false" placeholder="Enter password" id="password-input" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required>
-                                                        <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+                                                        <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ph-eye align-middle"></i></button>
                                                         <div class="invalid-feedback">
                                                             Please enter password
                                                         </div>
@@ -135,10 +135,10 @@
                                                     </div>
 
                                                     <div>
-                                                        <button type="button" class="btn btn-subtle-primary btn-icon "><i class="ri-facebook-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-danger btn-icon "><i class="ri-google-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-dark btn-icon "><i class="ri-github-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-info btn-icon "><i class="ri-twitter-fill fs-lg"></i></button>
+                                                        <button type="button" class="btn btn-subtle-primary btn-icon "><i class="ph-facebook-logo fs-lg"></i></button>
+<button type="button" class="btn btn-subtle-danger btn-icon "><i class="ph-google-logo fs-lg"></i></button>
+<button type="button" class="btn btn-subtle-dark btn-icon "><i class="ph-github-logo fs-lg"></i></button>
+<button type="button" class="btn btn-subtle-info btn-icon "><i class="ph-twitter-logo fs-lg"></i></button>
                                                     </div>
                                                 </div>
                                             </form>

@@ -8,10 +8,10 @@
             <td>{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}</td>
             <td>
                 <button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation({{ $info->id }})">
-                    <i class="ri-edit-line"></i> Edit
+                    <i class="ph-pencil"></i> Edit
                 </button>
                 <button class="btn btn-sm btn-outline-danger" onclick="deleteBlockInformation({{ $info->id }})">
-                    <i class="ri-delete-bin-line"></i> Delete
+                    <i class="ph-trash"></i> Delete
                 </button>
             </td>
         </tr>

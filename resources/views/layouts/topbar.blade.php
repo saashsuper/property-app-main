@@ -61,19 +61,19 @@
 
                             <!-- item-->
                             <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-bubble-chart-line align-middle fs-18 text-muted me-2"></i>
+                                <i class="ph-chart-line align-middle fs-18 text-muted me-2"></i>
                                 <span>Analytics Dashboard</span>
                             </a>
 
                             <!-- item-->
                             <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-lifebuoy-line align-middle fs-18 text-muted me-2"></i>
+                                <i class="ph-lifebuoy align-middle fs-18 text-muted me-2"></i>
                                 <span>Help Center</span>
                             </a>
 
                             <!-- item-->
                             <a href="javascript:void(0);" class="dropdown-item notify-item">
-                                <i class="ri-user-settings-line align-middle fs-18 text-muted me-2"></i>
+                                <i class="ph-user-gear align-middle fs-18 text-muted me-2"></i>
                                 <span>My account settings</span>
                             </a>
 
@@ -121,7 +121,7 @@
 
                         <div class="text-center pt-3 pb-1">
                             <a href="#" class="btn btn-primary btn-sm">View All Results <i
-                                    class="ri-arrow-right-line ms-1"></i></a>
+                                    class="ph-arrow-right ms-1"></i></a>
                         </div>
                     </div>
                 </form>
@@ -142,7 +142,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <a href="#!" class="btn btn-sm btn-subtle-info"> View All Apps
-                                        <i class="ri-arrow-right-s-line align-middle"></i></a>
+                                        <i class="ph-arrow-right align-middle"></i></a>
                                 </div>
                             </div>
                         </div>

@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Inspection History</h6>
             <button class="btn btn-sm btn-primary">
-                <i class="ri-add-line align-bottom me-1"></i> Schedule Inspection
+                <i class="ph-plus align-bottom me-1"></i> Schedule Inspection
             </button>
         </div>
         
@@ -50,7 +50,7 @@
             </div>
         @else
             <div class="text-center py-4">
-                <i class="ri-search-line text-muted" style="font-size: 3rem;"></i>
+                                                    <i class="ph-magnifying-glass text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No inspections scheduled for this block.</p>
                 <button class="btn btn-primary">Schedule First Inspection</button>
             </div>

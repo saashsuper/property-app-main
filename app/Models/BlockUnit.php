@@ -75,4 +75,44 @@ class BlockUnit extends Model
     {
         return $this->belongsTo(BlockUnitType::class, 'block_unit_type_id');
     }
+
+    /**
+     * Boot the model and register model events.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Update block unit count when unit is created
+        static::created(function ($unit) {
+            $unit->updateBlockUnitCount();
+        });
+
+        // Update block unit count when unit is updated
+        static::updated(function ($unit) {
+            $unit->updateBlockUnitCount();
+        });
+
+        // Update block unit count when unit is deleted
+        static::deleted(function ($unit) {
+            $unit->updateBlockUnitCount();
+        });
+
+        // Update block unit count when unit is restored
+        static::restored(function ($unit) {
+            $unit->updateBlockUnitCount();
+        });
+    }
+
+    /**
+     * Update the block's unit count.
+     */
+    protected function updateBlockUnitCount()
+    {
+        if ($this->block) {
+            $this->block->update([
+                'no_of_units' => $this->block->units()->count()
+            ]);
+        }
+    }
 }

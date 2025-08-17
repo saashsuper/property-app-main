@@ -99,7 +99,7 @@
                                             <form action="#!">
                                                 <div class="countdown-input-subscribe mx-auto my-4">
                                                     <input type="email" class="form-control" placeholder="Enter your email address" required />
-                                                    <button class="btn btn-primary" type="submit" id="button-email">Send<i class="ri-send-plane-2-fill align-bottom ms-2"></i></button>
+                                                    <button class="btn btn-primary" type="submit" id="button-email">Send<i class="ph-paper-plane-right align-bottom ms-2"></i></button>
                                                 </div>
                                             </form>
                                         </div>

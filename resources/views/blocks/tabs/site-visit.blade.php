@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Site Visit History</h6>
             <button class="btn btn-sm btn-primary">
-                <i class="ri-add-line align-bottom me-1"></i> Schedule Visit
+                <i class="ph-plus align-bottom me-1"></i> Schedule Visit
             </button>
         </div>
         
@@ -44,7 +44,7 @@
             </div>
         @else
             <div class="text-center py-4">
-                <i class="ri-calendar-check-line text-muted" style="font-size: 3rem;"></i>
+                                                    <i class="ph-calendar-check text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No site visits scheduled for this block.</p>
                 <button class="btn btn-primary">Schedule First Visit</button>
             </div>

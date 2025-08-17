@@ -3,7 +3,7 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Contractor Information</h6>
             <button class="btn btn-sm btn-primary">
-                <i class="ri-add-line align-bottom me-1"></i> Add Contractor
+                <i class="ph-plus align-bottom me-1"></i> Add Contractor
             </button>
         </div>
         
@@ -40,7 +40,7 @@
             </div>
         @else
             <div class="text-center py-4">
-                <i class="ri-user-settings-line text-muted" style="font-size: 3rem;"></i>
+                                                    <i class="ph-user-gear text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No contractors assigned to this block.</p>
                 <button class="btn btn-primary">Assign Contractor</button>
             </div>

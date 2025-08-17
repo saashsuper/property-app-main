@@ -95,14 +95,14 @@
                                     </div>
                                     <div class="col-md-2">
                                          <button type="submit" class="btn btn-primary w-100">
-                                             <i class="ri-search-line me-1"></i> @lang('translation.search')
+                                             <i class="ph-magnifying-glass me-1"></i> @lang('translation.search')
                                         </button>
                                     </div>
                                 </form>
                             </div>
                             <div class="col-md-4 text-end">
                                  <a href="{{ route('block-issues.index') }}" class="btn btn-secondary">
-                                     <i class="ri-refresh-line me-1"></i> @lang('translation.clear-filters')
+                                     <i class="ph-arrows-clockwise me-1"></i> @lang('translation.clear-filters')
                                 </a>
                             </div>
                         </div>
@@ -133,7 +133,7 @@
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar-sm me-2">
                                                     <span class="avatar-title bg-soft-primary rounded-3">
-                                                        <i class="ri-error-warning-line font-size-16 text-primary"></i>
+                                                        <i class="ph-warning font-size-16 text-primary"></i>
                                                     </span>
                                                 </div>
                                                 <div>
@@ -147,7 +147,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <span class="avatar-title bg-soft-info rounded-3">
-                                                            <i class="ri-building-line font-size-16 text-info"></i>
+                                                            <i class="ph-buildings font-size-16 text-info"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -170,7 +170,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <span class="avatar-title bg-soft-success rounded-3">
-                                                            <i class="ri-user-line font-size-16 text-success"></i>
+                                                            <i class="ph-user font-size-16 text-success"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -187,7 +187,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-2">
                                                         <span class="avatar-title bg-soft-warning rounded-3">
-                                                            <i class="ri-user-line font-size-16 text-warning"></i>
+                                                            <i class="ph-user font-size-16 text-warning"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -205,17 +205,17 @@
                                         <td>
                                             <div class="dropdown">
                                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                    <i class="ri-settings-3-line"></i>
+                                                    <i class="ph-gear-six"></i>
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('block-issues.show', $issue) }}">
-                                                             <i class="ri-eye-line me-2"></i> @lang('translation.view')
+                                                             <i class="ph-eye me-2"></i> @lang('translation.view')
                                                         </a>
                                                     </li>
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('block-issues.edit', $issue) }}">
-                                                             <i class="ri-edit-line me-2"></i> @lang('translation.edit')
+                                                             <i class="ph-pencil me-2"></i> @lang('translation.edit')
                                                         </a>
                                                     </li>
                                                     <li><hr class="dropdown-divider"></li>
@@ -225,7 +225,7 @@
                                                                 data-bs-target="#confirmDeleteModal"
                                                                 data-action="{{ route('block-issues.destroy', $issue) }}"
                                                                 data-ref="{{ $issue->ref_no }}">
-                                                            <i class="ri-delete-bin-line me-2"></i> @lang('translation.delete')
+                                                            <i class="ph-trash me-2"></i> @lang('translation.delete')
                                                         </button>
                                                     </li>
                                                 </ul>
@@ -236,10 +236,10 @@
                                     <tr>
                                         <td colspan="9" class="text-center py-4">
                                             <div class="text-muted">
-                                                <i class="ri-error-warning-line font-size-24 mb-2"></i>
+                                                <i class="ph-warning font-size-24 mb-2"></i>
                                                  <p>@lang('translation.no-block-issues-found')</p>
                                                 <a href="{{ route('block-issues.create') }}" class="btn btn-primary btn-sm">
-                                                     <i class="ri-add-line me-1"></i> @lang('translation.create-first-issue')
+                                                     <i class="ph-plus me-1"></i> @lang('translation.create-first-issue')
                                                 </a>
                                             </div>
                                         </td>

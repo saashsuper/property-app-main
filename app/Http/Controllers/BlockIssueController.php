@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlockIssue;
+use App\Models\BlockIssueImage;
 use App\Models\Block;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -78,48 +79,95 @@ class BlockIssueController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
-            'ref_no' => 'required|string|max:100|unique:block_issues',
+            'assigned_to' => 'required|exists:users,id',
             'issue' => 'required|string|max:255',
-            'issue_details' => 'required|string',
+            'issue_type' => 'required|string|max:100',
             'priority_id' => 'required|integer|min:1|max:5',
             'issue_status_id' => 'required|integer|min:1|max:5',
-            'assigned_to' => 'nullable|exists:users,id',
-            'reported_by' => 'nullable|exists:users,id',
+            'contact_name' => 'required|string|max:255',
+            'contact_email' => 'required|email|max:255',
+            'contact_method_id' => 'required|exists:contact_methods,id',
+            'fault_details' => 'nullable|string',
+            'default_contact_details' => 'nullable|string',
+            'block_unit_id' => 'required|exists:block_units,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        $data = $request->except('images');
-        $data['reported_by'] = $data['reported_by'] ?? Auth::id();
-        $data['created_by'] = Auth::id();
-        $data['updated_by'] = Auth::id();
+        try {
+            $data = [
+                'block_id' => $request->block_id,
+                'assigned_to' => $request->assigned_to_hidden ?: $request->assigned_to,
+                'issue' => $request->issue,
+                'issue_type' => $request->issue_type,
+                'priority_id' => $request->priority_id,
+                'issue_status_id' => $request->issue_status_id,
+                'contact_name' => $request->contact_name,
+                'contact_email' => $request->contact_email,
+                'contact_method_id' => $request->contact_method_id_hidden ?: $request->contact_method_id,
+                'fault_details' => $request->fault_details,
+                'default_contact_details' => $request->default_contact_details,
+                'block_unit_id' => $request->block_unit_id_hidden ?: $request->block_unit_id,
+                'reported_by' => Auth::id(),
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ];
 
-        $blockIssue = BlockIssue::create($data);
+            $blockIssue = BlockIssue::create($data);
 
-        // Handle image uploads
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $image) {
-                $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
-                $imagePath = 'block-issues/images';
-                
-                $image->storeAs('public/' . $imagePath, $imageName);
-                
-                // You can create a BlockIssueImage model if needed
-                // BlockIssueImage::create([
-                //     'block_issue_id' => $blockIssue->id,
-                //     'image_name' => $imageName,
-                //     'image_path' => $imagePath,
-                // ]);
+            // Handle image uploads
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                    $imagePath = 'block-issues/images';
+                    
+                    $image->storeAs('public/' . $imagePath, $imageName);
+                    
+                    BlockIssueImage::create([
+                        'block_issue_id' => $blockIssue->id,
+                        'image_path' => $imagePath,
+                        'image_name' => $imageName,
+                        's3_status' => false,
+                    ]);
+                }
             }
-        }
 
-        return redirect()->route('block-issues.index')
-            ->with('success', 'Block issue created successfully!');
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Issue created successfully!',
+                    'data' => $blockIssue
+                ]);
+            }
+
+            return redirect()->route('block-issues.index')
+                ->with('success', 'Block issue created successfully!');
+
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create issue: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to create issue: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -233,5 +281,54 @@ class BlockIssueController extends Controller
             'success' => true,
             'data' => $blockIssue
         ]);
+    }
+
+    /**
+     * Get contact methods for autocomplete
+     */
+    public function getContactMethodsAutocomplete(Request $request)
+    {
+        $query = $request->get('query', '');
+        $limit = config('autocomplete.default_limit', 10);
+        
+        $contactMethods = \App\Models\ContactMethod::where('name', 'like', "%{$query}%")
+            ->limit($limit)
+            ->get(['id', 'name'])
+            ->map(function($method) {
+                return [
+                    'id' => $method->id,
+                    'text' => $method->name
+                ];
+            });
+
+        return response()->json($contactMethods);
+    }
+
+    /**
+     * Get property managers for autocomplete
+     */
+    public function getPropertyManagersAutocomplete(Request $request)
+    {
+        $query = $request->get('query', '');
+        $limit = config('autocomplete.default_limit', 10);
+        
+        $propertyManagers = \App\Models\User::with('userType')
+            ->whereHas('userType', function($q) {
+                $q->where('name', 'Property Manager');
+            })
+            ->where(function($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('email', 'like', "%{$query}%");
+            })
+            ->limit($limit)
+            ->get(['id', 'name', 'email'])
+            ->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'text' => $user->name . ' (' . $user->email . ')'
+                ];
+            });
+
+        return response()->json($propertyManagers);
     }
 }

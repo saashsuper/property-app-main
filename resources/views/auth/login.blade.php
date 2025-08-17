@@ -139,7 +139,7 @@
                                                         <button
                                                             class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
                                                             type="button" id="password-addon"><i
-                                                                class="ri-eye-fill align-middle"></i></button>
+                                                                class="ph-eye align-middle"></i></button>
                                                         @error('password')
                                                             <span class="invalid-feedback" role="alert">
                                                                 <strong>{{ $message }}</strong>
@@ -165,13 +165,13 @@
                                                     </div>
                                                     <div class="pt-2 hstack gap-2 justify-content-center">
                                                         <button type="button" class="btn btn-subtle-primary btn-icon"><i
-                                                                class="ri-facebook-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-danger btn-icon"><i
-                                                                class="ri-google-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-dark btn-icon"><i
-                                                                class="ri-github-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-info btn-icon"><i
-                                                                class="ri-twitter-fill fs-lg"></i></button>
+                                                                                                class="ph-facebook-logo fs-lg"></i></button>
+                            <button type="button" class="btn btn-subtle-danger btn-icon"><i
+                                class="ph-google-logo fs-lg"></i></button>
+                            <button type="button" class="btn btn-subtle-dark btn-icon"><i
+                                class="ph-github-logo fs-lg"></i></button>
+                            <button type="button" class="btn btn-subtle-info btn-icon"><i
+                                class="ph-twitter-logo fs-lg"></i></button>
                                                     </div>
                                                 </div>
                                             </form>

@@ -33,10 +33,10 @@
                             <h4 class="card-title mb-0">Issue: {{ $issue->ref_no }}</h4>
                             <div class="d-flex gap-2">
                                 <a href="{{ route('issues.edit', $issue) }}" class="btn btn-primary btn-sm">
-                                    <i class="ri-edit-line me-1"></i> Edit
+                                    <i class="ph-pencil me-1"></i> Edit
                                 </a>
                                 <a href="{{ route('issues.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="ri-arrow-left-line me-1"></i> Back
+                                    <i class="ph-arrow-left me-1"></i> Back
                                 </a>
                             </div>
                         </div>
@@ -97,7 +97,7 @@
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
                                                                 <span class="avatar-title bg-soft-success rounded-3">
-                                                                    <i class="ri-user-line font-size-16 text-success"></i>
+                                                                    <i class="ph-user font-size-16 text-success"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -117,7 +117,7 @@
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
                                                                 <span class="avatar-title bg-soft-warning rounded-3">
-                                                                    <i class="ri-user-line font-size-16 text-warning"></i>
+                                                                    <i class="ph-user font-size-16 text-warning"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -137,7 +137,7 @@
                                                         <div class="d-flex align-items-center">
                                                             <div class="avatar-sm me-2">
                                                                 <span class="avatar-title bg-soft-info rounded-3">
-                                                                    <i class="ri-user-line font-size-16 text-info"></i>
+                                                                    <i class="ph-user font-size-16 text-info"></i>
                                                                 </span>
                                                             </div>
                                                             <div>
@@ -174,7 +174,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
                                                         <span class="avatar-title bg-soft-primary rounded-3">
-                                                            <i class="ri-error-warning-line font-size-16 text-primary"></i>
+                                                            <i class="ph-warning font-size-16 text-primary"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -192,7 +192,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
                                                         <span class="avatar-title bg-soft-{{ $issue->priority_color }} rounded-3">
-                                                            <i class="ri-flag-line font-size-16 text-{{ $issue->priority_color }}"></i>
+                                                            <i class="ph-flag font-size-16 text-{{ $issue->priority_color }}"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -210,7 +210,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
                                                         <span class="avatar-title bg-soft-{{ $issue->status_color }} rounded-3">
-                                                            <i class="ri-checkbox-circle-line font-size-16 text-{{ $issue->status_color }}"></i>
+                                                            <i class="ph-check-circle font-size-16 text-{{ $issue->status_color }}"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -228,7 +228,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <div class="avatar-sm me-3">
                                                         <span class="avatar-title bg-soft-info rounded-3">
-                                                            <i class="ri-map-pin-line font-size-16 text-info"></i>
+                                                            <i class="ph-map-pin font-size-16 text-info"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -253,7 +253,7 @@
                                                 <div class="d-flex align-items-center mb-3">
                                                     <div class="avatar-sm me-3">
                                                         <span class="avatar-title bg-soft-success rounded-3">
-                                                            <i class="ri-calendar-line font-size-16 text-success"></i>
+                                                            <i class="ph-calendar font-size-16 text-success"></i>
                                                         </span>
                                                     </div>
                                                     <div>
@@ -266,7 +266,7 @@
                                                 <div class="d-flex align-items-center mb-3">
                                                     <div class="avatar-sm me-3">
                                                         <span class="avatar-title bg-soft-info rounded-3">
-                                                            <i class="ri-time-line font-size-16 text-info"></i>
+                                                            <i class="ph-clock font-size-16 text-info"></i>
                                                         </span>
                                                     </div>
                                                     <div>

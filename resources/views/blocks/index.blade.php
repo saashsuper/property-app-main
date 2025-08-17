@@ -226,9 +226,6 @@
                                 <th>Block Manager</th>
                                 <th>Address</th>
                                 <th>Units</th>
-                                <th>Car Spaces</th>
-                                <th>Created By</th>
-                                <th>Created Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -240,10 +237,7 @@
                                 <td>{{ $block->management_company }}</td>
                                 <td>{{ $block->block_manager }}</td>
                                 <td>{{ $block->block_address }}</td>
-                                <td><span class="badge bg-info">{{ $block->no_of_units ?? 0 }}</span></td>
-                                <td><span class="badge bg-secondary">{{ $block->car_spaces }}</span></td>
-                                <td><small>{{ $block->creator->name ?? 'System' }}</small></td>
-                                <td data-order="{{ $block->created_at->timestamp }}"><small>{{ $block->created_at->format('M d, Y') }}</small></td>
+                                <td><span class="badge bg-info">{{ $block->units->count() }}</span></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -278,7 +272,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4">
+                                <td colspan="6" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
                                         <p>No blocks found. 
@@ -330,10 +324,10 @@ $(document).ready(function() {
         responsive: true,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
-        order: [[8, 'desc']], // default sort by Created Date (0-based index)
+        order: [[0, 'asc']], // default sort by Name (0-based index)
         columnDefs: [
-            { targets: [9], orderable: false }, // Actions (last column)
-            { targets: [6, 7], type: 'num' } // Units, Car Spaces
+            { targets: [6], orderable: false }, // Actions (last column)
+            { targets: [5], type: 'num' } // Units
         ],
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],

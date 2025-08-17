@@ -32,10 +32,10 @@
                             <h4 class="card-title mb-0">{{ $block->name }}</h4>
                             <div>
                                 <a href="{{ route('blocks.edit', $block) }}" class="btn btn-primary btn-sm">
-                                    <i class="ri-edit-line align-bottom me-1"></i> Edit
+                                    <i class="ph-pencil align-bottom me-1"></i> Edit
                                 </a>
                                 <a href="{{ route('blocks.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="ri-arrow-left-line align-bottom me-1"></i> Back
+                                    <i class="ph-arrow-left align-bottom me-1"></i> Back
                                 </a>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                                 @else
                                     <div class="bg-light rounded d-flex align-items-center justify-content-center mb-3" 
                                          style="height: 200px;">
-                                        <i class="ri-building-line text-muted" style="font-size: 3rem;"></i>
+                                        <i class="ph-buildings text-muted" style="font-size: 3rem;"></i>
                                     </div>
                                 @endif
                             </div>

@@ -181,13 +181,13 @@
 
                                                     <div>
                                                         <button type="button" class="btn btn-subtle-primary btn-icon "><i
-                                                                class="ri-facebook-fill fs-lg"></i></button>
+                                                                class="ph-facebook-logo fs-lg"></i></button>
                                                         <button type="button" class="btn btn-subtle-danger btn-icon "><i
-                                                                class="ri-google-fill fs-lg"></i></button>
+                                                                class="ph-google-logo fs-lg"></i></button>
                                                         <button type="button" class="btn btn-subtle-dark btn-icon "><i
-                                                                class="ri-github-fill fs-lg"></i></button>
+                                                                class="ph-github-logo fs-lg"></i></button>
                                                         <button type="button" class="btn btn-subtle-info btn-icon "><i
-                                                                class="ri-twitter-fill fs-lg"></i></button>
+                                                                class="ph-twitter-logo fs-lg"></i></button>
                                                     </div>
                                                 </div>
                                             </form>

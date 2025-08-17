@@ -131,7 +131,7 @@
                                                         <button
                                                             class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
                                                             type="button" id="password-addon"><i
-                                                                class="ri-eye-fill align-middle"></i></button>
+                                                                class="ph-eye align-middle"></i></button>
                                                         @error('password')
                                                             <span class="invalid-feedback" role="alert">
                                                                 <strong>{{ $message }}</strong>
@@ -152,7 +152,7 @@
                                                             name="password_confirmation" required>
                                                         <button
                                                             class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
-                                                            type="button"><i class="ri-eye-fill align-middle"></i></button>
+                                                            type="button"><i class="ph-eye align-middle"></i></button>
                                                     </div>
                                                 </div>
 

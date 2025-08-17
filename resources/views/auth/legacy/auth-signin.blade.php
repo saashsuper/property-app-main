@@ -102,7 +102,7 @@
                                                 <label class="form-label" for="password-input">Password <span class="text-danger">*</span></label>
                                                 <div class="position-relative auth-pass-inputgroup mb-3">
                                                     <input type="password" class="form-control pe-5 password-input " placeholder="Enter password" id="password-input">
-                                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
+                                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" type="button" id="password-addon"><i class="ph-eye align-middle"></i></button>
                                                 </div>
                                             </div>
 
@@ -120,10 +120,10 @@
                                                     <h5 class="fs-sm mb-4 title">Sign In with</h5>
                                                 </div>
                                                 <div class="pt-2 hstack gap-2 justify-content-center">
-                                                    <button type="button" class="btn btn-subtle-primary btn-icon"><i class="ri-facebook-fill fs-lg"></i></button>
-                                                    <button type="button" class="btn btn-subtle-danger btn-icon"><i class="ri-google-fill fs-lg"></i></button>
-                                                    <button type="button" class="btn btn-subtle-dark btn-icon"><i class="ri-github-fill fs-lg"></i></button>
-                                                    <button type="button" class="btn btn-subtle-info btn-icon"><i class="ri-twitter-fill fs-lg"></i></button>
+                                                    <button type="button" class="btn btn-subtle-primary btn-icon"><i class="ph-facebook-logo fs-lg"></i></button>
+<button type="button" class="btn btn-subtle-danger btn-icon"><i class="ph-google-logo fs-lg"></i></button>
+<button type="button" class="btn btn-subtle-dark btn-icon"><i class="ph-github-logo fs-lg"></i></button>
+<button type="button" class="btn btn-subtle-info btn-icon"><i class="ph-twitter-logo fs-lg"></i></button>
                                                 </div>
                                             </div>
                                         </form>

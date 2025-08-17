@@ -278,7 +278,7 @@
                             <div class="mb-3">
                                 <h5 class="mb-3">Current PDF</h5>
                                 <div class="alert alert-info">
-                                    <i class="ri-file-pdf-line me-2"></i>
+                                                                                    <i class="ph-file-pdf me-2"></i>
                                     <a href="{{ $blockWorkOrder->pdf_url }}" target="_blank">{{ $blockWorkOrder->pdf_name }}</a>
                                 </div>
                             </div>
@@ -333,12 +333,12 @@
 
                             <!-- Submit Buttons -->
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('block-work-orders.index') }}" class="btn btn-secondary">
-                                    <i class="ri-arrow-left-line me-1"></i> Cancel
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="ri-save-line me-1"></i> Update Block Work Order
-                                </button>
+                                                        <a href="{{ route('block-work-orders.index') }}" class="btn btn-secondary">
+                            <i class="ph-arrow-left me-1"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk me-1"></i> Update Block Work Order
+                        </button>
                             </div>
                         </form>
                     </div>
