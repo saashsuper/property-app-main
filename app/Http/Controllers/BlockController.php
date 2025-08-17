@@ -157,6 +157,7 @@ class BlockController extends Controller
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+        $users = \App\Models\User::orderBy('name')->get();
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
@@ -169,7 +170,8 @@ class BlockController extends Controller
             'blockWorkOrders',
             'blockBuildingTypes',
             'buildingTypes',
-            'blockUnitTypes'
+            'blockUnitTypes',
+            'users'
         ));
     }
 

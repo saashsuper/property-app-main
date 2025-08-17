@@ -72,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('block-inspections', App\Http\Controllers\BlockInspectionController::class);
     Route::post('block-inspections/{blockInspection}/start', [App\Http\Controllers\BlockInspectionController::class, 'start'])->name('block-inspections.start');
     Route::post('block-inspections/{blockInspection}/complete', [App\Http\Controllers\BlockInspectionController::class, 'complete'])->name('block-inspections.complete');
+    Route::post('block-inspections/store-from-modal', [App\Http\Controllers\BlockInspectionController::class, 'storeFromModal'])->name('block-inspections.store-from-modal');
 
     // Block Issues
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);

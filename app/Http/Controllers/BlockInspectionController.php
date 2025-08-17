@@ -199,4 +199,46 @@ class BlockInspectionController extends Controller
         return redirect()->route('block-inspections.show', $blockInspection)
             ->with('success', 'Inspection completed successfully.');
     }
+
+    /**
+     * Store inspection from modal form.
+     */
+    public function storeFromModal(Request $request)
+    {
+        $request->validate([
+            'block_id' => 'required|exists:blocks,id',
+            'user_id' => 'required|exists:users,id',
+            'scheduled_date_time' => 'required|date|after:now',
+            'notes' => 'required|string|max:500',
+        ]);
+
+        try {
+            $inspection = BlockInspection::create([
+                'block_id' => $request->block_id,
+                'ref_no' => BlockInspection::generateRefNo(),
+                'scheduled_date_time' => $request->scheduled_date_time,
+                'notes' => $request->notes,
+                'job_status_id' => 1, // Scheduled
+                'created_by' => Auth::id(),
+            ]);
+
+            // Create team member (single user for modal)
+            $inspection->inspectionTeams()->create([
+                'user_id' => $request->user_id,
+                'role' => 'Inspector',
+                'is_lead' => true,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inspection scheduled successfully!',
+                'inspection' => $inspection
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to schedule inspection: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

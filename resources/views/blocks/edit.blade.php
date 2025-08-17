@@ -43,7 +43,7 @@
                         @endif
 
                         <!-- Animation Nav Tabs -->
-                        <ul class="nav nav-tabs nav-tabs-custom" id="blockEditTabs" role="tablist">
+                        <ul class="nav nav-tabs nav-tabs-custom arrow-navtabs" id="blockEditTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link active" id="basic-details-tab" data-bs-toggle="tab" href="#basic-details" role="tab" aria-controls="basic-details" aria-selected="true">
                                     <span>Basic Details</span>
@@ -145,6 +145,80 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+/* Enhanced arrow-navtabs styling for block tabs */
+.arrow-navtabs {
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 0;
+}
+
+.arrow-navtabs .nav-item {
+    margin-bottom: -2px;
+}
+
+.arrow-navtabs .nav-link {
+    border: none;
+    border-radius: 0;
+    padding: 12px 20px;
+    font-weight: 500;
+    color: #6c757d;
+    background: transparent;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.arrow-navtabs .nav-link:hover {
+    color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+    border-color: transparent;
+}
+
+.arrow-navtabs .nav-link.active {
+    color: var(--bs-primary);
+    background-color: #fff;
+    border-color: transparent;
+    border-bottom: 2px solid var(--bs-primary);
+}
+
+.arrow-navtabs .nav-link.active::before {
+    border-top-color: var(--bs-primary);
+    border-width: 8px;
+    bottom: -16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .arrow-navtabs .nav-link {
+        padding: 8px 12px;
+        font-size: 0.875rem;
+    }
+    
+    .arrow-navtabs .nav-link.active::before {
+        border-width: 6px;
+        bottom: -12px;
+    }
+}
+
+/* Smooth transitions */
+.arrow-navtabs .nav-link::before {
+    transition: all 0.3s ease;
+}
+
+/* Tab content styling */
+.tab-content {
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    background-color: #fff;
+}
+
+.tab-pane {
+    padding: 1.5rem;
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>
