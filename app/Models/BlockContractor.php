@@ -47,7 +47,14 @@ class BlockContractor extends Model
         return $this->belongsTo(Block::class);
     }
 
-
+    public function contractorType()
+    {
+        return $this->belongsTo(\App\Models\BlockContractorType::class, 'contractor_type_id');
+    }
+    public function contractor()
+    {
+        return $this->belongsTo(User::class, 'contractor_id');
+    }
 
     /**
      * Get the creator of the contractor.

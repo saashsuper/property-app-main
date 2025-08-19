@@ -56,12 +56,12 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="building-core-tab" data-bs-toggle="tab" href="#building-core" role="tab" aria-controls="building-core" aria-selected="false">
-                                    <span>BUILDING/CORE</span>
+                                    <span>Building/Core</span>
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false">
-                                    <span>CONTRACTORS</span>
+                                    <span>Contractors</span>
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">

@@ -55,6 +55,13 @@ class UserTypeSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'id' => 7,
+                'name' => 'Contractor',
+                'description' => 'Contractor user with limited access for contract-related tasks',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($userTypes as $userType) {

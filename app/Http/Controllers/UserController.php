@@ -35,7 +35,7 @@ class UserController extends Controller
             $query->where('user_role_id', $request->user_type_id);
         }
 
-        $users = $query->orderBy('created_at', 'desc')->paginate(10);
+        $users = $query->orderBy('id', 'asc')->paginate(10);
         $userTypes = UserType::orderBy('name')->get();
 
         return view('users.index', compact('users', 'userTypes'));

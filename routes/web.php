@@ -102,6 +102,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('excel/{type}', [App\Http\Controllers\ExportController::class, 'exportExcel'])->name('excel');
         Route::get('print/{type}', [App\Http\Controllers\ExportController::class, 'exportPrint'])->name('print');
     });
+
+    Route::post('block-contractors', [\App\Http\Controllers\BlockContractorController::class, 'store'])->name('block-contractors.store');
+    Route::put('block-contractors/{id}', [\App\Http\Controllers\BlockContractorController::class, 'update'])->name('block-contractors.update');
+    Route::delete('block-contractors/{id}', [\App\Http\Controllers\BlockContractorController::class, 'destroy'])->name('block-contractors.destroy');
+    Route::get('block-contractors/{id}', [\App\Http\Controllers\BlockContractorController::class, 'show'])->name('block-contractors.show');
 });
 
 // Block Information Routes
