@@ -98,11 +98,9 @@ body {
                                         <div class="text-center">
                                             <!-- PROMAN Logo on left side -->
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="80" class="img-fluid mx-auto">
+                                                <h1 class="text-white fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">PROMAN</h1>
                                             </div>
                                             <h3 class="text-white">Start your journey with us.</h3>
-                                            <p class="text-white opacity-75 fs-base">It brings together your tasks,
-                                                projects, timelines, files and more</p>
                                         </div>
 
                                         <div
@@ -185,7 +183,7 @@ body {
                                         <div class="text-center mt-5">
                                             <!-- PROMAN Logo -->
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <img src="{{ URL::asset('build/images/logos/proman-logo.svg') }}" alt="PROMAN" height="60" class="img-fluid mx-auto">
+                                                <h2 class="text-dark fw-bold" style="font-size: 2rem; letter-spacing: 1.5px;">PROMAN</h2>
                                             </div>
                                             <h5 class="fs-3xl">Welcome Back</h5>
                                             <p class="text-muted">Sign in to continue to PROMAN.</p>

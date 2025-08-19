@@ -50,18 +50,18 @@
         <div class="navbar-brand-box">
             <a href="{{ route('root') }}" class="logo logo-dark">
                 <span class="logo-sm">
-                    <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
+                    <span class="fw-bold text-dark" style="font-size: 1rem; letter-spacing: 1px;">PROMAN</span>
                 </span>
                 <span class="logo-lg">
-                    <img src="{{ URL::asset('build/images/logos/proman-logo-dark.svg') }}" alt="PROMAN" height="22">
+                    <span class="fw-bold text-dark" style="font-size: 1.2rem; letter-spacing: 1.5px;">PROMAN</span>
                 </span>
             </a>
             <a href="{{ route('root') }}" class="logo logo-light">
                 <span class="logo-sm">
-                    <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
+                    <span class="fw-bold text-white" style="font-size: 1rem; letter-spacing: 1px;">PROMAN</span>
                 </span>
                 <span class="logo-lg">
-                    <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="22">
+                    <span class="fw-bold text-white" style="font-size: 1.2rem; letter-spacing: 1.5px;">PROMAN</span>
                 </span>
             </a>
             <button type="button" class="btn btn-sm p-0 fs-3xl header-item float-end btn-vertical-sm-hover"
