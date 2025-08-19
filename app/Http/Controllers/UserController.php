@@ -32,7 +32,7 @@ class UserController extends Controller
 
         // Filter by user type
         if ($request->filled('user_type_id')) {
-            $query->where('user_role_id', $request->user_type_id);
+            $query->where('user_type_id', $request->user_type_id);
         }
 
         $users = $query->orderBy('id', 'asc')->paginate(10);
@@ -59,7 +59,7 @@ class UserController extends Controller
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'user_role_id' => 'required|exists:user_types,id',
+            'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -115,7 +115,7 @@ class UserController extends Controller
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed',
-            'user_role_id' => 'required|exists:user_types,id',
+            'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 

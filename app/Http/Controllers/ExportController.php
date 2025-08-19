@@ -462,7 +462,7 @@ class ExportController extends Controller
         }
 
         if ($request->filled('user_type_id')) {
-            $query->where('user_role_id', $request->user_type_id);
+            $query->where('user_type_id', $request->user_type_id);
         }
 
         $users = $query->orderBy('created_at', 'desc')->get();

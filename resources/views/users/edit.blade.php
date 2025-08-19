@@ -72,18 +72,18 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="user_role_id" class="form-label">@lang('translation.user-type') <span class="text-danger">*</span></label>
-                                <select class="form-select @error('user_role_id') is-invalid @enderror" 
-                                        id="user_role_id" name="user_role_id" required>
+                                <label for="user_type_id" class="form-label">@lang('translation.user-type') <span class="text-danger">*</span></label>
+                                <select class="form-select @error('user_type_id') is-invalid @enderror" 
+                                        id="user_type_id" name="user_type_id" required>
                                     <option value="">@lang('translation.select-user-type')</option>
                                     @foreach($userTypes as $userType)
                                         <option value="{{ $userType->id }}" 
-                                                {{ old('user_role_id', $user->user_role_id) == $userType->id ? 'selected' : '' }}>
+                                                {{ old('user_type_id', $user->user_type_id) == $userType->id ? 'selected' : '' }}>
                                             {{ $userType->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('user_role_id')
+                                @error('user_type_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

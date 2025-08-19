@@ -16,55 +16,55 @@ class UserSeeder extends Seeder
                 'name' => 'Admin User',
                 'email' => 'admin@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 1,
+                'user_type_id' => 1,
             ],
             [
                 'name' => 'Manager User',
                 'email' => 'manager@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 2,
+                'user_type_id' => 2,
             ],
             [
                 'name' => 'Regular User',
                 'email' => 'user@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 3,
+                'user_type_id' => 3,
             ],
             [
                 'name' => 'Contract Manager',
                 'email' => 'contract.manager@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 4, // ensure valid role id
+                'user_type_id' => 4, // ensure valid role id
             ],
             [
                 'name' => 'Contract User',
                 'email' => 'contract.user@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 5, // ensure valid role id
+                'user_type_id' => 5, // ensure valid role id
             ],
             [
                 'name' => 'Contractor One',
                 'email' => 'contractor1@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 7,
+                'user_type_id' => 7,
             ],
             [
                 'name' => 'Contractor Two',
                 'email' => 'contractor2@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 7,
+                'user_type_id' => 7,
             ],
             [
                 'name' => 'Contractor Three',
                 'email' => 'contractor3@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 7,
+                'user_type_id' => 7,
             ],
             [
                 'name' => 'Contractor Four',
                 'email' => 'contractor4@proman.com',
                 'password' => Hash::make('password123'),
-                'user_role_id' => 7,
+                'user_type_id' => 7,
             ],
         ];
 

@@ -23,7 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'avatar',
-        'user_role_id',
+        'user_type_id',
     ];
 
     /**
@@ -50,7 +50,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function userType()
     {
-        return $this->belongsTo('App\Models\UserType', 'user_role_id');
+        return $this->belongsTo('App\Models\UserType', 'user_type_id');
     }
 
     /**

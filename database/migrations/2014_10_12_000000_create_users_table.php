@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->unsignedBigInteger('user_role_id')->nullable();
+            $table->unsignedBigInteger('user_type_id')->nullable();
             $table->string('avatar')->nullable();
             $table->rememberToken();
             require_once __DIR__.'/helpers/CommonColumns.php';
@@ -25,7 +25,7 @@ return new class extends Migration
             $commonColumns->addCommonColumns($table);
             
             // Foreign key constraint
-            $table->foreign('user_role_id')->references('id')->on('user_types')->nullOnDelete();
+            $table->foreign('user_type_id')->references('id')->on('user_types')->nullOnDelete();
         });
     }
 

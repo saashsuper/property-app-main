@@ -17,7 +17,7 @@ class RealUserSeeder extends Seeder
         $users = [
             [
                 'id' => 1,
-                'user_role_id' => 1, // Super Admin
+                'user_type_id' => 1, // Super Admin
                 'name' => 'Admin User',
                 'email' => 'admin@proman.com',
                 'email_verified_at' => now(),
@@ -27,7 +27,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'user_role_id' => 2, // Admin
+                'user_type_id' => 2, // Admin
                 'name' => 'John Smith',
                 'email' => 'john.smith@proman.com',
                 'email_verified_at' => now(),
@@ -37,7 +37,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 3,
-                'user_role_id' => 3, // Financial Admin
+                'user_type_id' => 3, // Financial Admin
                 'name' => 'Sarah Johnson',
                 'email' => 'sarah.johnson@proman.com',
                 'email_verified_at' => now(),
@@ -47,7 +47,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 4,
-                'user_role_id' => 4, // Property manager
+                'user_type_id' => 4, // Property manager
                 'name' => 'Michael Brown',
                 'email' => 'michael.brown@proman.com',
                 'email_verified_at' => now(),
@@ -57,7 +57,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 5,
-                'user_role_id' => 5, // Office Administrator
+                'user_type_id' => 5, // Office Administrator
                 'name' => 'Emma Wilson',
                 'email' => 'emma.wilson@proman.com',
                 'email_verified_at' => now(),
@@ -67,7 +67,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 6,
-                'user_role_id' => 6, // Assistant Property Manager
+                'user_type_id' => 6, // Assistant Property Manager
                 'name' => 'David Taylor',
                 'email' => 'david.taylor@proman.com',
                 'email_verified_at' => now(),
@@ -77,7 +77,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 7,
-                'user_role_id' => 4, // Property manager
+                'user_type_id' => 4, // Property manager
                 'name' => 'Lisa Anderson',
                 'email' => 'lisa.anderson@proman.com',
                 'email_verified_at' => now(),
@@ -87,7 +87,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 8,
-                'user_role_id' => 4, // Property manager
+                'user_type_id' => 4, // Property manager
                 'name' => 'Robert Garcia',
                 'email' => 'robert.garcia@proman.com',
                 'email_verified_at' => now(),
@@ -97,7 +97,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 9,
-                'user_role_id' => 4, // Property manager
+                'user_type_id' => 4, // Property manager
                 'name' => 'Jennifer Martinez',
                 'email' => 'jennifer.martinez@proman.com',
                 'email_verified_at' => now(),
@@ -107,7 +107,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 10,
-                'user_role_id' => 6, // Assistant Property Manager
+                'user_type_id' => 6, // Assistant Property Manager
                 'name' => 'Christopher Robinson',
                 'email' => 'christopher.robinson@proman.com',
                 'email_verified_at' => now(),
