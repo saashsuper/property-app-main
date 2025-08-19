@@ -23,7 +23,9 @@ return new class extends Migration
             require_once __DIR__.'/helpers/CommonColumns.php';
             $commonColumns = require __DIR__.'/helpers/CommonColumns.php';
             $commonColumns->addCommonColumns($table);
-            // Foreign key will be added after user_roles table is created
+            
+            // Foreign key constraint
+            $table->foreign('user_role_id')->references('id')->on('user_types')->nullOnDelete();
         });
     }
 

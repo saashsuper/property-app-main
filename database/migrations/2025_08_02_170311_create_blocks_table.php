@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('management_company', 100);
             $table->unsignedSmallInteger('block_type_id');
             $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('block_manager_id')->nullable();
             $table->string('address1', 100);
             $table->string('address2', 100)->nullable();
             $table->string('address3', 100)->nullable();
@@ -36,6 +37,7 @@ return new class extends Migration
             // Foreign key constraints
             $table->foreign('block_type_id')->references('id')->on('block_types');
             $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('block_manager_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

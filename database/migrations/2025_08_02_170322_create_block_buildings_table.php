@@ -29,7 +29,7 @@ return new class extends Migration
 
             // Foreign key constraints
             $table->foreign('block_id')->references('id')->on('blocks')->onDelete('cascade');
-            $table->foreign('building_type_id')->references('id')->on('building_types');
+            $table->foreign('building_type_id')->references('id')->on('block_building_types')->onDelete('cascade');
         });
     }
 

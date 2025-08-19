@@ -22,10 +22,14 @@ return new class extends Migration
             $table->unsignedInteger('block_unit_id')->nullable();
             $table->string('contact_details', 255)->nullable();
             $table->string('issue', 255)->nullable();
+            $table->string('issue_type')->nullable();
             $table->text('issue_details')->nullable();
             $table->string('contact_name', 100)->nullable();
+            $table->string('salutation', 10)->nullable();
             $table->string('contact_mobile', 20)->nullable();
+            $table->string('phone_number', 20)->nullable();
             $table->string('contact_email', 100)->nullable();
+            $table->unsignedBigInteger('contact_method_id')->nullable();
             $table->dateTime('preferred_start_date_time')->nullable();
             $table->dateTime('preferred_end_date_time')->nullable();
             $table->string('note_for_access', 255)->nullable();
@@ -44,6 +48,7 @@ return new class extends Migration
             // Foreign key constraints
             $table->foreign('block_id')->references('id')->on('blocks')->onDelete('cascade');
             $table->foreign('block_unit_id')->references('id')->on('block_units')->onDelete('cascade');
+            $table->foreign('contact_method_id')->references('id')->on('contact_methods')->onDelete('set null');
             $table->foreign('issued_by')->references('id')->on('users');
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('updated_by')->references('id')->on('users');
