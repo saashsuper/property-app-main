@@ -11,10 +11,10 @@ class BlockBuildingsSeeder extends Seeder
     {
         // Check if we have blocks and building types
         $blockIds = DB::table('blocks')->pluck('id');
-        $buildingTypeIds = DB::table('building_types')->pluck('id');
+        $buildingTypeIds = DB::table('block_building_types')->pluck('id');
 
         if ($blockIds->isEmpty() || $buildingTypeIds->isEmpty()) {
-            $this->command->warn('Skipping BlockBuildingsSeeder: missing blocks or building_types');
+            $this->command->warn('Skipping BlockBuildingsSeeder: missing blocks or block_building_types');
             return;
         }
 

@@ -34,6 +34,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RealUserSeeder::class,
             RealBlockSeeder::class,
+            BlockBuildingsSeeder::class,
+            BlockUnitsSeeder::class,
             BlockVisitSeeder::class,
             BlockInspectionSeeder::class,
         ]);
