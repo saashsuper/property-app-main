@@ -2,9 +2,26 @@
     <div class="col-12">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h6 class="mb-0">Unit Information</h6>
-            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
-                <i class="ph-plus align-bottom me-1"></i> Add Unit
-            </button>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Export Buttons -->
+                <div class="btn-group" role="group">
+                    <a href="{{ route('export.pdf', 'block-units') }}?block_id={{ $block->id }}" 
+                       class="btn btn-outline-danger btn-sm" title="Export to PDF">
+                        <i class="ph-file-pdf"></i>
+                    </a>
+                    <a href="{{ route('export.excel', 'block-units') }}?block_id={{ $block->id }}" 
+                       class="btn btn-outline-success btn-sm" title="Export to Excel">
+                        <i class="ph-file-xls"></i>
+                    </a>
+                    <a href="{{ route('export.print', 'block-units') }}?block_id={{ $block->id }}" 
+                       class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
+                        <i class="ph-printer"></i>
+                    </a>
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                    <i class="ph-plus align-bottom me-1"></i> Add Unit
+                </button>
+            </div>
         </div>
         
         @if($block->units && $block->units->count() > 0)
@@ -426,4 +443,25 @@ function editUnit(id) {
             }
         });
 }
+
+// DataTables for Units
+$(document).ready(function() {
+    $('#blockUnitsTable').DataTable({
+        responsive: true,
+        dom: 'rtip', // Removed 'f' (filter/search) to remove the search box on the left
+        order: [[0, 'asc']], // default sort by Unit Code
+        columnDefs: [
+            { targets: [11], orderable: false } // Actions (last column)
+        ],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        language: {
+            lengthMenu: "Show _MENU_ units per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ units",
+            infoEmpty: "Showing 0 to 0 of 0 units",
+            infoFiltered: "(filtered from _MAX_ total units)",
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        }
+    });
+});
 </script>
