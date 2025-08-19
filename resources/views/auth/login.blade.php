@@ -1,4 +1,87 @@
 @extends('layouts.master-without-nav')
+
+@push('styles')
+<style>
+/* Fix layout issues for all screens */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fix auth page wrapper */
+.auth-page-wrapper {
+    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0;
+}
+
+/* Ensure container fits properly */
+.container {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Fix card height issues */
+.card {
+    height: auto;
+    max-height: none;
+}
+
+/* Responsive adjustments */
+@media (max-height: 800px) {
+    .auth-page-wrapper {
+        padding: 0.5rem 0;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-height: 600px) {
+    .auth-page-wrapper {
+        padding: 0.25rem 0;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Fix for smaller screens */
+@media (max-width: 768px) {
+    .auth-page-wrapper {
+        padding: 0.5rem 0;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Ensure proper spacing */
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.col-lg-11, .col-xxl-5, .col-xxl-6 {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+</style>
+@endpush
 @section('title')
     @lang('translation.signin')
 @endsection
@@ -176,12 +259,7 @@
                                                 </div>
                                             </form>
 
-                                            <div class="text-center mt-5">
-                                                <p class="mb-0">Don't have an account ? <a
-                                                        href="{{ route('register') }}"
-                                                        class="fw-semibold text-secondary text-decoration-underline"> Sign
-                                                        Up</a> </p>
-                                            </div>
+
                                         </div>
                                     </div><!-- end card body -->
                                 </div><!-- end card -->
