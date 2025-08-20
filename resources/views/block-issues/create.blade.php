@@ -36,197 +36,143 @@
                             @csrf
                             
                             <div class="row">
-                                <!-- Basic Information -->
-                                <div class="col-md-6">
-                                    <h5 class="mb-3">Basic Information</h5>
-                                    
-                                    <div class="mb-3">
-                                        <label for="ref_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('ref_no') is-invalid @enderror" 
-                                               id="ref_no" name="ref_no" value="{{ old('ref_no') }}" required>
-                                        @error('ref_no')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="block_id" class="form-label">Block <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('block_id') is-invalid @enderror" id="block_id" name="block_id" required>
-                                            <option value="">Select Block</option>
-                                            @foreach($blocks as $block)
-                                                <option value="{{ $block->id }}" {{ old('block_id') == $block->id ? 'selected' : '' }}>
-                                                    {{ $block->name }} - {{ $block->blockType->name ?? 'N/A' }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('block_id')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="title" class="form-label">Issue Title <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('title') is-invalid @enderror" 
-                                               id="title" name="title" value="{{ old('title') }}" required>
-                                        @error('title')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                                        <textarea class="form-control @error('description') is-invalid @enderror" 
-                                                  id="description" name="description" rows="4" required>{{ old('description') }}</textarea>
-                                        @error('description')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <!-- Row 1: Contact Method, Unit Selection, Assigned To -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('contact_method_id') is-invalid @enderror" id="contact_method_id" name="contact_method_id" required>
+                                        <option value="">Select Contact Method</option>
+                                        <option value="1" {{ old('contact_method_id') == '1' ? 'selected' : '' }}>Phone</option>
+                                        <option value="2" {{ old('contact_method_id') == '2' ? 'selected' : '' }}>Email</option>
+                                        <option value="3" {{ old('contact_method_id') == '3' ? 'selected' : '' }}>SMS</option>
+                                        <option value="4" {{ old('contact_method_id') == '4' ? 'selected' : '' }}>WhatsApp</option>
+                                        <option value="5" {{ old('contact_method_id') == '5' ? 'selected' : '' }}>In Person</option>
+                                    </select>
+                                    @error('contact_method_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
-                                <!-- Issue Details -->
-                                <div class="col-md-6">
-                                    <h5 class="mb-3">Issue Details</h5>
-                                    
-                                    <div class="mb-3">
-                                        <label for="priority" class="form-label">Priority <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('priority') is-invalid @enderror" id="priority" name="priority" required>
-                                            <option value="">Select Priority</option>
-                                            <option value="1" {{ old('priority') == '1' ? 'selected' : '' }}>Low</option>
-                                            <option value="2" {{ old('priority') == '2' ? 'selected' : '' }}>Normal</option>
-                                            <option value="3" {{ old('priority') == '3' ? 'selected' : '' }}>High</option>
-                                            <option value="4" {{ old('priority') == '4' ? 'selected' : '' }}>Urgent</option>
-                                            <option value="5" {{ old('priority') == '5' ? 'selected' : '' }}>Critical</option>
-                                        </select>
-                                        @error('priority')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('block_unit_id') is-invalid @enderror" 
+                                           id="block_unit_id" name="block_unit_id" placeholder="Search for units..." autocomplete="off" required>
+                                    <input type="hidden" id="block_unit_id_hidden" name="block_unit_id_hidden">
+                                    @error('block_unit_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
-                                    <div class="mb-3">
-                                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                                            <option value="">Select Status</option>
-                                            <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Open</option>
-                                            <option value="2" {{ old('status') == '2' ? 'selected' : '' }}>In Progress</option>
-                                            <option value="3" {{ old('status') == '3' ? 'selected' : '' }}>Resolved</option>
-                                            <option value="4" {{ old('status') == '4' ? 'selected' : '' }}>Closed</option>
-                                            <option value="5" {{ old('status') == '5' ? 'selected' : '' }}>On Hold</option>
-                                        </select>
-                                        @error('status')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="assigned_to" class="form-label">Assigned To <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('assigned_to') is-invalid @enderror" 
+                                           id="assigned_to" name="assigned_to" placeholder="Search property managers..." autocomplete="off" required>
+                                    <input type="hidden" id="assigned_to_hidden" name="assigned_to_hidden">
+                                    @error('assigned_to')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                
+                                <!-- Row 2: Issue Type, Priority, Issue Title -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="issue_type" class="form-label">Issue Type <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('issue_type') is-invalid @enderror" id="issue_type" name="issue_type" required>
+                                        <option value="">Select Issue Type</option>
+                                        <option value="plumbing" {{ old('issue_type') == 'plumbing' ? 'selected' : '' }}>Plumbing</option>
+                                        <option value="electrical" {{ old('issue_type') == 'electrical' ? 'selected' : '' }}>Electrical</option>
+                                        <option value="hvac" {{ old('issue_type') == 'hvac' ? 'selected' : '' }}>HVAC</option>
+                                        <option value="structural" {{ old('issue_type') == 'structural' ? 'selected' : '' }}>Structural</option>
+                                        <option value="security" {{ old('issue_type') == 'security' ? 'selected' : '' }}>Security</option>
+                                        <option value="fire_safety" {{ old('issue_type') == 'fire_safety' ? 'selected' : '' }}>Fire Safety</option>
+                                        <option value="water_leakage" {{ old('issue_type') == 'water_leakage' ? 'selected' : '' }}>Water Leakage</option>
+                                        <option value="noise" {{ old('issue_type') == 'noise' ? 'selected' : '' }}>Noise Complaint</option>
+                                        <option value="parking" {{ old('issue_type') == 'parking' ? 'selected' : '' }}>Parking Issue</option>
+                                        <option value="landscaping" {{ old('landscaping') == 'landscaping' ? 'selected' : '' }}>Landscaping</option>
+                                        <option value="elevator" {{ old('elevator') == 'elevator' ? 'selected' : '' }}>Elevator</option>
+                                        <option value="internet" {{ old('internet') == 'internet' ? 'selected' : '' }}>Internet</option>
+                                        <option value="trash" {{ old('trash') == 'trash' ? 'selected' : '' }}>Trash Collection</option>
+                                        <option value="lighting" {{ old('lighting') == 'lighting' ? 'selected' : '' }}>Lighting</option>
+                                        <option value="access_control" {{ old('access_control') == 'access_control' ? 'selected' : '' }}>Access Control</option>
+                                    </select>
+                                    @error('issue_type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
-                                    <div class="mb-3">
-                                        <label for="assigned_to" class="form-label">Assign To</label>
-                                        <select class="form-select @error('assigned_to') is-invalid @enderror" id="assigned_to" name="assigned_to">
-                                            <option value="">Select User</option>
-                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
-                                                    {{ $user->name }} ({{ $user->email }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('assigned_to')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('priority_id') is-invalid @enderror" id="priority_id" name="priority_id" required>
+                                        <option value="">Select Priority</option>
+                                        <option value="1" {{ old('priority_id') == '1' ? 'selected' : '' }}>Low</option>
+                                        <option value="2" {{ old('priority_id') == '2' ? 'selected' : '' }} selected>Normal</option>
+                                        <option value="3" {{ old('priority_id') == '3' ? 'selected' : '' }}>High</option>
+                                        <option value="4" {{ old('priority_id') == '4' ? 'selected' : '' }}>Urgent</option>
+                                        <option value="5" {{ old('priority_id') == '5' ? 'selected' : '' }}>Critical</option>
+                                    </select>
+                                    @error('priority_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
 
-                                    <div class="mb-3">
-                                        <label for="reported_by" class="form-label">Reported By</label>
-                                        <select class="form-select @error('reported_by') is-invalid @enderror" id="reported_by" name="reported_by">
-                                            <option value="">Select User</option>
-                                            @foreach($users as $user)
-                                                <option value="{{ $user->id }}" {{ old('reported_by') == $user->id ? 'selected' : '' }}>
-                                                    {{ $user->name }} ({{ $user->email }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('reported_by')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
+                                <div class="col-md-4 mb-3">
+                                    <label for="issue" class="form-label">Issue Title <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('issue') is-invalid @enderror" 
+                                           id="issue" name="issue" value="{{ old('issue') }}" required>
+                                    @error('issue')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                
+                                <!-- Row 3: Email, Fault Details -->
+                                <div class="col-md-6 mb-3">
+                                    <label for="contact_email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control @error('contact_email') is-invalid @enderror" 
+                                           id="contact_email" name="contact_email" value="{{ old('contact_email') }}" required>
+                                    @error('contact_email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label for="fault_details" class="form-label">Issue Details</label>
+                                    <textarea class="form-control @error('fault_details') is-invalid @enderror" 
+                                              id="fault_details" name="fault_details" rows="2" placeholder="Describe the issue in detail...">{{ old('fault_details') }}</textarea>
+                                    @error('fault_details')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                
+                                <!-- Row 4: Default Contact Details -->
+                                <div class="col-12 mb-3">
+                                    <label for="default_contact_details" class="form-label">Default Contact Details</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
+                                        <label class="form-check-label" for="use_default_contact">
+                                            Use default contact details
+                                        </label>
                                     </div>
+                                    <textarea class="form-control @error('default_contact_details') is-invalid @enderror" 
+                                              id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly>{{ old('default_contact_details') }}</textarea>
+                                    @error('default_contact_details')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Row 5: File Upload -->
+                                <div class="col-12 mb-3">
+                                    <label for="images" class="form-label">Upload Images</label>
+                                    <input type="file" class="form-control @error('images.*') is-invalid @enderror" 
+                                           id="images" name="images[]" multiple accept="image/*">
+                                    <small class="form-text text-muted">You can select multiple images. Maximum file size: 2MB each.</small>
+                                    @error('images.*')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
 
                                 <!-- Additional Details -->
                                 <div class="col-12">
                                     <h5 class="mb-3">Additional Details</h5>
                                     
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="contact_name" class="form-label">Contact Name</label>
-                                                <input type="text" class="form-control @error('contact_name') is-invalid @enderror" 
-                                                       id="contact_name" name="contact_name" value="{{ old('contact_name') }}">
-                                                @error('contact_name')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="contact_mobile" class="form-label">Contact Mobile</label>
-                                                <input type="text" class="form-control @error('contact_mobile') is-invalid @enderror" 
-                                                       id="contact_mobile" name="contact_mobile" value="{{ old('contact_mobile') }}">
-                                                @error('contact_mobile')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    <div class="mb-3">
-                                        <label for="contact_email" class="form-label">Contact Email</label>
-                                        <input type="email" class="form-control @error('contact_email') is-invalid @enderror" 
-                                               id="contact_email" name="contact_email" value="{{ old('contact_email') }}">
-                                        @error('contact_email')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="preferred_start_date_time" class="form-label">Preferred Start Date/Time</label>
-                                                <input type="datetime-local" class="form-control @error('preferred_start_date_time') is-invalid @enderror" 
-                                                       id="preferred_start_date_time" name="preferred_start_date_time" value="{{ old('preferred_start_date_time') }}">
-                                                @error('preferred_start_date_time')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="preferred_end_date_time" class="form-label">Preferred End Date/Time</label>
-                                                <input type="datetime-local" class="form-control @error('preferred_end_date_time') is-invalid @enderror" 
-                                                       id="preferred_end_date_time" name="preferred_end_date_time" value="{{ old('preferred_end_date_time') }}">
-                                                @error('preferred_end_date_time')
-                                                    <div class="invalid-feedback">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="note_for_access" class="form-label">Note for Access</label>
-                                        <textarea class="form-control @error('note_for_access') is-invalid @enderror" 
-                                                  id="note_for_access" name="note_for_access" rows="3">{{ old('note_for_access') }}</textarea>
-                                        @error('note_for_access')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="images" class="form-label">Upload Images</label>
-                                        <input type="file" class="form-control @error('images.*') is-invalid @enderror" 
-                                               id="images" name="images[]" multiple accept="image/*">
-                                        <small class="form-text text-muted">You can select multiple images. Maximum file size: 2MB each.</small>
-                                        @error('images.*')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                            </div>
 
                             <div class="row mt-4">
                                 <div class="col-12">
@@ -250,5 +196,164 @@
 @endsection
 
 @section('script')
-    <!-- add your js here -->
+<style>
+/* Custom styling for autocomplete dropdowns to match Bootstrap form design */
+.autoComplete_wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.autoComplete_wrapper > input {
+    width: 100%;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.autoComplete_wrapper > input:focus {
+    color: #495057;
+    background-color: #fff;
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.autoComplete_wrapper > ul {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 0.25rem 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.autoComplete_wrapper > ul > li {
+    padding: 0.375rem 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+}
+
+.autoComplete_wrapper > ul > li:last-child {
+    border-bottom: none;
+}
+
+.autoComplete_wrapper > ul > li:hover,
+.autoComplete_wrapper > ul > li[aria-selected="true"] {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.autoComplete_wrapper > ul > li mark {
+    background-color: #fff3cd;
+    color: #495057;
+    padding: 0;
+}
+
+/* Hide the lens icon in autocomplete */
+.autoComplete_wrapper > input::before {
+    display: none !important;
+}
+
+.autoComplete_wrapper > input::-webkit-search-cancel-button,
+.autoComplete_wrapper > input::-webkit-search-decoration,
+.autoComplete_wrapper > input::-webkit-search-results-button,
+.autoComplete_wrapper > input::-webkit-search-results-decoration {
+    display: none !important;
+}
+</style>
+
+<script>
+
+// AutoComplete for Units
+const unitAutoComplete = new autoComplete({
+    selector: () => document.getElementById("block_unit_id"),
+    placeHolder: "Search for units...",
+    data: {
+        src: async (query) => {
+            try {
+                const source = await fetch(`/api/units/search?q=${encodeURIComponent(query)}`);
+                const data = await source.json();
+                return data;
+            } catch (error) {
+                return [];
+            }
+        },
+        keys: ["unit_code", "unit_name"]
+    },
+    resultItem: {
+        highlight: true
+    },
+    events: {
+        input: {
+            selection: (event) => {
+                const selection = event.detail.selection.value;
+                document.getElementById("block_unit_id_hidden").value = selection.id;
+            }
+        }
+    }
+});
+
+// AutoComplete for Property Managers
+const assignedToAutoComplete = new autoComplete({
+    selector: () => document.getElementById("assigned_to"),
+    placeHolder: "Search property managers...",
+    data: {
+        src: async (query) => {
+            try {
+                const source = await fetch(`/api/users/property-managers?q=${encodeURIComponent(query)}`);
+                const data = await source.json();
+                return data;
+            } catch (error) {
+                return [];
+            }
+        },
+        keys: ["name", "email"]
+    },
+    resultItem: {
+        highlight: true
+    },
+    events: {
+        input: {
+            selection: (event) => {
+                const selection = event.detail.selection.value;
+                document.getElementById("assigned_to_hidden").value = selection.id;
+            }
+        }
+    }
+});
+
+
+
+// Default contact details checkbox
+document.getElementById('use_default_contact').addEventListener('change', function() {
+    const textarea = document.getElementById('default_contact_details');
+    textarea.readOnly = this.checked;
+    if (this.checked) {
+        textarea.value = 'Default contact information will be used';
+    } else {
+        textarea.value = '';
+    }
+});
+</script>
 @endsection 

@@ -153,8 +153,8 @@
                                     <input type="email" class="form-control" id="contact_email" name="contact_email" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="fault_details" class="form-label">Fault Details</label>
-                                    <textarea class="form-control" id="fault_details" name="fault_details" rows="2" placeholder="Describe the fault in detail..."></textarea>
+                                    <label for="fault_details" class="form-label">Issue Details</label>
+                                    <textarea class="form-control" id="fault_details" name="fault_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
                                 </div>
                                 
                                 <!-- Row 4: Default Contact Details -->
@@ -175,17 +175,9 @@
                         
                                 <!-- Row 6: File Upload -->
                                 <div class="col-12 mb-2">
-                                    <label class="form-label">Upload Images</label>
-                                    <div class="dropzone" id="issueImagesDropzone" style="min-height: 60px;">
-                                        <div class="dz-message needsclick text-center">
-                                            <div class="mb-1">
-                                                <i class="ph-cloud-arrow-up fs-4 text-muted"></i>
-                                            </div>
-                                            <h6 class="text-center mb-1">Drop files here or click to upload.</h6>
-                                            <span class="text-muted small text-center d-block">You can upload multiple images.</span>
-                                        </div>
-                                    </div>
-                                    <div id="dropzone-preview" class="dropzone-previews mt-2"></div>
+                                    <label for="images" class="form-label">Upload Images</label>
+                                    <input type="file" class="form-control" id="images" name="images[]" multiple accept="image/*">
+                                    <small class="form-text text-muted">You can select multiple images. Maximum file size: 2MB each.</small>
                                 </div>
                     </div>
                 </div>
@@ -218,16 +210,7 @@
     padding: 0.375rem 0.5rem;
 }
 
-#createIssueModal .dropzone {
-    border: 2px dashed #dee2e6;
-    border-radius: 0.375rem;
-    background-color: #f8f9fa;
-}
 
-#createIssueModal .dropzone:hover {
-    border-color: #0d6efd;
-    background-color: #f0f8ff;
-}
 
 /* Custom styling for autocomplete dropdowns to match Bootstrap form design */
 .autoComplete_wrapper {
@@ -395,37 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const createIssueForm = document.getElementById('createIssueForm');
     const createIssueModal = document.getElementById('createIssueModal');
     
-    // Initialize Dropzone for file uploads
-    let issueImagesDropzone;
-    if (document.getElementById('issueImagesDropzone')) {
-        issueImagesDropzone = new Dropzone("#issueImagesDropzone", {
-            url: "#", // We'll handle upload in form submission
-            method: "post",
-            paramName: "images[]",
-            maxFilesize: 2, // MB
-            acceptedFiles: "image/*",
-            addRemoveLinks: true,
-            dictRemoveFile: "Remove",
-            autoProcessQueue: false, // Don't auto-upload, wait for form submission
-            uploadMultiple: true,
-            parallelUploads: 5,
-            maxFiles: 10,
-            previewsContainer: "#dropzone-preview",
-            clickable: true,
-            createImageThumbnails: true,
-            thumbnailWidth: 120,
-            thumbnailHeight: 120,
-            dictDefaultMessage: "Drop files here or click to upload.",
-            dictFileTooBig: "File is too big (%(filesize)sMB). Max filesize: %(maxFilesize)sMB.",
-            dictInvalidFileType: "You can't upload files of this type.",
-            dictResponseError: "Server responded with %(statusCode)s code.",
-            dictCancelUpload: "Cancel upload",
-            dictUploadCanceled: "Upload canceled.",
-            dictCancelUploadConfirmation: "Are you sure you want to cancel this upload?",
-            dictRemoveFile: "Remove file",
-            dictMaxFilesExceeded: "You can not upload any more files."
-        });
-    }
+
     
     if (createIssueForm) {
         createIssueForm.addEventListener('submit', function(e) {
@@ -440,12 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Get form data
             const formData = new FormData(createIssueForm);
             
-            // Add files from Dropzone to form data
-            if (issueImagesDropzone && issueImagesDropzone.files.length > 0) {
-                issueImagesDropzone.files.forEach(function(file) {
-                    formData.append('images[]', file);
-                });
-            }
+
             
             // Submit form via AJAX
             fetch(createIssueForm.action, {
@@ -469,10 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Reset form
                     createIssueForm.reset();
                     
-                    // Clear Dropzone files
-                    if (issueImagesDropzone) {
-                        issueImagesDropzone.removeAllFiles();
-                    }
+
                     
                     // Reload page to show new issue
                     setTimeout(() => {
