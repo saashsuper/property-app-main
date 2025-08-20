@@ -232,7 +232,7 @@
                         <tbody>
                             @forelse($blocks as $block)
                             <tr>
-                                <td><strong>{{ $block->name }}</strong></td>
+                                <td><strong><a href="{{ route('blocks.show', $block->id) }}" class="text-decoration-none">{{ $block->name }}</a></strong></td>
                                 <td><span class="badge bg-primary">{{ $block->blockType->name ?? 'N/A' }}</span></td>
                                 <td>{{ $block->management_company }}</td>
                                 <td>{{ $block->block_manager }}</td>
