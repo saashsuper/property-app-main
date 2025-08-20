@@ -6,6 +6,23 @@
     <!-- add your css here -->
 @endsection
 @section('content')
+<style>
+/* Dashboard specific layout fixes */
+.main-content {
+    margin-top: 70px; /* Add top margin to account for fixed header */
+}
+
+/* Ensure proper spacing for dashboard content */
+.page-content {
+    padding-top: 1rem;
+}
+
+/* Fix for dashboard cards */
+.card {
+    margin-bottom: 1rem;
+}
+</style>
+
         <div class="row">
             <div class="col-xl-3 col-md-6">
                 <div class="card">
