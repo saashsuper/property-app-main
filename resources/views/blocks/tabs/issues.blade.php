@@ -102,13 +102,23 @@
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="block_unit_id" name="block_unit_id" placeholder="Search for units..." autocomplete="off" required>
-                                    <input type="hidden" id="block_unit_id_hidden" name="block_unit_id_hidden">
+                                    <select class="form-select" id="block_unit_id" name="block_unit_id" required>
+                                        <option value="">Select Unit</option>
+                                        @foreach($block->units as $unit)
+                                            <option value="{{ $unit->id }}">{{ $unit->unit_code }} - {{ $unit->unit_name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="assigned_to" class="form-label">Assigned To <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="assigned_to" name="assigned_to" placeholder="Search property managers..." autocomplete="off" required>
-                                    <input type="hidden" id="assigned_to_hidden" name="assigned_to_hidden">
+                                    <select class="form-select" id="assigned_to" name="assigned_to" required>
+                                        <option value="">Select Property Manager</option>
+                                        @foreach($users as $user)
+                                            @if($user->userType && $user->userType->name === 'Property Manager')
+                                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
                                 </div>
                                 
                                 <!-- Row 2: Issue Type, Priority, Issue Title -->
@@ -153,8 +163,23 @@
                                 
                                 <!-- Row 3: Email, Fault Details -->
                                 <div class="col-md-6 mb-3">
+                                    <label for="contact_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="contact_name" name="contact_name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
                                     <label for="contact_email" class="form-label">Email <span class="text-danger">*</span></label>
                                     <input type="email" class="form-control" id="contact_email" name="contact_email" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="issue_status_id" class="form-label">Status <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="issue_status_id" name="issue_status_id" required>
+                                        <option value="">Select Status</option>
+                                        <option value="1" selected>Open</option>
+                                        <option value="2">In Progress</option>
+                                        <option value="3">Resolved</option>
+                                        <option value="4">Closed</option>
+                                        <option value="5">On Hold</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="fault_details" class="form-label">Issue Details</label>
