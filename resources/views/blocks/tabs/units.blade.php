@@ -106,7 +106,7 @@
                             <label for="block_unit_type_id" class="form-label">Unit Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="block_unit_type_id" name="block_unit_type_id" required>
                                 <option value="">Select Unit Type</option>
-                                @foreach($blockUnitTypes as $type)
+                                @foreach(\App\Models\BlockUnitType::orderBy('name')->get() as $type)
                                     <option value="{{ $type->id }}">{{ $type->name }}</option>
                                 @endforeach
                             </select>
