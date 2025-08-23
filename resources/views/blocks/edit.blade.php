@@ -227,30 +227,56 @@
 document.addEventListener('DOMContentLoaded', function() {
     const countrySelect = document.getElementById('country_id');
     const stateSelect = document.getElementById('state_id');
+    
+    if (!countrySelect || !stateSelect) {
+        console.warn('Country or State select elements not found');
+        return;
+    }
+    
     const stateOptions = stateSelect.querySelectorAll('option[data-country]');
 
     function updateStates() {
         const selectedCountryId = countrySelect.value;
+        console.log('Selected country ID:', selectedCountryId);
         
-        // Hide all state options
+        // Show all state options first (for debugging)
         stateOptions.forEach(option => {
-            option.style.display = 'none';
+            option.style.display = '';
+            option.disabled = false;
         });
         
-        // Show only states for selected country
+        // If a country is selected, hide states that don't belong to it
         if (selectedCountryId) {
+            let visibleCount = 0;
             stateOptions.forEach(option => {
-                if (option.dataset.country === selectedCountryId) {
+                const stateCountryId = option.dataset.country;
+                console.log('State option:', option.value, 'Country ID:', stateCountryId, 'Selected:', selectedCountryId, 'Match:', stateCountryId === selectedCountryId);
+                
+                if (String(stateCountryId) === String(selectedCountryId)) {
                     option.style.display = '';
+                    option.disabled = false;
+                    visibleCount++;
+                } else {
+                    option.style.display = 'none';
+                    option.disabled = true;
                 }
             });
+            console.log('Showing', visibleCount, 'states for country', selectedCountryId);
+        } else {
+            // If no country selected, show all states
+            stateOptions.forEach(option => {
+                option.style.display = '';
+                option.disabled = false;
+            });
+            console.log('No country selected, showing all states');
         }
         
-        // Reset state selection if it doesn't belong to selected country
+        // Reset state selection if current selection is not valid for selected country
         const currentStateId = stateSelect.value;
         const currentStateOption = stateSelect.querySelector(`option[value="${currentStateId}"]`);
         if (currentStateOption && currentStateOption.dataset.country !== selectedCountryId) {
             stateSelect.value = '';
+            console.log('Reset state selection - invalid for selected country');
         }
     }
 
@@ -269,6 +295,8 @@ document.addEventListener('DOMContentLoaded', function() {
             tabTrigger.show();
         });
     });
+    
+    console.log('Country/State dependency and tabs initialized');
 });
 </script>
 @endpush 

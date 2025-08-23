@@ -19,7 +19,7 @@ class BlockController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Block::with(['blockType', 'user', 'creator', 'units'])->active();
+        $query = Block::with(['blockType', 'user', 'creator', 'units', 'blockManager', 'issues', 'workOrders'])->active();
 
         // Search functionality
         if ($request->filled('search')) {

@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
         // Seed reference data first
         $this->call([
             CountrySeeder::class,
-            StateSeeder::class,
+            CompleteStateSeeder::class,
             UserTypeSeeder::class,
             BlockTypeSeeder::class,
             BlockInformationTypeSeeder::class,

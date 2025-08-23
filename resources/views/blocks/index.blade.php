@@ -226,6 +226,8 @@
                                 <th>Block Manager</th>
                                 <th>Address</th>
                                 <th>Units</th>
+                                <th>Issues</th>
+                                <th>Work Orders</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -235,9 +237,11 @@
                                 <td><strong><a href="{{ route('blocks.show', $block->id) }}" class="text-decoration-none">{{ $block->name }}</a></strong></td>
                                 <td><span class="badge bg-primary">{{ $block->blockType->name ?? 'N/A' }}</span></td>
                                 <td>{{ $block->management_company }}</td>
-                                <td>{{ $block->block_manager }}</td>
+                                <td>{{ $block->blockManager->name ?? 'N/A' }}</td>
                                 <td>{{ $block->block_address }}</td>
                                 <td><span class="badge bg-info">{{ $block->units->count() }}</span></td>
+                                <td><span class="badge bg-warning">{{ $block->issues->where('status', 1)->count() }}</span></td>
+                                <td><span class="badge bg-success">{{ $block->workOrders->where('status', 1)->count() }}</span></td>
                                 <td>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -272,7 +276,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center py-4">
+                                <td colspan="9" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
                                         <p>No blocks found. 
