@@ -4,6 +4,8 @@
     Edit Block - PROMAN
 @endsection
 
+
+
 @section('content')
 <div class="page-content">
     <div class="container-fluid">
