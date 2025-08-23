@@ -93,8 +93,12 @@
                                 <!-- Row 1: Contact Method, Unit Selection, Issue Code -->
                                 <div class="col-md-4 mb-3">
                                     <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="contact_method_id" name="contact_method_id" placeholder="Search contact methods..." autocomplete="off" required>
-                                    <input type="hidden" id="contact_method_id_hidden" name="contact_method_id_hidden">
+                                    <select class="form-select" id="contact_method_id" name="contact_method_id" required>
+                                        <option value="">Select Contact Method</option>
+                                        @foreach($contactMethods as $contactMethod)
+                                            <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>

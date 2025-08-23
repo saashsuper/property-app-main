@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CountrySeeder::class,
             CompleteStateSeeder::class,
             UserTypeSeeder::class,
+            ContactMethodsSeeder::class,
             BlockTypeSeeder::class,
             BlockInformationTypeSeeder::class,
             BlockContractorTypeSeeder::class,
