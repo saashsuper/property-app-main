@@ -100,6 +100,47 @@ class BlockIssue extends Model
     }
 
     /**
+     * Boot method to automatically generate ref_no
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($blockIssue) {
+            if (empty($blockIssue->ref_no)) {
+                $blockIssue->ref_no = self::generateRefNo();
+            }
+        });
+    }
+
+    /**
+     * Generate a unique reference number
+     */
+    protected static function generateRefNo()
+    {
+        $prefix = 'ISSUE';
+        $year = date('Y');
+        $month = date('m');
+        
+        // Get the last issue number for this month
+        $lastIssue = self::where('ref_no', 'like', "{$prefix}-{$year}{$month}-%")
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastIssue) {
+            // Extract the number part and increment
+            $parts = explode('-', $lastIssue->ref_no);
+            $lastNumber = (int) end($parts);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        // Format: ISSUE-202508-001
+        return sprintf('%s-%s%s-%03d', $prefix, $year, $month, $newNumber);
+    }
+
+    /**
      * Get the user who updated the issue.
      */
     public function updater()

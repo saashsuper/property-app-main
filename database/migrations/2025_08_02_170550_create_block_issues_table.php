@@ -42,6 +42,7 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by');
             $table->unsignedBigInteger('updated_by');
             $table->unsignedInteger('issue_status_id')->default(1);
+            $table->unsignedBigInteger('reported_by');
             $table->softDeletes();
             $table->timestamps();
 
@@ -51,7 +52,8 @@ return new class extends Migration
             $table->foreign('contact_method_id')->references('id')->on('contact_methods')->onDelete('set null');
             $table->foreign('issued_by')->references('id')->on('users');
             $table->foreign('created_by')->references('id')->on('users');
-            $table->foreign('updated_by')->references('id')->on('users');
+            $table->foreign('reported_by')->references('id')->on('users')->onDelete('cascade');
+            
         });
     }
 

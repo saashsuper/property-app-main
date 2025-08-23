@@ -83,9 +83,7 @@ class BlockIssueController extends Controller
             'issue' => 'required|string|max:255',
             'issue_type' => 'required|string|max:100',
             'priority_id' => 'required|integer|min:1|max:5',
-            'issue_status_id' => 'required|integer|min:1|max:5',
-            'contact_name' => 'required|string|max:255',
-            'contact_email' => 'required|email|max:255',
+            'contact_details' => 'required|string|max:500',
             'contact_method_id' => 'required|exists:contact_methods,id',
             'fault_details' => 'nullable|string',
             'default_contact_details' => 'nullable|string',
@@ -114,9 +112,8 @@ class BlockIssueController extends Controller
                 'issue' => $request->issue,
                 'issue_type' => $request->issue_type,
                 'priority_id' => $request->priority_id,
-                'issue_status_id' => $request->issue_status_id,
-                'contact_name' => $request->contact_name,
-                'contact_email' => $request->contact_email,
+                'issue_status_id' => 1, // Default to 'Open' status
+                'contact_details' => $request->contact_details,
                 'contact_method_id' => $request->contact_method_id_hidden ?: $request->contact_method_id,
                 'fault_details' => $request->fault_details,
                 'default_contact_details' => $request->default_contact_details,
@@ -124,6 +121,7 @@ class BlockIssueController extends Controller
                 'reported_by' => Auth::id(),
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
+                'issued_by' => Auth::id(),
             ];
 
             $blockIssue = BlockIssue::create($data);

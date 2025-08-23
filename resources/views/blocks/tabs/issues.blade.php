@@ -161,25 +161,11 @@
                                 
 
                                 
-                                <!-- Row 3: Email, Fault Details -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="contact_name" class="form-label">Contact Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="contact_name" name="contact_name" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="contact_email" class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control" id="contact_email" name="contact_email" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="issue_status_id" class="form-label">Status <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="issue_status_id" name="issue_status_id" required>
-                                        <option value="">Select Status</option>
-                                        <option value="1" selected>Open</option>
-                                        <option value="2">In Progress</option>
-                                        <option value="3">Resolved</option>
-                                        <option value="4">Closed</option>
-                                        <option value="5">On Hold</option>
-                                    </select>
+                                <!-- Row 3: Dynamic Contact Details based on Contact Method -->
+                                <div class="col-md-6 mb-3" id="contact_details_container">
+                                    <label for="contact_details" class="form-label">Contact Details <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="contact_details" name="contact_details" placeholder="Enter contact details..." required>
+                                    <div class="form-text">Please provide relevant contact information</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="fault_details" class="form-label">Issue Details</label>
@@ -198,16 +184,15 @@
                                     <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly></textarea>
                                 </div>
                                 
-
-                            </div>
-                        </div>
-                        
-                                <!-- Row 6: File Upload -->
-                                <div class="col-12 mb-2">
+                                <!-- Row 5: File Upload -->
+                                <div class="col-12 mb-3">
                                     <label for="images" class="form-label">Upload Images</label>
                                     <input type="file" class="form-control" id="images" name="images[]" multiple accept="image/*">
                                     <small class="form-text text-muted">You can select multiple images. Maximum file size: 2MB each.</small>
                                 </div>
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -222,6 +207,31 @@
 </div>
 
 <style>
+    #contact_details_container {
+        transition: all 0.3s ease;
+    }
+    
+    #contact_details_container input:focus,
+    #contact_details_container textarea:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    
+    #contact_details_container .form-text {
+        font-size: 0.875em;
+        margin-top: 0.25rem;
+    }
+    
+    .is-valid {
+        border-color: #198754 !important;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+    }
+
 /* Compact modal styling */
 #createIssueModal .modal-body {
     max-height: 70vh;
@@ -695,6 +705,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (emailMethod) {
                     contactMethodInput.value = 'Email';
                     contactMethodHiddenInput.value = emailMethod.id;
+                    
+                    // Initialize contact details field for Email
+                    updateContactDetailsField('Email');
                 }
                 
                 autoCompleteContactMethods = new autoComplete({
@@ -728,6 +741,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const selectedMethod = contactMethodsData.find(method => method.text === selection);
                                 if (selectedMethod) {
                                     contactMethodHiddenInput.value = selectedMethod.id;
+                                    
+                                    // Update contact details field based on contact method
+                                    updateContactDetailsField(selection);
                                 }
                             }
                         }
@@ -783,6 +799,81 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize readonly state
         defaultContactDetailsField.readOnly = true;
         defaultContactDetailsField.classList.add('bg-light');
+    }
+
+    // Function to update contact details field based on selected contact method
+    function updateContactDetailsField(selectedMethod) {
+        const contactDetailsContainer = document.getElementById('contact_details_container');
+        
+        // Clear previous content
+        contactDetailsContainer.innerHTML = '';
+        
+        // Determine which field to show based on contact method
+        if (selectedMethod === 'Email') {
+            contactDetailsContainer.innerHTML = `
+                <label for="contact_details" class="form-label">Email Address <span class="text-danger">*</span></label>
+                <input type="email" class="form-control" id="contact_details" name="contact_details" placeholder="Enter email address..." required>
+                <div class="form-text">Please enter a valid email address</div>
+            `;
+        } else if (selectedMethod.includes('Phone')) {
+            contactDetailsContainer.innerHTML = `
+                <label for="contact_details" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="contact_details" name="contact_details" placeholder="Enter phone number..." required>
+                <div class="form-text">Please enter a valid phone number</div>
+            `;
+        } else if (selectedMethod === 'In Person' || selectedMethod === 'Site Visit') {
+            contactDetailsContainer.innerHTML = `
+                <label for="contact_details" class="form-label">Location/Address <span class="text-danger">*</span></label>
+                <textarea class="form-control" id="contact_details" name="contact_details" rows="2" placeholder="Enter location or address details..." required></textarea>
+                <div class="form-text">Please provide specific location details</div>
+            `;
+        } else {
+            // Default to text input for other methods (Block Inspection, Meetings, etc.)
+            contactDetailsContainer.innerHTML = `
+                <label for="contact_details" class="form-label">Contact Details <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="contact_details" name="contact_details" placeholder="Enter contact details..." required>
+                <div class="form-text">Please provide relevant contact information</div>
+            `;
+        }
+        
+        // Add event listener for validation
+        const newInput = contactDetailsContainer.querySelector('input, textarea');
+        if (newInput) {
+            newInput.addEventListener('input', function() {
+                validateContactDetails(this);
+            });
+        }
+    }
+    
+    // Function to validate contact details based on type
+    function validateContactDetails(input) {
+        const value = input.value.trim();
+        const type = input.type;
+        
+        // Remove previous validation classes
+        input.classList.remove('is-valid', 'is-invalid');
+        
+        if (type === 'email') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (emailRegex.test(value)) {
+                input.classList.add('is-valid');
+            } else if (value.length > 0) {
+                input.classList.add('is-invalid');
+            }
+        } else if (type === 'tel') {
+            const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+            if (phoneRegex.test(value.replace(/[\s\-\(\)]/g, ''))) {
+                input.classList.add('is-valid');
+            } else if (value.length > 0) {
+                input.classList.add('is-invalid');
+            }
+        } else {
+            if (value.length >= 3) {
+                input.classList.add('is-valid');
+            } else if (value.length > 0) {
+                input.classList.add('is-invalid');
+            }
+        }
     }
 });
 </script>
