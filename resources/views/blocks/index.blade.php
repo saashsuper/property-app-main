@@ -240,7 +240,18 @@
                                 <td>{{ $block->blockManager->name ?? 'N/A' }}</td>
                                 <td>{{ $block->block_address }}</td>
                                 <td><span class="badge bg-info">{{ $block->units->count() }}</span></td>
-                                <td><span class="badge bg-warning">{{ $block->issues->where('status', 1)->count() }}</span></td>
+                                <td>
+                                    @php
+                                        $activeIssuesCount = $block->issues->where('status', 1)->count();
+                                    @endphp
+                                    @if($activeIssuesCount > 0)
+                                        <a href="{{ route('block-issues.index', ['block_id' => $block->id]) }}" class="badge bg-warning text-decoration-none" style="cursor: pointer;" title="Click to view issues for this block">
+                                            {{ $activeIssuesCount }}
+                                        </a>
+                                    @else
+                                        <span class="badge bg-warning">{{ $activeIssuesCount }}</span>
+                                    @endif
+                                </td>
                                 <td><span class="badge bg-success">{{ $block->workOrders->where('status', 1)->count() }}</span></td>
                                 <td>
                                     <div class="dropdown">
