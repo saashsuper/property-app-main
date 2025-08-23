@@ -125,6 +125,14 @@ class Block extends Model
     }
 
     /**
+     * Get the work orders for the block.
+     */
+    public function workOrders()
+    {
+        return $this->hasMany(BlockWorkOrder::class);
+    }
+
+    /**
      * Get the site visits for the block.
      */
     public function blockVisits()
