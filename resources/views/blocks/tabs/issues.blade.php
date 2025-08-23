@@ -114,7 +114,7 @@
                                     <select class="form-select" id="assigned_to" name="assigned_to" required>
                                         <option value="">Select Property Manager</option>
                                         @foreach($users as $user)
-                                            @if($user->userType && $user->userType->name === 'Property Manager')
+                                            @if($user->userType && $user->userType->name === 'Property manager')
                                                 <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                                             @endif
                                         @endforeach

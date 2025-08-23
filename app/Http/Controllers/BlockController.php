@@ -157,7 +157,7 @@ class BlockController extends Controller
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
-        $users = \App\Models\User::orderBy('name')->get();
+        $users = \App\Models\User::with('userType')->orderBy('name')->get();
         $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
         $contractors = \App\Models\User::whereHas('userType', function($q) { $q->where('name', 'Contractor'); })->orderBy('name')->get();
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
