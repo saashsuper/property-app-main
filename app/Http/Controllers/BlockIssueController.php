@@ -256,15 +256,39 @@ class BlockIssueController extends Controller
     /**
      * Get block issues for API
      */
-    public function getBlockIssues()
+    public function getBlockIssues(Request $request)
     {
-        $blockIssues = BlockIssue::with(['block', 'reportedBy', 'assignedTo'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+        $blockIssues = BlockIssue::with(['block'])
+            ->orderBy('created_at', 'desc');
+            
+        if($request->has('block_id')){
+            $blockIssues->where('block_id', $request->block_id);
+        }
+        if($request->has('status')){
+            $blockIssues->where('issue_status_id', $request->status);
+        }
+        if($request->has('priority')){
+            $blockIssues->where('priority_id', $request->priority);
+        }
+        if($request->has('contact_method_id')){
+            $blockIssues->where('contact_method_id', $request->contact_method_id);
+        }
+        if($request->has('block_unit_id')){
+            $blockIssues->where('block_unit_id', $request->block_unit_id);
+        }
+        if($request->has('issue_type')){
+            $blockIssues->where('issue_type', $request->issue_type);
+        }
+        if($request->has('ref_no')){
+            $blockIssues->where('ref_no', 'like', "%{$request->ref_no}%");
+        }
+        
+        // Only get open issues (status_id = 1)
+        $blockIssues->where('issue_status_id', 1);
+        
         return response()->json([
             'success' => true,
-            'data' => $blockIssues
+            'data' => $blockIssues->get()
         ]);
     }
 

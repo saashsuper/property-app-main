@@ -190,6 +190,40 @@
                                     <input type="file" class="form-control" id="images" name="images[]" multiple accept="image/*">
                                     <small class="form-text text-muted">You can select multiple images. Maximum file size: 2MB each.</small>
                                 </div>
+                                
+                                <!-- Row 6: Open Issues in Same Unit -->
+                                <div class="col-12 mb-3">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                            <h6 class="mb-0">Open Issues in Same Unit</h6>
+                                            <button type="button" class="btn btn-sm btn-outline-primary" id="refreshIssuesBtn">
+                                                <i class="ph-arrow-clockwise"></i> Refresh
+                                            </button>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div class="table-responsive" style="max-height: 200px;">
+                                                <table class="table table-sm table-hover mb-0" id="openIssuesTable">
+                                                    <thead class="table-light sticky-top">
+                                                        <tr>
+                                                            <th>Ref #</th>
+                                                            <th>Issue</th>
+                                                            <th>Type</th>
+                                                            <th>Priority</th>
+                                                            <th>Reported</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="openIssuesTableBody">
+                                                        <tr>
+                                                            <td colspan="5" class="text-center text-muted py-3">
+                                                                <i class="ph-info-circle"></i> Select a unit to view open issues
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -409,6 +443,52 @@
 .autoComplete_wrapper *[class*="magnify"],
 .autoComplete_wrapper *[class*="icon"] {
     display: none !important;
+}
+
+/* Open Issues Table Styling */
+#openIssuesTable {
+    font-size: 0.875rem;
+}
+
+#openIssuesTable th {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+#openIssuesTable td {
+    padding: 0.5rem;
+    vertical-align: middle;
+}
+
+#openIssuesTable tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+#openIssuesTable .badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+#refreshIssuesBtn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+#refreshIssuesBtn:hover {
+    transform: rotate(180deg);
+    transition: transform 0.3s ease;
+}
+
+/* Sticky header for table */
+#openIssuesTable thead.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 </style>
 
@@ -875,5 +955,140 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+    
+    // Function to load open issues for the selected unit
+    function loadOpenIssues(blockId, blockUnitId, issueType = null) {
+        const tableBody = document.getElementById('openIssuesTableBody');
+        
+        // Show loading state
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted py-3">
+                    <i class="ph-spinner ph-spin"></i> Loading open issues...
+                </td>
+            </tr>
+        `;
+        
+        // Build API URL with filters
+        let apiUrl = `/api/block-issues?block_id=${blockId}&block_unit_id=${blockUnitId}`;
+        if (issueType) {
+            apiUrl += `&issue_type=${encodeURIComponent(issueType)}`;
+        }
+        
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.data.length > 0) {
+                    // Render issues table
+                    tableBody.innerHTML = data.data.map(issue => `
+                        <tr>
+                            <td><span class="badge bg-secondary">${issue.ref_no}</span></td>
+                            <td>${issue.issue}</td>
+                            <td><span class="badge bg-info">${issue.issue_type}</span></td>
+                            <td>
+                                ${getPriorityBadge(issue.priority_id)}
+                            </td>
+                            <td>${formatDate(issue.created_at)}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    // Show no issues message
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">
+                                <i class="ph-check-circle"></i> No open issues found for this unit
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading open issues:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-danger py-3">
+                            <i class="ph-warning"></i> Failed to load issues. Please try again.
+                        </td>
+                    </tr>
+                `;
+            });
+    }
+    
+    // Function to get priority badge HTML
+    function getPriorityBadge(priorityId) {
+        const priorities = {
+            1: '<span class="badge bg-success">Low</span>',
+            2: '<span class="badge bg-info">Normal</span>',
+            3: '<span class="badge bg-warning">High</span>',
+            4: '<span class="badge bg-danger">Urgent</span>',
+            5: '<span class="badge bg-dark">Critical</span>'
+        };
+        return priorities[priorityId] || '<span class="badge bg-secondary">Unknown</span>';
+    }
+    
+    // Function to format date
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        });
+    }
+    
+    // Event listeners for issue type and unit selection changes
+    const issueTypeSelect = document.getElementById('issue_type');
+    const blockUnitSelect = document.getElementById('block_unit_id');
+    const refreshIssuesBtn = document.getElementById('refreshIssuesBtn');
+    
+    if (issueTypeSelect) {
+        issueTypeSelect.addEventListener('change', function() {
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            const blockUnitId = blockUnitSelect ? blockUnitSelect.value : null;
+            
+            if (blockId && blockUnitId) {
+                loadOpenIssues(blockId, blockUnitId, this.value);
+            }
+        });
+    }
+    
+    if (blockUnitSelect) {
+        blockUnitSelect.addEventListener('change', function() {
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            const issueType = issueTypeSelect ? issueTypeSelect.value : null;
+            
+            if (blockId && this.value) {
+                loadOpenIssues(blockId, this.value, issueType);
+            }
+        });
+    }
+    
+    if (refreshIssuesBtn) {
+        refreshIssuesBtn.addEventListener('click', function() {
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            const blockUnitId = blockUnitSelect ? blockUnitSelect.value : null;
+            const issueType = issueTypeSelect ? issueTypeSelect.value : null;
+            
+            if (blockId && blockUnitId) {
+                loadOpenIssues(blockId, blockUnitId, issueType);
+            }
+        });
+    }
+    
+    // Load initial issues when modal opens (if unit is already selected)
+    createIssueModal.addEventListener('shown.bs.modal', function() {
+        const blockId = document.querySelector('input[name="block_id"]').value;
+        const blockUnitId = blockUnitSelect ? blockUnitSelect.value : null;
+        
+        if (blockId && blockUnitId) {
+            loadOpenIssues(blockId, blockUnitId);
+        }
+    });
 });
 </script>
