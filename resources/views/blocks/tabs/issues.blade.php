@@ -8,6 +8,7 @@
                             <th>Priority</th>
                             <th>Status</th>
                             <th>Reported Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,6 +47,20 @@
                                     @endif
                                 </td>
                                 <td>{{ $issue->created_at ? $issue->created_at->format('M d, Y') : 'N/A' }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('block-issues.show', $issue) }}" class="btn btn-sm btn-outline-primary" title="View Issue">
+                                            <i class="ph-eye"></i>
+                                        </a>
+                                        <a href="{{ route('block-issues.edit', $issue) }}" class="btn btn-sm btn-outline-warning" title="Edit Issue">
+                                            <i class="ph-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Issue" 
+                                                onclick="deleteIssue({{ $issue->id }}, '{{ $issue->ref_no }}')">
+                                            <i class="ph-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -165,7 +180,7 @@
                                             Use default contact details
                                         </label>
                                     </div>
-                                    <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly></textarea>
+                                    <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..."></textarea>
                                 </div>
                                 
                                 <!-- Row 5: File Upload -->
@@ -852,10 +867,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Enable readonly mode
                 defaultContactDetailsField.readOnly = true;
                 defaultContactDetailsField.classList.add('bg-light');
+                defaultContactDetailsField.setAttribute('readonly', 'readonly');
             } else {
                 // Disable readonly mode for manual editing
                 defaultContactDetailsField.readOnly = false;
                 defaultContactDetailsField.classList.remove('bg-light');
+                defaultContactDetailsField.removeAttribute('readonly');
                 defaultContactDetailsField.focus();
             }
         });
@@ -863,6 +880,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize readonly state
         defaultContactDetailsField.readOnly = true;
         defaultContactDetailsField.classList.add('bg-light');
+        defaultContactDetailsField.setAttribute('readonly', 'readonly');
     }
 
     // Function to update contact details field based on selected contact method
