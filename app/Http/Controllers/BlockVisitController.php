@@ -4,63 +4,127 @@ namespace App\Http\Controllers;
 
 use App\Models\Block;
 use App\Models\BlockVisit;
+use App\Models\JobReason;
+use App\Models\JobStatus;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class BlockVisitController extends Controller
 {
-    public function index(Request $request)
-    {
-        $visits = BlockVisit::with('block')->orderByDesc('created_at')->paginate(10);
-        return view('block-visits.index', compact('visits'));
-    }
-
-    public function create()
-    {
-        $blocks = Block::orderBy('name')->get();
-        return view('block-visits.create', compact('blocks'));
-    }
-
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
-            'ref_no' => 'required|string|max:30',
+            'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
+            'job_reason_id' => 'required|exists:job_reasons,id',
             'notes' => 'nullable|string|max:255',
         ]);
 
-        BlockVisit::create($data);
-        return redirect()->route('block-visits.index')->with('success', 'Site visit created');
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $blockVisit = BlockVisit::create([
+                'block_id' => $request->block_id,
+                'ref_no' => 'SV-' . strtoupper(Str::random(6)),
+                'scheduled_date_time' => $request->scheduled_date_time,
+                'job_reason_id' => $request->job_reason_id,
+                'notes' => $request->notes,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Site visit scheduled successfully',
+                'data' => $blockVisit->load('jobReason', 'createdByUser')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error scheduling site visit: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(BlockVisit $blockVisit)
     {
-        $blockVisit->load(['block', 'images', 'results', 'team']);
-        return view('block-visits.show', compact('blockVisit'));
-    }
-
-    public function edit(BlockVisit $blockVisit)
-    {
-        $blocks = Block::orderBy('name')->get();
-        return view('block-visits.edit', compact('blockVisit','blocks'));
+        try {
+            $blockVisit->load(['jobReason', 'jobStatus', 'createdByUser', 'updatedByUser']);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $blockVisit
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not fetch site visit details: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function update(Request $request, BlockVisit $blockVisit)
     {
-        $data = $request->validate([
-            'block_id' => 'required|exists:blocks,id',
-            'ref_no' => 'required|string|max:30',
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
+            'job_reason_id' => 'required|exists:job_reasons,id',
             'notes' => 'nullable|string|max:255',
         ]);
-        $blockVisit->update($data);
-        return redirect()->route('block-visits.index')->with('success', 'Site visit updated');
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $blockVisit->update([
+                'scheduled_date_time' => $request->scheduled_date_time,
+                'job_reason_id' => $request->job_reason_id,
+                'notes' => $request->notes,
+                'updated_by' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Site visit updated successfully',
+                'data' => $blockVisit->load('jobReason', 'updatedByUser')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating site visit: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(BlockVisit $blockVisit)
     {
-        $blockVisit->delete();
-        return back()->with('success', 'Site visit deleted');
+        try {
+            $blockVisit->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Site visit deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting site visit: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }
 

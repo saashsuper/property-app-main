@@ -161,6 +161,8 @@ class BlockController extends Controller
         $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
         $contractors = \App\Models\User::whereHas('userType', function($q) { $q->where('name', 'Contractor'); })->orderBy('name')->get();
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
+        $jobReasons = \App\Models\JobReason::orderBy('name')->get();
+        $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
@@ -177,7 +179,9 @@ class BlockController extends Controller
             'users',
             'contractTypes',
             'contractors',
-            'contactMethods'
+            'contactMethods',
+            'jobReasons',
+            'jobStatuses'
         ));
     }
 

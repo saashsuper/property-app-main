@@ -29,11 +29,14 @@ class DatabaseSeeder extends Seeder
             BlockInspectionValueTypeSeeder::class,
             BlockInspectionValueSeeder::class,
             BuildingAssetSeeder::class,
+            JobReasonSeeder::class,
+            JobStatusSeeder::class,
         ]);
 
         // Seed main data
         $this->call([
             RealUserSeeder::class,
+            ContractorUserSeeder::class,
             RealBlockSeeder::class,
             BlockBuildingsSeeder::class,
             BlockUnitsSeeder::class,

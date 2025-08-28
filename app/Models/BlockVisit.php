@@ -42,6 +42,26 @@ class BlockVisit extends Model
     {
         return $this->hasMany(BlockVisitTeam::class);
     }
+
+    public function jobReason()
+    {
+        return $this->belongsTo(JobReason::class);
+    }
+
+    public function jobStatus()
+    {
+        return $this->belongsTo(JobStatus::class);
+    }
+
+    public function createdByUser()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedByUser()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 }
 
 
