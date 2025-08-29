@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\BlockIssue;
 use App\Models\BlockIssueImage;
 use App\Models\Block;
+use App\Models\IssueStatus;
+use App\Models\Priority;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -185,8 +187,10 @@ class BlockIssueController extends Controller
     {
         $blocks = Block::orderBy('name')->get();
         $users = User::orderBy('name')->get();
+        $priorities = Priority::orderBy('id')->get();
+        $issue_status = IssueStatus::orderBy('id')->get();
 
-        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users'));
+        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users', 'priorities', 'issue_status'));
     }
 
     /**

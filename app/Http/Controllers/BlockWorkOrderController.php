@@ -106,6 +106,15 @@ class BlockWorkOrderController extends Controller
         ]);
 
         if ($validator->fails()) {
+            // Check if this is an AJAX request
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -145,6 +154,16 @@ class BlockWorkOrderController extends Controller
                     's3_status' => 0,
                 ]);
             }
+        }
+
+        // Check if this is an AJAX request
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Block work order created successfully!',
+                'work_order_id' => $workOrder->id,
+                'redirect_url' => route('block-work-orders.index')
+            ]);
         }
 
         return redirect()->route('block-work-orders.index')

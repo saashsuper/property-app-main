@@ -173,6 +173,22 @@ class BlockIssue extends Model
     }
 
     /**
+     * Get the priority for the issue
+     */
+    public function priority()
+    {
+        return $this->belongsTo(Priority::class, 'priority_id');
+    }
+
+    /**
+     * Get the issue status for the issue
+     */
+    public function issueStatus()
+    {
+        return $this->belongsTo(IssueStatus::class, 'issue_status_id');
+    }
+
+    /**
      * Get the images for the issue
      */
     public function images()
@@ -191,18 +207,18 @@ class BlockIssue extends Model
     /**
      * Get priority text
      */
-    public function getPriorityTextAttribute()
-    {
-        $priorities = [
-            1 => 'Low',
-            2 => 'Normal',
-            3 => 'High',
-            4 => 'Urgent',
-            5 => 'Critical'
-        ];
+    // public function getPriorityTextAttribute()
+    // {
+    //     $priorities = [
+    //         1 => 'Low',
+    //         2 => 'Normal',
+    //         3 => 'High',
+    //         4 => 'Urgent',
+    //         5 => 'Critical'
+    //     ];
 
-        return $priorities[$this->priority ?? $this->priority_id] ?? 'Unknown';
-    }
+    //     return $priorities[$this->priority ?? $this->priority_id] ?? 'Unknown';
+    // }
 
     /**
      * Get status text

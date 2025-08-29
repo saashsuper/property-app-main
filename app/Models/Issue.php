@@ -69,6 +69,22 @@ class Issue extends Model
     }
 
     /**
+     * Get the priority for the issue
+     */
+    public function priority()
+    {
+        return $this->belongsTo(Priority::class, 'priority');
+    }
+
+    /**
+     * Get the issue status for the issue
+     */
+    public function issueStatus()
+    {
+        return $this->belongsTo(IssueStatus::class, 'status');
+    }
+
+    /**
      * Scope for active issues
      */
     public function scopeActive($query)

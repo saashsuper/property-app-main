@@ -108,6 +108,14 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Get the priority for the work order.
+     */
+    public function priority()
+    {
+        return $this->belongsTo(Priority::class, 'priority_id');
+    }
+
+    /**
      * Get the images for the work order.
      */
     public function images()
