@@ -239,18 +239,18 @@ class BlockIssue extends Model
     /**
      * Get priority color class
      */
-    public function getPriorityColorAttribute()
-    {
-        $colors = [
-            1 => 'success',
-            2 => 'info',
-            3 => 'warning',
-            4 => 'danger',
-            5 => 'dark'
-        ];
+    // public function getPriorityColorAttribute()
+    // {
+    //     $colors = [
+    //         1 => 'success',
+    //         2 => 'info',
+    //         3 => 'warning',
+    //         4 => 'danger',
+    //         5 => 'dark'
+    //     ];
 
-        return $colors[$this->priority ?? $this->priority_id] ?? 'info';
-    }
+    //     return $colors[$this->priority ?? $this->priority_id] ?? 'info';
+    // }
 
     /**
      * Get status color class

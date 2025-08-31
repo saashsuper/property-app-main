@@ -1,3 +1,12 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Block Issues</h6>
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#createIssueModal">
+                <i class="ph-plus align-bottom me-1"></i> Report Issue
+            </button>
+        </div>
+        
         @if($block->issues && $block->issues->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -17,31 +26,15 @@
                                 <td>#{{ $issue->id }}</td>
                                 <td>{{ $issue->issue ?? 'N/A' }}</td>
                                 <td>
-                                    @if($issue->priority_id == 1)
-                                        <span class="badge bg-success">Low</span>
-                                    @elseif($issue->priority_id == 2)
-                                        <span class="badge bg-info">Normal</span>
-                                    @elseif($issue->priority_id == 3)
-                                        <span class="badge bg-warning">High</span>
-                                    @elseif($issue->priority_id == 4)
-                                        <span class="badge bg-danger">Urgent</span>
-                                    @elseif($issue->priority_id == 5)
-                                        <span class="badge bg-dark">Critical</span>
+                                    @if($issue->priority)
+                                        <span class="badge bg-{{ $issue->priority->btn_class }}">{{ $issue->priority->label }}</span>
                                     @else
                                         <span class="badge bg-secondary">Unknown</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($issue->issue_status_id == 1)
-                                        <span class="badge bg-warning">Open</span>
-                                    @elseif($issue->issue_status_id == 2)
-                                        <span class="badge bg-info">In Progress</span>
-                                    @elseif($issue->issue_status_id == 3)
-                                        <span class="badge bg-success">Resolved</span>
-                                    @elseif($issue->issue_status_id == 4)
-                                        <span class="badge bg-secondary">Closed</span>
-                                    @elseif($issue->issue_status_id == 5)
-                                        <span class="badge bg-danger">On Hold</span>
+                                    @if($issue->issueStatus)
+                                        <span class="badge bg-{{ $issue->issueStatus->btn_class }}">{{ $issue->issueStatus->label }}</span>
                                     @else
                                         <span class="badge bg-secondary">Unknown</span>
                                     @endif
@@ -68,7 +61,7 @@
             </div>
         @else
             <div class="text-center py-4">
-                                                    <i class="ph-warning text-muted" style="font-size: 3rem;"></i>
+                <i class="ph-warning text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No issues reported for this block.</p>
             </div>
         @endif
@@ -146,11 +139,11 @@
                                     <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
                                     <select class="form-select" id="priority_id" name="priority_id" required>
                                         <option value="">Select Priority</option>
-                                        <option value="1">Low</option>
-                                        <option value="2" selected>Normal</option>
-                                        <option value="3">High</option>
-                                        <option value="4">Urgent</option>
-                                        <option value="5">Critical</option>
+                                        @foreach($priorities as $priority)
+                                            <option value="{{ $priority->value }}" {{ $priority->value == 2 ? 'selected' : '' }}>
+                                                {{ $priority->label }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
@@ -492,6 +485,82 @@
 </style>
 
 <script>
+// Global functions that need to be accessible from HTML onclick attributes
+function deleteIssue(issueId, issueRef) {
+    // Show confirmation dialog
+    if (confirm(`Are you sure you want to delete issue ${issueRef}? This action cannot be undone.`)) {
+        // Show loading state
+        const deleteBtn = event.target.closest('button');
+        const originalHTML = deleteBtn.innerHTML;
+        deleteBtn.innerHTML = '<i class="ph-spinner ph-spin"></i>';
+        deleteBtn.disabled = true;
+
+        // Send delete request
+        fetch(`/block-issues/${issueId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Remove the row from the table
+                const row = deleteBtn.closest('tr');
+                row.remove();
+                
+                // Show success message
+                showNotification('Issue deleted successfully!', 'success');
+                
+                // Check if table is empty and show message
+                const tbody = document.querySelector('#issuesTable tbody');
+                if (tbody && tbody.children.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                <i class="ph-info-circle"></i> No issues reported for this block.
+                            </td>
+                    </tr>
+                    `;
+                }
+            } else {
+                throw new Error('Failed to delete issue');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting issue:', error);
+            showNotification('Failed to delete issue. Please try again.', 'error');
+        })
+        .finally(() => {
+            // Reset button state
+            deleteBtn.innerHTML = originalHTML;
+            deleteBtn.disabled = false;
+        });
+    }
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    // Check if Toastify is available
+    if (typeof Toastify !== 'undefined') {
+        const backgroundColor = type === 'success' ? '#28a745' : 
+                             type === 'error' ? '#dc3545' : 
+                             type === 'warning' ? '#ffc107' : '#17a2b8';
+        
+        Toastify({
+            text: message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: backgroundColor,
+            stopOnFocus: true
+        }).showToast();
+    } else {
+        // Fallback to alert if Toastify is not available
+        alert(message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const createIssueForm = document.getElementById('createIssueForm');
     const createIssueModal = document.getElementById('createIssueModal');
@@ -1002,7 +1071,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Show no issues message
                     tableBody.innerHTML = `
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-3">
+                            <td colspan="6" class="text-center text-muted py-3">
                                 <i class="ph-check-circle"></i> No open issues found for this unit
                             </td>
                         </tr>
@@ -1013,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error loading open issues:', error);
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center text-danger py-3">
+                        <td colspan="6" class="text-center text-danger py-3">
                             <i class="ph-warning"></i> Failed to load issues. Please try again.
                         </td>
                     </tr>
@@ -1031,6 +1100,18 @@ document.addEventListener('DOMContentLoaded', function() {
             5: '<span class="badge bg-dark">Critical</span>'
         };
         return priorities[priorityId] || '<span class="badge bg-secondary">Unknown</span>';
+    }
+
+    // Function to get status badge HTML
+    function getStatusBadge(statusId) {
+        const statuses = {
+            1: '<span class="badge bg-warning">Open</span>',
+            2: '<span class="badge bg-info">In Progress</span>',
+            3: '<span class="badge bg-success">Resolved</span>',
+            4: '<span class="badge bg-secondary">Closed</span>',
+            5: '<span class="badge bg-danger">On Hold</span>'
+        };
+        return statuses[statusId] || '<span class="badge bg-secondary">Unknown</span>';
     }
     
     // Function to format date
@@ -1092,5 +1173,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loadOpenIssues(blockId, blockUnitId);
         }
     });
+
+
 });
 </script>

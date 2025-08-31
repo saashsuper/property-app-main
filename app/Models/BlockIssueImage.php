@@ -48,4 +48,54 @@ class BlockIssueImage extends Model
     {
         return $this->belongsTo(BlockIssueAction::class, 'block_issue_action_id');
     }
+
+    /**
+     * Get the full image URL.
+     */
+    public function getImageUrlAttribute()
+    {
+        if ($this->image_path && $this->image_name) {
+            return asset('storage/' . $this->image_path . '/' . $this->image_name);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get the image filename for display.
+     */
+    public function getDisplayNameAttribute()
+    {
+        if ($this->image_name) {
+            // Remove timestamp prefix and show original name if possible
+            $parts = explode('_', $this->image_name);
+            if (count($parts) > 2) {
+                array_shift($parts); // Remove timestamp
+                array_shift($parts); // Remove random string
+                return implode('_', $parts);
+            }
+            return $this->image_name;
+        }
+        
+        return 'Image';
+    }
+
+    /**
+     * Get the file size in human readable format.
+     */
+    public function getFileSizeAttribute()
+    {
+        $path = storage_path('app/public/' . $this->image_path . '/' . $this->image_name);
+        if (file_exists($path)) {
+            $bytes = filesize($path);
+            $units = ['B', 'KB', 'MB', 'GB'];
+            $bytes = max($bytes, 0);
+            $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+            $pow = min($pow, count($units) - 1);
+            $bytes /= pow(1024, $pow);
+            return round($bytes, 2) . ' ' . $units[$pow];
+        }
+        
+        return 'Unknown';
+    }
 }

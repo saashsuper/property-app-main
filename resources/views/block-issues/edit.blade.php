@@ -301,6 +301,83 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
+
+                                        <!-- Existing Images -->
+                                        @if($blockIssue->images && $blockIssue->images->count() > 0)
+                                        <div class="mb-3">
+                                            <label class="form-label">Existing Images</label>
+                                            <div class="row" id="existingImages">
+                                                @foreach($blockIssue->images as $image)
+                                                <div class="col-md-4 col-lg-3 mb-3" id="imageContainer{{ $image->id }}">
+                                                    <div class="card border h-100">
+                                                        <div class="card-img-top position-relative">
+                                                            <img src="{{ $image->image_url }}" 
+                                                                 alt="{{ $image->display_name }}" 
+                                                                 class="img-fluid" 
+                                                                 style="height: 150px; object-fit: cover; width: 100%;"
+                                                                 data-bs-toggle="modal" 
+                                                                 data-bs-target="#editImageModal{{ $image->id }}"
+                                                                 style="cursor: pointer;">
+                                                            <div class="position-absolute top-0 end-0 m-2">
+                                                                <button type="button" 
+                                                                        class="btn btn-danger btn-sm" 
+                                                                        onclick="deleteImage({{ $image->id }}, '{{ $image->display_name }}')"
+                                                                        title="Delete Image">
+                                                                    <i class="ph-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="position-absolute top-0 start-0 m-2">
+                                                                <span class="badge bg-secondary">{{ $image->file_size }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div class="card-body p-2">
+                                                            <small class="text-muted d-block text-truncate" title="{{ $image->display_name }}">
+                                                                {{ $image->display_name }}
+                                                            </small>
+                                                            <small class="text-muted d-block">
+                                                                Uploaded: {{ $image->created_at->format('M d, Y') }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Edit Image Modal -->
+                                                <div class="modal fade" id="editImageModal{{ $image->id }}" tabindex="-1" aria-labelledby="editImageModalLabel{{ $image->id }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="editImageModalLabel{{ $image->id }}">
+                                                                    {{ $image->display_name }}
+                                                                </h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body text-center">
+                                                                <img src="{{ $image->image_url }}" 
+                                                                     alt="{{ $image->display_name }}" 
+                                                                     class="img-fluid" 
+                                                                     style="max-height: 70vh;">
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <div class="me-auto">
+                                                                    <small class="text-muted">
+                                                                        Size: {{ $image->file_size }} | 
+                                                                        Uploaded: {{ $image->created_at->format('M d, Y H:i') }}
+                                                                    </small>
+                                                                </div>
+                                                                <a href="{{ $image->image_url }}" 
+                                                                   class="btn btn-primary btn-sm" 
+                                                                   download="{{ $image->display_name }}">
+                                                                    <i class="ph-download me-1"></i> Download
+                                                                </a>
+                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -565,5 +642,85 @@
                 document.getElementById('work_order_issue').value = issueDetails;
             }
         });
+
+        // Function to delete images
+        function deleteImage(imageId, imageName) {
+            if (confirm(`Are you sure you want to delete the image "${imageName}"? This action cannot be undone.`)) {
+                // Show loading state
+                const deleteBtn = event.target.closest('button');
+                const originalHTML = deleteBtn.innerHTML;
+                deleteBtn.innerHTML = '<i class="ph-spinner ph-spin"></i>';
+                deleteBtn.disabled = true;
+
+                // Send delete request
+                fetch(`/block-issues/images/${imageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the image container from the DOM
+                        const imageContainer = document.getElementById(`imageContainer${imageId}`);
+                        if (imageContainer) {
+                            imageContainer.remove();
+                        }
+
+                        // Show success message
+                        if (typeof Toastify !== 'undefined') {
+                            Toastify({
+                                text: data.message || 'Image deleted successfully!',
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "#28a745",
+                                stopOnFocus: true
+                            }).showToast();
+                        } else {
+                            alert(data.message || 'Image deleted successfully!');
+                        }
+
+                        // Check if no images remain
+                        const existingImages = document.getElementById('existingImages');
+                        if (existingImages && existingImages.children.length === 0) {
+                            existingImages.innerHTML = `
+                                <div class="col-12">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="ph-images"></i> No images uploaded for this issue.
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        throw new Error(data.message || 'Failed to delete image');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting image:', error);
+                    const message = error.message || 'Failed to delete image. Please try again.';
+                    
+                    if (typeof Toastify !== 'undefined') {
+                        Toastify({
+                            text: message,
+                            duration: 5000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#dc3545",
+                            stopOnFocus: true
+                        }).showToast();
+                    } else {
+                        alert(message);
+                    }
+                })
+                .finally(() => {
+                    // Reset button state
+                    deleteBtn.innerHTML = originalHTML;
+                    deleteBtn.disabled = false;
+                });
+            }
+        }
     </script>
 @endsection

@@ -76,6 +76,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Block Issues
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);
+    Route::delete('block-issues/images/{image}', [App\Http\Controllers\BlockIssueController::class, 'deleteImage'])->name('block-issues.delete-image');
     Route::get('api/block-issues', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssues'])->name('api.block-issues');
     Route::get('api/block-issues/{blockIssue}', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssue'])->name('api.block-issues.show');
     Route::get('api/contact-methods-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getContactMethodsAutocomplete'])->name('api.contact-methods-autocomplete');

@@ -175,7 +175,7 @@ class BlockIssueController extends Controller
      */
     public function show(BlockIssue $blockIssue)
     {
-        $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater']);
+        $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater', 'priority', 'issueStatus']);
         
         return view('block-issues.show', compact('blockIssue'));
     }
@@ -229,12 +229,13 @@ class BlockIssueController extends Controller
                 
                 $image->storeAs('public/' . $imagePath, $imageName);
                 
-                // You can create a BlockIssueImage model if needed
-                // BlockIssueImage::create([
-                //     'block_issue_id' => $blockIssue->id,
-                //     'image_name' => $imageName,
-                //     'image_path' => $imagePath,
-                // ]);
+                // Create BlockIssueImage record
+                BlockIssueImage::create([
+                    'block_issue_id' => $blockIssue->id,
+                    'image_name' => $imageName,
+                    'image_path' => $imagePath,
+                    's3_status' => false,
+                ]);
             }
         }
 
@@ -356,5 +357,41 @@ class BlockIssueController extends Controller
             });
 
         return response()->json($propertyManagers);
+    }
+
+    /**
+     * Delete an image from a block issue.
+     */
+    public function deleteImage(BlockIssueImage $image)
+    {
+        try {
+            // Check if the user has permission to delete this image
+            $blockIssue = $image->blockIssue;
+            if (!$blockIssue) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Image not found or issue not found.'
+                ], 404);
+            }
+
+            // Delete the physical file
+            $filePath = storage_path('app/public/' . $image->image_path . '/' . $image->image_name);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // Delete the database record
+            $image->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete image: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

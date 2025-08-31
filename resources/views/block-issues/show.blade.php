@@ -119,15 +119,18 @@
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Title:</td>
-                                                <td>{{ $blockIssue->title ?? 'N/A' }}</td>
+                                                <td>{{ $blockIssue->issue ?? 'N/A' }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Description:</td>
-                                                <td>{{ $blockIssue->description ?? $blockIssue->issue ?? 'No description available' }}</td>
+                                                <td>{{ $blockIssue->issue_details ?? $blockIssue->issue_details ?? 'No description available' }}</td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Priority:</td>
-                                                <td><span class="badge bg-{{ $blockIssue->priority_color }}">{{ $blockIssue->priority_text }}</span></td>
+                                                <td>
+                                                    <span class="badge bg-{{ $blockIssue->priority->btn_class }}">
+                                                    {{ $blockIssue->priority->label}}</span>
+                                                </td>
                                             </tr>
                                             <tr>
                                                 <td class="fw-medium">Status:</td>
@@ -449,6 +452,76 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Images Section -->
+                            @if($blockIssue->images && $blockIssue->images->count() > 0)
+                            <div class="col-12">
+                                <h5 class="mb-3">Issue Images</h5>
+                                
+                                <div class="row">
+                                    @foreach($blockIssue->images as $image)
+                                    <div class="col-md-4 col-lg-3 mb-3">
+                                        <div class="card border h-100">
+                                            <div class="card-img-top position-relative">
+                                                <img src="{{ $image->image_url }}" 
+                                                     alt="{{ $image->display_name }}" 
+                                                     class="img-fluid" 
+                                                     style="height: 200px; object-fit: cover; width: 100%;"
+                                                     data-bs-toggle="modal" 
+                                                     data-bs-target="#imageModal{{ $image->id }}"
+                                                     style="cursor: pointer;">
+                                                <div class="position-absolute top-0 end-0 m-2">
+                                                    <span class="badge bg-secondary">{{ $image->file_size }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <small class="text-muted d-block text-truncate" title="{{ $image->display_name }}">
+                                                    {{ $image->display_name }}
+                                                </small>
+                                                <small class="text-muted d-block">
+                                                    Uploaded: {{ $image->created_at->format('M d, Y') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Image Modal -->
+                                    <div class="modal fade" id="imageModal{{ $image->id }}" tabindex="-1" aria-labelledby="imageModalLabel{{ $image->id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="imageModalLabel{{ $image->id }}">
+                                                        {{ $image->display_name }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-center">
+                                                    <img src="{{ $image->image_url }}" 
+                                                         alt="{{ $image->display_name }}" 
+                                                         class="img-fluid" 
+                                                         style="max-height: 70vh;">
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <div class="me-auto">
+                                                        <small class="text-muted">
+                                                            Size: {{ $image->file_size }} | 
+                                                            Uploaded: {{ $image->created_at->format('M d, Y H:i') }}
+                                                        </small>
+                                                    </div>
+                                                    <a href="{{ $image->image_url }}" 
+                                                       class="btn btn-primary btn-sm" 
+                                                       download="{{ $image->display_name }}">
+                                                        <i class="ph-download me-1"></i> Download
+                                                    </a>
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
                             @endif
