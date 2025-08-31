@@ -1,4 +1,87 @@
 @extends('layouts.master-without-nav')
+
+@push('styles')
+<style>
+/* Fix layout issues for all screens */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fix auth page wrapper */
+.auth-page-wrapper {
+    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0;
+}
+
+/* Ensure container fits properly */
+.container {
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Fix card height issues */
+.card {
+    height: auto;
+    max-height: none;
+}
+
+/* Responsive adjustments */
+@media (max-height: 800px) {
+    .auth-page-wrapper {
+        padding: 0.5rem 0;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-height: 600px) {
+    .auth-page-wrapper {
+        padding: 0.25rem 0;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Fix for smaller screens */
+@media (max-width: 768px) {
+    .auth-page-wrapper {
+        padding: 0.5rem 0;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Ensure proper spacing */
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.col-lg-11, .col-xxl-5, .col-xxl-6 {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+</style>
+@endpush
 @section('title')
     @lang('translation.signin')
 @endsection
@@ -13,9 +96,11 @@
                                 <div class="card auth-card bg-secondary h-100 border-0 shadow-none d-none d-sm-block mb-0">
                                     <div class="card-body py-5 d-flex justify-content-between flex-column">
                                         <div class="text-center">
+                                            <!-- PROMAN Logo on left side -->
+                                            <div class="mb-4 d-flex justify-content-center align-items-center">
+                                                <h1 class="text-white fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">PROMAN</h1>
+                                            </div>
                                             <h3 class="text-white">Start your journey with us.</h3>
-                                            <p class="text-white opacity-75 fs-base">It brings together your tasks,
-                                                projects, timelines, files and more</p>
                                         </div>
 
                                         <div
@@ -26,7 +111,7 @@
                                                     class="effect-circle-2 position-relative mx-auto rounded-circle d-flex align-items-center justify-content-center">
                                                     <div
                                                         class="effect-circle-3 mx-auto rounded-circle position-relative text-white fs-4xl d-flex align-items-center justify-content-center">
-                                                        Welcome to <span class="text-primary ms-1">Steex</span>
+                                                        Welcome to <span class="text-primary ms-1">PROMAN</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -84,8 +169,8 @@
                                                 &copy;
                                                 <script>
                                                     document.write(new Date().getFullYear())
-                                                </script> Steex. Crafted with <i
-                                                    class="mdi mdi-heart text-danger"></i> by Themesbrand
+                                                </script> PROMAN. Crafted with <i
+                                                    class="mdi mdi-heart text-danger"></i> by PROMAN
                                             </p>
                                         </div>
                                     </div>
@@ -96,8 +181,12 @@
                                 <div class="card mb-0 border-0 shadow-none mb-0">
                                     <div class="card-body p-sm-5 m-lg-4">
                                         <div class="text-center mt-5">
+                                            <!-- PROMAN Logo -->
+                                            <div class="mb-4 d-flex justify-content-center align-items-center">
+                                                <h2 class="text-dark fw-bold" style="font-size: 2rem; letter-spacing: 1.5px;">PROMAN</h2>
+                                            </div>
                                             <h5 class="fs-3xl">Welcome Back</h5>
-                                            <p class="text-muted">Sign in to continue to Steex.</p>
+                                            <p class="text-muted">Sign in to continue to PROMAN.</p>
                                         </div>
                                         <div class="p-2 mt-5">
                                             <form action="{{ route('login') }}" method="post">
@@ -108,7 +197,7 @@
                                                             class="text-danger">*</span></label>
                                                     <input type="text"
                                                         class="form-control @error('email') is-invalid @enderror"
-                                                        value="{{ old('email', 'admin@themesbrand.com') }}" id="email"
+                                                        value="{{ old('email', 'admin@proman.com') }}" id="email"
                                                         name="email" placeholder="Enter your email">
                                                     @error('email')
                                                         <span class="invalid-feedback" role="alert">
@@ -131,7 +220,7 @@
                                                         <button
                                                             class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon"
                                                             type="button" id="password-addon"><i
-                                                                class="ri-eye-fill align-middle"></i></button>
+                                                                class="ph-eye align-middle"></i></button>
                                                         @error('password')
                                                             <span class="invalid-feedback" role="alert">
                                                                 <strong>{{ $message }}</strong>
@@ -157,23 +246,18 @@
                                                     </div>
                                                     <div class="pt-2 hstack gap-2 justify-content-center">
                                                         <button type="button" class="btn btn-subtle-primary btn-icon"><i
-                                                                class="ri-facebook-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-danger btn-icon"><i
-                                                                class="ri-google-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-dark btn-icon"><i
-                                                                class="ri-github-fill fs-lg"></i></button>
-                                                        <button type="button" class="btn btn-subtle-info btn-icon"><i
-                                                                class="ri-twitter-fill fs-lg"></i></button>
+                                                                                                class="ph-facebook-logo fs-lg"></i></button>
+                            <button type="button" class="btn btn-subtle-danger btn-icon"><i
+                                class="ph-google-logo fs-lg"></i></button>
+                            <button type="button" class="btn btn-subtle-dark btn-icon"><i
+                                class="ph-github-logo fs-lg"></i></button>
+                            <button type="button" class="btn btn-subtle-info btn-icon"><i
+                                class="ph-twitter-logo fs-lg"></i></button>
                                                     </div>
                                                 </div>
                                             </form>
 
-                                            <div class="text-center mt-5">
-                                                <p class="mb-0">Don't have an account ? <a
-                                                        href="{{ route('register') }}"
-                                                        class="fw-semibold text-secondary text-decoration-underline"> Sign
-                                                        Up</a> </p>
-                                            </div>
+
                                         </div>
                                     </div><!-- end card body -->
                                 </div><!-- end card -->

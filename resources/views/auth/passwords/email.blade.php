@@ -26,7 +26,7 @@
                                                     class="effect-circle-2 position-relative mx-auto rounded-circle d-flex align-items-center justify-content-center">
                                                     <div
                                                         class="effect-circle-3 mx-auto rounded-circle position-relative text-white fs-4xl d-flex align-items-center justify-content-center">
-                                                        Welcome to <span class="text-primary ms-1">Steex</span>
+                                                        Welcome to <span class="text-primary ms-1">PROMAN</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -84,8 +84,8 @@
                                                 &copy;
                                                 <script>
                                                     document.write(new Date().getFullYear())
-                                                </script> Steex. Crafted with <i
-                                                    class="mdi mdi-heart text-danger"></i> by Themesbrand
+                                                </script> PROMAN. Crafted with <i
+                                                    class="mdi mdi-heart text-danger"></i> by PROMAN
                                             </p>
                                         </div>
                                     </div>
@@ -97,7 +97,7 @@
                                     <div class="card-body p-sm-5 m-lg-4">
                                         <div class="text-center mt-2">
                                             <h5 class="fs-3xl">Reset Password?</h5>
-                                            <p class="text-muted mb-4">Reset password with Steex</p>
+                                            <p class="text-muted mb-4">Reset password with PROMAN</p>
                                             <div class="pb-4">
                                                 <img src="{{ URL::asset('build/images/auth/email.png') }}" alt=""
                                                     class="avatar-md">

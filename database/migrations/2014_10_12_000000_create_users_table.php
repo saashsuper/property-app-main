@@ -1,9 +1,7 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -19,10 +17,16 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->unsignedBigInteger('user_type_id')->nullable();
+            $table->string('avatar')->nullable();
             $table->rememberToken();
-            $table->timestamps();
+            require_once __DIR__.'/helpers/CommonColumns.php';
+            $commonColumns = require __DIR__.'/helpers/CommonColumns.php';
+            $commonColumns->addCommonColumns($table);
+            
+            // Foreign key constraint
+            $table->foreign('user_type_id')->references('id')->on('user_types')->nullOnDelete();
         });
-        User::create(['name' => 'admin','email' => 'admin@themesbrand.com','password' => Hash::make('12345678'),'email_verified_at'=>'2023-07-10 05:46:38','created_at' => now(),]);
     }
 
     /**

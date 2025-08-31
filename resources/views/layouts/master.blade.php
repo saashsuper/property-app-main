@@ -3,12 +3,13 @@
 
 <head>
     <meta charset="utf-8" />
-    <title> @yield('title') | Steex - Laravel 10 Admin & Dashboard Template </title>
+    <title> @yield('title') | PROMAN - Property Management System </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
-    <meta content="Themesbrand" name="author" />
+    <meta content="Property Management System" name="description" />
+    <meta content="PROMAN" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/proman-favicon.svg') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('layouts.head-css')
 </head>
 
@@ -41,6 +42,7 @@
 
     <!-- JAVASCRIPT -->
     @include('layouts.vendor-scripts')
+    @stack('scripts')
 </body>
 
 </html>

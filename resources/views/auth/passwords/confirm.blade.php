@@ -26,7 +26,7 @@
                                                     class="effect-circle-2 position-relative mx-auto rounded-circle d-flex align-items-center justify-content-center">
                                                     <div
                                                         class="effect-circle-3 mx-auto rounded-circle position-relative text-white fs-4xl d-flex align-items-center justify-content-center">
-                                                        Welcome to <span class="text-primary ms-1">Steex</span>
+                                                        Welcome to <span class="text-primary ms-1">PROMAN</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -84,8 +84,8 @@
                                                 &copy;
                                                 <script>
                                                     document.write(new Date().getFullYear())
-                                                </script> Steex. Crafted with <i
-                                                    class="mdi mdi-heart text-danger"></i> by Themesbrand
+                                                </script> PROMAN. Crafted with <i
+                                                    class="mdi mdi-heart text-danger"></i> by PROMAN
                                             </p>
                                         </div>
                                     </div>

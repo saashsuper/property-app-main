@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\UserType;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -22,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'avatar',
+        'user_type_id',
     ];
 
     /**
@@ -42,4 +44,36 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the user's type
+     */
+    public function userType()
+    {
+        return $this->belongsTo('App\Models\UserType', 'user_type_id');
+    }
+
+    /**
+     * Check if user is an admin
+     */
+    public function isAdmin()
+    {
+        return $this->userType && in_array($this->userType->name, ['Admin', 'Super Admin']);
+    }
+
+    /**
+     * Check if user has a specific type
+     */
+    public function hasType($typeName)
+    {
+        return $this->userType && $this->userType->name === $typeName;
+    }
+
+    /**
+     * Scope a query to only include active users
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at');
+    }
 }

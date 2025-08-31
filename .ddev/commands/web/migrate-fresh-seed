@@ -1,0 +1,7 @@
+#!/bin/bash
+
+## Description: Run Laravel fresh migrations and seeders
+## Usage: migrate-fresh-seed
+## Example: "ddev migrate-fresh-seed"
+
+php artisan migrate:fresh --seed 
