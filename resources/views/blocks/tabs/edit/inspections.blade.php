@@ -41,7 +41,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editInspection({{ $inspection->id }})">
+                                        <i class="ph-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteInspection({{ $inspection->id }})">
+                                        <i class="ph-trash"></i> Delete
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -57,6 +62,9 @@
         @endif
     </div>
 </div>
+
+<!-- jQuery for modal functionality -->
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 <!-- Add Inspection Modal -->
 <div class="modal fade" id="addInspectionModal" tabindex="-1" aria-labelledby="addInspectionModalLabel" aria-hidden="true">
@@ -112,9 +120,66 @@
     </div>
 </div>
 
+<!-- Edit Inspection Modal -->
+<div class="modal fade" id="editInspectionModal" tabindex="-1" aria-labelledby="editInspectionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editInspectionModalLabel">EDIT INSPECTION</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editInspectionForm" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="inspection_id" id="edit_inspection_id">
+                <input type="hidden" name="block_id" value="{{ $block->id }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- User Selection -->
+                        <div class="col-12 mb-3">
+                            <label for="edit_user_id" class="form-label">User <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_user_id" name="user_id" required>
+                                <option value="">Select User</option>
+                                @foreach($users ?? [] as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <!-- Scheduled Date & Time -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_scheduled_date" class="form-label">Scheduled Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="edit_scheduled_date" name="scheduled_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_scheduled_time" class="form-label">Scheduled Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="edit_scheduled_time" name="scheduled_time" required>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div class="col-12 mb-3">
+                            <label for="edit_notes" class="form-label">Notes <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="edit_notes" name="notes" rows="4" placeholder="Enter inspection notes..." required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x align-bottom me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check align-bottom me-1"></i> Update Inspection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const addInspectionForm = document.getElementById('addInspectionForm');
+    const editInspectionForm = document.getElementById('editInspectionForm');
     
     if (addInspectionForm) {
         addInspectionForm.addEventListener('submit', function(e) {
@@ -174,6 +239,68 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+    
+    if (editInspectionForm) {
+        editInspectionForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(editInspectionForm);
+            
+            // Combine date and time
+            const scheduledDate = formData.get('scheduled_date');
+            const scheduledTime = formData.get('scheduled_time');
+            const scheduledDateTime = scheduledDate + ' ' + scheduledTime;
+            
+            // Create the data object
+            const data = {
+                inspection_id: formData.get('inspection_id'),
+                block_id: formData.get('block_id'),
+                user_id: formData.get('user_id'),
+                scheduled_date_time: scheduledDateTime,
+                notes: formData.get('notes'),
+                _token: formData.get('_token'),
+                _method: formData.get('_method')
+            };
+            
+            // Submit form via AJAX (you'll need to create this route)
+            const inspectionId = formData.get('inspection_id');
+            fetch(`/block-inspections/${inspectionId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showAlert('success', 'Inspection updated successfully!');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editInspectionModal'));
+                    modal.hide();
+                    
+                    // Reset form
+                    editInspectionForm.reset();
+                    
+                    // Reload page to show updated inspection
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('error', data.message || 'Failed to update inspection.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'An error occurred. Please try again.');
+            });
+        });
+    }
 });
 
 // Function to reset form
@@ -202,5 +329,227 @@ function showAlert(type, message) {
             alertDiv.remove();
         }
     }, 5000);
+}
+
+// Function to edit inspection
+function editInspection(inspectionId) {
+    console.log('editInspection called with ID:', inspectionId);
+    
+    // Find the inspection data from the table row
+    const row = event.target.closest('tr');
+    console.log('Found row:', row);
+    
+    if (!row) {
+        console.error('Could not find table row');
+        return;
+    }
+    
+    // Map the table columns correctly:
+    // Column 0: Inspection Date (e.g., "Dec 15, 2024")
+    // Column 1: Reference
+    // Column 2: Inspector
+    // Column 3: Status
+    // Column 4: Actions (buttons)
+    
+    const inspectionDate = row.cells[0].textContent.trim();
+    const reference = row.cells[1].textContent.trim();
+    const inspector = row.cells[2].textContent.trim();
+    const status = row.cells[3].textContent.trim();
+    
+    console.log('Raw cell data:', {
+        cell0: row.cells[0].textContent,
+        cell1: row.cells[1].textContent,
+        cell2: row.cells[2].textContent,
+        cell3: row.cells[3].textContent,
+        cell4: row.cells[4].textContent
+    });
+    
+    console.log('Extracted data:', { 
+        inspectionId, 
+        inspectionDate, 
+        reference, 
+        inspector, 
+        status,
+        rowCells: row.cells.length 
+    });
+    
+    // Parse the date and time from the inspection date cell
+    let scheduledDate = '';
+    let scheduledTime = '';
+    
+    if (inspectionDate !== 'N/A') {
+        try {
+            // Handle "Sep 01, 2025" format - use a more reliable date parsing
+            const months = {
+                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+            };
+            
+            // Parse "Sep 01, 2025" format manually
+            const parts = inspectionDate.split(' ');
+            if (parts.length === 3) {
+                const month = months[parts[0]];
+                const day = parts[1].replace(',', '').padStart(2, '0');
+                const year = parts[2];
+                
+                if (month && day && year) {
+                    scheduledDate = `${year}-${month}-${day}`;
+                    scheduledTime = '09:00'; // Default time
+                    console.log('Manually parsed date successfully:', { 
+                        original: inspectionDate, 
+                        scheduledDate, 
+                        scheduledTime,
+                        month, day, year 
+                    });
+                } else {
+                    console.log('Could not parse date parts:', { month, day, year });
+                }
+            } else {
+                console.log('Date format not recognized:', inspectionDate);
+            }
+        } catch (e) {
+            console.log('Error parsing date:', inspectionDate, e);
+        }
+    }
+    
+    // Populate the edit modal fields
+    try {
+        const inspectionIdField = document.getElementById('edit_inspection_id');
+        const userSelect = document.getElementById('edit_user_id');
+        const dateField = document.getElementById('edit_scheduled_date');
+        const timeField = document.getElementById('edit_scheduled_time');
+        const notesField = document.getElementById('edit_notes');
+        
+        console.log('Found modal fields:', {
+            inspectionIdField: !!inspectionIdField,
+            userSelect: !!userSelect,
+            dateField: !!dateField,
+            timeField: !!timeField,
+            notesField: !!notesField
+        });
+        
+        console.log('Values to set:', {
+            inspectionId,
+            scheduledDate,
+            scheduledTime,
+            notes: `Inspection for ${reference} - ${inspector}`
+        });
+        
+        if (inspectionIdField) {
+            inspectionIdField.value = inspectionId;
+            console.log('Set inspection ID to:', inspectionId);
+        }
+        if (dateField) {
+            dateField.value = scheduledDate;
+            console.log('Set date to:', scheduledDate);
+        }
+        if (timeField) {
+            timeField.value = scheduledTime;
+            console.log('Set time to:', scheduledTime);
+        }
+        if (notesField) {
+            notesField.value = `Inspection for ${reference} - ${inspector}`;
+            console.log('Set notes to:', `Inspection for ${reference} - ${inspector}`);
+        }
+        
+        // Try to find and select the user based on inspector name
+        if (userSelect) {
+            console.log('Looking for user:', inspector);
+            console.log('Available options:', Array.from(userSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
+            
+            for (let option of userSelect.options) {
+                if (option.text.includes(inspector) || option.text === inspector) {
+                    userSelect.value = option.value;
+                    console.log('Selected user:', option.text, 'with value:', option.value);
+                    break;
+                }
+            }
+        }
+        
+        console.log('Modal fields populated successfully');
+        
+        // Show the edit modal using jQuery (same as working modals)
+        $('#editInspectionModal').modal('show');
+        console.log('Edit modal shown');
+        
+        // Populate fields after modal is shown (more reliable)
+        $('#editInspectionModal').on('shown.bs.modal', function() {
+            console.log('Modal fully shown, populating fields...');
+            
+            // Use jQuery to set values (more reliable)
+            $('#edit_inspection_id').val(inspectionId);
+            $('#edit_scheduled_date').val(scheduledDate);
+            $('#edit_scheduled_time').val(scheduledTime);
+            $('#edit_notes').val(`Inspection for ${reference} - ${inspector}`);
+            
+            console.log('Set values using jQuery:');
+            console.log('Inspection ID:', inspectionId);
+            console.log('Date:', scheduledDate);
+            console.log('Time:', scheduledTime);
+            console.log('Notes:', `Inspection for ${reference} - ${inspector}`);
+            
+            // Try to find and select the user based on inspector name
+            const userSelect = document.getElementById('edit_user_id');
+            if (userSelect) {
+                console.log('Looking for user:', inspector);
+                console.log('Available options:', Array.from(userSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
+                
+                for (let option of userSelect.options) {
+                    if (option.text.includes(inspector) || option.text === inspector) {
+                        userSelect.value = option.value;
+                        console.log('Selected user:', option.text, 'with value:', option.value);
+                        break;
+                    }
+                }
+            }
+            
+            // Force a refresh of the form fields
+            $('#editInspectionModal input, #editInspectionModal select, #editInspectionModal textarea').each(function() {
+                console.log('Field:', this.id, 'Value:', $(this).val());
+            });
+            
+            // Additional debugging - check if fields are actually set
+            setTimeout(() => {
+                console.log('=== FINAL FIELD VALUES ===');
+                console.log('Inspection ID:', $('#edit_inspection_id').val());
+                console.log('Date:', $('#edit_scheduled_date').val());
+                console.log('Time:', $('#edit_scheduled_time').val());
+                console.log('Notes:', $('#edit_notes').val());
+                console.log('User:', $('#edit_user_id').val());
+                console.log('=== END FIELD VALUES ===');
+            }, 100);
+            
+            console.log('Fields populated after modal show');
+        });
+        
+    } catch (error) {
+        console.error('Error populating modal fields:', error);
+    }
+}
+
+// Function to delete inspection
+function deleteInspection(inspectionId) {
+    if (confirm('Are you sure you want to delete this inspection?')) {
+        // You can implement delete functionality here
+        // For now, show an alert
+        showAlert('info', `Delete inspection with ID: ${inspectionId}`);
+        
+        // TODO: Implement delete via AJAX
+        // Example: 
+        // fetch(`/inspections/${inspectionId}`, {
+        //     method: 'DELETE',
+        //     headers: {
+        //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        //     }
+        // })
+        // .then(response => response.json())
+        // .then(data => {
+        //     if (data.success) {
+        //         showAlert('success', 'Inspection deleted successfully!');
+        //         setTimeout(() => window.location.reload(), 1500);
+        //     }
+        // });
+    }
 }
 </script>

@@ -131,7 +131,44 @@ class BlockController extends Controller
     {
         $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues']);
         
-        return view('blocks.show', compact('block'));
+        // Load additional data needed for the view
+        $blockInformation = $block->blockInformation()->with('informationType')->get();
+        $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
+        $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
+        $blockVisits = \App\Models\BlockVisit::where('block_id', $block->id)->latest()->get();
+        
+        // Load additional data for building core and other tabs
+        $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
+        $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
+        $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+        $users = \App\Models\User::with('userType')->orderBy('name')->get();
+        $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
+        $contractors = \App\Models\User::whereHas('userType', function($q) { $q->where('name', 'Contractor'); })->orderBy('name')->get();
+        $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
+        $jobReasons = \App\Models\JobReason::orderBy('name')->get();
+        $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+        $priorities = \App\Models\Priority::ordered()->get();
+        
+        return view('blocks.show', compact(
+            'block',
+            'blockInformation',
+            'blockWorkOrders',
+            'blockInspections',
+            'blockVisits',
+            'blockBuildingTypes',
+            'buildingTypes',
+            'blockUnitTypes',
+            'users',
+            'contractTypes',
+            'contractors',
+            'contactMethods',
+            'jobReasons',
+            'jobStatuses',
+            'priorities',
+            'jobReasons',
+            'jobStatuses',
+            'priorities'
+        ));
     }
 
     /**
@@ -173,6 +210,7 @@ class BlockController extends Controller
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+        $priorities = \App\Models\Priority::ordered()->get();
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
@@ -189,7 +227,10 @@ class BlockController extends Controller
             'users',
             'contractTypes',
             'contractors',
-            'contactMethods'
+            'contactMethods',
+            'jobReasons',
+            'jobStatuses',
+            'priorities'
         ));
     }
 

@@ -249,4 +249,20 @@ class Block extends Model
     {
         return \App\Models\BlockInformationType::ordered()->get();
     }
+
+    /**
+     * Get the block inspections for this block
+     */
+    public function blockInspections()
+    {
+        return $this->hasMany(BlockInspection::class);
+    }
+
+    /**
+     * Get the block work orders for this block
+     */
+    public function blockWorkOrders()
+    {
+        return $this->hasMany(BlockWorkOrder::class);
+    }
 }
