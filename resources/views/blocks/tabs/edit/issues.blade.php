@@ -1,3 +1,12 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Block Issues</h6>
+            <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#createIssueModal">
+                <i class="ph-plus align-bottom me-1"></i> Report Issue
+            </button>
+        </div>
+        
         @if($block->issues && $block->issues->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -8,6 +17,7 @@
                             <th>Priority</th>
                             <th>Status</th>
                             <th>Reported Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -46,6 +56,9 @@
                                     @endif
                                 </td>
                                 <td>{{ $issue->created_at ? $issue->created_at->format('M d, Y') : 'N/A' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -55,8 +68,11 @@
             <div class="text-center py-4">
                                                     <i class="ph-warning text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No issues reported for this block.</p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createIssueModal">Report First Issue</button>
             </div>
         @endif
+    </div>
+</div>
 
 <!-- Create Issue Modal -->
 <div class="modal fade" id="createIssueModal" tabindex="-1" aria-labelledby="createIssueModalLabel" aria-hidden="true">

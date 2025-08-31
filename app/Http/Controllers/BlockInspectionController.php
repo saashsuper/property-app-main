@@ -103,6 +103,14 @@ class BlockInspectionController extends Controller
     {
         $blockInspection->load(['block', 'creator', 'inspectionTeams.user', 'inspectionAssets.buildingAsset', 'inspectionAssets.inspectionValue']);
         
+        // Check if request expects JSON (AJAX request)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $blockInspection
+            ]);
+        }
+        
         return view('block-inspections.show', compact('blockInspection'));
     }
 
@@ -124,33 +132,31 @@ class BlockInspectionController extends Controller
     public function update(Request $request, BlockInspection $blockInspection)
     {
         $request->validate([
-            'block_id' => 'required|exists:blocks,id',
+            'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
             'notes' => 'nullable|string|max:255',
-            'job_status_id' => 'required|in:1,2,3,4,5',
-            'team_members' => 'required|array|min:1',
-            'team_members.*' => 'exists:users,id',
-            'lead_inspector' => 'required|exists:users,id',
         ]);
 
         $blockInspection->update([
-            'block_id' => $request->block_id,
             'scheduled_date_time' => $request->scheduled_date_time,
             'notes' => $request->notes,
-            'job_status_id' => $request->job_status_id,
             'updated_by' => Auth::id(),
         ]);
 
-        // Update team members
+        // Update team member (single user for modal)
         $blockInspection->inspectionTeams()->delete();
-        
-        $teamMembers = array_unique(array_merge($request->team_members, [$request->lead_inspector]));
-        
-        foreach ($teamMembers as $userId) {
-            $blockInspection->inspectionTeams()->create([
-                'user_id' => $userId,
-                'role' => $userId == $request->lead_inspector ? 'Lead Inspector' : 'Inspector',
-                'is_lead' => $userId == $request->lead_inspector,
+        $blockInspection->inspectionTeams()->create([
+            'user_id' => $request->user_id,
+            'role' => 'Inspector',
+            'is_lead' => true,
+        ]);
+
+        // Check if request expects JSON (AJAX request)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Inspection updated successfully!',
+                'inspection' => $blockInspection
             ]);
         }
 
@@ -165,6 +171,14 @@ class BlockInspectionController extends Controller
     {
         $blockInspection->update(['deleted_by' => Auth::id()]);
         $blockInspection->delete();
+
+        // Check if request expects JSON (AJAX request)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Inspection deleted successfully!'
+            ]);
+        }
 
         return redirect()->route('block-inspections.index')
             ->with('success', 'Inspection deleted successfully.');

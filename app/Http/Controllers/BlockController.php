@@ -6,10 +6,19 @@ use App\Models\Block;
 use App\Models\BlockType;
 use App\Models\Country;
 use App\Models\State;
+use App\Models\BlockWorkOrder;
+use App\Models\BlockInspection;
+use App\Models\BlockBuildingType;
+use App\Models\BuildingType;
+use App\Models\BlockUnitType;
+use App\Models\ContactMethod;
+use App\Models\JobReason;
+use App\Models\JobStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 use App\Models\User; // Added this import for the new edit method
 
 class BlockController extends Controller
@@ -120,9 +129,83 @@ class BlockController extends Controller
      */
     public function show(Block $block)
     {
-        $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues']);
-        
-        return view('blocks.show', compact('block'));
+        try {
+            $block->load([
+                'blockType', 
+                'user', 
+                'creator', 
+                'updater',
+                'country',
+                'state',
+                'buildings.buildingType', 
+                'units.unitType', 
+                'contractors', 
+                'issues',
+                'blockVisits',
+                'workOrders',
+                'blockInformation.informationType'
+            ]);
+            
+            // Get additional data for tabs
+            $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
+            $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
+            $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
+            $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
+            $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+            $users = \App\Models\User::with('userType')->orderBy('name')->get();
+            $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
+            $contractors = \App\Models\User::whereHas('userType', function($q) { $q->where('name', 'Contractor'); })->orderBy('name')->get();
+            $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
+            $jobReasons = \App\Models\JobReason::orderBy('name')->get();
+            $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+            $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
+            $blockInformation = $block->blockInformation()->with('informationType')->get();
+            
+            // Get additional statistics with error handling
+            $totalIssues = $block->issues ? $block->issues->count() : 0;
+            $openIssues = $block->issues ? $block->issues->where('status', 'open')->count() : 0;
+            $completedWorkOrders = $block->workOrders ? $block->workOrders->where('status', 'completed')->count() : 0;
+            $pendingWorkOrders = $block->workOrders ? $block->workOrders->where('status', 'pending')->count() : 0;
+            $totalInspections = $block->blockVisits ? $block->blockVisits->count() : 0;
+            $completedInspections = $block->blockVisits ? $block->blockVisits->whereNotNull('end_date_time')->count() : 0;
+            
+            // Get recent activities with error handling
+            $recentIssues = $block->issues ? $block->issues()->latest()->take(5)->get() : collect();
+            $recentWorkOrders = $block->workOrders ? $block->workOrders()->latest()->take(5)->get() : collect();
+            $recentInspections = $block->blockVisits ? $block->blockVisits()->latest()->take(5)->get() : collect();
+            
+            return view('blocks.show', compact(
+                'block',
+                'totalIssues',
+                'openIssues',
+                'completedWorkOrders',
+                'pendingWorkOrders',
+                'totalInspections',
+                'completedInspections',
+                'recentIssues',
+                'recentWorkOrders',
+                'recentInspections',
+                'blockWorkOrders',
+                'blockInspections',
+                'blockBuildingTypes',
+                'buildingTypes',
+                'blockUnitTypes',
+                'users',
+                'contractTypes',
+                'contractors',
+                'contactMethods',
+                'jobReasons',
+                'jobStatuses',
+                'blockInformationTypes',
+                'blockInformation'
+            ));
+        } catch (\Exception $e) {
+            // Log the error and return a simple view
+            \Log::error('Error in BlockController@show: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return view('blocks.show', compact('block'))->with('error', 'There was an error loading the block data.');
+        }
     }
 
     /**

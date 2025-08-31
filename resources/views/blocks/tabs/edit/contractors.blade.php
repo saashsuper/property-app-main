@@ -1,3 +1,12 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Contractor Information</h6>
+            <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addContractorModal">
+                <i class="ph-plus align-bottom me-1"></i> Add Contractor
+            </button>
+        </div>
+        
         @if($block->contractors && $block->contractors->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover w-100" id="contractorTable">
@@ -7,6 +16,7 @@
                             <th>Contractor Email</th>
                             <th>Contract Type</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -22,6 +32,10 @@
                                         <span class="badge bg-info">Active</span>
                                     @endif
                                 </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-secondary me-1 edit-contractor-btn" data-id="{{ $contractor->id }}">Edit</button>
+                                    <button class="btn btn-sm btn-outline-danger delete-contractor-btn" data-id="{{ $contractor->id }}">Delete</button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -34,6 +48,55 @@
                 <button class="btn btn-primary">Assign Contractor</button>
             </div>
         @endif
+    </div>
+</div>
+
+<!-- Add Contractor Modal -->
+<div class="modal fade" id="addContractorModal" tabindex="-1" aria-labelledby="addContractorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background: #0a497a;">
+        <h5 class="modal-title text-white" id="addContractorModalLabel">Add Contractor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="addContractorForm">
+        <div class="modal-body">
+          <input type="hidden" name="block_id" value="{{ $block->id }}">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="contract_type_id" class="form-label fw-bold">Contract Type<span class="text-danger">*</span></label>
+              <select class="form-select" id="contract_type_id" name="contractor_type_id" required>
+                <option value="">Select Service</option>
+                @foreach($contractTypes as $type)
+                  <option value="{{ $type->id }}">{{ $type->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="contractor_id" class="form-label fw-bold">Contractor<span class="text-danger">*</span></label>
+              <select class="form-select" id="contractor_id" name="contractor_id" required>
+                <option value="">Select Contractor</option>
+                @foreach($contractors as $contractor)
+                  <option value="{{ $contractor->id }}">{{ $contractor->name }}</option>
+                @endforeach
+              </select>
+            </div>
+          </div>
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="default_contractor" name="default_contractor" value="1">
+            <label class="form-check-label fw-bold" for="default_contractor">
+              Default Contractor
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg"></i> Submit</button>
+          <button type="reset" class="btn btn-danger px-4"><i class="bi bi-x-lg"></i> Reset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- Edit Contractor Modal -->
 <div class="modal fade" id="editContractorModal" tabindex="-1" aria-labelledby="editContractorModalLabel" aria-hidden="true">

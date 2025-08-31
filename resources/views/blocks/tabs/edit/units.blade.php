@@ -1,3 +1,29 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Unit Information</h6>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Export Buttons -->
+                <div class="btn-group" role="group">
+                    <a href="{{ route('export.pdf', 'block-units') }}?block_id={{ $block->id }}" 
+                       class="btn btn-outline-danger btn-sm" title="Export to PDF">
+                        <i class="ph-file-pdf"></i>
+                    </a>
+                    <a href="{{ route('export.excel', 'block-units') }}?block_id={{ $block->id }}" 
+                       class="btn btn-outline-success btn-sm" title="Export to Excel">
+                        <i class="ph-file-xls"></i>
+                    </a>
+                    <a href="{{ route('export.print', 'block-units') }}?block_id={{ $block->id }}" 
+                       class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
+                        <i class="ph-printer"></i>
+                    </a>
+                </div>
+                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                    <i class="ph-plus align-bottom me-1"></i> Add Unit
+                </button>
+            </div>
+        </div>
+        
         @if($block->units && $block->units->count() > 0)
             <div class="table-responsive">
                 <table id="blockUnitsTable" class="table table-bordered table-hover w-100">
@@ -14,6 +40,7 @@
                             <th>Phone</th>
                             <th>Letting Agent</th>
                             <th>Misc Info</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -30,6 +57,14 @@
                                 <td>{{ $unit->phone_number ?? 'N/A' }}</td>
                                 <td>{{ $unit->letting_agent ?? 'N/A' }}</td>
                                 <td>{{ $unit->misc_info ?? 'N/A' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})">Edit</button>
+                                    <form action="{{ route('block-units.destroy', $unit->id) }}" method="POST" class="d-inline-block" onsubmit="saveActiveTab(); return confirm('Are you sure you want to delete this unit?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -39,8 +74,11 @@
             <div class="text-center py-4">
                                                     <i class="ph-house text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No units found for this block.</p>
+                <button class="btn btn-primary">Add First Unit</button>
             </div>
         @endif
+    </div>
+</div>
 
 <!-- Add Unit Modal -->
 <div class="modal fade" id="addUnitModal" tabindex="-1" aria-labelledby="addUnitModalLabel" aria-hidden="true">

@@ -1,3 +1,12 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Work Orders</h6>
+            <button class="btn btn-primary custom-toggle active">
+                <i class="ph-plus align-bottom me-1"></i> Create Work Order
+            </button>
+        </div>
+        
         @if(isset($blockWorkOrders) && $blockWorkOrders->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -8,6 +17,7 @@
                             <th>Priority</th>
                             <th>Status</th>
                             <th>Created Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,6 +50,9 @@
                                     @endif
                                 </td>
                                 <td>{{ $workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A' }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -49,5 +62,8 @@
             <div class="text-center py-4">
                                                     <i class="ph-file-text text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No work orders created for this block.</p>
+                <button class="btn btn-primary">Create First Work Order</button>
             </div>
         @endif
+    </div>
+</div>

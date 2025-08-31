@@ -1,19 +1,29 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Inspection History</h6>
+            <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addInspectionModal">
+                <i class="ph-plus align-bottom me-1"></i> Schedule Inspection
+            </button>
+        </div>
+        
         @if(isset($blockInspections) && $blockInspections->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th>Reference</th>
                             <th>Inspection Date</th>
+                            <th>Reference</th>
                             <th>Inspector</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($blockInspections as $inspection)
                             <tr>
-                                <td>{{ $inspection->ref_no ?? 'N/A' }}</td>
                                 <td>{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}</td>
+                                <td>{{ $inspection->ref_no ?? 'N/A' }}</td>
                                 <td>{{ $inspection->creator->name ?? 'N/A' }}</td>
                                 <td>
                                     @if($inspection->job_status_id == 1)
@@ -30,6 +40,9 @@
                                         <span class="badge bg-secondary">Unknown</span>
                                     @endif
                                 </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -42,6 +55,8 @@
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInspectionModal">Schedule First Inspection</button>
             </div>
         @endif
+    </div>
+</div>
 
 <!-- Add Inspection Modal -->
 <div class="modal fade" id="addInspectionModal" tabindex="-1" aria-labelledby="addInspectionModalLabel" aria-hidden="true">

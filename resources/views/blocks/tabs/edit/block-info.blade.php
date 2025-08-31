@@ -1,11 +1,24 @@
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Block Information</h6>
+            <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addBlockInformationModal">
+                <i class="ph-plus align-bottom me-1"></i> Add Block Information
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Block Information List -->
-        <table id="blockInformationTable" class="table table-bordered table-hover w-100">
+<div class="row mt-4">
+    <div class="col-12 p-0">
         <table id="blockInformationTable" class="table table-bordered table-hover w-100">
             <thead class="table-light">
                 <tr>
                     <th>Information Type</th>
                     <th>Description</th>
                     <th>Added Date</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -16,10 +29,95 @@
                         </td>
                         <td>{{ $info->description ?? 'No description provided' }}</td>
                         <td>{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}</td>
+                        <td>
+                                                                <button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation({{ $info->id }})">
+                                        <i class="ph-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBlockInformation({{ $info->id }})">
+                                        <i class="ph-trash"></i> Delete
+                                    </button>
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Add Block Information Modal -->
+<div class="modal fade" id="addBlockInformationModal" tabindex="-1" aria-labelledby="addBlockInformationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addBlockInformationModalLabel">Add Block Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            @php
+                $usedTypeIds = isset($blockInformation) ? $blockInformation->pluck('information_type_id')->toArray() : [];
+            @endphp
+            <form id="addBlockInformationForm" action="{{ route('block-information.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="block_id" value="{{ $block->id }}">
+                <!-- Message area for success/failure -->
+                <div id="addBlockInformationMessage" class="alert d-none" role="alert"></div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="information_type_id" class="form-label">Information Type <span class="text-danger">*</span></label>
+                                <select class="form-select @error('information_type_id') is-invalid @enderror" 
+                                        id="information_type_id" name="information_type_id" required>
+                                    <option value="">Select Information Type</option>
+                                    @if(isset($blockInformationTypes) && $blockInformationTypes->count() > 0)
+                                        @foreach($blockInformationTypes as $infoType)
+                                            <option value="{{ $infoType->id }}" @if(in_array($infoType->id, $usedTypeIds)) disabled @endif>
+                                                {{ $infoType->name }}@if(in_array($infoType->id, $usedTypeIds)) (Already added)@endif
+                                            </option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>No information types available</option>
+                                    @endif
+                                </select>
+                                @error('information_type_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">
+                                    Select the type of information you want to add
+                                    @if(isset($blockInformationTypes))
+                                        ({{ $blockInformationTypes->count() }} types available)
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control @error('description') is-invalid @enderror" 
+                                          id="description" name="description" rows="4" 
+                                          placeholder="Enter detailed description of the information..." required></textarea>
+                                @error('description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">Provide a detailed description of the information</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="ph-x align-bottom me-1"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ph-floppy-disk align-bottom me-1"></i> Save Information
+                        </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Edit Block Information Modal -->
 <div class="modal fade" id="editBlockInformationModal" tabindex="-1" aria-labelledby="editBlockInformationModalLabel" aria-hidden="true">
