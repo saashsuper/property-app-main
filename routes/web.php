@@ -125,6 +125,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload')->middleware('role:Admin');
     Route::get('block-units/template', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template')->middleware('role:Admin');
     Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin');
+    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin');
 });
 
 // Catch-all route for SPA - must be last

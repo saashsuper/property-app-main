@@ -10,6 +10,7 @@ use App\Models\BlockUnitType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 
 class BlockUnitController extends Controller
 {
@@ -240,19 +241,26 @@ class BlockUnitController extends Controller
 
     public function upload(Request $request)
     {
-        $request->validate([
-            'block_id' => 'required|exists:blocks,id',
-            'unit_file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
-        ]);
-
         try {
+            // Log the request for debugging
+            \Log::info('Upload request received', [
+                'block_id' => $request->input('block_id'),
+                'file' => $request->hasFile('unit_file') ? $request->file('unit_file')->getClientOriginalName() : 'No file',
+                'file_size' => $request->hasFile('unit_file') ? $request->file('unit_file')->getSize() : 0
+            ]);
+
+            $request->validate([
+                'block_id' => 'required|exists:blocks,id',
+                'unit_file' => 'required|file|mimes:xlsx,xls,csv|max:5120', // 5MB max
+            ]);
+
             $block = Block::findOrFail($request->block_id);
             
             // Get the uploaded file
             $file = $request->file('unit_file');
             $extension = $file->getClientOriginalExtension();
             
-
+            \Log::info('Processing file', ['extension' => $extension, 'size' => $file->getSize()]);
             
             // Process the file based on its type
             if (in_array($extension, ['xlsx', 'xls'])) {
@@ -263,7 +271,7 @@ class BlockUnitController extends Controller
                 $data = $this->processCsvFile($file, $block);
             }
             
-
+            \Log::info('File processed', ['rows_count' => count($data)]);
             
             // Import the units
             $importedCount = $this->importUnits($data, $block);
@@ -280,13 +288,58 @@ class BlockUnitController extends Controller
                 session()->forget('import_errors');
             }
             
+            \Log::info('Upload completed successfully', ['imported_count' => $importedCount]);
             return response()->json($response);
             
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error in upload', ['errors' => $e->errors()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error: ' . implode(', ', array_flatten($e->errors()))
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('Block not found', ['block_id' => $request->input('block_id')]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Block not found'
+            ], 404);
         } catch (\Exception $e) {
+            \Log::error('Error in upload method', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Error importing units: ' . $e->getMessage()
-            ], 422);
+            ], 500);
+        }
+    }
+
+    public function testPhpSpreadsheet()
+    {
+        try {
+            // Test if PhpSpreadsheet is working
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setCellValue('A1', 'Test');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'PhpSpreadsheet is working correctly',
+                'version' => \PhpOffice\PhpSpreadsheet\Settings::getLibXmlLoaderOptions()
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PhpSpreadsheet error: ' . $e->getMessage(),
+                'error_details' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]
+            ], 500);
         }
     }
 
@@ -324,6 +377,17 @@ class BlockUnitController extends Controller
         $data = [];
         
         try {
+            \Log::info('Starting Excel file processing', [
+                'file_path' => $file->getPathname(),
+                'file_size' => $file->getSize(),
+                'file_name' => $file->getClientOriginalName()
+            ]);
+            
+            // Check if file exists and is readable
+            if (!file_exists($file->getPathname()) || !is_readable($file->getPathname())) {
+                throw new \Exception('File is not accessible or readable');
+            }
+            
             // Load the Excel file
             $spreadsheet = IOFactory::load($file->getPathname());
             $worksheet = $spreadsheet->getActiveSheet();
@@ -332,7 +396,10 @@ class BlockUnitController extends Controller
             $highestRow = $worksheet->getHighestRow();
             $highestColumn = $worksheet->getHighestColumn();
             
-
+            \Log::info('Excel file loaded', [
+                'highest_row' => $highestRow,
+                'highest_column' => $highestColumn
+            ]);
             
             // Get headers from first row
             $headers = [];
@@ -340,7 +407,7 @@ class BlockUnitController extends Controller
                 $headers[] = trim($worksheet->getCell($col . '1')->getValue());
             }
             
-
+            \Log::info('Headers extracted', ['headers' => $headers]);
             
             // Process data rows (skip header row)
             for ($row = 2; $row <= $highestRow; $row++) {
@@ -352,8 +419,6 @@ class BlockUnitController extends Controller
                     $rowData[] = $cellValue;
                     $colIndex++;
                 }
-                
-
                 
                 // Only process rows that have data
                 if (!empty(array_filter($rowData))) {
@@ -373,13 +438,23 @@ class BlockUnitController extends Controller
                     ];
                     
                     $data[] = $processedRow;
-                } else {
-                    // Skip empty rows
                 }
             }
             
+            \Log::info('Excel processing completed', ['processed_rows' => count($data)]);
+            
+        } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+            \Log::error('PhpSpreadsheet error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            throw new \Exception('Excel file format error: ' . $e->getMessage());
         } catch (\Exception $e) {
-            \Log::error('Error processing Excel file: ' . $e->getMessage());
+            \Log::error('Error processing Excel file: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new \Exception('Error processing Excel file: ' . $e->getMessage());
         }
         
