@@ -139,12 +139,29 @@ code {
 
 // text-truncate-two-lines
 .text-truncate-two-lines {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -webkit-line-clamp: 2;
     display: -webkit-box;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    white-space: normal;
+    overflow: hidden;
+}
+
+// Custom gradient for modal headers matching block banner
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+}
+
+// Modal header specific styling
+.modal-header.bg-gradient-primary {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header.bg-gradient-primary .modal-title {
+    color: white !important;
+}
+
+.modal-header.bg-gradient-primary .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
 }
 
 // card

@@ -21,6 +21,9 @@
                 <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addUnitModal">
                     <i class="ph-plus align-bottom me-1"></i> Add Unit
                 </button>
+                <button class="btn btn-success custom-toggle" data-bs-toggle="modal" data-bs-target="#uploadUnitModal">
+                    <i class="ph-upload align-bottom me-1"></i> Upload Unit
+                </button>
             </div>
         </div>
         
@@ -84,9 +87,9 @@
 <div class="modal fade" id="addUnitModal" tabindex="-1" aria-labelledby="addUnitModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addUnitModalLabel">Add Unit</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="addUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Unit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             <form id="addUnitForm" method="POST" action="{{ route('block-units.store') }}">
                 @csrf
@@ -157,8 +160,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Unit</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check me-1"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -169,9 +176,9 @@
 <div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editUnitModalLabel">Edit Unit</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="editUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Unit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             <form id="editUnitForm" method="POST">
                 @csrf
@@ -243,8 +250,82 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Unit</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check me-1"></i> Update
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Unit Modal -->
+<div class="modal fade" id="uploadUnitModal" tabindex="-1" aria-labelledby="uploadUnitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="uploadUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Upload Units</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
+            </div>
+            
+            <!-- Message Container -->
+            <div id="uploadMessageContainer" style="display: none;">
+                <div id="uploadSuccess" class="alert alert-success mx-3 mt-3" style="display: none;">
+                    <h6 class="alert-heading"><i class="ph-check-circle me-2"></i>Upload Successful</h6>
+                    <div id="successMessage"></div>
+                </div>
+            </div>
+            
+            <form id="uploadUnitForm" method="POST" action="{{ route('block-units.upload') }}" enctype="multipart/form-data">
+                @csrf
+                <input type="hidden" name="block_id" value="{{ $block->id }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label for="unit_file" class="form-label">Upload File <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" id="unit_file" name="unit_file" accept=".xlsx,.xls,.csv" required>
+                            <div class="form-text">
+                                <strong>Supported formats:</strong> Excel (.xlsx, .xls) or CSV (.csv)<br>
+                                <strong>Maximum file size:</strong> 5MB<br>
+                                <strong>Required columns:</strong> Unit Code, Unit Name, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading"><i class="ph-info me-2"></i>Upload Instructions</h6>
+                                <ul class="mb-0">
+                                    <li>Download the template file to see the required format</li>
+                                    <li>Ensure all required fields are filled</li>
+                                    <li>Unit codes must be unique within the block</li>
+                                    <li>Resident field should be "Yes" or "No"</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <a href="{{ asset('storage/templates/unit-upload-template.xlsx') }}" 
+                               download="unit_upload_template_{{ str_replace(' ', '_', $block->name) }}_{{ date('Y-m-d') }}.xlsx"
+                               class="btn btn-outline-primary">
+                                <i class="ph-download me-1"></i> Download Template
+                            </a>
+                        </div>
+                        <div class="col-12 mb-3" id="uploadErrors" style="display: none;">
+                            <div class="alert alert-danger">
+                                <h6 class="alert-heading"><i class="ph-warning me-2"></i>Import Errors</h6>
+                                <div id="errorList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check me-1"></i> Upload
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -443,6 +524,149 @@ function editUnit(id) {
             }
         });
 }
+
+
+
+// Handle upload form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadUnitForm');
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            const fileInput = document.getElementById('unit_file');
+            
+            if (!fileInput.files[0]) {
+                // Show error in modal instead of alert
+                let errorDiv = document.getElementById('uploadErrors');
+                const errorList = document.getElementById('errorList');
+                errorList.innerHTML = 'Please select a file to upload.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            // Hide any previous messages
+            const messageContainer = document.getElementById('uploadMessageContainer');
+            const successDiv = document.getElementById('uploadSuccess');
+            if (messageContainer) {
+                messageContainer.style.display = 'none';
+            }
+            if (successDiv) {
+                successDiv.style.display = 'none';
+            }
+            document.getElementById('uploadErrors').style.display = 'none';
+            
+            // Show loading state
+            const submitBtn = uploadForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="ph-spinner ph-spin me-1"></i> Uploading...';
+            submitBtn.disabled = true;
+            
+            fetch(uploadForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide any previous errors
+                    document.getElementById('uploadErrors').style.display = 'none';
+                    
+                    // Show success message in modal
+                    const messageContainer = document.getElementById('uploadMessageContainer');
+                    const successDiv = document.getElementById('uploadSuccess');
+                    const successMessage = document.getElementById('successMessage');
+                    
+                    successMessage.textContent = data.message;
+                    messageContainer.style.display = 'block';
+                    successDiv.style.display = 'block';
+                    
+                    // Show errors if any
+                    if (data.errors && data.errors.length > 0) {
+                        const errorList = document.getElementById('errorList');
+                        errorList.innerHTML = '<ul class="mb-0">' + data.errors.map(error => '<li>' + error + '</li>').join('') + '</ul>';
+                        document.getElementById('uploadErrors').style.display = 'block';
+                    }
+                    
+                    // Reset form
+                    uploadForm.reset();
+                    
+                    // Close modal and redirect to Units tab after 3 seconds
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadUnitModal'));
+                        if (modal) modal.hide();
+                        
+                        // Wait for modal to close, then navigate to Units tab
+                        setTimeout(() => {
+                            // Find the Units tab using the correct selector
+                            let unitsTab = document.querySelector('#units-tab') ||
+                                          document.querySelector('a[href="#units"]') || 
+                                          document.querySelector('[aria-controls="units"]');
+                            
+                            if (unitsTab) {
+                                console.log('Found units tab:', unitsTab);
+                                unitsTab.click();
+                                
+                                // Reload page after a short delay to show new units
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 500);
+                            } else {
+                                console.log('Units tab not found, just reloading page');
+                                // If tab not found, just reload the page
+                                window.location.reload();
+                            }
+                        }, 300);
+                    }, 3000);
+                } else {
+                    // Show error message in modal
+                    let errorDiv = document.getElementById('uploadErrors');
+                    const errorList = document.getElementById('errorList');
+                    errorList.innerHTML = data.message || 'Error uploading units.';
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Show error message in modal
+                let errorDiv = document.getElementById('uploadErrors');
+                const errorList = document.getElementById('errorList');
+                errorList.innerHTML = 'An error occurred while uploading. Please try again.';
+                errorDiv.style.display = 'block';
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+    }
+    
+    // Clear messages when upload modal is opened
+    const uploadModal = document.getElementById('uploadUnitModal');
+    if (uploadModal) {
+        uploadModal.addEventListener('show.bs.modal', function() {
+            // Hide any previous messages
+            const messageContainer = document.getElementById('uploadMessageContainer');
+            const successDiv = document.getElementById('uploadSuccess');
+            if (messageContainer) {
+                messageContainer.style.display = 'none';
+            }
+            if (successDiv) {
+                successDiv.style.display = 'none';
+            }
+            const errorDiv = document.getElementById('uploadErrors');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        });
+    }
+});
 
 // DataTables for Units
 $(document).ready(function() {

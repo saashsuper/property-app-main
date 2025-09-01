@@ -55,9 +55,9 @@
 <div class="modal fade" id="addContractorModal" tabindex="-1" aria-labelledby="addContractorModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header" style="background: #0a497a;">
-        <h5 class="modal-title text-white" id="addContractorModalLabel">Add Contractor</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+        <h5 class="modal-title" id="addContractorModalLabel" style="color: white !important; padding-bottom: 15px;">Add Contractor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
       </div>
       <form id="addContractorForm">
         <div class="modal-body">
@@ -89,9 +89,13 @@
             </label>
           </div>
         </div>
-        <div class="modal-footer justify-content-center">
-          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg"></i> Submit</button>
-          <button type="reset" class="btn btn-danger px-4"><i class="bi bi-x-lg"></i> Reset</button>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="ph-check me-1"></i> Save
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="ph-x me-1"></i> Cancel
+          </button>
         </div>
       </form>
     </div>
@@ -102,9 +106,9 @@
 <div class="modal fade" id="editContractorModal" tabindex="-1" aria-labelledby="editContractorModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header" style="background: #0a497a;">
-        <h5 class="modal-title text-white" id="editContractorModalLabel">Edit Contractor</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+        <h5 class="modal-title" id="editContractorModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Contractor</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
       </div>
       <form id="editContractorForm">
         <input type="hidden" name="contractor_id" id="edit_contractor_row_id">
@@ -138,9 +142,13 @@
             </label>
           </div>
         </div>
-        <div class="modal-footer justify-content-center">
-          <button type="submit" class="btn btn-primary px-4"><i class="bi bi-check-lg"></i> Update</button>
-          <button type="reset" class="btn btn-danger px-4"><i class="bi bi-x-lg"></i> Reset</button>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">
+            <i class="ph-check me-1"></i> Update
+          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="ph-x me-1"></i> Cancel
+          </button>
         </div>
       </form>
     </div>

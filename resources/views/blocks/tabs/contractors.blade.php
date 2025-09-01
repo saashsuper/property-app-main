@@ -39,8 +39,8 @@
 <div class="modal fade" id="editContractorModal" tabindex="-1" aria-labelledby="editContractorModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header" style="background: #0a497a;">
-        <h5 class="modal-title text-white" id="editContractorModalLabel">Edit Contractor</h5>
+      <div class="modal-header bg-gradient-primary text-white">
+        <h5 class="modal-title" id="editContractorModalLabel">Edit Contractor</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form id="editContractorForm">

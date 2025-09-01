@@ -48,9 +48,9 @@
 <div class="modal fade" id="addBlockInformationModal" tabindex="-1" aria-labelledby="addBlockInformationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addBlockInformationModalLabel">Add Block Information</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="addBlockInformationModalLabel" style="color: white !important; padding-bottom: 15px;">Add Block Information</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             @php
                 $usedTypeIds = isset($blockInformation) ? $blockInformation->pluck('information_type_id')->toArray() : [];
@@ -107,12 +107,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="ph-x align-bottom me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph-floppy-disk align-bottom me-1"></i> Save Information
-                        </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check me-1"></i> Save
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>
@@ -123,9 +123,9 @@
 <div class="modal fade" id="editBlockInformationModal" tabindex="-1" aria-labelledby="editBlockInformationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editBlockInformationModalLabel">Edit Block Information</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="editBlockInformationModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Block Information</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             @php
                 $usedTypeIds = isset($blockInformation) ? $blockInformation->pluck('information_type_id')->toArray() : [];
@@ -166,12 +166,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="ph-x align-bottom me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph-floppy-disk align-bottom me-1"></i> Update Information
-                        </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check me-1"></i> Update
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
                 </div>
             </form>
         </div>

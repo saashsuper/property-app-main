@@ -57,9 +57,9 @@
 <div class="modal fade" id="addSiteVisitModal" tabindex="-1" aria-labelledby="addSiteVisitModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addSiteVisitModalLabel">ADD SITE VISIT</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="addSiteVisitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Site Visit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             <form id="addSiteVisitForm">
                 <div class="modal-body">
@@ -112,10 +112,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">
-                        <i class="ph-check me-1"></i> Submit
+                        <i class="ph-check me-1"></i> Save
                     </button>
-                    <button type="button" class="btn btn-danger" onclick="resetForm()">
-                        <i class="ph-x me-1"></i> Reset
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
                     </button>
                 </div>
             </form>
@@ -127,9 +127,9 @@
 <div class="modal fade" id="editSiteVisitModal" tabindex="-1" aria-labelledby="editSiteVisitModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editSiteVisitModalLabel">EDIT SITE VISIT</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="editSiteVisitModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Site Visit</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             <form id="editSiteVisitForm">
                 <div class="modal-body">

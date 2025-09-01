@@ -7,6 +7,94 @@
 	font-size: $h5-font-size;
 }
 
+// Custom gradient for modal headers - More specific rules
+.bg-gradient-primary {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+// Very specific modal header gradient rules
+.modal .modal-content .modal-header.bg-gradient-primary,
+.modal-header.bg-gradient-primary,
+div[class*="modal-header"].bg-gradient-primary {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	border-bottom: none !important;
+	background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+// Modal title color
+.modal .modal-content .modal-header.bg-gradient-primary .modal-title,
+.modal-header.bg-gradient-primary .modal-title,
+div[class*="modal-header"].bg-gradient-primary .modal-title {
+	color: white !important;
+	font-weight: 600 !important;
+	padding-bottom: 15px !important;
+}
+
+// Close button styling
+.modal .modal-content .modal-header.bg-gradient-primary .btn-close,
+.modal-header.bg-gradient-primary .btn-close,
+div[class*="modal-header"].bg-gradient-primary .btn-close {
+	filter: invert(1) brightness(100) !important;
+	opacity: 1 !important;
+	margin-bottom: 10px !important;
+	font-weight: bold !important;
+}
+
+// Additional specificity for any remaining issues
+.modal-dialog .modal-content .modal-header.bg-gradient-primary {
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+	background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+// Modal footer button styling to match Site Visit modal
+.modal-footer .btn-primary {
+	background-color: #0d6efd !important;
+	border-color: #0d6efd !important;
+	color: white !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	padding: 8px 16px !important;
+	box-shadow: none !important;
+}
+
+.modal-footer .btn-primary:hover {
+	background-color: #0b5ed7 !important;
+	border-color: #0a58ca !important;
+	color: white !important;
+}
+
+.modal-footer .btn-danger {
+	background-color: #dc3545 !important;
+	border-color: #dc3545 !important;
+	color: white !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	padding: 8px 16px !important;
+	box-shadow: none !important;
+}
+
+.modal-footer .btn-danger:hover {
+	background-color: #bb2d3b !important;
+	border-color: #b02a37 !important;
+	color: white !important;
+}
+
+.modal-footer .btn-secondary {
+	background-color: #6c757d !important;
+	border-color: #6c757d !important;
+	color: white !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	padding: 8px 16px !important;
+	box-shadow: none !important;
+}
+
+.modal-footer .btn-secondary:hover {
+	background-color: #5c636a !important;
+	border-color: #565e64 !important;
+	color: white !important;
+}
+
 .modal-dialog:not(.modal-dialog-scrollable) {
 	.modal-header {
 		padding-bottom: 0;
