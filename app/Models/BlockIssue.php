@@ -207,18 +207,18 @@ class BlockIssue extends Model
     /**
      * Get priority text
      */
-    // public function getPriorityTextAttribute()
-    // {
-    //     $priorities = [
-    //         1 => 'Low',
-    //         2 => 'Normal',
-    //         3 => 'High',
-    //         4 => 'Urgent',
-    //         5 => 'Critical'
-    //     ];
+    public function getPriorityTextAttribute()
+    {
+        $priorities = [
+            1 => 'Low',
+            2 => 'Normal',
+            3 => 'High',
+            4 => 'Urgent',
+            5 => 'Critical'
+        ];
 
-    //     return $priorities[$this->priority ?? $this->priority_id] ?? 'Unknown';
-    // }
+        return $priorities[$this->priority ?? $this->priority_id] ?? 'Unknown';
+    }
 
     /**
      * Get status text
@@ -239,18 +239,18 @@ class BlockIssue extends Model
     /**
      * Get priority color class
      */
-    // public function getPriorityColorAttribute()
-    // {
-    //     $colors = [
-    //         1 => 'success',
-    //         2 => 'info',
-    //         3 => 'warning',
-    //         4 => 'danger',
-    //         5 => 'dark'
-    //     ];
+    public function getPriorityColorAttribute()
+    {
+        $colors = [
+            1 => 'success',
+            2 => 'info',
+            3 => 'warning',
+            4 => 'danger',
+            5 => 'dark'
+        ];
 
-    //     return $colors[$this->priority ?? $this->priority_id] ?? 'info';
-    // }
+        return $colors[$this->priority ?? $this->priority_id] ?? 'info';
+    }
 
     /**
      * Get status color class

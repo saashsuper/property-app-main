@@ -30,14 +30,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Total Blocks</span>
-                                <h4 class="mb-0">{{ $stats['total_blocks'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('blocks.index') }}" class="text-decoration-none text-primary">
+                                        {{ $stats['total_blocks'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
-                                        <i class="ph-buildings"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('blocks.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                            <i class="ph-buildings"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -49,14 +55,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Block Types</span>
-                                <h4 class="mb-0">{{ $stats['total_block_types'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('block-types.index') }}" class="text-decoration-none text-success">
+                                        {{ $stats['total_block_types'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
-                                        <i class="ph-grid-four"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('block-types.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                            <i class="ph-grid-four"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -87,14 +99,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Active Issues</span>
-                                <h4 class="mb-0">{{ $stats['total_issues'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-danger">
+                                        {{ $stats['total_issues'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
-                                        <i class="ph-warning"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                            <i class="ph-warning"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -110,14 +128,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Open Issues</span>
-                                <h4 class="mb-0">{{ $stats['open_issues'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-warning">
+                                        {{ $stats['open_issues'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
-                                        <i class="ph-clock"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                            <i class="ph-clock"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -129,14 +153,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">In Progress</span>
-                                <h4 class="mb-0">{{ $stats['in_progress_issues'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-info">
+                                        {{ $stats['in_progress_issues'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
-                                        <i class="ph-spinner-gap"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                            <i class="ph-spinner-gap"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -148,14 +178,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">Resolved</span>
-                                <h4 class="mb-0">{{ $stats['resolved_issues'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-success">
+                                        {{ $stats['resolved_issues'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
-                                        <i class="ph-check"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                            <i class="ph-check"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -167,14 +203,20 @@
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
                                 <span class="text-muted text-uppercase fw-medium">High Priority</span>
-                                <h4 class="mb-0">{{ $stats['high_priority_issues'] }}</h4>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-danger">
+                                        {{ $stats['high_priority_issues'] }}
+                                    </a>
+                                </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <div class="avatar-sm">
-                                    <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
-                                        <i class="ph-warning"></i>
-                                    </span>
-                                </div>
+                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                            <i class="ph-warning"></i>
+                                        </span>
+                                    </div>
+                                </a>
                             </div>
                         </div>
                     </div>

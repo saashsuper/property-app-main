@@ -67,9 +67,12 @@
                                         <i class="ph-clock text-white-50 me-2"></i>
                                         <span class="text-white-50">{{ $block->created_at ? $block->created_at->format('h:i A') : 'N/A' }}</span>
                                     </div>
-                                    <div>
+                                    <div class="d-flex gap-2">
                                         <a href="{{ route('blocks.edit', $block) }}" class="btn btn-light btn-sm">
                                             <i class="ph-pencil me-2"></i>Edit Block
+                                        </a>
+                                        <a href="{{ route('blocks.index') }}" class="btn btn-outline-light btn-sm">
+                                            <i class="ph-list me-2"></i>Block List
                                         </a>
                                     </div>
                                 </div>

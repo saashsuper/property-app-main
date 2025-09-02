@@ -128,8 +128,15 @@
                                             <tr>
                                                 <td class="fw-medium">Priority:</td>
                                                 <td>
-                                                    <span class="badge bg-{{ $blockIssue->priority->btn_class }}">
-                                                    {{ $blockIssue->priority->label}}</span>
+                                                    @if($blockIssue->priority)
+                                                        <span class="badge bg-{{ $blockIssue->priority->btn_class ?? 'secondary' }}">
+                                                            {{ $blockIssue->priority->label ?? 'Unknown' }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-{{ $blockIssue->priority_color }}">
+                                                            {{ $blockIssue->priority_text }}
+                                                        </span>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             <tr>
