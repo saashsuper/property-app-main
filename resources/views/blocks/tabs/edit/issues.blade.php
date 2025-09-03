@@ -57,7 +57,18 @@
                                 </td>
                                 <td>{{ $issue->created_at ? $issue->created_at->format('M d, Y') : 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ route('block-issues.show', $issue) }}" class="btn btn-sm btn-outline-primary" title="View Issue">
+                                            <i class="ph-eye"></i>
+                                        </a>
+                                        <a href="{{ route('block-issues.edit', $issue) }}" class="btn btn-sm btn-outline-warning" title="Edit Issue">
+                                            <i class="ph-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Issue" 
+                                                onclick="deleteIssue({{ $issue->id }}, '{{ $issue->ref_no }}')">
+                                            <i class="ph-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
