@@ -7,7 +7,6 @@
             </button>
         </div>
         
-<<<<<<< HEAD
         @if($block->issues && $block->issues->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -21,22 +20,6 @@
                         </tr>
                     </thead>
                     <tbody>
-=======
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover" id="issuesTable">
-                <thead class="table-light">
-                    <tr>
-                        <th>Issue ID</th>
-                        <th>Title</th>
-                        <th>Priority</th>
-                        <th>Status</th>
-                        <th>Reported Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if($block->issues && $block->issues->count() > 0)
->>>>>>> a98d1124618acb7d9310cd46ac36df02de0a585f
                         @foreach($block->issues as $issue)
                             <tr>
                                 <td>
