@@ -1,7 +1,7 @@
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Site Visit History</h6>
+        <div class="d-flex align-items-center mb-3 gap-3">
+            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Site Visit History</h6>
             <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addSiteVisitModal">
                 <i class="ph-plus align-bottom me-1"></i> Schedule Visit
             </button>
@@ -256,7 +256,29 @@ document.addEventListener('DOMContentLoaded', function() {
             { width: '8%', targets: 6 }   // Actions
         ],
         fixedHeader: true,
-        scrollCollapse: true
+        scrollCollapse: true,
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "",
+            infoFiltered: "(filtered from _MAX_ total entries)",
+            zeroRecords: "No Site Visit Informations found",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        initComplete: function() {
+            // Increase search box size
+            $('.dataTables_filter input').addClass('form-control').css({
+                'width': '300px',
+                'height': '38px',
+                'font-size': '14px'
+            });
+        }
     });
 
     // Add Site Visit Form Submission

@@ -1,12 +1,13 @@
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Block Issues</h6>
+        <div class="d-flex align-items-center mb-3 gap-3">
+            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Issues</h6>
             <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#createIssueModal">
                 <i class="ph-plus align-bottom me-1"></i> Report Issue
             </button>
         </div>
         
+<<<<<<< HEAD
         @if($block->issues && $block->issues->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -20,6 +21,22 @@
                         </tr>
                     </thead>
                     <tbody>
+=======
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="issuesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Issue ID</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Reported Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if($block->issues && $block->issues->count() > 0)
+>>>>>>> a98d1124618acb7d9310cd46ac36df02de0a585f
                         @foreach($block->issues as $issue)
                             <tr>
                                 <td>
@@ -62,16 +79,10 @@
                     
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="text-center py-4">
-                                                    <i class="ph-warning text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No issues reported for this block.</p>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createIssueModal">Report First Issue</button>
-            </div>
-        @endif
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -495,8 +506,60 @@
 }
 </style>
 
+<!-- DataTables CSS and JS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.colVis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable
+    $('#issuesTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        ],
+        autoWidth: false,
+        scrollX: true,
+        scrollCollapse: true,
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "",
+            infoFiltered: "(filtered from _MAX_ total entries)",
+            zeroRecords: "No Issue Informations found",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        initComplete: function() {
+            // Increase search box size
+            $('.dataTables_filter input').addClass('form-control').css({
+                'width': '300px',
+                'height': '38px',
+                'font-size': '14px'
+            });
+        }
+    });
     const createIssueForm = document.getElementById('createIssueForm');
     const createIssueModal = document.getElementById('createIssueModal');
     

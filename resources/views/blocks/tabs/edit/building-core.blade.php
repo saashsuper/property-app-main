@@ -1,27 +1,27 @@
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Building Information</h6>
+        <div class="d-flex align-items-center mb-3 gap-3">
+            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Building Information</h6>
             <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addBuildingModal">
                 <i class="ph-plus align-bottom me-1"></i> Add Building
             </button>
         </div>
         
-        @if($block->buildings && $block->buildings->count() > 0)
-            <div class="table-responsive w-100">
-                <table class="table table-bordered table-hover w-100" id="building-info-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Building Name</th>
-                            <th>Type</th>
-                            <th>Floor</th>
-                            <th>Roof Type</th>
-                            <th>No of Lifts</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="table-responsive w-100">
+            <table class="table table-bordered table-hover w-100" id="building-info-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Building Name</th>
+                        <th>Type</th>
+                        <th>Floor</th>
+                        <th>Roof Type</th>
+                        <th>No of Lifts</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if($block->buildings && $block->buildings->count() > 0)
                         @foreach($block->buildings as $building)
                             <tr>
                                 <td>{{ $building->name ?? 'N/A' }}</td>
@@ -40,16 +40,10 @@
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="text-center py-4">
-                                                    <i class="ph-buildings text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No buildings found for this block.</p>
-                <button class="btn btn-primary">Add First Building</button>
-            </div>
-        @endif
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -316,13 +310,25 @@ $(document).ready(function() {
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        autoWidth: false,
+        scrollX: true,
+        scrollCollapse: true,
         language: {
-            search: "Search buildings:",
-            lengthMenu: "Show _MENU_ buildings per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ buildings",
-            infoEmpty: "Showing 0 to 0 of 0 buildings",
-            infoFiltered: "(filtered from _MAX_ total buildings)",
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "",
+            infoFiltered: "(filtered from _MAX_ total entries)",
+            zeroRecords: "No Building Informations found",
             paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        },
+        initComplete: function() {
+            // Increase search box size
+            $('.dataTables_filter input').addClass('form-control').css({
+                'width': '300px',
+                'height': '38px',
+                'font-size': '14px'
+            });
         }
     });
 });
