@@ -17,13 +17,16 @@
                             <th>Priority</th>
                             <th>Status</th>
                             <th>Reported Date</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($block->issues as $issue)
                             <tr>
-                                <td>#{{ $issue->id }}</td>
+                                <td>
+                                    <a href="{{ route('block-issues.show', $issue) }}">
+                                        <b>#{{ $issue->ref_no }}</b>
+                                    </a>
+                                </td>
                                 <td>{{ $issue->issue ?? 'N/A' }}</td>
                                 <td>
                                     @if($issue->priority_id == 1)
@@ -56,20 +59,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $issue->created_at ? $issue->created_at->format('M d, Y') : 'N/A' }}</td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="{{ route('block-issues.show', $issue) }}" class="btn btn-sm btn-outline-primary" title="View Issue">
-                                            <i class="ph-eye"></i>
-                                        </a>
-                                        <a href="{{ route('block-issues.edit', $issue) }}" class="btn btn-sm btn-outline-warning" title="Edit Issue">
-                                            <i class="ph-pencil"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-outline-danger" title="Delete Issue" 
-                                                onclick="deleteIssue({{ $issue->id }}, '{{ $issue->ref_no }}')">
-                                            <i class="ph-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
+                    
                             </tr>
                         @endforeach
                     </tbody>

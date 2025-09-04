@@ -360,6 +360,67 @@ class BlockIssueController extends Controller
     }
 
     /**
+     * Get block unit contact details for API
+     */
+    public function getBlockUnitContactDetails(Request $request)
+    {
+        try {
+            $blockUnitId = $request->get('block_unit_id');
+            
+            if (!$blockUnitId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Block unit ID is required.'
+                ], 400);
+            }
+
+            $blockUnit = \App\Models\BlockUnit::find($blockUnitId);
+            
+            if (!$blockUnit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Block unit not found.'
+                ], 404);
+            }
+
+            // Build contact details string
+            $contactDetails = [];
+            
+            if (!empty($blockUnit->mobile_no)) {
+                $contactDetails[] = 'Mobile: ' . $blockUnit->mobile_no;
+            }
+            
+            if (!empty($blockUnit->phone_number)) {
+                $contactDetails[] = 'Phone: ' . $blockUnit->phone_number;
+            }
+            
+            if (!empty($blockUnit->email)) {
+                $contactDetails[] = 'Email: ' . $blockUnit->email;
+            }
+            
+            if (!empty($blockUnit->owners_name)) {
+                $contactDetails[] = 'Owner: ' . $blockUnit->owners_name;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'mobile_no' => $blockUnit->mobile_no,
+                    'phone_number' => $blockUnit->phone_number,
+                    'email' => $blockUnit->email,
+                    'owners_name' => $blockUnit->owners_name,
+                    'contact_details' => implode("\n", $contactDetails)
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch block unit details: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Delete an image from a block issue.
      */
     public function deleteImage(BlockIssueImage $image)
