@@ -48,21 +48,22 @@
             </ul>
         </div>
 
-        <div class="d-none flex-sm-fill d-sm-flex align-items-sm-center justify-content-sm-between">
-            <div>
-                <p class="small text-muted">
-                    {!! __('Showing') !!}
-                    <span class="fw-semibold">{{ $paginator->firstItem() }}</span>
-                    {!! __('to') !!}
-                    <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
-                    {!! __('of') !!}
-                    <span class="fw-semibold">{{ $paginator->total() }}</span>
-                    {!! __('results') !!}
-                </p>
-            </div>
+        <div class="d-none d-sm-block w-100">
+            <div class="row align-items-center w-100 g-2">
+                <div class="col-sm-4 text-start">
+                    <p class="small text-muted mb-0">
+                        {!! __('Showing') !!}
+                        <span class="fw-semibold">{{ $paginator->firstItem() }}</span>
+                        {!! __('to') !!}
+                        <span class="fw-semibold">{{ $paginator->lastItem() }}</span>
+                        {!! __('of') !!}
+                        <span class="fw-semibold">{{ $paginator->total() }}</span>
+                        {!! __('results') !!}
+                    </p>
+                </div>
 
-            <div class="d-flex align-items-center">
-                <ul class="pagination mb-0 me-3">
+                <div class="col-sm-4 d-flex align-items-center justify-content-center">
+                    <ul class="pagination mb-0">
                     {{-- Previous Page Link --}}
                     @if ($paginator->onFirstPage())
                         <li class="page-item disabled" aria-disabled="true" aria-label="@lang('pagination.previous')">
@@ -140,12 +141,12 @@
                             <span class="page-link" aria-hidden="true">&rsaquo;</span>
                         </li>
                     @endif
-                </ul>
+                    </ul>
+                </div>
 
-                {{-- Page Number Input --}}
-                <div class="d-flex align-items-center">
+                <div class="col-sm-4 d-flex align-items-center justify-content-end">
                     <span class="text-muted me-2">Go to:</span>
-                    <div class="input-group" style="width: 80px;">
+                    <div class="input-group" style="width: 100px;">
                         <input type="number" 
                                class="form-control form-control-sm pagination-input" 
                                min="1" 

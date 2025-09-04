@@ -48,33 +48,35 @@
                     </div>
 
                     <!-- Filters -->
-                    <div class="row mt-3">
-                        <div class="col-md-3">
-                            <label for="status" class="form-label">Status</label>
-                            <select class="form-select" name="status" onchange="this.form.submit()">
-                                <option value="">All Statuses</option>
-                                <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Scheduled</option>
-                                <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>In Progress</option>
-                                <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Completed</option>
-                                <option value="4" {{ request('status') == '4' ? 'selected' : '' }}>Cancelled</option>
-                                <option value="5" {{ request('status') == '5' ? 'selected' : '' }}>On Hold</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="date_from" class="form-label">Date From</label>
-                            <input type="date" class="form-control" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="date_to" class="form-label">Date To</label>
-                            <input type="date" class="form-control" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
-                            <div>
-                                <a href="{{ route('block-inspections.index') }}" class="btn btn-outline-secondary btn-sm">Clear Filters</a>
+                    <form action="{{ route('block-inspections.index') }}" method="GET">
+                        <div class="row mt-3">
+                            <div class="col-md-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="inspection-status" name="status" onchange="this.form.submit()">
+                                    <option value="">All Statuses</option>
+                                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>Scheduled</option>
+                                    <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>In Progress</option>
+                                    <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Completed</option>
+                                    <option value="4" {{ request('status') == '4' ? 'selected' : '' }}>Cancelled</option>
+                                    <option value="5" {{ request('status') == '5' ? 'selected' : '' }}>On Hold</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="date_from" class="form-label">Date From</label>
+                                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="date_to" class="form-label">Date To</label>
+                                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <a href="{{ route('block-inspections.index') }}" class="btn btn-outline-secondary">Clear Filters</a>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </form>
 
                     <div class="table-responsive mt-4">
                         <table class="table table-bordered dt-responsive nowrap w-100">

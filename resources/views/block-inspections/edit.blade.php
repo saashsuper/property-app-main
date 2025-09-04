@@ -128,16 +128,20 @@
 @endsection
 
 @section('script')
-    <script src="{{ URL::asset('build/libs/select2/js/select2.min.js') }}"></script>
+    <script src="{{ URL::asset('build/libs/choices.js/choices.min.js') }}"></script>
     <script src="{{ URL::asset('build/libs/flatpickr/flatpickr.min.js') }}"></script>
 
     <script>
-        $(document).ready(function() {
-            flatpickr("#scheduled_date_time", {
+        document.addEventListener('DOMContentLoaded', function() {
+            const dtInput = document.getElementById('scheduled_date_time');
+            flatpickr(dtInput, {
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
+                altInput: true,
+                altFormat: "D, M j, Y H:i",
                 time_24hr: true,
-                minuteIncrement: 15
+                minuteIncrement: 15,
+                defaultDate: dtInput && dtInput.value ? dtInput.value : null
             });
         });
     </script>

@@ -3,8 +3,8 @@
 @section('title') Schedule Block Inspection @endsection
 
 @section('css')
-    <!-- Select2 css -->
-    <link href="{{ URL::asset('build/libs/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
+    <!-- Choices css (replaces Select2) -->
+    <link href="{{ URL::asset('build/libs/choices.js/choices.min.css') }}" rel="stylesheet" type="text/css" />
     <!-- Flatpickr css -->
     <link href="{{ URL::asset('build/libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet" type="text/css" />
 @endsection
@@ -50,7 +50,7 @@
                                     <label for="scheduled_date_time" class="form-label">Scheduled Date & Time <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('scheduled_date_time') is-invalid @enderror" 
                                            name="scheduled_date_time" id="scheduled_date_time" 
-                                           value="{{ old('scheduled_date_time') }}" required>
+                                           placeholder="Select date and time" value="{{ old('scheduled_date_time') }}" required>
                                     @error('scheduled_date_time')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -75,7 +75,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="lead_inspector" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('lead_inspector') is-invalid @enderror" name="lead_inspector" required>
+                                    <select class="form-select js-choices-single @error('lead_inspector') is-invalid @enderror" name="lead_inspector" required>
                                         <option value="">Select Lead Inspector</option>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}" {{ old('lead_inspector') == $user->id ? 'selected' : '' }}>
@@ -92,7 +92,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="team_members" class="form-label">Team Members <span class="text-danger">*</span></label>
-                                    <select class="form-select select2 @error('team_members') is-invalid @enderror" 
+                                    <select class="form-select js-choices-multiple @error('team_members') is-invalid @enderror" 
                                             name="team_members[]" multiple required>
                                         @foreach($users as $user)
                                             <option value="{{ $user->id }}" {{ in_array($user->id, old('team_members', [])) ? 'selected' : '' }}>
@@ -128,49 +128,45 @@
 @endsection
 
 @section('script')
-    <!-- Select2 js -->
-    <script src="{{ URL::asset('build/libs/select2/js/select2.min.js') }}"></script>
+    <!-- Choices js (replaces Select2) -->
+    <script src="{{ URL::asset('build/libs/choices.js/choices.min.js') }}"></script>
     <!-- Flatpickr js -->
     <script src="{{ URL::asset('build/libs/flatpickr/flatpickr.min.js') }}"></script>
 
     <script>
-        $(document).ready(function() {
-            // Initialize Select2
-            $('.select2').select2({
-                placeholder: 'Select team members',
-                allowClear: true
-            });
-
+        document.addEventListener('DOMContentLoaded', function() {
             // Initialize Flatpickr for date and time
-            flatpickr("#scheduled_date_time", {
+            const dtInput = document.getElementById('scheduled_date_time');
+            flatpickr(dtInput, {
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
+                altInput: true,
+                altFormat: "D, M j, Y H:i",
                 minDate: "today",
                 time_24hr: true,
-                minuteIncrement: 15
+                minuteIncrement: 15,
+                defaultDate: dtInput && dtInput.value ? dtInput.value : null
             });
 
+            // Initialize Choices.js for selects
+            const leadSelect = document.querySelector('select[name="lead_inspector"]');
+            const teamSelect = document.querySelector('select[name="team_members[]"]');
+            const leadChoices = leadSelect ? new Choices(leadSelect, { searchEnabled: true, shouldSort: false }) : null;
+            const teamChoices = teamSelect ? new Choices(teamSelect, { removeItemButton: true, searchEnabled: true, shouldSort: false }) : null;
+
             // Auto-select lead inspector in team members
-            $('select[name="lead_inspector"]').on('change', function() {
-                var leadInspectorId = $(this).val();
-                var teamMembersSelect = $('select[name="team_members[]"]');
-                
-                if (leadInspectorId) {
-                    // Check if lead inspector is already selected in team members
-                    var isSelected = false;
-                    teamMembersSelect.find('option:selected').each(function() {
-                        if ($(this).val() == leadInspectorId) {
-                            isSelected = true;
-                            return false;
+            if (leadSelect && teamChoices) {
+                leadSelect.addEventListener('change', function(e) {
+                    const leadInspectorId = e.target.value;
+                    if (leadInspectorId) {
+                        // Select in team members if not already selected
+                        const alreadySelected = Array.from(teamSelect.selectedOptions).some(opt => opt.value === leadInspectorId);
+                        if (!alreadySelected) {
+                            try { teamChoices.setChoiceByValue(leadInspectorId); } catch (err) {}
                         }
-                    });
-                    
-                    if (!isSelected) {
-                        teamMembersSelect.find('option[value="' + leadInspectorId + '"]').prop('selected', true);
-                        teamMembersSelect.trigger('change');
                     }
-                }
-            });
+                });
+            }
         });
     </script>
 @endsection
