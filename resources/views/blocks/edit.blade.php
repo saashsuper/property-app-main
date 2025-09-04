@@ -62,13 +62,13 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false">
-                                    Contractors
+                                <a class="nav-link" id="units-tab" data-bs-toggle="tab" href="#units" role="tab" aria-controls="units" aria-selected="false">
+                                    Units
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="units-tab" data-bs-toggle="tab" href="#units" role="tab" aria-controls="units" aria-selected="false">
-                                    Units
+                                <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false">
+                                    Contractors
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
@@ -110,14 +110,14 @@
                                 @include('blocks.tabs.edit.building-core')
                             </div>
 
-                            <!-- Contractors Tab -->
-                            <div class="tab-pane fade" id="contractors" role="tabpanel" aria-labelledby="contractors-tab">
-                                @include('blocks.tabs.edit.contractors')
-                            </div>
-
                             <!-- Units Tab -->
                             <div class="tab-pane fade" id="units" role="tabpanel" aria-labelledby="units-tab">
                                 @include('blocks.tabs.edit.units')
+                            </div>
+
+                            <!-- Contractors Tab -->
+                            <div class="tab-pane fade" id="contractors" role="tabpanel" aria-labelledby="contractors-tab">
+                                @include('blocks.tabs.edit.contractors')
                             </div>
 
                             <!-- Site Visit Tab -->

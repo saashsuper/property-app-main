@@ -1,25 +1,25 @@
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Contractor Information</h6>
+        <div class="d-flex align-items-center mb-3 gap-3">
+            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Contractor Information</h6>
             <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addContractorModal">
                 <i class="ph-plus align-bottom me-1"></i> Add Contractor
             </button>
         </div>
         
-        @if($block->contractors && $block->contractors->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover w-100" id="contractorTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Contractor Name</th>
-                            <th>Contractor Email</th>
-                            <th>Contract Type</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover w-100" id="contractorTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Contractor Name</th>
+                        <th>Contractor Email</th>
+                        <th>Contract Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if($block->contractors && $block->contractors->count() > 0)
                         @foreach($block->contractors as $contractor)
                             <tr>
                                 <td>{{ $contractor->contractor ? $contractor->contractor->name : 'N/A' }}</td>
@@ -38,16 +38,10 @@
                                 </td>
                             </tr>
                         @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="text-center py-4">
-                                                    <i class="ph-user-gear text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No contractors assigned to this block.</p>
-                <button class="btn btn-primary">Assign Contractor</button>
-            </div>
-        @endif
+                    @endif
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -292,18 +286,30 @@ $(document).ready(function() {
         buttons: [
             'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
         ],
+        autoWidth: false,
+        scrollX: true,
+        scrollCollapse: true,
         language: {
             search: "Search:",
             lengthMenu: "Show _MENU_ entries",
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "No entries to show",
-            zeroRecords: "No matching records found",
+            infoEmpty: "",
+            infoFiltered: "(filtered from _MAX_ total entries)",
+            zeroRecords: "No Contractor Informations found",
             paginate: {
                 first: "First",
                 last: "Last",
                 next: "Next",
                 previous: "Previous"
             }
+        },
+        initComplete: function() {
+            // Increase search box size
+            $('.dataTables_filter input').addClass('form-control').css({
+                'width': '300px',
+                'height': '38px',
+                'font-size': '14px'
+            });
         }
     });
 });
