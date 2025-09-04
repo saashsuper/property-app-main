@@ -71,7 +71,7 @@
 
 <!-- Create Issue Modal -->
 <div class="modal fade" id="createIssueModal" tabindex="-1" aria-labelledby="createIssueModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl" style="max-width: 95vw;">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
                 <h5 class="modal-title" id="createIssueModalLabel" style="color: white !important; padding-bottom: 15px;">Create Issue</h5>
@@ -263,10 +263,11 @@
         box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
     }
 
-/* Compact modal styling */
+/* Large modal styling */
 #createIssueModal .modal-body {
-    max-height: 70vh;
+    max-height: 80vh;
     overflow-y: auto;
+    padding: 2rem;
 }
 
 #createIssueModal .form-label {
@@ -277,7 +278,27 @@
 #createIssueModal .form-control,
 #createIssueModal .form-select {
     font-size: 0.875rem;
-    padding: 0.375rem 0.5rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Additional large modal styling */
+#createIssueModal .modal-dialog {
+    margin: 1rem auto;
+}
+
+#createIssueModal .modal-content {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+#createIssueModal .row {
+    margin-bottom: 1rem;
+}
+
+#createIssueModal .col-md-4,
+#createIssueModal .col-md-6,
+#createIssueModal .col-12 {
+    margin-bottom: 0.5rem;
 }
 
 
