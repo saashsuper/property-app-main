@@ -56,7 +56,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/blocks/{block}/units-autocomplete', [App\Http\Controllers\BlockController::class, 'getUnitsAutocomplete'])->name('api.blocks.units-autocomplete');
     
     // Work Orders
-    Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class);
+    Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
+    Route::post('work-orders/{workOrder}/reassign', [App\Http\Controllers\WorkOrderController::class, 'reassign'])->name('work-orders.reassign');
+    
+    // Work Order management routes (Admin only, not Contractor Admin)
+    Route::middleware(['role:Admin'])->group(function () {
+        Route::get('work-orders/create', [App\Http\Controllers\WorkOrderController::class, 'create'])->name('work-orders.create');
+        Route::post('work-orders', [App\Http\Controllers\WorkOrderController::class, 'store'])->name('work-orders.store');
+        Route::get('work-orders/{workOrder}/edit', [App\Http\Controllers\WorkOrderController::class, 'edit'])->name('work-orders.edit');
+        Route::put('work-orders/{workOrder}', [App\Http\Controllers\WorkOrderController::class, 'update'])->name('work-orders.update');
+        Route::delete('work-orders/{workOrder}', [App\Http\Controllers\WorkOrderController::class, 'destroy'])->name('work-orders.destroy');
+    });
+    
     Route::get('api/work-orders', [App\Http\Controllers\WorkOrderController::class, 'getWorkOrders'])->name('api.work-orders');
     Route::get('api/work-orders/{workOrder}', [App\Http\Controllers\WorkOrderController::class, 'getWorkOrder'])->name('api.work-orders.show');
     

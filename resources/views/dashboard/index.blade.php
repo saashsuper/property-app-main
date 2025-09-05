@@ -23,6 +23,112 @@
 }
 </style>
 
+        @if($isContractorAdmin ?? false)
+        <!-- Contractor Admin Dashboard -->
+        <div class="row">
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">Contractor Users</span>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('users.index') }}" class="text-decoration-none text-primary">
+                                        {{ $stats['total_contractor_users'] }}
+                                    </a>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <a href="{{ route('users.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                            <i class="ph-users"></i>
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">Total Work Orders</span>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('work-orders.index') }}" class="text-decoration-none text-success">
+                                        {{ $stats['total_work_orders'] }}
+                                    </a>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <a href="{{ route('work-orders.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                            <i class="ph-list-dashes"></i>
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">Assigned to Me</span>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('work-orders.index') }}" class="text-decoration-none text-warning">
+                                        {{ $stats['assigned_work_orders'] }}
+                                    </a>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <a href="{{ route('work-orders.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                            <i class="ph-user-check"></i>
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="flex-grow-1">
+                                <span class="text-muted text-uppercase fw-medium">Completed</span>
+                                <h4 class="mb-0">
+                                    <a href="{{ route('work-orders.index') }}" class="text-decoration-none text-info">
+                                        {{ $stats['completed_work_orders'] }}
+                                    </a>
+                                </h4>
+                            </div>
+                            <div class="flex-shrink-0 text-end">
+                                <a href="{{ route('work-orders.index') }}" class="text-decoration-none">
+                                    <div class="avatar-sm">
+                                        <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                            <i class="ph-check-circle"></i>
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @else
+        <!-- Regular Admin Dashboard -->
         <div class="row">
             <div class="col-xl-3 col-md-6">
                 <div class="card">
@@ -119,7 +225,9 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if(!($isContractorAdmin ?? false))
         <!-- Issue Statistics Cards -->
         <div class="row">
             <div class="col-xl-3 col-md-6">
@@ -271,7 +379,145 @@
                 </div>
             </div>
         </div>
+        @endif
 
+        @if($isContractorAdmin ?? false)
+        <!-- Contractor Admin Quick Actions and Recent Data -->
+        <div class="row">
+            <div class="col-xl-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Quick Actions</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <div class="avatar-sm mx-auto mb-3">
+                                            <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                                <i class="ph-users"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title">Manage Users</h5>
+                                        <p class="card-text text-muted">View and manage contractor users</p>
+                                        <a href="{{ route('users.index') }}" class="btn btn-primary">View Users</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <div class="avatar-sm mx-auto mb-3">
+                                            <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                                <i class="ph-plus"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title">Add New User</h5>
+                                        <p class="card-text text-muted">Create a new contractor user</p>
+                                        <a href="{{ route('users.create') }}" class="btn btn-success">Create User</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <div class="avatar-sm mx-auto mb-3">
+                                            <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                                <i class="ph-list-dashes"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title">Block Work Orders</h5>
+                                        <p class="card-text text-muted">View assigned block work orders</p>
+                                        <a href="{{ route('block-work-orders.index') }}" class="btn btn-info">View Work Orders</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <div class="avatar-sm mx-auto mb-3">
+                                            <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
+                                                <i class="ph-user-check"></i>
+                                            </span>
+                                        </div>
+                                        <h5 class="card-title">My Assignments</h5>
+                                        <p class="card-text text-muted">View work orders assigned to me</p>
+                                        <a href="{{ route('work-orders.index') }}" class="btn btn-warning">My Tasks</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Recent Contractor Users</h4>
+                    </div>
+                    <div class="card-body">
+                        @if(isset($recentContractorUsers) && $recentContractorUsers->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($recentContractorUsers as $user)
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ $user->name }}</h6>
+                                            <small class="text-muted">{{ $user->email }}</small>
+                                        </div>
+                                        <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-outline-primary">
+                                            View
+                                        </a>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ph-users fs-2"></i>
+                                    <p class="mt-2">No contractor users found</p>
+                                    <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
+                                        Create Your First User
+                                    </a>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">Recent Work Orders</h4>
+                    </div>
+                    <div class="card-body">
+                        @if(isset($recentWorkOrders) && $recentWorkOrders->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($recentWorkOrders as $workOrder)
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No description', 30) }}</h6>
+                                                <small class="text-muted">{{ $workOrder->ref_no ?? 'N/A' }}</small>
+                                            </div>
+                                            <span class="badge bg-{{ $workOrder->status == 3 ? 'success' : 'warning' }}">{{ $workOrder->status_text }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ph-list-dashes fs-2"></i>
+                                    <p class="mt-2">No work orders found</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+        @else
+        <!-- Regular Admin Quick Actions and Recent Data -->
         <div class="row">
             <div class="col-xl-8">
                 <div class="card">
@@ -346,7 +592,7 @@
                         <h4 class="card-title">Recent Blocks</h4>
                     </div>
                     <div class="card-body">
-                        @if($recentBlocks->count() > 0)
+                        @if(isset($recentBlocks) && $recentBlocks->count() > 0)
                             <div class="list-group list-group-flush">
                                 @foreach($recentBlocks as $block)
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
@@ -379,7 +625,7 @@
                         <h4 class="card-title">Recent Issues</h4>
                     </div>
                     <div class="card-body">
-                        @if($recentIssues->count() > 0)
+                        @if(isset($recentIssues) && $recentIssues->count() > 0)
                             <div class="list-group list-group-flush">
                                 @foreach($recentIssues as $issue)
                                     <div class="list-group-item">
@@ -403,10 +649,9 @@
                         @endif
                     </div>
                 </div>
-
-
             </div>
         </div>
+        @endif
 @endsection
 
 @section('script')

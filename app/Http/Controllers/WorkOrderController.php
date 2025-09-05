@@ -17,7 +17,15 @@ class WorkOrderController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        $isContractorAdmin = $user->hasType('Contractor Admin');
+        
         $query = WorkOrder::with(['user', 'creator'])->active();
+
+        // If Contractor Admin, only show work orders assigned to them
+        if ($isContractorAdmin) {
+            $query->where('user_id', $user->id);
+        }
 
         // Search functionality
         if ($request->filled('search')) {
@@ -50,7 +58,15 @@ class WorkOrderController extends Controller
 
         $workOrders = $query->orderBy('created_at', 'desc')->paginate(10);
 
-        return view('work-orders.index', compact('workOrders'));
+        // Get contractor users for reassignment (only for Contractor Admin)
+        $contractorUsers = null;
+        if ($isContractorAdmin) {
+            $contractorUsers = \App\Models\User::whereHas('userType', function($query) {
+                $query->where('name', 'Contractor User');
+            })->where('created_by', $user->id)->get();
+        }
+
+        return view('work-orders.index', compact('workOrders', 'isContractorAdmin', 'contractorUsers'));
     }
 
     /**
@@ -248,5 +264,47 @@ class WorkOrderController extends Controller
             'success' => true,
             'data' => $workOrder
         ]);
+    }
+
+    /**
+     * Reassign work order to another contractor user (Contractor Admin only)
+     */
+    public function reassign(Request $request, WorkOrder $workOrder)
+    {
+        $user = auth()->user();
+        
+        // Only Contractor Admin can reassign work orders
+        if (!$user->hasType('Contractor Admin')) {
+            return redirect()->back()->with('error', 'You do not have permission to reassign work orders.');
+        }
+
+        // Only allow reassignment of work orders assigned to the current contractor admin
+        if ($workOrder->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'You can only reassign work orders assigned to you.');
+        }
+
+        $validator = Validator::make($request->all(), [
+            'new_user_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->with('error', 'Invalid user selected for reassignment.');
+        }
+
+        // Verify the new user is a Contractor User created by this admin
+        $newUser = \App\Models\User::find($request->new_user_id);
+        if (!$newUser->hasType('Contractor User') || $newUser->created_by !== $user->id) {
+            return redirect()->back()->with('error', 'You can only reassign to contractor users you created.');
+        }
+
+        // Update the work order
+        $workOrder->update([
+            'user_id' => $request->new_user_id,
+            'updated_by' => $user->id,
+        ]);
+
+        return redirect()->back()->with('success', 'Work order reassigned successfully!');
     }
 }

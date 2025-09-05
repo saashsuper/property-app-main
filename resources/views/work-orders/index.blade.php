@@ -47,10 +47,12 @@
                                     </a>
                                 </div>
 
-                                <!-- Add Button -->
+                                <!-- Add Button (hidden for Contractor Admin) -->
+                                @if(!($isContractorAdmin ?? false))
                                 <a href="{{ route('work-orders.create') }}" class="btn btn-primary">
                                     <i class="ph-plus me-2"></i>Add New Work Order
                                 </a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -176,11 +178,21 @@
                                                             <i class="ph-eye me-2"></i> View
                                                         </a>
                                                     </li>
+                                                    @if(!($isContractorAdmin ?? false))
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('work-orders.edit', $workOrder) }}">
                                                             <i class="ph-pencil me-2"></i> Edit
                                                         </a>
                                                     </li>
+                                                    @endif
+                                                    @if($isContractorAdmin ?? false)
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#reassignModal{{ $workOrder->id }}">
+                                                            <i class="ph-user-switch me-2"></i> Reassign
+                                                        </a>
+                                                    </li>
+                                                    @endif
+                                                    @if(!($isContractorAdmin ?? false))
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li>
                                                         <form action="{{ route('work-orders.destroy', $workOrder) }}" method="POST" class="d-inline">
@@ -192,6 +204,7 @@
                                                             </button>
                                                         </form>
                                                     </li>
+                                                    @endif
                                                 </ul>
                                             </div>
                                         </td>
@@ -229,6 +242,55 @@
         </div>
     </div>
 </div>
+
+<!-- Reassign Modals for Contractor Admin -->
+@if($isContractorAdmin ?? false)
+@foreach($workOrders as $workOrder)
+<div class="modal fade" id="reassignModal{{ $workOrder->id }}" tabindex="-1" aria-labelledby="reassignModalLabel{{ $workOrder->id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reassignModalLabel{{ $workOrder->id }}">Reassign Work Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('work-orders.reassign', $workOrder) }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="workOrderCode{{ $workOrder->id }}" class="form-label">Work Order</label>
+                        <input type="text" class="form-control" id="workOrderCode{{ $workOrder->id }}" 
+                               value="{{ $workOrder->code }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_user_id{{ $workOrder->id }}" class="form-label">Reassign to Contractor User</label>
+                        <select class="form-select" id="new_user_id{{ $workOrder->id }}" name="new_user_id" required>
+                            <option value="">Select a contractor user...</option>
+                            @if($contractorUsers)
+                                @foreach($contractorUsers as $contractorUser)
+                                    <option value="{{ $contractorUser->id }}" 
+                                            {{ $workOrder->user_id == $contractorUser->id ? 'selected' : '' }}>
+                                        {{ $contractorUser->name }} ({{ $contractorUser->email }})
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="ph-info me-2"></i>
+                        You can only reassign this work order to contractor users you have created.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reassign Work Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+@endif
+
 @endsection
 
 @section('script')

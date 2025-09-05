@@ -44,6 +44,12 @@
                     </div>
 
                     <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="visible" name="visible" checked>
+                                <label class="form-check-label" for="visible">Visible</label>
+                            </div>
+                        </div>
                         <div class="col-12">
                             <div class="d-flex justify-content-end gap-2">
                                 <a href="{{ route('user-types.index') }}" class="btn btn-secondary">

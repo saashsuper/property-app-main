@@ -16,7 +16,15 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        $isContractorAdmin = $user->hasType('Contractor Admin');
+        
         $query = User::with(['userType'])->active();
+
+        // If Contractor Admin, only show users they created
+        if ($isContractorAdmin) {
+            $query->where('created_by', $user->id);
+        }
 
         // Search functionality
         if ($request->filled('search')) {
@@ -35,10 +43,16 @@ class UserController extends Controller
             $query->where('user_type_id', $request->user_type_id);
         }
 
-        $users = $query->orderBy('id', 'asc')->paginate(10);
-        $userTypes = UserType::orderBy('name')->get();
+        $users = $query->orderBy('updated_at', 'desc')->paginate(10);
+        
+        // For Contractor Admin, only show Contractor User type in filter
+        if ($isContractorAdmin) {
+            $userTypes = UserType::where('name', 'Contractor User')->get();
+        } else {
+            $userTypes = UserType::visible()->orderBy('name')->get();
+        }
 
-        return view('users.index', compact('users', 'userTypes'));
+        return view('users.index', compact('users', 'userTypes', 'isContractorAdmin'));
     }
 
     /**
@@ -46,8 +60,17 @@ class UserController extends Controller
      */
     public function create()
     {
-        $userTypes = UserType::orderBy('name')->get();
-        return view('users.create', compact('userTypes'));
+        $user = auth()->user();
+        $isContractorAdmin = $user->hasType('Contractor Admin');
+        
+        // For Contractor Admin, only allow creating Contractor User types
+        if ($isContractorAdmin) {
+            $userTypes = UserType::where('name', 'Contractor User')->get();
+        } else {
+            $userTypes = UserType::visible()->orderBy('name')->get();
+        }
+        
+        return view('users.create', compact('userTypes', 'isContractorAdmin'));
     }
 
     /**
@@ -58,7 +81,7 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed',
             'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -69,8 +92,35 @@ class UserController extends Controller
                 ->withInput();
         }
 
+        $user = auth()->user();
+        $isContractorAdmin = $user->hasType('Contractor Admin');
+        
+        // Validate that Contractor Admin can only create Contractor User types
+        if ($isContractorAdmin) {
+            $selectedType = UserType::find($request->user_type_id);
+            if (!$selectedType || $selectedType->name !== 'Contractor User') {
+                return redirect()->back()
+                    ->withErrors(['user_type_id' => 'You can only create Contractor User accounts.'])
+                    ->withInput();
+            }
+        }
+
         $data = $request->except(['password', 'password_confirmation', 'avatar']);
-        $data['password'] = Hash::make($request->password);
+        
+        // Set the creator
+        $data['created_by'] = auth()->id();
+        
+        // If contractor admin with web login required, set default password
+        $selectedType = UserType::find($request->user_type_id);
+        if ($request->has('is_web_login_required') && $selectedType && $selectedType->name === 'Contractor Admin') {
+            $data['password'] = Hash::make('password123');
+        } else {
+            // Otherwise require provided password
+            if (!$request->filled('password')) {
+                return redirect()->back()->withErrors(['password' => 'Password is required unless web login is auto-enabled for Contractor Admin.'])->withInput();
+            }
+            $data['password'] = Hash::make($request->password);
+        }
 
         // Handle avatar upload
         if ($request->hasFile('avatar')) {
@@ -102,8 +152,23 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $userTypes = UserType::orderBy('name')->get();
-        return view('users.edit', compact('user', 'userTypes'));
+        $currentUser = auth()->user();
+        $isContractorAdmin = $currentUser->hasType('Contractor Admin');
+        
+        // If Contractor Admin, only allow editing users they created
+        if ($isContractorAdmin && $user->created_by !== $currentUser->id) {
+            return redirect()->route('users.index')
+                ->with('error', 'You can only edit users you created.');
+        }
+        
+        // For Contractor Admin, only allow Contractor User type
+        if ($isContractorAdmin) {
+            $userTypes = UserType::where('name', 'Contractor User')->get();
+        } else {
+            $userTypes = UserType::visible()->orderBy('name')->get();
+        }
+        
+        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin'));
     }
 
     /**
@@ -123,6 +188,25 @@ class UserController extends Controller
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
+        }
+
+        $currentUser = auth()->user();
+        $isContractorAdmin = $currentUser->hasType('Contractor Admin');
+        
+        // If Contractor Admin, only allow updating users they created
+        if ($isContractorAdmin && $user->created_by !== $currentUser->id) {
+            return redirect()->route('users.index')
+                ->with('error', 'You can only update users you created.');
+        }
+        
+        // Validate that Contractor Admin can only update to Contractor User type
+        if ($isContractorAdmin) {
+            $selectedType = UserType::find($request->user_type_id);
+            if (!$selectedType || $selectedType->name !== 'Contractor User') {
+                return redirect()->back()
+                    ->withErrors(['user_type_id' => 'You can only assign Contractor User type.'])
+                    ->withInput();
+            }
         }
 
         $data = $request->except(['password', 'password_confirmation', 'avatar']);
@@ -158,6 +242,15 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
+        $currentUser = auth()->user();
+        $isContractorAdmin = $currentUser->hasType('Contractor Admin');
+        
+        // If Contractor Admin, only allow deleting users they created
+        if ($isContractorAdmin && $user->created_by !== $currentUser->id) {
+            return redirect()->route('users.index')
+                ->with('error', 'You can only delete users you created.');
+        }
+        
         // Prevent deleting own account
         if ($user->id === Auth::id()) {
             return redirect()->route('users.index')

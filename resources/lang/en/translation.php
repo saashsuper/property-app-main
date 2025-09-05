@@ -353,6 +353,7 @@ return [
     "id" => "ID",
     "name" => "Name",
     "email" => "Email",
+    "password" => "Password",
     "created-at" => "Created At",
     "actions" => "Actions",
     "back" => "Back",

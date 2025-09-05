@@ -51,6 +51,7 @@
                                     <input type="text" class="form-control @error('scheduled_date_time') is-invalid @enderror" 
                                            name="scheduled_date_time" id="scheduled_date_time" 
                                            placeholder="Select date and time" value="{{ old('scheduled_date_time') }}" required>
+                                           
                                     @error('scheduled_date_time')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

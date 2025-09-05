@@ -15,7 +15,20 @@ class UserType extends Model
     protected $fillable = [
         'name',
         'description',
+        'is_hidden',
     ];
+
+    protected $casts = [
+        'is_hidden' => 'boolean',
+    ];
+
+    /**
+     * Scope to only show visible types.
+     */
+    public function scopeVisible($query)
+    {
+        return $query->where('is_hidden', false);
+    }
 
     /**
      * Get the users that belong to this type
