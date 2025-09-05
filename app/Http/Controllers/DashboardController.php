@@ -6,6 +6,9 @@ use App\Models\Block;
 use App\Models\BlockIssue;
 use App\Models\BlockType;
 use App\Models\BlockUnit;
+use App\Models\BlockWorkOrder;
+use App\Models\User;
+use App\Models\WorkOrder;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -16,30 +19,62 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        // Get initial dashboard statistics
-        $stats = [
-            'total_blocks' => Block::count(),
-            'total_block_types' => BlockType::count(),
-            'total_units' => BlockUnit::count(),
-            'total_issues' => BlockIssue::count(),
-            'open_issues' => BlockIssue::where('issue_status_id', 1)->count(),
-            'in_progress_issues' => BlockIssue::where('issue_status_id', 2)->count(),
-            'resolved_issues' => BlockIssue::where('issue_status_id', 3)->count(),
-            'high_priority_issues' => BlockIssue::where('priority_id', '>=', 3)->count(),
-        ];
+        $user = auth()->user();
+        $isContractorAdmin = $user->hasType('Contractor Admin');
 
-        // Get recent data for widgets
-        $recentBlocks = Block::with('blockType')
+        if ($isContractorAdmin) {
+            // Contractor Admin specific data
+            $stats = [
+                'total_contractor_users' => User::whereHas('userType', function($query) {
+                    $query->where('name', 'Contractor User');
+                })->count(),
+                'total_work_orders' => BlockWorkOrder::count(),
+                'assigned_work_orders' => BlockWorkOrder::where('contractor_id', $user->id)->count(),
+                'completed_work_orders' => BlockWorkOrder::where('contractor_id', $user->id)
+                    ->where('status', 3)->count(), // Status 3 is Completed
+            ];
+
+            // Get recent contractor users created by this admin
+            $recentContractorUsers = User::whereHas('userType', function($query) {
+                $query->where('name', 'Contractor User');
+            })->where('created_by', $user->id)
             ->latest()
             ->take(5)
             ->get();
 
-        $recentIssues = BlockIssue::with('block')
-            ->latest()
-            ->take(5)
-            ->get();
+            // Get recent block work orders assigned to this admin
+            $recentWorkOrders = BlockWorkOrder::where('contractor_id', $user->id)
+                ->latest()
+                ->take(5)
+                ->get();
 
-        return view('dashboard.index', compact('stats', 'recentBlocks', 'recentIssues'));
+            return view('dashboard.index', compact('stats', 'recentContractorUsers', 'recentWorkOrders', 'isContractorAdmin'));
+        } else {
+            // Regular admin/other users - show all data
+            $stats = [
+                'total_blocks' => Block::count(),
+                'total_block_types' => BlockType::count(),
+                'total_units' => BlockUnit::count(),
+                'total_issues' => BlockIssue::count(),
+                'open_issues' => BlockIssue::where('issue_status_id', 1)->count(),
+                'in_progress_issues' => BlockIssue::where('issue_status_id', 2)->count(),
+                'resolved_issues' => BlockIssue::where('issue_status_id', 3)->count(),
+                'high_priority_issues' => BlockIssue::where('priority_id', '>=', 3)->count(),
+            ];
+
+            // Get recent data for widgets
+            $recentBlocks = Block::with('blockType')
+                ->latest()
+                ->take(5)
+                ->get();
+
+            $recentIssues = BlockIssue::with('block')
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return view('dashboard.index', compact('stats', 'recentBlocks', 'recentIssues', 'isContractorAdmin'));
+        }
     }
 
     /**

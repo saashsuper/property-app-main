@@ -45,6 +45,12 @@
                     </div>
 
                     <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="visible" name="visible" {{ old('visible', !$userType->is_hidden) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="visible">Visible</label>
+                            </div>
+                        </div>
                         <div class="col-12">
                             <div class="d-flex justify-content-end gap-2">
                                 <a href="{{ route('user-types.show', $userType->id) }}" class="btn btn-secondary">

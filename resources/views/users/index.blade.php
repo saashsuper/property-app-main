@@ -197,6 +197,7 @@
                                 <input type="text" class="form-control" name="search" 
                                        placeholder="@lang('translation.search-users')" value="{{ request('search') }}">
                             </div>
+                            @if(!($isContractorAdmin ?? false))
                             <div class="col-md-3">
                                 <select class="form-select" name="user_type_id">
                                     <option value="">@lang('translation.all-user-types')</option>
@@ -207,6 +208,7 @@
                                     @endforeach
                                 </select>
                             </div>
+                            @endif
                             <div class="col-md-3">
                                 <button type="submit" class="btn btn-primary w-100">
                                     <i class="ph-magnifying-glass me-1"></i> @lang('translation.search')
@@ -268,8 +270,10 @@
                                             </button>
                                             <ul class="dropdown-menu dropdown-menu-end">
                                                 <li><a class="dropdown-item" href="{{ route('users.show', $user->id) }}"><i class="ph-eye align-bottom me-2"></i> @lang('translation.view')</a></li>
+                                                @if(!($isContractorAdmin ?? false) || $user->created_by == auth()->id())
                                                 <li><a class="dropdown-item" href="{{ route('users.edit', $user->id) }}"><i class="ph-pencil align-bottom me-2"></i> @lang('translation.edit')</a></li>
-                                                @if($user->id !== auth()->id())
+                                                @endif
+                                                @if($user->id !== auth()->id() && (!($isContractorAdmin ?? false) || $user->created_by == auth()->id()))
                                                     <li>
                                                         <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline">
                                                             @csrf
@@ -304,7 +308,7 @@
 
                 @if($users->hasPages())
                     <div class="d-flex justify-content-center mt-3">
-                        {{ $users->appends(request()->query())->links() }}
+                        {{ $users->appends(request()->query())->links('vendor.pagination.custom') }}
                     </div>
                 @endif
             </div>

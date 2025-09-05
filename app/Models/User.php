@@ -24,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'avatar',
         'user_type_id',
+        'created_by',
     ];
 
     /**
@@ -51,6 +52,22 @@ class User extends Authenticatable implements MustVerifyEmail
     public function userType()
     {
         return $this->belongsTo('App\Models\UserType', 'user_type_id');
+    }
+
+    /**
+     * Get the user who created this user
+     */
+    public function creator()
+    {
+        return $this->belongsTo('App\Models\User', 'created_by');
+    }
+
+    /**
+     * Get users created by this user
+     */
+    public function createdUsers()
+    {
+        return $this->hasMany('App\Models\User', 'created_by');
     }
 
     /**

@@ -83,6 +83,7 @@
                         </a>
                     </li>
 
+                    @if(!auth()->user()->hasType('Contractor Admin'))
                     <li class="nav-item">
                         <a class="{{ getMenuClasses(null, ['blocks.*', 'block-types.*']) }}" href="#sidebarBlocks" data-bs-toggle="collapse"
                             role="button" aria-expanded="{{ hasActiveChild(['blocks.*', 'block-types.*']) ? 'true' : 'false' }}" aria-controls="sidebarBlocks">
@@ -104,30 +105,28 @@
                             </ul>
                         </div>
                     </li>
+                    @endif
 
                     <li class="nav-item">
-                        <a class="{{ getMenuClasses(null, ['work-orders.*', 'block-work-orders.*']) }}" href="#sidebarWorkOrders" data-bs-toggle="collapse"
-                            role="button" aria-expanded="{{ hasActiveChild(['work-orders.*', 'block-work-orders.*']) ? 'true' : 'false' }}" aria-controls="sidebarWorkOrders">
+                        <a class="{{ getMenuClasses(null, ['block-work-orders.*']) }}" href="#sidebarWorkOrders" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['block-work-orders.*']) ? 'true' : 'false' }}" aria-controls="sidebarWorkOrders">
                             <i class="ph-list-dashes"></i> <span>@lang('translation.work-orders')</span>
                         </a>
-                        <div class="{{ getDropdownClasses(['work-orders.*', 'block-work-orders.*']) }}" id="sidebarWorkOrders">
+                        <div class="{{ getDropdownClasses(['block-work-orders.*']) }}" id="sidebarWorkOrders">
                             <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="{{ route('work-orders.index') }}" class="{{ getSubmenuClasses('work-orders.index') }}">@lang('translation.general-work-orders')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('work-orders.create') }}" class="{{ getSubmenuClasses('work-orders.create') }}">@lang('translation.create-work-order')</a>
-                                </li>
                                 <li class="nav-item">
                                     <a href="{{ route('block-work-orders.index') }}" class="{{ getSubmenuClasses('block-work-orders.index') }}">@lang('translation.block-work-orders')</a>
                                 </li>
+                                @if(!auth()->user()->hasType('Contractor Admin'))
                                 <li class="nav-item">
                                     <a href="{{ route('block-work-orders.create') }}" class="{{ getSubmenuClasses('block-work-orders.create') }}">@lang('translation.create-block-work-order')</a>
                                 </li>
+                                @endif
                             </ul>
                         </div>
                     </li>
 
+                    @if(!auth()->user()->hasType('Contractor Admin'))
                     <li class="nav-item">
                         <a class="{{ getMenuClasses('block-visits.*') }}" href="{{ route('block-visits.index') }}">
                             <i class="ph-map-pin"></i> <span>@lang('translation.site-visits')</span>
@@ -162,6 +161,7 @@
                             </ul>
                         </div>
                     </li>
+                    @endif
 
                     <li class="nav-item">
                         <a class="{{ getMenuClasses(null, ['users.*', 'user-types.*']) }}" href="#sidebarUsers" data-bs-toggle="collapse"
@@ -173,6 +173,11 @@
                                 <li class="nav-item">
                                     <a href="{{ route('users.index') }}" class="{{ getSubmenuClasses('users.index') }}">@lang('translation.list-users')</a>
                                 </li>
+                                @if(auth()->user()->hasType('Contractor Admin'))
+                                <li class="nav-item">
+                                    <a href="{{ route('users.create') }}" class="{{ getSubmenuClasses('users.create') }}">@lang('translation.create-user')</a>
+                                </li>
+                                @else
                                 @admin
                                 <li class="nav-item">
                                     <a href="{{ route('users.create') }}" class="{{ getSubmenuClasses('users.create') }}">@lang('translation.create-user')</a>
@@ -184,6 +189,7 @@
                                     <a href="{{ route('user-types.create') }}" class="{{ getSubmenuClasses('user-types.create') }}">@lang('translation.create-user-type')</a>
                                 </li>
                                 @endadmin
+                                @endif
                             </ul>
                         </div>
                     </li>

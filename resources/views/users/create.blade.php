@@ -75,7 +75,7 @@
                                         id="user_type_id" name="user_type_id" required>
                                     <option value="">@lang('translation.select-user-type')</option>
                                     @foreach($userTypes as $userType)
-                                        <option value="{{ $userType->id }}" {{ old('user_type_id') == $userType->id ? 'selected' : '' }}>
+                                        <option value="{{ $userType->id }}" data-name="{{ $userType->name }}" {{ old('user_type_id') == $userType->id ? 'selected' : '' }}>
                                             {{ $userType->name }}
                                         </option>
                                     @endforeach
@@ -85,8 +85,18 @@
                                 @enderror
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
+                            <div class="mb-3" id="web-login-wrapper" style="display: none;">
+                                <label class="form-label" for="is_web_login_required">Web Login Required</label>
+                                <div class="form-check form-switch form-switch-lg">
+                                    <input class="form-check-input" type="checkbox" id="is_web_login_required" name="is_web_login_required" {{ old('is_web_login_required') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="is_web_login_required"><small class="text-muted">If checked, a default password will be set.</small></label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-12">
                             <div class="mb-3">
                                 <label for="avatar" class="form-label">@lang('translation.avatar')</label>
                                 <input type="file" class="form-control @error('avatar') is-invalid @enderror" 
@@ -116,4 +126,27 @@
         </div>
     </div>
 </div>
+@section('script')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('user_type_id');
+    const wrapper = document.getElementById('web-login-wrapper');
+
+    function toggleWebLogin() {
+        const selected = userTypeSelect.options[userTypeSelect.selectedIndex];
+        const typeName = selected ? selected.getAttribute('data-name') : '';
+        if (typeName === 'Contractor Admin') {
+            wrapper.style.display = '';
+        } else {
+            wrapper.style.display = 'none';
+            const cb = document.getElementById('is_web_login_required');
+            if (cb) cb.checked = false;
+        }
+    }
+
+    userTypeSelect.addEventListener('change', toggleWebLogin);
+    toggleWebLogin();
+});
+</script>
+@endsection
 @endsection

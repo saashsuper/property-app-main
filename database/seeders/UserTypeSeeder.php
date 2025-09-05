@@ -31,6 +31,7 @@ class UserTypeSeeder extends Seeder
                 'id' => 3,
                 'name' => 'Financial Admin',
                 'description' => 'Financial Administrator with financial management access',
+                'is_hidden' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -57,7 +58,14 @@ class UserTypeSeeder extends Seeder
             ],
             [
                 'id' => 7,
-                'name' => 'Contractor',
+                'name' => 'Contractor Admin',
+                'description' => 'Contractor administrator with management capabilities for contractor operations',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => 8,
+                'name' => 'Contractor User',
                 'description' => 'Contractor user with limited access for contract-related tasks',
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -65,7 +73,11 @@ class UserTypeSeeder extends Seeder
         ];
 
         foreach ($userTypes as $userType) {
-            DB::table('user_types')->insertOrIgnore($userType);
+            // Upsert to keep is_hidden in sync if record exists
+            DB::table('user_types')->updateOrInsert(
+                ['id' => $userType['id']],
+                $userType
+            );
         }
     }
 }

@@ -57,6 +57,7 @@ class UserTypeController extends Controller
         UserType::create([
             'name' => $request->name,
             'description' => $request->description,
+            'is_hidden' => $request->has('visible') ? false : true,
         ]);
 
         return redirect()->route('user-types.index')
@@ -102,6 +103,7 @@ class UserTypeController extends Controller
         $userType->update([
             'name' => $request->name,
             'description' => $request->description,
+            'is_hidden' => $request->has('visible') ? false : true,
         ]);
 
         return redirect()->route('user-types.index')
