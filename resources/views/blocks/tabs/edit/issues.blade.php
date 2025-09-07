@@ -30,7 +30,7 @@
                         <!-- Unit Selection -->
                         <div class="col-md-4 mb-3">
                             <label for="search_unit" class="form-label">Unit</label>
-                            <select class="form-select" id="search_unit" name="unit" onchange="getUnitDetails()">
+                            <select class="form-select" id="search_unit" name="block_unit_id" onchange="getUnitDetails()">
                                 <option value="">All Units</option>
                                 @foreach ($block->units as $unit)
                                     <option value="{{ $unit->id }}">{{ $unit->unit_code }} - {{ $unit->unit_name }}
@@ -38,11 +38,12 @@
                                 @endforeach
                             </select>
                         </div>
-
+                        <input type="hidden" name="type" value="api">
+                        <input type="hidden" name="block_id" value="{{ $block->id }}">
                         <!-- State Selection -->
                         <div class="col-md-4 mb-3">
                             <label for="search_state" class="form-label">Status</label>
-                            <select class="form-select" id="search_state" name="state">
+                            <select class="form-select" id="search_state" name="status">
                                 <option value="">All Statuses</option>
                                 <option value="1">Open</option>
                                 <option value="2">In Progress</option>
@@ -55,7 +56,7 @@
                         <!-- Type Selection -->
                         <div class="col-md-4 mb-3">
                             <label for="search_type" class="form-label">Issue Type</label>
-                            <select class="form-select" id="search_type" name="type">
+                            <select class="form-select" id="search_type" name="issue_type">
                                 <option value="">All Types</option>
                                 <option value="plumbing">Plumbing</option>
                                 <option value="electrical">Electrical</option>
@@ -91,7 +92,7 @@
                         <!-- Keyword Search -->
                         <div class="col-6 mb-3">
                             <label for="search_keyword" class="form-label">Keyword Search</label>
-                            <input type="text" class="form-control" id="search_keyword" name="keyword"
+                            <input type="text" class="form-control" id="search_keyword" name="search"
                                 placeholder="Search by issue title, description, or reference number...">
                         </div>
                     </div>
@@ -101,22 +102,28 @@
                 <button type="button" class="btn btn-primary" id="searchIssuesBtn">
                     <i class="ph-magnifying-glass me-1"></i> Search
                 </button>
+                <button type="button" class="btn btn-secondary" id="clearSearchBtn">
+                    <i class="ph-x me-1"></i> Clear
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="showAllBtn">
+                    <i class="ph-list me-1"></i> Show All
+                </button>
             </div>
         </div>
 
-        @if ($block->issues && $block->issues->count() > 0)
-            <div class="table-responsive">
-                <table class="table table-bordered table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Issue ID</th>
-                            <th>Title</th>
-                            <th>Priority</th>
-                            <th>Status</th>
-                            <th>Reported Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+         @if ($block->issues && $block->issues->count() > 0)
+             <div class="table-responsive">
+                 <table class="table table-bordered table-hover" id="issuesTable">
+                     <thead class="table-light">
+                         <tr>
+                             <th>Issue ID</th>
+                             <th>Title</th>
+                             <th>Priority</th>
+                             <th>Status</th>
+                             <th>Reported Date</th>
+                         </tr>
+                     </thead>
+                     <tbody>
                         @foreach ($block->issues as $issue)
                             <tr>
                                 <td>
@@ -1209,11 +1216,20 @@
             });
         }
 
-        if (clearSearchBtn) {
-            clearSearchBtn.addEventListener('click', function() {
-                clearSearch();
-            });
-        }
+         if (clearSearchBtn) {
+             clearSearchBtn.addEventListener('click', function() {
+                 clearSearch();
+             });
+         }
+
+         // Show All button functionality
+         const showAllBtn = document.getElementById('showAllBtn');
+         if (showAllBtn) {
+             showAllBtn.addEventListener('click', function() {
+                 // Reload the page to show all issues
+                 window.location.reload();
+             });
+         }
 
         // Allow Enter key to trigger search
         if (searchIssuesForm) {
@@ -1223,91 +1239,101 @@
             });
         }
 
-        function performSearch() {
-            const formData = new FormData(searchIssuesForm);
-            const searchParams = new URLSearchParams();
+         function performSearch() {
+             const formData = new FormData(searchIssuesForm);
+             const searchParams = new URLSearchParams();
 
-            // Add search parameters
-            for (let [key, value] of formData.entries()) {
-                if (value.trim() !== '') {
-                    searchParams.append(key, value);
-                }
-            }
+             // Add search parameters
+             for (let [key, value] of formData.entries()) {
+                 if (value.trim() !== '') {
+                     searchParams.append(key, value);
+                 }
+             }
 
-            // Add block ID
-            const blockId = document.querySelector('input[name="block_id"]').value;
-            searchParams.append('block_id', blockId);
+             // Block ID is now included in the form as a hidden field
 
-            // Show loading state
-            searchResultsBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center text-muted py-3">
-                    <i class="ph-spinner ph-spin"></i> Searching issues...
-                </td>
-            </tr>
-        `;
-            searchResults.style.display = 'block';
+             // Show loading state on main table
+             const mainTableBody = document.querySelector('#issuesTable tbody');
+             if (mainTableBody) {
+                 mainTableBody.innerHTML = `
+                     <tr>
+                         <td colspan="5" class="text-center text-muted py-3">
+                             <i class="ph-spinner ph-spin"></i> Filtering issues...
+                         </td>
+                     </tr>
+                 `;
+             }
 
-            // Perform AJAX search
-            fetch(`/api/block-issues/search?${searchParams.toString()}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                            'content')
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success && data.data.length > 0) {
-                        // Display search results
-                        searchResultsBody.innerHTML = data.data.map(issue => `
-                    <tr>
-                        <td>
-                            <a href="/block-issues/${issue.id}" class="text-decoration-none">
-                                <b>#${issue.ref_no}</b>
-                            </a>
-                        </td>
-                        <td>${issue.issue || 'N/A'}</td>
-                        <td>${issue.unit ? `${issue.unit.unit_code} - ${issue.unit.unit_name}` : 'N/A'}</td>
-                        <td><span class="badge bg-info">${issue.issue_type || 'N/A'}</span></td>
-                        <td>${getPriorityBadge(issue.priority_id)}</td>
-                        <td>${getStatusBadge(issue.issue_status_id)}</td>
-                        <td>${formatDate(issue.created_at)}</td>
-                    </tr>
-                `).join('');
-                    } else {
-                        // No results found
-                        searchResultsBody.innerHTML = `
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-3">
-                            <i class="ph-magnifying-glass"></i> No issues found matching your search criteria
-                        </td>
-                    </tr>
-                `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Search error:', error);
-                    searchResultsBody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center text-danger py-3">
-                        <i class="ph-warning"></i> Error occurred while searching. Please try again.
-                    </td>
-                </tr>
-            `;
-                });
-        }
+             // Perform AJAX search
+             fetch(`/api/block-issues?${searchParams.toString()}`, {
+                     method: 'GET',
+                     headers: {
+                         'X-Requested-With': 'XMLHttpRequest',
+                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                             'content')
+                     }
+                 })
+                 .then(response => {
+                     if (!response.ok) {
+                         throw new Error(`HTTP error! status: ${response.status}`);
+                     }
+                     return response.json();
+                 })
+                 .then(data => {
+                     if (mainTableBody) {
+                         if (data.success && data.data && data.data&& data.data.length > 0) {
+                             // Display filtered results in main table (handle paginated response)
+                             const issues = data.data; // Access the actual issues from paginated response
+                             mainTableBody.innerHTML = issues.map(issue => `
+                                 <tr>
+                                     <td>
+                                         <a href="/block-issues/${issue.id}" class="text-decoration-none">
+                                             <b>#${issue.ref_no}</b>
+                                         </a>
+                                     </td>
+                                     <td>${issue.issue || 'N/A'}</td>
+                                     <td>${getPriorityBadge(issue.priority_id)}</td>
+                                     <td>${getStatusBadge(issue.issue_status_id)}</td>
+                                     <td>${formatDate(issue.created_at)}</td>
+                                 </tr>
+                             `).join('');
+                         } else {
+                             // No results found
+                             mainTableBody.innerHTML = `
+                                 <tr>
+                                     <td colspan="5" class="text-center text-muted py-3">
+                                         <i class="ph-magnifying-glass"></i> No issues found matching your search criteria
+                                     </td>
+                                 </tr>
+                             `;
+                         }
+                     }
+                 })
+                 .catch(error => {
+                     console.error('Search error:', error);
+                     if (mainTableBody) {
+                         mainTableBody.innerHTML = `
+                             <tr>
+                                 <td colspan="5" class="text-center text-danger py-3">
+                                     <i class="ph-warning"></i> Error occurred while filtering. Please try again.
+                                 </td>
+                             </tr>
+                         `;
+                     }
+                 });
+         }
 
         function clearSearch() {
             searchIssuesForm.reset();
             searchResults.style.display = 'none';
             searchResultsBody.innerHTML = '';
+            
+            // Restore original issue list
+            const mainTableBody = document.querySelector('#issuesTable tbody');
+            if (mainTableBody) {
+                // Reload the page to show all issues
+                window.location.reload();
+            }
         }
 
         function getStatusBadge(statusId) {

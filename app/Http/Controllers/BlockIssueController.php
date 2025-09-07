@@ -43,12 +43,12 @@ class BlockIssueController extends Controller
 
         // Filter by status
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('issue_status_id', $request->status);
         }
 
         // Filter by priority
         if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
+            $query->where('priority_id', $request->priority);
         }
 
         // Filter by assigned user
@@ -56,9 +56,25 @@ class BlockIssueController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
+        // Filter by block unit
+        if ($request->filled('block_unit_id')) {
+            $query->where('block_unit_id', $request->block_unit_id);
+        }
+
+        // Filter by issue type
+        if ($request->filled('issue_type')) {
+            $query->where('issue_type', $request->issue_type);
+        }
+
         $blockIssues = $query->orderBy('created_at', 'desc')->paginate(10);
         $blocks = Block::orderBy('name')->get();
         $users = User::orderBy('name')->get();
+        if($request->exists('type')&&$request->type=='api'){
+            return response()->json([
+                'success' => true,
+                'data' => $blockIssues
+            ]);
+        }
 
         return view('block-issues.index', compact('blockIssues', 'blocks', 'users'));
     }
