@@ -251,7 +251,7 @@
 
                             <!-- Issues Tab -->
                             <div class="tab-pane fade" id="issues" role="tabpanel" aria-labelledby="issues-tab">
-                                @include('blocks.tabs.issues')
+                                @include('blocks.tabs.edit.issues')
                             </div>
 
                             <!-- Work Orders Tab -->
