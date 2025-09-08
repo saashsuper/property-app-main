@@ -54,9 +54,14 @@ class BlockBuildingController extends Controller
         return redirect()->back()->with('success', 'Building updated successfully!');
     }
 
-    public function destroy(BlockBuilding $blockBuilding)
+    public function destroy(Request $request, BlockBuilding $blockBuilding)
     {
         $blockBuilding->delete();
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Building deleted successfully!']);
+        }
+        
         return redirect()->back()->with('success', 'Building deleted successfully!');
     }
 
