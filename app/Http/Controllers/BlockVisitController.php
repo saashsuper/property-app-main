@@ -13,6 +13,72 @@ use Illuminate\Support\Str;
 
 class BlockVisitController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(Request $request)
+    {
+        $query = BlockVisit::with(['block', 'jobReason', 'jobStatus', 'createdByUser', 'team.user']);
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('ref_no', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('block', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('jobReason', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('team.user', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Filter by job reason
+        if ($request->filled('job_reason_id')) {
+            $query->where('job_reason_id', $request->job_reason_id);
+        }
+
+        // Filter by job status
+        if ($request->filled('job_status_id')) {
+            $query->where('job_status_id', $request->job_status_id);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('scheduled_date_time', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('scheduled_date_time', '<=', $request->date_to);
+        }
+
+        $visits = $query->orderBy('scheduled_date_time', 'desc')->paginate(10);
+
+        // Get job reasons and statuses for filters
+        $jobReasons = JobReason::all();
+        $jobStatuses = JobStatus::all();
+
+        return view('block-visits.index', compact('visits', 'jobReasons', 'jobStatuses'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $blocks = Block::all();
+        $users = User::all();
+        $jobReasons = JobReason::all();
+        $jobStatuses = JobStatus::all();
+
+        return view('block-visits.create', compact('blocks', 'users', 'jobReasons', 'jobStatuses'));
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -64,19 +130,23 @@ class BlockVisitController extends Controller
 
     public function show(BlockVisit $blockVisit)
     {
-        try {
-            $blockVisit->load(['jobReason', 'jobStatus', 'createdByUser', 'updatedByUser', 'team.user']);
-            
-            return response()->json([
-                'success' => true,
-                'data' => $blockVisit
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Could not fetch site visit details: ' . $e->getMessage()
-            ], 500);
-        }
+        $blockVisit->load(['block.blockType', 'jobReason', 'jobStatus', 'createdByUser', 'updatedByUser', 'team.user', 'images']);
+        
+        return view('block-visits.show', compact('blockVisit'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(BlockVisit $blockVisit)
+    {
+        $blockVisit->load(['team.user']);
+        $blocks = Block::all();
+        $users = User::all();
+        $jobReasons = JobReason::all();
+        $jobStatuses = JobStatus::all();
+
+        return view('block-visits.edit', compact('blockVisit', 'blocks', 'users', 'jobReasons', 'jobStatuses'));
     }
 
     public function update(Request $request, BlockVisit $blockVisit)
