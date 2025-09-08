@@ -68,7 +68,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="no_of_floors" class="form-label">No of Floors <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="no_of_floors" name="no_of_floors" required min="1">
+                        <input type="number" class="form-control" id="no_of_floors" name="no_of_floors" required min="1" max="999" maxlength="3">
                     </div>
                     <div class="mb-3">
                         <label for="roof_type" class="form-label">Roof Type <span class="text-danger">*</span></label>
@@ -76,7 +76,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="no_lift" class="form-label">No of Lifts <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="no_lift" name="no_lift" required min="0">
+                        <input type="number" class="form-control" id="no_lift" name="no_lift" required min="0" max="999" maxlength="3">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -120,7 +120,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_no_of_floors" class="form-label">No of Floors <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="edit_no_of_floors" name="no_of_floors" required min="1">
+                        <input type="number" class="form-control" id="edit_no_of_floors" name="no_of_floors" required min="1" max="999" maxlength="3">
                     </div>
                     <div class="mb-3">
                         <label for="edit_roof_type" class="form-label">Roof Type <span class="text-danger">*</span></label>
@@ -128,7 +128,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_no_lift" class="form-label">No of Lifts <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="edit_no_lift" name="no_lift" required min="0">
+                        <input type="number" class="form-control" id="edit_no_lift" name="no_lift" required min="0" max="999" maxlength="3">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -181,6 +181,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Add input validation for 3-digit limit
+    function validateThreeDigits(input) {
+        const value = input.value;
+        if (value.length > 3) {
+            input.value = value.slice(0, 3);
+        }
+        if (parseInt(value) > 999) {
+            input.value = '999';
+        }
+    }
+
+    // Add event listeners for input validation
+    document.getElementById('no_of_floors').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
+    document.getElementById('no_lift').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
+    document.getElementById('edit_no_of_floors').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
+    document.getElementById('edit_no_lift').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
     // Add Building AJAX submission
     document.getElementById('addBuildingForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -211,10 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addBuildingModal'));
                     if (modal) modal.hide();
-                    // Reload the page to refresh the table
-                    setTimeout(() => {
-                        location.reload();
-                    }, 100);
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -258,10 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
                     if (modal) modal.hide();
-                    // Reload the page to refresh the table
-                    setTimeout(() => {
-                        location.reload();
-                    }, 100);
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -278,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add event listeners for modal close events
     document.getElementById('addBuildingModal').addEventListener('hidden.bs.modal', function() {
-        console.log('Add Building modal closed - refreshing table');
         // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
         setTimeout(() => {
             refreshBuildingsTable();
@@ -286,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('editBuildingModal').addEventListener('hidden.bs.modal', function() {
-        console.log('Edit Building modal closed - refreshing table');
         // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
         setTimeout(() => {
             refreshBuildingsTable();
@@ -295,18 +315,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to refresh the Buildings DataTable
     window.refreshBuildingsTable = function() {
-        console.log('refreshBuildingsTable called');
         if (buildingDataTable) {
-            console.log('DataTable exists, fetching data...');
             // Get the current block ID from the form
             const blockId = document.querySelector('input[name="block_id"]').value;
-            console.log('Block ID:', blockId);
             
             // Fetch fresh data
             fetch(`/block-buildings/block/${blockId}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log('API Response:', data);
                     if (data.success) {
                         // Clear existing data
                         buildingDataTable.clear();
@@ -335,12 +351,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // Redraw the table
                         buildingDataTable.draw();
-                    } else {
-                        console.error('API Error:', data.message);
                     }
                 })
                 .catch(error => {
-                    console.error('Error refreshing buildings table:', error);
+                    console.error('Error refreshing table:', error);
                 });
         }
     };
@@ -370,10 +384,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     messageDiv.className = 'alert alert-success';
                     messageDiv.textContent = 'Building deleted successfully!';
                     messageDiv.classList.remove('d-none');
-                    // Reload the page to refresh the table
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBuildingsTable();
                 } else {
                     messageDiv.className = 'alert alert-danger';
                     messageDiv.textContent = data.message || 'Error deleting building.';
