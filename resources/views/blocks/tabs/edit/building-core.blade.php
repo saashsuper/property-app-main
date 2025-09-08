@@ -206,8 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addBuildingModal'));
                     if (modal) modal.hide();
-                    // Tab switching code removed
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable after modal closes
+                    refreshBuildingsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -252,8 +252,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
                     if (modal) modal.hide();
-                    // Tab switching code removed
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable after modal closes
+                    refreshBuildingsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -353,16 +353,12 @@ window.refreshBuildingsTable = function() {
                     // Add new data
                     data.data.forEach(function(building) {
                         buildingDataTable.row.add([
-                            building.building_type ? building.building_type.name : 'N/A',
                             building.name || 'N/A',
+                            building.building_type_name || 'N/A',
                             building.floor_no || 'N/A',
                             building.roof_type || 'N/A',
                             building.no_lift || 'N/A',
-                            building.created_at ? new Date(building.created_at).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'short', 
-                                day: '2-digit' 
-                            }) : 'N/A',
+                            '<span class="badge bg-success">Active</span>',
                             '<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(' + building.id + ')">' +
                                 '<i class="ph-pencil"></i> Edit' +
                             '</button> ' +
