@@ -23,6 +23,9 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token' => Str::random(10),
+            'avatar' => null,
+            'user_type_id' => null,
+            'created_by' => null,
         ];
     }
 
@@ -33,6 +36,74 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create a user with a specific user type.
+     */
+    public function withUserType($userTypeId): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_type_id' => $userTypeId,
+        ]);
+    }
+
+    /**
+     * Create an admin user.
+     */
+    public function admin(): static
+    {
+        return $this->state(function (array $attributes) {
+            $userType = \App\Models\UserType::firstOrCreate(
+                ['name' => 'Admin'],
+                \App\Models\UserType::factory()->admin()->make()->toArray()
+            );
+            return [
+                'user_type_id' => $userType->id,
+            ];
+        });
+    }
+
+    /**
+     * Create a contractor admin user.
+     */
+    public function contractorAdmin(): static
+    {
+        return $this->state(function (array $attributes) {
+            $userType = \App\Models\UserType::firstOrCreate(
+                ['name' => 'Contractor Admin'],
+                \App\Models\UserType::factory()->contractorAdmin()->make()->toArray()
+            );
+            return [
+                'user_type_id' => $userType->id,
+            ];
+        });
+    }
+
+    /**
+     * Create a contractor user.
+     */
+    public function contractorUser(): static
+    {
+        return $this->state(function (array $attributes) {
+            $userType = \App\Models\UserType::firstOrCreate(
+                ['name' => 'Contractor User'],
+                \App\Models\UserType::factory()->contractorUser()->make()->toArray()
+            );
+            return [
+                'user_type_id' => $userType->id,
+            ];
+        });
+    }
+
+    /**
+     * Create a user created by another user.
+     */
+    public function createdBy($creatorId): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'created_by' => $creatorId,
         ]);
     }
 }
