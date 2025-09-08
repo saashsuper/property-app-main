@@ -44,11 +44,10 @@ class BlockIssueFactory extends Factory
             'salutation' => $this->faker->randomElement(['Mr.', 'Ms.', 'Dr.', 'Prof.']),
             'phone_number' => $this->faker->phoneNumber(),
             'preferred_start_date_time' => $this->faker->dateTimeBetween('now', '+1 month'),
-            'preferred_end_date_time' => $this->faker->dateTimeBetween('+1 month', '+2 months'),
             'note_for_access' => $this->faker->paragraph(),
             'issued_by' => User::factory(),
             'block_visit_id' => null,
-            'block_inspection_id' => null,
+            'block_inspection_id' => null,m
             'issued_date_time' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'comment' => $this->faker->paragraph(),
             'is_mobile' => $this->faker->boolean(),
