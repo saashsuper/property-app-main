@@ -48,9 +48,11 @@
                                 </div>
 
                                 <!-- Add Button -->
+                                @if(!auth()->user()->hasType('Contractor Admin'))
                                 <a href="{{ route('block-work-orders.create') }}" class="btn btn-primary">
                                     <i class="ph-plus me-2"></i>Add New Block Work Order
                                 </a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -213,6 +215,7 @@
                                                             <i class="ph-eye me-2"></i> View
                                                         </a>
                                                     </li>
+                                                    @if(!auth()->user()->hasType('Contractor Admin'))
                                                     <li>
                                                         <a class="dropdown-item" href="{{ route('block-work-orders.edit', $workOrder) }}">
                                                             <i class="ph-pencil me-2"></i> Edit
@@ -229,6 +232,7 @@
                                                             </button>
                                                         </form>
                                                     </li>
+                                                    @endif
                                                 </ul>
                                             </div>
                                         </td>
@@ -239,9 +243,11 @@
                                             <div class="text-muted">
                                                 <i class="ph-file-text fs-2"></i>
                                                 <p class="mt-2">No block work orders found</p>
+                                                @if(!auth()->user()->hasType('Contractor Admin'))
                                                 <a href="{{ route('block-work-orders.create') }}" class="btn btn-primary btn-sm">
                                                     Create Your First Block Work Order
                                                 </a>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>

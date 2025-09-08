@@ -19,6 +19,11 @@ class BlockBuilding extends Model
         'no_lift',
     ];
 
+    public function block()
+    {
+        return $this->belongsTo(Block::class, 'block_id');
+    }
+
     public function buildingType()
     {
         return $this->belongsTo(BlockBuildingType::class, 'building_type_id');
