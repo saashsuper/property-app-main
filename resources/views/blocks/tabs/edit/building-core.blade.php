@@ -32,11 +32,7 @@
                                 <td><span class="badge bg-success">Active</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="editBuilding({{ $building->id }})">Edit</button>
-                                    <form action="{{ route('block-buildings.destroy', $building->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this building?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                    </form>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteBuilding({{ $building->id }})">Delete</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -74,7 +70,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="no_of_floors" class="form-label">No of Floors <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="no_of_floors" name="no_of_floors" required min="1">
+                        <input type="number" class="form-control" id="no_of_floors" name="no_of_floors" required min="1" max="999" maxlength="3">
                     </div>
                     <div class="mb-3">
                         <label for="roof_type" class="form-label">Roof Type <span class="text-danger">*</span></label>
@@ -82,7 +78,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="no_lift" class="form-label">No of Lifts <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="no_lift" name="no_lift" required min="0">
+                        <input type="number" class="form-control" id="no_lift" name="no_lift" required min="0" max="999" maxlength="3">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -126,7 +122,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_no_of_floors" class="form-label">No of Floors <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="edit_no_of_floors" name="no_of_floors" required min="1">
+                        <input type="number" class="form-control" id="edit_no_of_floors" name="no_of_floors" required min="1" max="999" maxlength="3">
                     </div>
                     <div class="mb-3">
                         <label for="edit_roof_type" class="form-label">Roof Type <span class="text-danger">*</span></label>
@@ -134,7 +130,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="edit_no_lift" class="form-label">No of Lifts <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="edit_no_lift" name="no_lift" required min="0">
+                        <input type="number" class="form-control" id="edit_no_lift" name="no_lift" required min="0" max="999" maxlength="3">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -151,6 +147,34 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Add input validation for 3-digit limit
+    function validateThreeDigits(input) {
+        const value = input.value;
+        if (value.length > 3) {
+            input.value = value.slice(0, 3);
+        }
+        if (parseInt(value) > 999) {
+            input.value = '999';
+        }
+    }
+
+    // Add event listeners for input validation
+    document.getElementById('no_of_floors').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
+    document.getElementById('no_lift').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
+    document.getElementById('edit_no_of_floors').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
+    document.getElementById('edit_no_lift').addEventListener('input', function() {
+        validateThreeDigits(this);
+    });
+
     // Add Building AJAX submission
     document.getElementById('addBuildingForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -280,8 +304,10 @@ function editBuilding(id) {
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
 <script>
+let buildingDataTable;
+
 $(document).ready(function() {
-    $('#building-info-table').DataTable({
+    buildingDataTable = $('#building-info-table').DataTable({
         responsive: true,
         dom: 'Bfrtip',
         buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
@@ -309,6 +335,105 @@ $(document).ready(function() {
         }
     });
 });
+
+// Function to refresh the Buildings DataTable
+window.refreshBuildingsTable = function() {
+    if (buildingDataTable) {
+        // Get the current block ID from the form
+        const blockId = document.querySelector('input[name="block_id"]').value;
+        
+        // Fetch fresh data
+        fetch(`/block-buildings/block/${blockId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear existing data
+                    buildingDataTable.clear();
+                    
+                    // Add new data
+                    data.data.forEach(function(building) {
+                        buildingDataTable.row.add([
+                            building.building_type ? building.building_type.name : 'N/A',
+                            building.name || 'N/A',
+                            building.floor_no || 'N/A',
+                            building.roof_type || 'N/A',
+                            building.no_lift || 'N/A',
+                            building.created_at ? new Date(building.created_at).toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: '2-digit' 
+                            }) : 'N/A',
+                            '<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(' + building.id + ')">' +
+                                '<i class="ph-pencil"></i> Edit' +
+                            '</button> ' +
+                            '<button class="btn btn-sm btn-outline-danger" onclick="deleteBuilding(' + building.id + ')">' +
+                                '<i class="ph-trash"></i> Delete' +
+                            '</button>'
+                        ]);
+                    });
+                    
+                    // Redraw the table
+                    buildingDataTable.draw();
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing table:', error);
+            });
+    }
+};
+
+// Function to delete a building
+window.deleteBuilding = function(buildingId) {
+    if (confirm('Are you sure you want to delete this building? This action cannot be undone.')) {
+        fetch(`/block-buildings/${buildingId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Add a message area if not present
+            let messageDiv = document.getElementById('buildingDeleteMessage');
+            if (!messageDiv) {
+                messageDiv = document.createElement('div');
+                messageDiv.id = 'buildingDeleteMessage';
+                messageDiv.className = 'alert d-none';
+                document.body.appendChild(messageDiv);
+            }
+            if (data.success) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = 'Building deleted successfully!';
+                messageDiv.classList.remove('d-none');
+                // Refresh the DataTable instead of reloading the page
+                refreshBuildingsTable();
+            } else {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.textContent = data.message || 'Error deleting building.';
+                messageDiv.classList.remove('d-none');
+            }
+            // Hide message after 5 seconds
+            setTimeout(() => {
+                messageDiv.classList.add('d-none');
+            }, 5000);
+        })
+        .catch(error => {
+            let messageDiv = document.getElementById('buildingDeleteMessage');
+            if (!messageDiv) {
+                messageDiv = document.createElement('div');
+                messageDiv.id = 'buildingDeleteMessage';
+                messageDiv.className = 'alert d-none';
+                document.body.appendChild(messageDiv);
+            }
+            messageDiv.className = 'alert alert-danger';
+            messageDiv.textContent = 'Error deleting building';
+            messageDiv.classList.remove('d-none');
+            setTimeout(() => {
+                messageDiv.classList.add('d-none');
+            }, 5000);
+        });
+    }
+};
 </script>
 @endpush
 
