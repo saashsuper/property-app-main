@@ -135,7 +135,7 @@ class BlockController extends Controller
         $blockInformation = $block->blockInformation()->with('informationType')->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
-        $blockVisits = \App\Models\BlockVisit::where('block_id', $block->id)->latest()->get();
+        $blockVisits = \App\Models\BlockVisit::where('block_id', $block->id)->with(['team.user', 'createdByUser'])->latest()->get();
         
         // Load additional data for building core and other tabs
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
@@ -197,7 +197,8 @@ class BlockController extends Controller
             'units',
             'contractors',
             'issues',
-            'blockVisits',
+            'blockVisits.team.user',
+            'blockVisits.createdByUser',
         ]);
         $blockInformation = $block->blockInformation()->with('informationType')->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();

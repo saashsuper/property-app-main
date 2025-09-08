@@ -27,7 +27,7 @@
                         <td>
                             <span class="fw-semibold">{{ $info->informationType->name ?? 'N/A' }}</span>
                         </td>
-                        <td>{{ $info->description ?? 'No description provided' }}</td>
+                        <td>{{ Str::limit($info->description ?? 'No description provided', 50) }}</td>
                         <td>{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}</td>
                         <td>
                                                                 <button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation({{ $info->id }})">
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         data.data.forEach(function(info) {
                             blockInformationDataTable.row.add([
                                 '<span class="fw-semibold">' + (info.information_type ? info.information_type.name : 'N/A') + '</span>',
-                                info.description || 'No description provided',
+                                (info.description && info.description.length > 50 ? info.description.substring(0, 50) + '...' : info.description) || 'No description provided',
                                 info.created_at ? new Date(info.created_at).toLocaleDateString('en-US', { 
                                     year: 'numeric', 
                                     month: 'short', 

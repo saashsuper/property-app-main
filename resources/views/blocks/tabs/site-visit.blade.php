@@ -14,9 +14,19 @@
                 <tbody>
                     @foreach($block->blockVisits as $visit)
                         <tr>
-                            <td>{{ $visit->ref_no ?? 'N/A' }}</td>
+                            <td>
+                                <a href="#" class="text-primary fw-bold view-site-visit-details" data-visit-id="{{ $visit->id }}" style="text-decoration: none;">
+                                    {{ $visit->ref_no ?? 'N/A' }}
+                                </a>
+                            </td>
                             <td>{{ $visit->scheduled_date_time ? \Carbon\Carbon::parse($visit->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}</td>
-                            <td>{{ $visit->createdByUser->name ?? 'N/A' }}</td>
+                            <td>
+                                @if($visit->team && $visit->team->count() > 0)
+                                    {{ $visit->team->first()->user->name ?? 'N/A' }}
+                                @else
+                                    {{ $visit->createdByUser->name ?? 'N/A' }}
+                                @endif
+                            </td>
                             <td>{{ $visit->jobReason->name ?? 'N/A' }}</td>
                             <td>
                                 @if($visit->end_date_time)
@@ -179,6 +189,92 @@
     </div>
 </div>
 
+<!-- Site Visit Details Modal -->
+<div class="modal fade" id="siteVisitDetailsModal" tabindex="-1" aria-labelledby="siteVisitDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="siteVisitDetailsModalLabel">Site Visit Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Reference Number:</label>
+                            <p class="form-control-plaintext" id="detail_ref_no">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status:</label>
+                            <p class="form-control-plaintext" id="detail_status">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Scheduled Date & Time:</label>
+                            <p class="form-control-plaintext" id="detail_scheduled_date_time">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Assigned User:</label>
+                            <p class="form-control-plaintext" id="detail_user">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Job Reason:</label>
+                            <p class="form-control-plaintext" id="detail_job_reason">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Created By:</label>
+                            <p class="form-control-plaintext" id="detail_created_by">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Start Date & Time:</label>
+                            <p class="form-control-plaintext" id="detail_start_date_time">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">End Date & Time:</label>
+                            <p class="form-control-plaintext" id="detail_end_date_time">-</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Notes:</label>
+                    <p class="form-control-plaintext" id="detail_notes">-</p>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Comments:</label>
+                    <p class="form-control-plaintext" id="detail_comments">-</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 .dataTables_wrapper {
     width: 100% !important;
@@ -236,8 +332,8 @@ document.addEventListener('DOMContentLoaded', function() {
         scrollX: true,
         scrollCollapse: true,
         columnDefs: [
-            { width: '20%', targets: 0 }, // Visit Date
-            { width: '15%', targets: 1 }, // Reference
+            { width: '15%', targets: 0 }, // Reference
+            { width: '20%', targets: 1 }, // Visit Date
             { width: '20%', targets: 2 }, // User
             { width: '20%', targets: 3 }, // Job Reason
             { width: '15%', targets: 4 }, // Status
@@ -271,16 +367,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Add new data
                         data.data.forEach(function(visit) {
                             siteVisitsDataTable.row.add([
+                                `<a href="#" class="text-primary fw-bold view-site-visit-details" data-visit-id="${visit.id}" style="text-decoration: none;">${visit.ref_no || 'N/A'}</a>`,
                                 visit.scheduled_date_time ? new Date(visit.scheduled_date_time).toLocaleDateString('en-US', { 
                                     year: 'numeric', 
                                     month: 'short', 
                                     day: '2-digit' 
                                 }) : 'N/A',
-                                visit.ref_no || 'N/A',
                                 visit.user_name || 'N/A',
                                 visit.job_reason_name || 'N/A',
                                 visit.job_status_name || 'N/A',
-                                visit.notes || 'N/A'
+                                (visit.notes && visit.notes.length > 50 ? visit.notes.substring(0, 50) + '...' : visit.notes) || 'N/A'
                             ]);
                         });
                         
@@ -340,6 +436,95 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+
+    // View Site Visit Details
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('view-site-visit-details')) {
+            e.preventDefault();
+            const visitId = e.target.getAttribute('data-visit-id');
+            
+            fetch(`/block-visits/${visitId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const visit = data.data;
+                        
+                        // Populate modal with visit details
+                        document.getElementById('detail_ref_no').textContent = visit.ref_no || 'N/A';
+                        
+                        // Determine status
+                        let status = 'Scheduled';
+                        if (visit.end_date_time) {
+                            status = 'Completed';
+                        } else if (visit.start_date_time) {
+                            status = 'In Progress';
+                        }
+                        document.getElementById('detail_status').innerHTML = `<span class="badge bg-${status === 'Completed' ? 'success' : status === 'In Progress' ? 'warning' : 'info'}">${status}</span>`;
+                        
+                        // Format scheduled date time
+                        const scheduledDateTime = visit.scheduled_date_time ? new Date(visit.scheduled_date_time).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : 'N/A';
+                        document.getElementById('detail_scheduled_date_time').textContent = scheduledDateTime;
+                        
+                        // Get assigned user
+                        let assignedUser = 'N/A';
+                        if (visit.team && visit.team.length > 0) {
+                            assignedUser = visit.team[0].user ? visit.team[0].user.name : 'N/A';
+                        } else if (visit.createdByUser) {
+                            assignedUser = visit.createdByUser.name;
+                        }
+                        document.getElementById('detail_user').textContent = assignedUser;
+                        
+                        // Job reason
+                        document.getElementById('detail_job_reason').textContent = visit.jobReason ? visit.jobReason.name : 'N/A';
+                        
+                        // Created by
+                        document.getElementById('detail_created_by').textContent = visit.createdByUser ? visit.createdByUser.name : 'N/A';
+                        
+                        // Start date time
+                        const startDateTime = visit.start_date_time ? new Date(visit.start_date_time).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : 'N/A';
+                        document.getElementById('detail_start_date_time').textContent = startDateTime;
+                        
+                        // End date time
+                        const endDateTime = visit.end_date_time ? new Date(visit.end_date_time).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : 'N/A';
+                        document.getElementById('detail_end_date_time').textContent = endDateTime;
+                        
+                        // Notes
+                        document.getElementById('detail_notes').textContent = visit.notes || 'N/A';
+                        
+                        // Comments
+                        document.getElementById('detail_comments').textContent = visit.comment || 'N/A';
+                        
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('siteVisitDetailsModal'));
+                        modal.show();
+                    } else {
+                        alert('Could not fetch site visit details: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching site visit details:', error);
+                    alert('Error fetching site visit details: ' + error.message);
+                });
+        }
+    });
 
 });
 

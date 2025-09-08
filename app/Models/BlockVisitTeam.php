@@ -16,6 +16,11 @@ class BlockVisitTeam extends Model
     {
         return $this->belongsTo(BlockVisit::class, 'block_visit_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
 
 

@@ -124,11 +124,13 @@ Route::middleware(['auth'])->group(function () {
 
 // Block Information Routes
 Route::resource('block-information', App\Http\Controllers\BlockInformationController::class);
-    Route::get('block-information/block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getBlockInformation'])->name('block-information.by-block');
-    Route::get('block-units/block/{blockId}', [App\Http\Controllers\BlockUnitController::class, 'getBlockUnits'])->name('block-units.by-block');
-    Route::get('block-contractors/block/{blockId}', [App\Http\Controllers\BlockContractorController::class, 'getBlockContractors'])->name('block-contractors.by-block');
-    Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');
-    Route::get('block-visits/block/{blockId}', [App\Http\Controllers\BlockVisitController::class, 'getBlockVisits'])->name('block-visits.by-block');
+
+// API Routes for DataTable refresh (no auth required for AJAX calls)
+Route::get('block-information/block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getBlockInformation'])->name('block-information.by-block');
+Route::get('block-units/block/{blockId}', [App\Http\Controllers\BlockUnitController::class, 'getBlockUnits'])->name('block-units.by-block');
+Route::get('block-contractors/block/{blockId}', [App\Http\Controllers\BlockContractorController::class, 'getBlockContractors'])->name('block-contractors.by-block');
+Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');
+Route::get('block-visits/block/{blockId}', [App\Http\Controllers\BlockVisitController::class, 'getBlockVisits'])->name('block-visits.by-block');
 
 // Block Building Management Routes
 Route::middleware(['auth'])->group(function () {
