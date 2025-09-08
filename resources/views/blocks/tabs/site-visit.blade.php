@@ -277,9 +277,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     day: '2-digit' 
                                 }) : 'N/A',
                                 visit.ref_no || 'N/A',
-                                visit.user ? visit.user.name : 'N/A',
-                                visit.job_reason ? visit.job_reason.name : 'N/A',
-                                visit.job_status ? visit.job_status.name : 'N/A',
+                                visit.user_name || 'N/A',
+                                visit.job_reason_name || 'N/A',
+                                visit.job_status_name || 'N/A',
                                 visit.notes || 'N/A'
                             ]);
                         });

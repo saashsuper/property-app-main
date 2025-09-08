@@ -42,10 +42,17 @@ class BlockVisitController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
+            // Create team member (user assigned to the visit)
+            $blockVisit->team()->create([
+                'user_id' => $request->user_id,
+                'leed' => true, // Set as lead team member
+                'created_by' => auth()->id(),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Site visit scheduled successfully',
-                'data' => $blockVisit->load('jobReason', 'createdByUser')
+                'data' => $blockVisit->load('jobReason', 'createdByUser', 'team')
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -58,7 +65,7 @@ class BlockVisitController extends Controller
     public function show(BlockVisit $blockVisit)
     {
         try {
-            $blockVisit->load(['jobReason', 'jobStatus', 'createdByUser', 'updatedByUser']);
+            $blockVisit->load(['jobReason', 'jobStatus', 'createdByUser', 'updatedByUser', 'team.user']);
             
             return response()->json([
                 'success' => true,
@@ -97,10 +104,21 @@ class BlockVisitController extends Controller
                 'updated_by' => auth()->id(),
             ]);
 
+            // Update team member (user assigned to the visit)
+            // First, remove existing team members
+            $blockVisit->team()->delete();
+            
+            // Add the new team member
+            $blockVisit->team()->create([
+                'user_id' => $request->user_id,
+                'leed' => true, // Set as lead team member
+                'created_by' => auth()->id(),
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Site visit updated successfully',
-                'data' => $blockVisit->load('jobReason', 'updatedByUser')
+                'data' => $blockVisit->load('jobReason', 'updatedByUser', 'team')
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -134,9 +152,21 @@ class BlockVisitController extends Controller
     {
         try {
             $visits = BlockVisit::where('block_id', $blockId)
-                ->with(['jobReason', 'jobStatus', 'user'])
+                ->with(['jobReason', 'jobStatus', 'team.user'])
                 ->orderBy('scheduled_date_time', 'desc')
-                ->get();
+                ->get()
+                ->map(function($visit) {
+                    return [
+                        'id' => $visit->id,
+                        'ref_no' => $visit->ref_no,
+                        'scheduled_date_time' => $visit->scheduled_date_time,
+                        'job_reason_name' => $visit->jobReason->name ?? 'N/A',
+                        'job_status_name' => $visit->jobStatus->name ?? 'N/A',
+                        'user_name' => $visit->team->first()->user->name ?? 'N/A',
+                        'notes' => $visit->notes,
+                        'created_at' => $visit->created_at,
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
