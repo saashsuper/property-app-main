@@ -16,7 +16,7 @@ class BlockUnitController extends Controller
 {
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $rules = [
             'block_id' => 'required|exists:blocks,id',
             'block_building_id' => 'required|exists:block_buildings,id',
             'block_unit_type_id' => 'required|exists:block_unit_types,id',
@@ -29,16 +29,28 @@ class BlockUnitController extends Controller
             'address1' => 'nullable|string|max:100',
             'address2' => 'nullable|string|max:100',
             'address3' => 'nullable|string|max:100',
-            'country_id' => 'nullable|integer',
-            'state_id' => 'nullable|integer',
+            'country_id' => 'nullable|integer|exists:countries,id',
+            'state_id' => 'nullable|integer|exists:states,id',
             'zip' => 'nullable|string|max:30',
             'mobile_no' => 'nullable|regex:/^[0-9+\-() ]+$/|max:20',
             'phone_number' => 'nullable|regex:/^[0-9+\-() ]+$/|max:20',
             'letting_agent' => 'nullable|string|max:100',
             'misc_info' => 'nullable|string|max:255',
-        ], [
+        ];
+
+        // If resident is "No" (0), make address fields required
+        if ($request->resident === '0' || $request->resident === 0) {
+            $rules['address1'] = 'required|string|max:100';
+            $rules['country_id'] = 'required|integer|exists:countries,id';
+            $rules['state_id'] = 'required|integer|exists:states,id';
+        }
+
+        $validated = $request->validate($rules, [
             'mobile_no.regex' => 'Mobile Number must be digits, spaces, or +, -, (, ) only.',
-            'phone_number.regex' => 'Phone Number must be digits, spaces, or +, -, (, ) only.'
+            'phone_number.regex' => 'Phone Number must be digits, spaces, or +, -, (, ) only.',
+            'address1.required' => 'Address Line 1 is required when Resident is No.',
+            'country_id.required' => 'Country is required when Resident is No.',
+            'state_id.required' => 'County/State is required when Resident is No.',
         ]);
         $validated['resident'] = $request->has('resident') ? (bool)$request->resident : false;
         $validated['created_by'] = auth()->id();

@@ -52,7 +52,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('blocks/{block}', [App\Http\Controllers\BlockController::class, 'show'])->name('blocks.show');
     Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
     Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
-    Route::get('api/states/{countryId}', [App\Http\Controllers\BlockController::class, 'getStatesByCountry'])->name('api.states.by-country');
     Route::get('api/blocks/{block}/units-autocomplete', [App\Http\Controllers\BlockController::class, 'getUnitsAutocomplete'])->name('api.blocks.units-autocomplete');
     
     // Work Orders
@@ -131,6 +130,9 @@ Route::get('block-units/block/{blockId}', [App\Http\Controllers\BlockUnitControl
 Route::get('block-contractors/block/{blockId}', [App\Http\Controllers\BlockContractorController::class, 'getBlockContractors'])->name('block-contractors.by-block');
 Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');
 Route::get('block-visits/block/{blockId}', [App\Http\Controllers\BlockVisitController::class, 'getBlockVisits'])->name('block-visits.by-block');
+
+// API Routes for address fields
+Route::get('api/states/{countryId}', [App\Http\Controllers\BlockController::class, 'getStatesByCountry']);
 
 // Block Building Management Routes
 Route::middleware(['auth'])->group(function () {

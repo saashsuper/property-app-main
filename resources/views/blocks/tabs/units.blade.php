@@ -121,6 +121,44 @@
                             <label for="misc_info" class="form-label">Miscellaneous Info</label>
                             <textarea class="form-control" id="misc_info" name="misc_info" rows="2"></textarea>
                         </div>
+                        
+                        <!-- Address Fields - Hidden by default, shown when Resident = No -->
+                        <div id="addressFields" class="row" style="display: none;">
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3">Address Information</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="address1" name="address1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address2" class="form-label">Address Line 2</label>
+                                <input type="text" class="form-control" id="address2" name="address2">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="address3" class="form-label">Address Line 3</label>
+                                <input type="text" class="form-control" id="address3" name="address3">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="country_id" class="form-label">Country <span class="text-danger">*</span></label>
+                                <select class="form-select" id="country_id" name="country_id">
+                                    <option value="">Select Country</option>
+                                    @foreach(\App\Models\Country::orderBy('country_name')->get() as $country)
+                                        <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="state_id" class="form-label">County / State <span class="text-danger">*</span></label>
+                                <select class="form-select" id="state_id" name="state_id">
+                                    <option value="">Select County / State</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="zip" class="form-label">Zip / Eircode</label>
+                                <input type="text" class="form-control" id="zip" name="zip">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -212,6 +250,44 @@
                             <label for="edit_misc_info" class="form-label">Miscellaneous Info</label>
                             <textarea class="form-control" id="edit_misc_info" name="misc_info" rows="2"></textarea>
                         </div>
+                        
+                        <!-- Address Fields - Hidden by default, shown when Resident = No -->
+                        <div id="editAddressFields" class="row" style="display: none;">
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3">Address Information</h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit_address1" name="address1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_address2" class="form-label">Address Line 2</label>
+                                <input type="text" class="form-control" id="edit_address2" name="address2">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_address3" class="form-label">Address Line 3</label>
+                                <input type="text" class="form-control" id="edit_address3" name="address3">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_country_id" class="form-label">Country <span class="text-danger">*</span></label>
+                                <select class="form-select" id="edit_country_id" name="country_id">
+                                    <option value="">Select Country</option>
+                                    @foreach(\App\Models\Country::orderBy('country_name')->get() as $country)
+                                        <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_state_id" class="form-label">County / State <span class="text-danger">*</span></label>
+                                <select class="form-select" id="edit_state_id" name="state_id">
+                                    <option value="">Select County / State</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_zip" class="form-label">Zip / Eircode</label>
+                                <input type="text" class="form-control" id="edit_zip" name="zip">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -244,6 +320,88 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Function to toggle address fields based on resident selection
+    function toggleAddressFields(residentSelectId, addressFieldsId) {
+        const residentSelect = document.getElementById(residentSelectId);
+        const addressFields = document.getElementById(addressFieldsId);
+        
+        if (residentSelect && addressFields) {
+            residentSelect.addEventListener('change', function() {
+                if (this.value === '0') { // No
+                    addressFields.style.display = 'block';
+                    // Make required fields required
+                    const requiredFields = addressFields.querySelectorAll('[required]');
+                    requiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
+                } else { // Yes
+                    addressFields.style.display = 'none';
+                    // Clear address fields and remove required attribute
+                    const addressInputs = addressFields.querySelectorAll('input, select');
+                    addressInputs.forEach(field => {
+                        field.value = '';
+                        field.removeAttribute('required');
+                    });
+                }
+            });
+        }
+    }
+
+    // Function to load states based on country selection
+    function loadStates(countrySelectId, stateSelectId) {
+        const countrySelect = document.getElementById(countrySelectId);
+        const stateSelect = document.getElementById(stateSelectId);
+        
+        if (countrySelect && stateSelect) {
+            countrySelect.addEventListener('change', function() {
+                const countryId = this.value;
+                console.log('Country changed to:', countryId);
+                
+                // Reset state selection
+                stateSelect.innerHTML = '<option value="">Select County / State</option>';
+                stateSelect.value = '';
+                
+                if (countryId) {
+                    console.log('Loading states for country:', countryId);
+                    fetch(`/api/states/${countryId}`)
+                        .then(response => {
+                            console.log('States API response status:', response.status);
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('States API response data:', data);
+                            if (Array.isArray(data) && data.length > 0) {
+                                data.forEach(state => {
+                                    const option = document.createElement('option');
+                                    option.value = state.id;
+                                    option.textContent = state.name;
+                                    stateSelect.appendChild(option);
+                                });
+                                console.log('Loaded', data.length, 'states');
+                            } else {
+                                console.error('No states found or API error:', data);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading states:', error);
+                        });
+                } else {
+                    console.log('No country selected, states cleared');
+                }
+            });
+        } else {
+            console.error('Could not find country or state select elements:', { countrySelectId, stateSelectId });
+        }
+    }
+
+    // Initialize address field toggles
+    toggleAddressFields('resident', 'addressFields');
+    toggleAddressFields('edit_resident', 'editAddressFields');
+    
+    // Initialize state loading
+    loadStates('country_id', 'state_id');
+    loadStates('edit_country_id', 'edit_state_id');
+
     // Add Unit AJAX submission
     document.getElementById('addUnitForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -447,6 +605,24 @@ function editUnit(id) {
                 document.getElementById('edit_phone_number').value = u.phone_number;
                 document.getElementById('edit_letting_agent').value = u.letting_agent;
                 document.getElementById('edit_misc_info').value = u.misc_info;
+                
+                // Handle address fields
+                if (u.resident === 0) { // No
+                    document.getElementById('editAddressFields').style.display = 'block';
+                    document.getElementById('edit_address1').value = u.address1 || '';
+                    document.getElementById('edit_address2').value = u.address2 || '';
+                    document.getElementById('edit_address3').value = u.address3 || '';
+                    document.getElementById('edit_country_id').value = u.country_id || '';
+                    document.getElementById('edit_zip').value = u.zip || '';
+                    
+                    // Load states for the selected country
+                    if (u.country_id) {
+                        loadStatesForEdit(u.country_id, u.state_id);
+                    }
+                } else {
+                    document.getElementById('editAddressFields').style.display = 'none';
+                }
+                
                 document.getElementById('editUnitForm').action = `/block-units/${id}`;
                 const modal = new bootstrap.Modal(document.getElementById('editUnitModal'));
                 modal.show();
@@ -454,6 +630,43 @@ function editUnit(id) {
                 alert('Error loading unit details.');
             }
         });
+}
+
+// Function to load states for edit form
+function loadStatesForEdit(countryId, selectedStateId) {
+    console.log('Loading states for edit form:', { countryId, selectedStateId });
+    const stateSelect = document.getElementById('edit_state_id');
+    stateSelect.innerHTML = '<option value="">Select County / State</option>';
+    stateSelect.value = '';
+    
+    if (countryId) {
+        fetch(`/api/states/${countryId}`)
+            .then(response => {
+                console.log('Edit states API response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Edit states API response data:', data);
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state.id;
+                        option.textContent = state.name;
+                        if (selectedStateId && state.id == selectedStateId) {
+                            option.selected = true;
+                            stateSelect.value = state.id;
+                        }
+                        stateSelect.appendChild(option);
+                    });
+                    console.log('Loaded', data.length, 'states for edit');
+                } else {
+                    console.error('No states found for edit or API error:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading states for edit:', error);
+            });
+    }
 }
 
 // DataTables for Units
