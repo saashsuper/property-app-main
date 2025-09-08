@@ -170,14 +170,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Save the active tab to localStorage before reload
-                var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                if (activeTab) {
-                    localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                }
+                // Tab switching code removed
                 var modal = bootstrap.Modal.getInstance(document.getElementById('addContractorModal'));
                 modal.hide();
-                setTimeout(() => { location.reload(); }, 400);
+                // DataTable will refresh automatically when modal closes
             } else {
                 alert(data.message || 'Error adding contractor.');
             }
@@ -229,15 +225,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.className = 'alert alert-success mb-2';
                 messageDiv.textContent = 'Contractor updated successfully!';
                 messageDiv.classList.remove('d-none');
-                // Save the active tab to localStorage before reload
-                var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                if (activeTab) {
-                    localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                }
+                // Tab switching code removed
                 setTimeout(() => {
                     var modal = bootstrap.Modal.getInstance(document.getElementById('editContractorModal'));
                     modal.hide();
-                    setTimeout(() => { location.reload(); }, 400);
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger mb-2';
@@ -262,13 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Save the active tab to localStorage before reload
-                        var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                        if (activeTab) {
-                            localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                        }
+                        // Tab switching code removed
                         alert('Contractor deleted successfully!');
-                        setTimeout(() => { location.reload(); }, 400);
+                        // DataTable will refresh automatically when modal closes
                     } else {
                         alert(data.message || 'Error deleting contractor.');
                     }
@@ -314,17 +302,6 @@ $(document).ready(function() {
     });
 });
 
-// Restore the active tab from localStorage on page load
-$(document).ready(function() {
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
-});
+// Tab switching code removed
 </script>
 @endpush

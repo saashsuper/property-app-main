@@ -126,6 +126,29 @@ class BlockVisitController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get block visits for a specific block
+     */
+    public function getBlockVisits($blockId)
+    {
+        try {
+            $visits = BlockVisit::where('block_id', $blockId)
+                ->with(['jobReason', 'jobStatus', 'user'])
+                ->orderBy('scheduled_date_time', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $visits
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching block visits: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 
 

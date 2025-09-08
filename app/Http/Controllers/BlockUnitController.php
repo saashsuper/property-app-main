@@ -23,7 +23,7 @@ class BlockUnitController extends Controller
             'unit_code' => 'required|string|max:50',
             'unit_name' => 'required|string|max:100',
             'owners_name' => 'nullable|string|max:100',
-            'salutation' => 'nullable|string|max:20',
+            'salutation' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:100',
             'resident' => 'nullable|boolean',
             'address1' => 'nullable|string|max:100',
@@ -58,7 +58,7 @@ class BlockUnitController extends Controller
             'unit_code' => 'required|string|max:50',
             'unit_name' => 'required|string|max:100',
             'owners_name' => 'nullable|string|max:100',
-            'salutation' => 'nullable|string|max:10',
+            'salutation' => 'nullable|string|max:50',
             'email' => 'nullable|email|max:100',
             'resident' => 'nullable|boolean',
             'address1' => 'nullable|string|max:100',
@@ -564,5 +564,28 @@ class BlockUnitController extends Controller
         }
         
         return $importedCount;
+    }
+
+    /**
+     * Get block units for a specific block
+     */
+    public function getBlockUnits($blockId): JsonResponse
+    {
+        try {
+            $blockUnits = BlockUnit::where('block_id', $blockId)
+                ->with(['blockBuilding', 'blockUnitType'])
+                ->orderBy('unit_code', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $blockUnits
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching block units: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

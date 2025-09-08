@@ -105,14 +105,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Save the active tab to localStorage before reload
-                var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                if (activeTab) {
-                    localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                }
                 var modal = bootstrap.Modal.getInstance(document.getElementById('addContractorModal'));
                 modal.hide();
-                setTimeout(() => { location.reload(); }, 400);
+                // DataTable will refresh automatically when modal closes
             } else {
                 alert(data.message || 'Error adding contractor.');
             }
@@ -164,15 +159,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.className = 'alert alert-success mb-2';
                 messageDiv.textContent = 'Contractor updated successfully!';
                 messageDiv.classList.remove('d-none');
-                // Save the active tab to localStorage before reload
-                var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                if (activeTab) {
-                    localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                }
                 setTimeout(() => {
                     var modal = bootstrap.Modal.getInstance(document.getElementById('editContractorModal'));
                     modal.hide();
-                    setTimeout(() => { location.reload(); }, 400);
+                    // Refresh the DataTable instead of reloading the page
+                    refreshContractorsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger mb-2';
@@ -197,13 +188,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Save the active tab to localStorage before reload
-                        var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                        if (activeTab) {
-                            localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                        }
                         alert('Contractor deleted successfully!');
-                        setTimeout(() => { location.reload(); }, 400);
+                        // Refresh the DataTable instead of reloading the page
+                        refreshContractorsTable();
                     } else {
                         alert(data.message || 'Error deleting contractor.');
                     }
@@ -212,42 +199,93 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
 
-$(document).ready(function() {
-    $('#contractorTable').DataTable({
-        responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-        ],
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "No entries to show",
-            zeroRecords: "No matching records found",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        }
+    // Add event listeners for modal close events
+    document.getElementById('addContractorModal').addEventListener('hidden.bs.modal', function() {
+        setTimeout(() => {
+            refreshContractorsTable();
+        }, 100);
     });
+
+    document.getElementById('editContractorModal').addEventListener('hidden.bs.modal', function() {
+        setTimeout(() => {
+            refreshContractorsTable();
+        }, 100);
+    });
+
+    // Initialize DataTable
+    let contractorDataTable;
+    if (window.jQuery && $('#contractorTable').length) {
+        contractorDataTable = $('#contractorTable').DataTable({
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+            ],
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "No entries to show",
+                zeroRecords: "No matching records found",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            }
+        });
+    }
+
+    // Function to refresh the Contractors DataTable
+    window.refreshContractorsTable = function() {
+        if (contractorDataTable) {
+            // Get the current block ID from the form
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            
+            // Fetch fresh data
+            fetch(`/block-contractors/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        contractorDataTable.clear();
+                        
+                        // Add new data
+                        data.data.forEach(function(contractor) {
+                            contractorDataTable.row.add([
+                                contractor.contractor_type_name || 'N/A',
+                                contractor.contractor_name || 'N/A',
+                                contractor.status ? 'Yes' : 'No',
+                                contractor.created_at ? new Date(contractor.created_at).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: '2-digit' 
+                                }) : 'N/A',
+                                '<button class="btn btn-sm btn-outline-primary edit-contractor-btn" data-id="' + contractor.id + '">' +
+                                    '<i class="ph-pencil"></i> Edit' +
+                                '</button> ' +
+                                '<button class="btn btn-sm btn-outline-danger delete-contractor-btn" data-id="' + contractor.id + '">' +
+                                    '<i class="ph-trash"></i> Delete' +
+                                '</button>'
+                            ]);
+                        });
+                        
+                        // Redraw the table
+                        contractorDataTable.draw();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing contractors table:', error);
+                });
+        }
+    };
+
+    // Initial data load
+    refreshContractorsTable();
 });
 
-// Restore the active tab from localStorage on page load
-$(document).ready(function() {
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
-});
+// Tab switching code removed
 </script>
 @endpush

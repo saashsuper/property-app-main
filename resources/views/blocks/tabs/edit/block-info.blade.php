@@ -200,9 +200,11 @@
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
 
 <script>
+let blockInformationDataTable;
+
 document.addEventListener('DOMContentLoaded', function() {
     if (window.jQuery && $('#blockInformationTable').length) {
-        $('#blockInformationTable').DataTable({
+        blockInformationDataTable = $('#blockInformationTable').DataTable({
             responsive: true,
             dom: 'Bfrtip',
             buttons: [
@@ -235,6 +237,49 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Function to refresh the DataTable
+    window.refreshBlockInformationTable = function() {
+        if (blockInformationDataTable) {
+            // Get the current block ID from the form
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            
+            // Fetch fresh data
+            fetch(`/block-information/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        blockInformationDataTable.clear();
+                        
+                        // Add new data
+                        data.data.forEach(function(info) {
+                            blockInformationDataTable.row.add([
+                                '<span class="fw-semibold">' + (info.information_type ? info.information_type.name : 'N/A') + '</span>',
+                                info.description || 'No description provided',
+                                info.created_at ? new Date(info.created_at).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: '2-digit' 
+                                }) : 'N/A',
+                                '<button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation(' + info.id + ')">' +
+                                    '<i class="ph-pencil"></i> Edit' +
+                                '</button> ' +
+                                '<button class="btn btn-sm btn-outline-danger" onclick="deleteBlockInformation(' + info.id + ')">' +
+                                    '<i class="ph-trash"></i> Delete' +
+                                '</button>'
+                            ]);
+                        });
+                        
+                        // Redraw the table
+                        blockInformationDataTable.draw();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing table:', error);
+                });
+        }
+    };
     // Function to edit block information
     window.editBlockInformation = function(id) {
         // Fetch the block information data
@@ -299,14 +344,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     messageDiv.className = 'alert alert-success';
                     messageDiv.textContent = 'Block information deleted successfully!';
                     messageDiv.classList.remove('d-none');
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => {
-                        location.reload();
-                    }, 800);
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockInformationTable();
                 } else {
                     messageDiv.className = 'alert alert-danger';
                     messageDiv.textContent = data.message || 'Error deleting information.';
@@ -350,19 +389,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.textContent = 'Block information added successfully!';
                 messageDiv.classList.remove('d-none');
                 this.reset();
-                // Close the modal after a short delay, then reload the page
+                // Close the modal after a short delay, then refresh the table
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addBlockInformationModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    // Reload the page to refresh the data table
-                    setTimeout(() => {
-                        location.reload();
-                    }, 400);
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockInformationTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -405,18 +437,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.className = 'alert alert-success';
                 messageDiv.textContent = 'Block information updated successfully!';
                 messageDiv.classList.remove('d-none');
-                // Close the modal after a short delay, then reload the page
+                // Close the modal after a short delay, then refresh the table
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editBlockInformationModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => {
-                        location.reload();
-                    }, 400);
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockInformationTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -431,16 +457,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Restore the active tab from localStorage
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
 });
 </script>
 @endpush

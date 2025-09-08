@@ -62,7 +62,7 @@
                                 <td>{{ $unit->misc_info ?? 'N/A' }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})">Edit</button>
-                                    <form action="{{ route('block-units.destroy', $unit->id) }}" method="POST" class="d-inline-block" onsubmit="saveActiveTab(); return confirm('Are you sure you want to delete this unit?');">
+                                    <form action="{{ route('block-units.destroy', $unit->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this unit?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
@@ -122,7 +122,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="salutation" class="form-label">Salutation</label>
-                            <input type="text" class="form-control" id="salutation" name="salutation" maxlength="10">
+                            <select class="form-select" id="salutation" name="salutation">
+                                <option value="">Select Salutation</option>
+                                @foreach(\App\Models\Salutation::orderBy('name')->get() as $salutation)
+                                    <option value="{{ $salutation->name }}">{{ $salutation->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="email" class="form-label">Email</label>
@@ -212,7 +217,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit_salutation" class="form-label">Salutation</label>
-                            <input type="text" class="form-control" id="edit_salutation" name="salutation" maxlength="10">
+                            <select class="form-select" id="edit_salutation" name="salutation">
+                                <option value="">Select Salutation</option>
+                                @foreach(\App\Models\Salutation::orderBy('name')->get() as $salutation)
+                                    <option value="{{ $salutation->name }}">{{ $salutation->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit_email" class="form-label">Email</label>
@@ -414,12 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // Tab switching code removed
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -464,12 +470,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editUnitModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // Tab switching code removed
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -484,24 +486,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Restore the active tab from localStorage
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
 });
-
-function saveActiveTab() {
-    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-    if (activeTab) {
-        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-    }
-}
 
 function editUnit(id) {
     fetch(`/block-units/${id}`)
@@ -617,13 +602,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 unitsTab.click();
                                 
                                 // Reload page after a short delay to show new units
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 500);
+                                // DataTable will refresh automatically when modal closes
                             } else {
                                 console.log('Units tab not found, just reloading page');
-                                // If tab not found, just reload the page
-                                window.location.reload();
+                                // If tab not found, DataTable will refresh automatically
                             }
                         }, 300);
                     }, 3000);

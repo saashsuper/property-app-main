@@ -220,9 +220,11 @@
 </style>
 
 <script>
+let siteVisitsDataTable;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize DataTable
-    const siteVisitsTable = $('#siteVisitsTable').DataTable({
+    siteVisitsDataTable = $('#siteVisitsTable').DataTable({
         responsive: true,
         dom: 'Bfrtip',
         buttons: [
@@ -244,6 +246,56 @@ document.addEventListener('DOMContentLoaded', function() {
         fixedHeader: true,
         scrollCollapse: true
     });
+
+    // Add event listeners for modal close events
+    document.getElementById('addSiteVisitModal').addEventListener('hidden.bs.modal', function() {
+        setTimeout(() => {
+            refreshSiteVisitsTable();
+        }, 100);
+    });
+
+    // Function to refresh the Site Visits DataTable
+    window.refreshSiteVisitsTable = function() {
+        if (siteVisitsDataTable) {
+            // Get the current block ID
+            const blockId = {{ $block->id }};
+            
+            // Fetch fresh data
+            fetch(`/block-visits/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        siteVisitsDataTable.clear();
+                        
+                        // Add new data
+                        data.data.forEach(function(visit) {
+                            siteVisitsDataTable.row.add([
+                                visit.scheduled_date_time ? new Date(visit.scheduled_date_time).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: '2-digit' 
+                                }) : 'N/A',
+                                visit.ref_no || 'N/A',
+                                visit.user ? visit.user.name : 'N/A',
+                                visit.job_reason ? visit.job_reason.name : 'N/A',
+                                visit.job_status ? visit.job_status.name : 'N/A',
+                                visit.notes || 'N/A'
+                            ]);
+                        });
+                        
+                        // Redraw the table
+                        siteVisitsDataTable.draw();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing site visits table:', error);
+                });
+        }
+    };
+
+    // Initial data load
+    refreshSiteVisitsTable();
 
     // Add Site Visit Form Submission
     document.getElementById('addSiteVisitForm').addEventListener('submit', function(e) {
@@ -273,12 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showMessage('addSiteVisitMessage', 'success', data.message);
                 setTimeout(() => {
                     $('#addSiteVisitModal').modal('hide');
-                    // Store current tab and reload page
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    location.reload();
+                    // DataTable will refresh automatically when modal closes
                 }, 1500);
             } else {
                 showMessage('addSiteVisitMessage', 'danger', data.message || 'Error scheduling site visit');
@@ -306,14 +353,5 @@ function resetForm() {
     document.getElementById('addSiteVisitMessage').innerHTML = '';
 }
 
-// Restore the active tab from localStorage
-var lastTab = localStorage.getItem('activeBlockTab');
-if (lastTab) {
-    var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-    if (triggerTab) {
-        var tab = new bootstrap.Tab(triggerTab);
-        tab.show();
-    }
-    localStorage.removeItem('activeBlockTab');
-}
+// Tab switching code removed to prevent unwanted redirects
 </script>

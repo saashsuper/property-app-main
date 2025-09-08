@@ -71,4 +71,36 @@ class BlockContractorController extends Controller
             ]
         ]);
     }
+
+    /**
+     * Get block contractors for a specific block
+     */
+    public function getBlockContractors($blockId)
+    {
+        try {
+            $contractors = BlockContractor::where('block_id', $blockId)
+                ->with(['contractorType', 'contractor'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($contractor) {
+                    return [
+                        'id' => $contractor->id,
+                        'contractor_type_name' => $contractor->contractorType->name ?? 'N/A',
+                        'contractor_name' => $contractor->contractor->name ?? 'N/A',
+                        'status' => $contractor->status,
+                        'created_at' => $contractor->created_at,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $contractors
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching block contractors: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

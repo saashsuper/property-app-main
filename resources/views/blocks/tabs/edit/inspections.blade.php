@@ -269,10 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Reset form
                     addInspectionForm.reset();
                     
-                    // Reload page to show new inspection
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
+                    // DataTable will refresh automatically when modal closes
                 } else {
                     showAlert('error', data.message || 'Failed to schedule inspection.');
                 }
@@ -331,10 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Reset form
                     editInspectionForm.reset();
                     
-                    // Reload page to show updated inspection
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1500);
+                    // DataTable will refresh automatically when modal closes
                 } else {
                     showAlert('error', data.message || 'Failed to update inspection.');
                 }

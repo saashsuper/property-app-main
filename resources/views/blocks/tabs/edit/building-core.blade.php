@@ -32,7 +32,7 @@
                                 <td><span class="badge bg-success">Active</span></td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="editBuilding({{ $building->id }})">Edit</button>
-                                    <form action="{{ route('block-buildings.destroy', $building->id) }}" method="POST" class="d-inline-block" onsubmit="saveActiveTab(); return confirm('Are you sure you want to delete this building?');">
+                                    <form action="{{ route('block-buildings.destroy', $building->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this building?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
@@ -182,12 +182,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addBuildingModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // Tab switching code removed
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -232,12 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // Tab switching code removed
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -252,16 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Restore the active tab from localStorage
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
 });
 function editBuilding(id) {
     fetch(`/block-buildings/${id}`)
@@ -282,12 +264,7 @@ function editBuilding(id) {
             }
         });
 }
-function saveActiveTab() {
-    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-    if (activeTab) {
-        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-    }
-}
+// Tab switching code removed
 </script>
 @push('scripts')
 <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>

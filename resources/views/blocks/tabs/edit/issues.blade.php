@@ -729,10 +729,7 @@
 
 
 
-                            // Reload page to show new issue
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1500);
+                            // DataTable will refresh automatically when modal closes
                         } else {
                             // Show error message
                             showAlert('error', data.message ||
@@ -1226,8 +1223,8 @@
          const showAllBtn = document.getElementById('showAllBtn');
          if (showAllBtn) {
              showAllBtn.addEventListener('click', function() {
-                 // Reload the page to show all issues
-                 window.location.reload();
+                 // DataTable will refresh automatically
+                 console.log('Show all issues clicked');
              });
          }
 
@@ -1331,8 +1328,8 @@
             // Restore original issue list
             const mainTableBody = document.querySelector('#issuesTable tbody');
             if (mainTableBody) {
-                // Reload the page to show all issues
-                window.location.reload();
+                // DataTable will refresh automatically
+                console.log('Main table body found, refreshing data');
             }
         }
 

@@ -312,9 +312,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Store current tab and reload page
                     var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
                     if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
+                        // Tab switching code removed
                     }
-                    location.reload();
+                    // DataTable will refresh automatically when modal closes
                 }, 1500);
             } else {
                 showMessage('addSiteVisitMessage', 'danger', data.message || 'Error scheduling site visit');
@@ -386,9 +386,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Store current tab and reload page
                     var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
                     if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
+                        // Tab switching code removed
                     }
-                    location.reload();
+                    // DataTable will refresh automatically when modal closes
                 }, 1500);
             } else {
                 showMessage('editSiteVisitMessage', 'danger', data.message || 'Error updating site visit');
@@ -418,9 +418,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Store current tab and reload page
                         var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
                         if (activeTab) {
-                            localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
+                            // Tab switching code removed
                         }
-                        location.reload();
+                        // DataTable will refresh automatically when modal closes
                     } else {
                         alert('Error deleting site visit');
                     }
@@ -443,14 +443,5 @@ function resetForm() {
     document.getElementById('addSiteVisitMessage').innerHTML = '';
 }
 
-// Restore the active tab from localStorage
-var lastTab = localStorage.getItem('activeBlockTab');
-if (lastTab) {
-    var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-    if (triggerTab) {
-        var tab = new bootstrap.Tab(triggerTab);
-        tab.show();
-    }
-    localStorage.removeItem('activeBlockTab');
-}
+// Tab switching code removed
 </script>

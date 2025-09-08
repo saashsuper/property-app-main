@@ -67,4 +67,38 @@ class BlockBuildingController extends Controller
             'data' => $blockBuilding
         ]);
     }
+
+    /**
+     * Get block buildings for a specific block
+     */
+    public function getBlockBuildings($blockId)
+    {
+        try {
+            $buildings = BlockBuilding::where('block_id', $blockId)
+                ->with(['buildingType'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function($building) {
+                    return [
+                        'id' => $building->id,
+                        'building_type_name' => $building->buildingType->name ?? 'N/A',
+                        'name' => $building->name,
+                        'floor_no' => $building->floor_no,
+                        'roof_type' => $building->roof_type,
+                        'no_lift' => $building->no_lift,
+                        'created_at' => $building->created_at,
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $buildings
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching block buildings: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

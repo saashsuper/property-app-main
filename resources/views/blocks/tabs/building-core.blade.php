@@ -1,37 +1,21 @@
-        @if($block->buildings && $block->buildings->count() > 0)
-            <div class="table-responsive w-100">
-                <table class="table table-bordered table-hover w-100" id="building-info-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Building Name</th>
-                            <th>Type</th>
-                            <th>Floor</th>
-                            <th>Roof Type</th>
-                            <th>No of Lifts</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($block->buildings as $building)
-                            <tr>
-                                <td>{{ $building->name ?? 'N/A' }}</td>
-                                <td>{{ $building->buildingType->name ?? 'N/A' }}</td>
-                                <td>{{ $building->floor_no ?? 'N/A' }}</td>
-                                <td>{{ $building->roof_type ?? 'N/A' }}</td>
-                                <td>{{ $building->no_lift ?? 'N/A' }}</td>
-                                <td><span class="badge bg-success">Active</span></td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @else
-            <div class="text-center py-4">
-                                                    <i class="ph-buildings text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No buildings found for this block.</p>
-                <button class="btn btn-primary">Add First Building</button>
-            </div>
-        @endif
+        <div class="table-responsive w-100">
+            <table class="table table-bordered table-hover w-100" id="building-info-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Building Type</th>
+                        <th>Building Name</th>
+                        <th>No of Floors</th>
+                        <th>Roof Type</th>
+                        <th>No of Lifts</th>
+                        <th>Created Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- DataTable will populate this -->
+                </tbody>
+            </table>
+        </div>
 
 <!-- Edit Building Modal -->
 <div class="modal fade" id="editBuildingModal" tabindex="-1" aria-labelledby="editBuildingModalLabel" aria-hidden="true">
@@ -80,57 +64,38 @@
         </div>
     </div>
 </div>
+<!-- JavaScript moved to @push('scripts') section below -->
+@push('scripts')
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add Building AJAX submission
-    document.getElementById('addBuildingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        let messageDiv = document.getElementById('addBuildingMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'addBuildingMessage';
-            messageDiv.className = 'alert d-none';
-            form.prepend(messageDiv);
+let buildingDataTable;
+
+$(document).ready(function() {
+    buildingDataTable = $('#building-info-table').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        language: {
+            search: "Search buildings:",
+            lengthMenu: "Show _MENU_ buildings per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ buildings",
+            infoEmpty: "Showing 0 to 0 of 0 buildings",
+            infoFiltered: "(filtered from _MAX_ total buildings)",
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
         }
-        messageDiv.classList.add('d-none');
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json().catch(() => null) || response)
-        .then(data => {
-            if (data && data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Building added successfully!';
-                messageDiv.classList.remove('d-none');
-                form.reset();
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addBuildingModal'));
-                    if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
-                }, 800);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = (data && data.message) || 'Error saving building.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(() => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error saving building';
-            messageDiv.classList.remove('d-none');
-        });
     });
 
     // Edit Building AJAX submission
@@ -150,29 +115,23 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json().catch(() => null) || response)
+        .then(response => response.json())
         .then(data => {
-            if (data && data.success) {
+            if (data.success) {
                 messageDiv.className = 'alert alert-success';
                 messageDiv.textContent = 'Building updated successfully!';
                 messageDiv.classList.remove('d-none');
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = (data && data.message) || 'Error updating building.';
+                messageDiv.textContent = data.message || 'Error updating building.';
                 messageDiv.classList.remove('d-none');
             }
         })
@@ -183,73 +142,147 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Restore the active tab from localStorage
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
-});
-function editBuilding(id) {
-    fetch(`/block-buildings/${id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const b = data.data;
-                document.getElementById('edit_building_type_id').value = b.building_type_id;
-                document.getElementById('edit_building_name').value = b.name;
-                document.getElementById('edit_no_of_floors').value = b.floor_no;
-                document.getElementById('edit_roof_type').value = b.roof_type;
-                document.getElementById('edit_no_lift').value = b.no_lift;
-                document.getElementById('editBuildingForm').action = `/block-buildings/${id}`;
-                const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
-                modal.show();
-            } else {
-                alert('Error loading building details.');
-            }
-        });
-}
-function saveActiveTab() {
-    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-    if (activeTab) {
-        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-    }
-}
-</script>
-@push('scripts')
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#building-info-table').DataTable({
-        responsive: true,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            search: "Search buildings:",
-            lengthMenu: "Show _MENU_ buildings per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ buildings",
-            infoEmpty: "Showing 0 to 0 of 0 buildings",
-            infoFiltered: "(filtered from _MAX_ total buildings)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
-        }
+    // Add event listeners for modal close events
+    document.getElementById('editBuildingModal').addEventListener('hidden.bs.modal', function() {
+        // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
+        setTimeout(() => {
+            refreshBuildingsTable();
+        }, 100);
     });
+
+    // Function to refresh the Buildings DataTable
+    window.refreshBuildingsTable = function() {
+        if (buildingDataTable) {
+            // Get the current block ID from the form
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            
+            // Fetch fresh data
+            fetch(`/block-buildings/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        buildingDataTable.clear();
+                        
+                        // Add new data
+                        if (data.data && data.data.length > 0) {
+                            data.data.forEach(function(building) {
+                                buildingDataTable.row.add([
+                                    building.building_type_name || 'N/A',
+                                    building.name || '',
+                                    building.floor_no || '',
+                                    building.roof_type || '',
+                                    building.no_lift || '',
+                                    building.created_at ? new Date(building.created_at).toLocaleDateString('en-US', { 
+                                        year: 'numeric', 
+                                        month: 'short', 
+                                        day: '2-digit' 
+                                    }) : 'N/A',
+                                    '<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(' + building.id + ')">' +
+                                        '<i class="ph-pencil"></i> Edit' +
+                                    '</button> ' +
+                                    '<button class="btn btn-sm btn-outline-danger" onclick="deleteBuilding(' + building.id + ')">' +
+                                        '<i class="ph-trash"></i> Delete' +
+                                    '</button>'
+                                ]);
+                            });
+                        }
+                        
+                        // Redraw the table
+                        buildingDataTable.draw();
+                    } else {
+                        console.error('API Error:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing buildings table:', error);
+                });
+        }
+    };
+
+    // Initial data load after function is defined
+    refreshBuildingsTable();
+
+    // Function to delete a building
+    window.deleteBuilding = function(buildingId) {
+        if (confirm('Are you sure you want to delete this building? This action cannot be undone.')) {
+            fetch(`/block-buildings/${buildingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Add a message area if not present
+                let messageDiv = document.getElementById('buildingDeleteMessage');
+                if (!messageDiv) {
+                    messageDiv = document.createElement('div');
+                    messageDiv.id = 'buildingDeleteMessage';
+                    messageDiv.className = 'alert d-none';
+                    document.body.appendChild(messageDiv);
+                }
+                if (data.success) {
+                    messageDiv.className = 'alert alert-success';
+                    messageDiv.textContent = 'Building deleted successfully!';
+                    messageDiv.classList.remove('d-none');
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBuildingsTable();
+                } else {
+                    messageDiv.className = 'alert alert-danger';
+                    messageDiv.textContent = data.message || 'Error deleting building.';
+                    messageDiv.classList.remove('d-none');
+                }
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    messageDiv.classList.add('d-none');
+                }, 5000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Add a message area if not present
+                let messageDiv = document.getElementById('buildingDeleteMessage');
+                if (!messageDiv) {
+                    messageDiv = document.createElement('div');
+                    messageDiv.id = 'buildingDeleteMessage';
+                    messageDiv.className = 'alert d-none';
+                    document.body.appendChild(messageDiv);
+                }
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.textContent = 'Error deleting building';
+                messageDiv.classList.remove('d-none');
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    messageDiv.classList.add('d-none');
+                }, 5000);
+            });
+        }
+    };
+
+    // Function to edit a building
+    window.editBuilding = function(id) {
+        fetch(`/block-buildings/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const b = data.data;
+                    document.getElementById('edit_building_type_id').value = b.building_type_id;
+                    document.getElementById('edit_building_name').value = b.name;
+                    document.getElementById('edit_no_of_floors').value = b.floor_no;
+                    document.getElementById('edit_roof_type').value = b.roof_type;
+                    document.getElementById('edit_no_lift').value = b.no_lift;
+                    document.getElementById('editBuildingForm').action = `/block-buildings/${id}`;
+                    const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
+                    modal.show();
+                } else {
+                    alert('Error loading building details.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error loading building details');
+            });
+    };
 });
 </script>
 @endpush

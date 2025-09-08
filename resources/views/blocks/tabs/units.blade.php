@@ -87,7 +87,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="salutation" class="form-label">Salutation</label>
-                            <input type="text" class="form-control" id="salutation" name="salutation" maxlength="10">
+                            <select class="form-select" id="salutation" name="salutation">
+                                <option value="">Select Salutation</option>
+                                @foreach(\App\Models\Salutation::orderBy('name')->get() as $salutation)
+                                    <option value="{{ $salutation->name }}">{{ $salutation->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="email" class="form-label">Email</label>
@@ -173,7 +178,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit_salutation" class="form-label">Salutation</label>
-                            <input type="text" class="form-control" id="edit_salutation" name="salutation" maxlength="10">
+                            <select class="form-select" id="edit_salutation" name="salutation">
+                                <option value="">Select Salutation</option>
+                                @foreach(\App\Models\Salutation::orderBy('name')->get() as $salutation)
+                                    <option value="{{ $salutation->name }}">{{ $salutation->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="edit_email" class="form-label">Email</label>
@@ -230,31 +240,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#blockUnitsTable').DataTable({
-        responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-        ],
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "No entries to show",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            zeroRecords: "No matching records found",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        }
-    });
-});
-</script>
 @endpush
 
 <script>
@@ -290,12 +275,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -340,12 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editUnitModal'));
                     if (modal) modal.hide();
-                    // Save the active tab to localStorage before reload
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
-                    }
-                    setTimeout(() => { location.reload(); }, 400);
+                    // DataTable will refresh automatically when modal closes
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -360,24 +335,99 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Restore the active tab from localStorage
-    var lastTab = localStorage.getItem('activeBlockTab');
-    if (lastTab) {
-        var triggerTab = document.querySelector('.nav-link[data-bs-toggle="tab"][href="' + lastTab + '"]');
-        if (triggerTab) {
-            var tab = new bootstrap.Tab(triggerTab);
-            tab.show();
-        }
-        localStorage.removeItem('activeBlockTab');
-    }
-});
+    // Add event listeners for modal close events
+    document.getElementById('addUnitModal').addEventListener('hidden.bs.modal', function() {
+        setTimeout(() => {
+            refreshBlockUnitsTable();
+        }, 100);
+    });
 
-function saveActiveTab() {
-    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-    if (activeTab) {
-        localStorage.setItem('activeBlockTab', activeTab.getAttribute('href'));
+    document.getElementById('editUnitModal').addEventListener('hidden.bs.modal', function() {
+        setTimeout(() => {
+            refreshBlockUnitsTable();
+        }, 100);
+    });
+
+    // Initialize DataTable
+    let blockUnitsDataTable;
+    if (window.jQuery && $('#blockUnitsTable').length) {
+        blockUnitsDataTable = $('#blockUnitsTable').DataTable({
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+            ],
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "No entries to show",
+                infoFiltered: "(filtered from _MAX_ total entries)",
+                zeroRecords: "No matching records found",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            }
+        });
     }
-}
+
+    // Function to refresh the Units DataTable
+    window.refreshBlockUnitsTable = function() {
+        if (blockUnitsDataTable) {
+            // Get the current block ID from the form
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            
+            // Fetch fresh data
+            fetch(`/block-units/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        blockUnitsDataTable.clear();
+                        
+                        // Add new data
+                        data.data.forEach(function(unit) {
+                            blockUnitsDataTable.row.add([
+                                unit.unit_code || '',
+                                unit.unit_name || '',
+                                unit.owners_name || '',
+                                unit.salutation || '',
+                                unit.email || '',
+                                unit.resident ? 'Yes' : 'No',
+                                unit.mobile_no || '',
+                                unit.phone_number || '',
+                                unit.letting_agent || '',
+                                unit.misc_info || '',
+                                unit.created_at ? new Date(unit.created_at).toLocaleDateString('en-US', { 
+                                    year: 'numeric', 
+                                    month: 'short', 
+                                    day: '2-digit' 
+                                }) : 'N/A',
+                                '<button class="btn btn-sm btn-outline-primary" onclick="editUnit(' + unit.id + ')">' +
+                                    '<i class="ph-pencil"></i> Edit' +
+                                '</button> ' +
+                                '<button class="btn btn-sm btn-outline-danger" onclick="deleteUnit(' + unit.id + ')">' +
+                                    '<i class="ph-trash"></i> Delete' +
+                                '</button>'
+                            ]);
+                        });
+                        
+                        // Redraw the table
+                        blockUnitsDataTable.draw();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing units table:', error);
+                });
+        }
+    };
+
+    // Initial data load
+    refreshBlockUnitsTable();
+});
 
 function editUnit(id) {
     fetch(`/block-units/${id}`)
@@ -407,8 +457,10 @@ function editUnit(id) {
 }
 
 // DataTables for Units
+let blockUnitsDataTable;
+
 $(document).ready(function() {
-    $('#blockUnitsTable').DataTable({
+    blockUnitsDataTable = $('#blockUnitsTable').DataTable({
         responsive: true,
         dom: 'rtip', // Removed 'f' (filter/search) to remove the search box on the left
         order: [[0, 'asc']], // default sort by Unit Code
@@ -426,4 +478,6 @@ $(document).ready(function() {
         }
     });
 });
+
+// Duplicate function removed - now defined inside DOMContentLoaded
 </script>
