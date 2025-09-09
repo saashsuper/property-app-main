@@ -4,7 +4,14 @@
         "clean": "rimraf public/build",
         "dev": "vite",
         "build": "npm run clean && vite build",
-        "build-rtl": "rtlcss public/build/css/app.min.css & rtlcss public/build/css/bootstrap.min.css"
+        "build-rtl": "rtlcss public/build/css/app.min.css & rtlcss public/build/css/bootstrap.min.css",
+        "test:ui": "./run-ui-tests.sh",
+        "test:ui:login": "ddev exec php artisan test --filter=test_login_page_contains_required_elements",
+        "test:ui:dashboard": "ddev exec php artisan test --filter=test_dashboard_page_contains_required_elements",
+        "test:ui:users": "ddev exec php artisan test --filter=test_users_page_contains_required_elements",
+        "test:ui:inspections": "ddev exec php artisan test --filter=test_block_inspections_page_contains_required_elements",
+        "test:ui:workorders": "ddev exec php artisan test --filter=test_work_orders_page_contains_required_elements",
+        "test:ui:blocks": "ddev exec php artisan test --filter=test_blocks_page_contains_required_elements"
     },
     "devDependencies": {
         "@popperjs/core": "^2.11.7",
