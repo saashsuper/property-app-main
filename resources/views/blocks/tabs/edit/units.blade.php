@@ -156,6 +156,39 @@
                             <label for="misc_info" class="form-label">Miscellaneous Info</label>
                             <textarea class="form-control" id="misc_info" name="misc_info" rows="2"></textarea>
                         </div>
+                        
+                        <!-- Address Fields - Shown when Resident = No -->
+                        <div class="col-md-6 mb-3" id="address1_field" style="display: none;">
+                            <label for="address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="address1" name="address1">
+                        </div>
+                        <div class="col-md-6 mb-3" id="address2_field" style="display: none;">
+                            <label for="address2" class="form-label">Address Line 2</label>
+                            <input type="text" class="form-control" id="address2" name="address2">
+                        </div>
+                        <div class="col-md-6 mb-3" id="address3_field" style="display: none;">
+                            <label for="address3" class="form-label">Address Line 3</label>
+                            <input type="text" class="form-control" id="address3" name="address3">
+                        </div>
+                        <div class="col-md-6 mb-3" id="country_field" style="display: none;">
+                            <label for="country_id" class="form-label">Country <span class="text-danger">*</span></label>
+                            <select class="form-select" id="country_id" name="country_id">
+                                <option value="">Select Country</option>
+                                @foreach(\App\Models\Country::orderBy('country_name')->get() as $country)
+                                    <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="state_field" style="display: none;">
+                            <label for="state_id" class="form-label">County / State <span class="text-danger">*</span></label>
+                            <select class="form-select" id="state_id" name="state_id">
+                                <option value="">Select County / State</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="zip_field" style="display: none;">
+                            <label for="zip" class="form-label">Zip / Eircode</label>
+                            <input type="text" class="form-control" id="zip" name="zip">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -250,6 +283,39 @@
                         <div class="col-md-6 mb-3">
                             <label for="edit_misc_info" class="form-label">Miscellaneous Info</label>
                             <textarea class="form-control" id="edit_misc_info" name="misc_info" rows="2"></textarea>
+                        </div>
+                        
+                        <!-- Address Fields - Shown when Resident = No -->
+                        <div class="col-md-6 mb-3" id="edit_address1_field" style="display: none;">
+                            <label for="edit_address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="edit_address1" name="address1">
+                        </div>
+                        <div class="col-md-6 mb-3" id="edit_address2_field" style="display: none;">
+                            <label for="edit_address2" class="form-label">Address Line 2</label>
+                            <input type="text" class="form-control" id="edit_address2" name="address2">
+                        </div>
+                        <div class="col-md-6 mb-3" id="edit_address3_field" style="display: none;">
+                            <label for="edit_address3" class="form-label">Address Line 3</label>
+                            <input type="text" class="form-control" id="edit_address3" name="address3">
+                        </div>
+                        <div class="col-md-6 mb-3" id="edit_country_field" style="display: none;">
+                            <label for="edit_country_id" class="form-label">Country <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_country_id" name="country_id">
+                                <option value="">Select Country</option>
+                                @foreach(\App\Models\Country::orderBy('country_name')->get() as $country)
+                                    <option value="{{ $country->id }}">{{ $country->country_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="edit_state_field" style="display: none;">
+                            <label for="edit_state_id" class="form-label">County / State <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_state_id" name="state_id">
+                                <option value="">Select County / State</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3" id="edit_zip_field" style="display: none;">
+                            <label for="edit_zip" class="form-label">Zip / Eircode</label>
+                            <input type="text" class="form-control" id="edit_zip" name="zip">
                         </div>
                     </div>
                 </div>
@@ -393,6 +459,98 @@ $(document).ready(function() {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Function to toggle address fields based on resident selection
+    function toggleAddressFields(residentSelectId, isEdit = false) {
+        const residentSelect = document.getElementById(residentSelectId);
+        
+        if (residentSelect) {
+            const prefix = isEdit ? 'edit_' : '';
+            const addressFields = [
+                `${prefix}address1_field`,
+                `${prefix}address2_field`, 
+                `${prefix}address3_field`,
+                `${prefix}country_field`,
+                `${prefix}state_field`,
+                `${prefix}zip_field`
+            ];
+            
+            residentSelect.addEventListener('change', function() {
+                console.log('Resident changed to:', this.value);
+                if (this.value === '0') {
+                    console.log('Showing address fields:', addressFields);
+                    // Show all address fields
+                    addressFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        console.log('Looking for field:', fieldId, 'Found:', field);
+                        if (field) field.style.display = 'block';
+                    });
+                    
+                    // Set required attributes for required fields
+                    const address1Field = document.getElementById(`${prefix}address1`);
+                    const countryField = document.getElementById(`${prefix}country_id`);
+                    const stateField = document.getElementById(`${prefix}state_id`);
+                    
+                    if (address1Field) address1Field.setAttribute('required', 'required');
+                    if (countryField) countryField.setAttribute('required', 'required');
+                    if (stateField) stateField.setAttribute('required', 'required');
+                } else {
+                    // Hide all address fields
+                    addressFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field) field.style.display = 'none';
+                    });
+                    
+                    // Remove required attributes
+                    addressFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field) {
+                            const inputs = field.querySelectorAll('input, select');
+                            inputs.forEach(input => input.removeAttribute('required'));
+                        }
+                    });
+                }
+            });
+        }
+    }
+    
+    // Initialize address fields toggle for Add Unit modal
+    toggleAddressFields('resident', false);
+    
+    // Initialize address fields toggle for Edit Unit modal
+    toggleAddressFields('edit_resident', true);
+    
+    // Function to load states based on country selection
+    function loadStates(countryId, stateSelectId) {
+        const stateSelect = document.getElementById(stateSelectId);
+        if (countryId && stateSelect) {
+            fetch(`/api/states/${countryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    stateSelect.innerHTML = '<option value="">Select County / State</option>';
+                    if (data.success && data.states) {
+                        data.states.forEach(state => {
+                            const option = document.createElement('option');
+                            option.value = state.id;
+                            option.textContent = state.name;
+                            stateSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading states:', error);
+                });
+        }
+    }
+    
+    // Add country change listeners for both modals
+    document.getElementById('country_id').addEventListener('change', function() {
+        loadStates(this.value, 'state_id');
+    });
+    
+    document.getElementById('edit_country_id').addEventListener('change', function() {
+        loadStates(this.value, 'edit_state_id');
+    });
+    
     // Add Unit AJAX submission
     document.getElementById('addUnitForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -506,6 +664,57 @@ function editUnit(id) {
                 document.getElementById('edit_phone_number').value = u.phone_number;
                 document.getElementById('edit_letting_agent').value = u.letting_agent;
                 document.getElementById('edit_misc_info').value = u.misc_info;
+                
+                // Populate address fields
+                document.getElementById('edit_address1').value = u.address1 || '';
+                document.getElementById('edit_address2').value = u.address2 || '';
+                document.getElementById('edit_address3').value = u.address3 || '';
+                document.getElementById('edit_country_id').value = u.country_id || '';
+                document.getElementById('edit_state_id').value = u.state_id || '';
+                document.getElementById('edit_zip').value = u.zip || '';
+                
+                // Show/hide address fields based on resident status
+                const addressFields = [
+                    'edit_address1_field',
+                    'edit_address2_field', 
+                    'edit_address3_field',
+                    'edit_country_field',
+                    'edit_state_field',
+                    'edit_zip_field'
+                ];
+                
+                if (u.resident === 0) {
+                    // Show all address fields
+                    addressFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field) field.style.display = 'block';
+                    });
+                    
+                    // Set required attributes for required fields
+                    const address1Field = document.getElementById('edit_address1');
+                    const countryField = document.getElementById('edit_country_id');
+                    const stateField = document.getElementById('edit_state_id');
+                    
+                    if (address1Field) address1Field.setAttribute('required', 'required');
+                    if (countryField) countryField.setAttribute('required', 'required');
+                    if (stateField) stateField.setAttribute('required', 'required');
+                } else {
+                    // Hide all address fields
+                    addressFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field) field.style.display = 'none';
+                    });
+                    
+                    // Remove required attributes
+                    addressFields.forEach(fieldId => {
+                        const field = document.getElementById(fieldId);
+                        if (field) {
+                            const inputs = field.querySelectorAll('input, select');
+                            inputs.forEach(input => input.removeAttribute('required'));
+                        }
+                    });
+                }
+                
                 document.getElementById('editUnitForm').action = `/block-units/${id}`;
                 const modal = new bootstrap.Modal(document.getElementById('editUnitModal'));
                 modal.show();

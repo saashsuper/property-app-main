@@ -39,7 +39,17 @@ class CheckRole
         }
 
         // Check if user's role is in the allowed roles
-        if (in_array($user->userType->name, $roles)) {
+        // Handle pipe-separated roles (e.g., "Admin|Super Admin|Property manager")
+        $allowedRoles = [];
+        foreach ($roles as $role) {
+            if (strpos($role, '|') !== false) {
+                $allowedRoles = array_merge($allowedRoles, explode('|', $role));
+            } else {
+                $allowedRoles[] = $role;
+            }
+        }
+        
+        if (in_array($user->userType->name, $allowedRoles)) {
             return $next($request);
         }
 

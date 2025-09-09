@@ -581,7 +581,7 @@ class BlockUnitController extends Controller
     /**
      * Get block units for a specific block
      */
-    public function getBlockUnits($blockId): JsonResponse
+    public function getBlockUnits($blockId): \Illuminate\Http\JsonResponse
     {
         try {
             $blockUnits = BlockUnit::where('block_id', $blockId)

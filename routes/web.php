@@ -40,8 +40,8 @@ Route::middleware(['auth'])->group(function () {
     // Blocks - Admin only for create, edit, delete
     Route::get('blocks', [App\Http\Controllers\BlockController::class, 'index'])->name('blocks.index');
     
-    // Admin-only block routes
-    Route::middleware(['role:Admin'])->group(function () {
+    // Block management routes - Admin and Property Management roles
+    Route::middleware(['role:Admin|Super Admin|Property manager|Office Administrator|Assistant Property Manager'])->group(function () {
         Route::get('blocks/create', [App\Http\Controllers\BlockController::class, 'create'])->name('blocks.create');
         Route::post('blocks', [App\Http\Controllers\BlockController::class, 'store'])->name('blocks.store');
         Route::get('blocks/{block}/edit', [App\Http\Controllers\BlockController::class, 'edit'])->name('blocks.edit');

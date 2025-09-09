@@ -27,7 +27,10 @@ class SalutationSeeder extends Seeder
         ];
 
         foreach ($salutations as $salutation) {
-            Salutation::create($salutation);
+            Salutation::updateOrCreate(
+                ['name' => $salutation['name']],
+                $salutation
+            );
         }
     }
 }

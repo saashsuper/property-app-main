@@ -118,7 +118,10 @@ class RealUserSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            DB::table('users')->insertOrIgnore($user);
+            \App\Models\User::updateOrCreate(
+                ['email' => $user['email']],
+                $user
+            );
         }
     }
 }

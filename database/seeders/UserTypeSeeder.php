@@ -73,8 +73,8 @@ class UserTypeSeeder extends Seeder
         ];
 
         foreach ($userTypes as $userType) {
-            // Upsert to keep is_hidden in sync if record exists
-            DB::table('user_types')->updateOrInsert(
+            // Use Eloquent model to handle soft deletes properly
+            \App\Models\UserType::withTrashed()->updateOrCreate(
                 ['id' => $userType['id']],
                 $userType
             );

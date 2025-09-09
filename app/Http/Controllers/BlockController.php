@@ -145,7 +145,9 @@ class BlockController extends Controller
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
         $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
-        $contractors = \App\Models\User::whereHas('userType', function($q) { $q->where('name', 'Contractor'); })->orderBy('name')->get();
+        $contractors = \App\Models\User::whereHas('userType', function($q) { 
+            $q->whereIn('name', ['Contractor Admin', 'Contractor User']); 
+        })->orderBy('name')->get();
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
@@ -211,7 +213,9 @@ class BlockController extends Controller
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
         $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
-        $contractors = \App\Models\User::whereHas('userType', function($q) { $q->where('name', 'Contractor'); })->orderBy('name')->get();
+        $contractors = \App\Models\User::whereHas('userType', function($q) { 
+            $q->whereIn('name', ['Contractor Admin', 'Contractor User']); 
+        })->orderBy('name')->get();
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();

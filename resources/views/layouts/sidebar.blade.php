@@ -94,10 +94,12 @@
                                 <li class="nav-item">
                                     <a href="{{ route('blocks.index') }}" class="{{ getSubmenuClasses('blocks.index') }}">@lang('translation.list-blocks')</a>
                                 </li>
-                                @admin
+                                @hasAnyRole('Admin|Super Admin|Property manager|Office Administrator|Assistant Property Manager')
                                 <li class="nav-item">
                                     <a href="{{ route('blocks.create') }}" class="{{ getSubmenuClasses('blocks.create') }}">@lang('translation.create-block')</a>
                                 </li>
+                                @endhasAnyRole
+                                @admin
                                 <li class="nav-item">
                                     <a href="{{ route('block-types.index') }}" class="{{ getSubmenuClasses('block-types.*') }}">@lang('translation.block-types')</a>
                                 </li>

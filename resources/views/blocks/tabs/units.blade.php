@@ -122,10 +122,11 @@
                             <textarea class="form-control" id="misc_info" name="misc_info" rows="2"></textarea>
                         </div>
                         
-                        <!-- Address Fields - Hidden by default, shown when Resident = No -->
-                        <div id="addressFields" class="row" style="display: none;">
+                        <!-- Address Fields - Shown by default, hidden when Resident = Yes -->
+                        <div id="addressFields" class="row" style="display: block !important; visibility: visible !important; background-color: #f8f9fa; border: 2px solid #007bff; padding: 15px; margin: 10px 0;">
                             <div class="col-12">
                                 <h6 class="fw-bold text-primary mb-3">Address Information</h6>
+                                <p class="text-muted">This section should be visible when the modal opens</p>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
@@ -251,8 +252,8 @@
                             <textarea class="form-control" id="edit_misc_info" name="misc_info" rows="2"></textarea>
                         </div>
                         
-                        <!-- Address Fields - Hidden by default, shown when Resident = No -->
-                        <div id="editAddressFields" class="row" style="display: none;">
+                        <!-- Address Fields - Shown by default, hidden when Resident = Yes -->
+                        <div id="editAddressFields" class="row" style="display: block !important; visibility: visible !important;">
                             <div class="col-12">
                                 <h6 class="fw-bold text-primary mb-3">Address Information</h6>
                             </div>
@@ -326,15 +327,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const addressFields = document.getElementById(addressFieldsId);
         
         if (residentSelect && addressFields) {
+            console.log('Address fields toggle initialized for:', residentSelectId, addressFieldsId);
             residentSelect.addEventListener('change', function() {
+                console.log('Resident changed to:', this.value);
                 if (this.value === '0') { // No
+                    console.log('Showing address fields');
                     addressFields.style.display = 'block';
                     // Make required fields required
-                    const requiredFields = addressFields.querySelectorAll('[required]');
-                    requiredFields.forEach(field => {
-                        field.setAttribute('required', 'required');
-                    });
+                    const address1Field = addressFields.querySelector('#address1, #edit_address1');
+                    const countryField = addressFields.querySelector('#country_id, #edit_country_id');
+                    const stateField = addressFields.querySelector('#state_id, #edit_state_id');
+                    
+                    if (address1Field) address1Field.setAttribute('required', 'required');
+                    if (countryField) countryField.setAttribute('required', 'required');
+                    if (stateField) stateField.setAttribute('required', 'required');
                 } else { // Yes
+                    console.log('Hiding address fields');
                     addressFields.style.display = 'none';
                     // Clear address fields and remove required attribute
                     const addressInputs = addressFields.querySelectorAll('input, select');
@@ -344,6 +352,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                 }
             });
+        } else {
+            console.error('Could not find elements:', { residentSelectId, addressFieldsId, residentSelect, addressFields });
         }
     }
 
@@ -395,6 +405,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Initialize address field toggles
+    console.log('Initializing address field toggles...');
+    console.log('Looking for resident element:', document.getElementById('resident'));
+    console.log('Looking for addressFields element:', document.getElementById('addressFields'));
+    console.log('Looking for edit_resident element:', document.getElementById('edit_resident'));
+    console.log('Looking for editAddressFields element:', document.getElementById('editAddressFields'));
+    
     toggleAddressFields('resident', 'addressFields');
     toggleAddressFields('edit_resident', 'editAddressFields');
     
@@ -433,7 +449,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
                     if (modal) modal.hide();
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockUnitsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -478,7 +495,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editUnitModal'));
                     if (modal) modal.hide();
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockUnitsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -499,11 +517,72 @@ document.addEventListener('DOMContentLoaded', function() {
             refreshBlockUnitsTable();
         }, 100);
     });
+    
+    // Add event listener for modal show events to reinitialize address fields
+    document.getElementById('addUnitModal').addEventListener('shown.bs.modal', function() {
+        console.log('Add Unit modal shown, reinitializing address fields...');
+        
+        // Force show address fields by default when modal opens
+        const addressFields = document.getElementById('addressFields');
+        if (addressFields) {
+            addressFields.style.display = 'block !important';
+            addressFields.style.visibility = 'visible !important';
+            addressFields.style.height = 'auto';
+            addressFields.style.opacity = '1';
+            console.log('Address fields forced to show by default');
+            console.log('Address fields element:', addressFields);
+            console.log('Address fields computed style:', window.getComputedStyle(addressFields).display);
+        } else {
+            console.error('Address fields element not found!');
+        }
+        
+        // Reinitialize address field toggle for the modal
+        toggleAddressFields('resident', 'addressFields');
+        
+        // Check current resident value and adjust accordingly
+        const residentSelect = document.getElementById('resident');
+        if (residentSelect) {
+            console.log('Resident select value in modal:', residentSelect.value);
+            if (residentSelect.value === '1') {
+                console.log('Resident is Yes, hiding address fields');
+                if (addressFields) {
+                    addressFields.style.display = 'none';
+                }
+            }
+        }
+    });
 
     document.getElementById('editUnitModal').addEventListener('hidden.bs.modal', function() {
         setTimeout(() => {
             refreshBlockUnitsTable();
         }, 100);
+    });
+    
+    // Add event listener for edit modal show events
+    document.getElementById('editUnitModal').addEventListener('shown.bs.modal', function() {
+        console.log('Edit Unit modal shown, reinitializing address fields...');
+        
+        // Show address fields by default when modal opens
+        const editAddressFields = document.getElementById('editAddressFields');
+        if (editAddressFields) {
+            editAddressFields.style.display = 'block';
+            console.log('Edit address fields shown by default');
+        }
+        
+        // Reinitialize address field toggle for the modal
+        toggleAddressFields('edit_resident', 'editAddressFields');
+        
+        // Check current resident value and adjust accordingly
+        const editResidentSelect = document.getElementById('edit_resident');
+        if (editResidentSelect) {
+            console.log('Edit resident select value in modal:', editResidentSelect.value);
+            if (editResidentSelect.value === '1') {
+                console.log('Edit resident is Yes, hiding address fields');
+                if (editAddressFields) {
+                    editAddressFields.style.display = 'none';
+                }
+            }
+        }
     });
 
     // Initialize DataTable
@@ -511,23 +590,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.jQuery && $('#blockUnitsTable').length) {
         blockUnitsDataTable = $('#blockUnitsTable').DataTable({
             responsive: true,
-            dom: 'Bfrtip',
-            buttons: [
-                'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+            dom: 'rtip', // Removed 'f' (filter/search) to remove the search box on the left
+            order: [[0, 'asc']], // default sort by Unit Code
+            columnDefs: [
+                { targets: [10], orderable: false } // Actions (last column)
             ],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
             language: {
-                search: "Search:",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                infoEmpty: "No entries to show",
-                infoFiltered: "(filtered from _MAX_ total entries)",
-                zeroRecords: "No matching records found",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "Next",
-                    previous: "Previous"
-                }
+                lengthMenu: "Show _MENU_ units per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ units",
+                infoEmpty: "Showing 0 to 0 of 0 units",
+                infoFiltered: "(filtered from _MAX_ total units)",
+                paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
             }
         });
     }
@@ -546,30 +621,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         // Clear existing data
                         blockUnitsDataTable.clear();
                         
-                        // Add new data
+                        // Add new data with correct column structure
                         data.data.forEach(function(unit) {
                             blockUnitsDataTable.row.add([
-                                unit.unit_code || '',
-                                unit.unit_name || '',
-                                unit.owners_name || '',
-                                unit.salutation || '',
-                                unit.email || '',
+                                unit.unit_code || 'N/A',
+                                unit.unit_name || 'N/A',
+                                unit.block_unit_type ? unit.block_unit_type.name : 'N/A',
+                                unit.owners_name || 'N/A',
+                                unit.salutation || 'N/A',
+                                unit.email || 'N/A',
                                 unit.resident ? 'Yes' : 'No',
-                                unit.mobile_no || '',
-                                unit.phone_number || '',
-                                unit.letting_agent || '',
-                                unit.misc_info || '',
-                                unit.created_at ? new Date(unit.created_at).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: '2-digit' 
-                                }) : 'N/A',
-                                '<button class="btn btn-sm btn-outline-primary" onclick="editUnit(' + unit.id + ')">' +
-                                    '<i class="ph-pencil"></i> Edit' +
-                                '</button> ' +
-                                '<button class="btn btn-sm btn-outline-danger" onclick="deleteUnit(' + unit.id + ')">' +
-                                    '<i class="ph-trash"></i> Delete' +
-                                '</button>'
+                                unit.mobile_no || 'N/A',
+                                unit.phone_number || 'N/A',
+                                unit.letting_agent || 'N/A',
+                                unit.misc_info || 'N/A'
                             ]);
                         });
                         
@@ -585,6 +650,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial data load
     refreshBlockUnitsTable();
+    
+    // Test address fields toggle on page load
+    setTimeout(() => {
+        console.log('Testing address fields toggle...');
+        const residentSelect = document.getElementById('resident');
+        if (residentSelect) {
+            console.log('Found resident select, current value:', residentSelect.value);
+            // Trigger change event to test
+            residentSelect.dispatchEvent(new Event('change'));
+        }
+    }, 1000);
 });
 
 function editUnit(id) {
@@ -669,28 +745,4 @@ function loadStatesForEdit(countryId, selectedStateId) {
     }
 }
 
-// DataTables for Units
-let blockUnitsDataTable;
-
-$(document).ready(function() {
-    blockUnitsDataTable = $('#blockUnitsTable').DataTable({
-        responsive: true,
-        dom: 'rtip', // Removed 'f' (filter/search) to remove the search box on the left
-        order: [[0, 'asc']], // default sort by Unit Code
-        columnDefs: [
-            { targets: [11], orderable: false } // Actions (last column)
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            lengthMenu: "Show _MENU_ units per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ units",
-            infoEmpty: "Showing 0 to 0 of 0 units",
-            infoFiltered: "(filtered from _MAX_ total units)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
-        }
-    });
-});
-
-// Duplicate function removed - now defined inside DOMContentLoaded
 </script>

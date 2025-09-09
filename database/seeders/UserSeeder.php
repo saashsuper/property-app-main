@@ -69,7 +69,7 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            DB::table('users')->updateOrInsert(
+            \App\Models\User::updateOrCreate(
                 ['email' => $user['email']],
                 array_merge($user, [
                     'avatar' => null,
