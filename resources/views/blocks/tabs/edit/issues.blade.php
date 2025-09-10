@@ -166,11 +166,21 @@
 
                             </tr>
                         @endforeach
-        @endif
-        </tbody>
-        </table>
+                     </tbody>
+                 </table>
+             </div>
+         @else
+             <div class="text-center py-4">
+                 <div class="text-muted">
+                     <i class="ph-warning font-size-24 mb-2"></i>
+                     <p>No issues reported for this block.</p>
+                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createIssueModal">
+                         <i class="ph-plus me-1"></i> Report First Issue
+                     </button>
+                 </div>
+             </div>
+         @endif
     </div>
-</div>
 </div>
 
 <!-- Create Issue Modal -->

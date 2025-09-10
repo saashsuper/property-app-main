@@ -63,8 +63,13 @@
             </div>
         @else
             <div class="text-center py-4">
-                <i class="ph-warning text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No issues reported for this block.</p>
+                <div class="text-muted">
+                    <i class="ph-warning font-size-24 mb-2"></i>
+                    <p>No issues reported for this block.</p>
+                    <a href="{{ route('block-issues.create', ['block_id' => $block->id]) }}" class="btn btn-primary btn-sm">
+                        <i class="ph-plus me-1"></i> Report First Issue
+                    </a>
+                </div>
             </div>
         @endif
     </div>
