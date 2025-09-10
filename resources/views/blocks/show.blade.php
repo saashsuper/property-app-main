@@ -423,6 +423,26 @@
 .tab-pane.fade.show {
     opacity: 1;
 }
+
+/* Ensure tabs don't interfere with sidebar */
+.tab-content {
+    position: relative;
+    z-index: 1;
+}
+
+.tab-pane {
+    position: relative;
+    z-index: 1;
+}
+
+/* Prevent any tab content from affecting sidebar */
+#blockShowTabContent {
+    overflow: visible;
+}
+
+#blockShowTabContent .tab-pane {
+    overflow: visible;
+}
 </style>
 
 @push('scripts')
