@@ -182,37 +182,37 @@
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="building-core-tab" data-bs-toggle="tab" href="#building-core" role="tab" aria-controls="building-core" aria-selected="false">
+                                    <a class="nav-link" id="building-core-tab" data-bs-toggle="tab" href="#building-core" role="tab" aria-controls="building-core" aria-selected="false" tabindex="-1">
                                         <i class="ph-buildings me-1"></i>Building Core
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false">
+                                    <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false" tabindex="-1">
                                         <i class="ph-users me-1"></i>Contractors
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="units-tab" data-bs-toggle="tab" href="#units" role="tab" aria-controls="units" aria-selected="false">
+                                    <a class="nav-link" id="units-tab" data-bs-toggle="tab" href="#units" role="tab" aria-controls="units" aria-selected="false" tabindex="-1">
                                         <i class="ph-house me-1"></i>Units
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="site-visit-tab" data-bs-toggle="tab" href="#site-visit" role="tab" aria-controls="site-visit" aria-selected="false">
+                                    <a class="nav-link" id="site-visit-tab" data-bs-toggle="tab" href="#site-visit" role="tab" aria-controls="site-visit" aria-selected="false" tabindex="-1">
                                         <i class="ph-map-pin me-1"></i>Site Visit
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="inspections-tab" data-bs-toggle="tab" href="#inspections" role="tab" aria-controls="inspections" aria-selected="false">
+                                    <a class="nav-link" id="inspections-tab" data-bs-toggle="tab" href="#inspections" role="tab" aria-controls="inspections" aria-selected="false" tabindex="-1">
                                         <i class="ph-clipboard-text me-1"></i>Inspections
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="issues-tab" data-bs-toggle="tab" href="#issues" role="tab" aria-controls="issues" aria-selected="false">
+                                    <a class="nav-link" id="issues-tab" data-bs-toggle="tab" href="#issues" role="tab" aria-controls="issues" aria-selected="false" tabindex="-1">
                                         <i class="ph-warning me-1"></i>Issues
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false">
+                                    <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false" tabindex="-1">
                                         <i class="ph-wrench me-1"></i>Work Orders
                                     </a>
                                 </li>
@@ -514,12 +514,37 @@ document.addEventListener('DOMContentLoaded', function() {
         })
     })
     
-    // Add active class to current tab
+    // Add active class to current tab and handle tabindex
     var tabs = document.querySelectorAll('#blockShowTabs .nav-link');
     tabs.forEach(function(tab) {
         tab.addEventListener('click', function() {
-            tabs.forEach(t => t.classList.remove('active'));
+            // Remove active class and set tabindex="-1" for all tabs
+            tabs.forEach(t => {
+                t.classList.remove('active');
+                t.setAttribute('tabindex', '-1');
+                t.setAttribute('aria-selected', 'false');
+            });
+            
+            // Add active class and remove tabindex for current tab
             this.classList.add('active');
+            this.removeAttribute('tabindex');
+            this.setAttribute('aria-selected', 'true');
+        });
+    });
+    
+    // Handle tab events for proper accessibility
+    tabs.forEach(function(tab) {
+        tab.addEventListener('shown.bs.tab', function() {
+            // Update tabindex for all tabs when a tab is shown
+            tabs.forEach(t => {
+                if (t === this) {
+                    t.removeAttribute('tabindex');
+                    t.setAttribute('aria-selected', 'true');
+                } else {
+                    t.setAttribute('tabindex', '-1');
+                    t.setAttribute('aria-selected', 'false');
+                }
+            });
         });
     });
     
