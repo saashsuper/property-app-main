@@ -124,10 +124,58 @@ class CountrySeeder extends Seeder
             ['country_code' => 'MW', 'country_name' => 'Malawi', 'phonecode' => 265],
             ['country_code' => 'MZ', 'country_name' => 'Mozambique', 'phonecode' => 258],
             ['country_code' => 'ZW', 'country_name' => 'Zimbabwe', 'phonecode' => 263],
+            
+            // Additional important countries
+            ['country_code' => 'RU', 'country_name' => 'Russia', 'phonecode' => 7],
+            ['country_code' => 'TR', 'country_name' => 'Turkey', 'phonecode' => 90],
+            ['country_code' => 'SA', 'country_name' => 'Saudi Arabia', 'phonecode' => 966],
+            ['country_code' => 'AE', 'country_name' => 'United Arab Emirates', 'phonecode' => 971],
+            ['country_code' => 'IL', 'country_name' => 'Israel', 'phonecode' => 972],
+            ['country_code' => 'JO', 'country_name' => 'Jordan', 'phonecode' => 962],
+            ['country_code' => 'LB', 'country_name' => 'Lebanon', 'phonecode' => 961],
+            ['country_code' => 'KW', 'country_name' => 'Kuwait', 'phonecode' => 965],
+            ['country_code' => 'QA', 'country_name' => 'Qatar', 'phonecode' => 974],
+            ['country_code' => 'BH', 'country_name' => 'Bahrain', 'phonecode' => 973],
+            ['country_code' => 'OM', 'country_name' => 'Oman', 'phonecode' => 968],
+            ['country_code' => 'IQ', 'country_name' => 'Iraq', 'phonecode' => 964],
+            ['country_code' => 'IR', 'country_name' => 'Iran', 'phonecode' => 98],
+            ['country_code' => 'AF', 'country_name' => 'Afghanistan', 'phonecode' => 93],
+            ['country_code' => 'PK', 'country_name' => 'Pakistan', 'phonecode' => 92],
+            ['country_code' => 'BD', 'country_name' => 'Bangladesh', 'phonecode' => 880],
+            ['country_code' => 'LK', 'country_name' => 'Sri Lanka', 'phonecode' => 94],
+            ['country_code' => 'NP', 'country_name' => 'Nepal', 'phonecode' => 977],
+            ['country_code' => 'BT', 'country_name' => 'Bhutan', 'phonecode' => 975],
+            ['country_code' => 'MV', 'country_name' => 'Maldives', 'phonecode' => 960],
+            ['country_code' => 'MM', 'country_name' => 'Myanmar', 'phonecode' => 95],
+            ['country_code' => 'LA', 'country_name' => 'Laos', 'phonecode' => 856],
+            ['country_code' => 'KH', 'country_name' => 'Cambodia', 'phonecode' => 855],
+            ['country_code' => 'BN', 'country_name' => 'Brunei', 'phonecode' => 673],
+            ['country_code' => 'TL', 'country_name' => 'East Timor', 'phonecode' => 670],
+            ['country_code' => 'MN', 'country_name' => 'Mongolia', 'phonecode' => 976],
+            ['country_code' => 'KZ', 'country_name' => 'Kazakhstan', 'phonecode' => 7],
+            ['country_code' => 'UZ', 'country_name' => 'Uzbekistan', 'phonecode' => 998],
+            ['country_code' => 'TM', 'country_name' => 'Turkmenistan', 'phonecode' => 993],
+            ['country_code' => 'TJ', 'country_name' => 'Tajikistan', 'phonecode' => 992],
+            ['country_code' => 'KG', 'country_name' => 'Kyrgyzstan', 'phonecode' => 996],
+            ['country_code' => 'GE', 'country_name' => 'Georgia', 'phonecode' => 995],
+            ['country_code' => 'AM', 'country_name' => 'Armenia', 'phonecode' => 374],
+            ['country_code' => 'AZ', 'country_name' => 'Azerbaijan', 'phonecode' => 994],
+            ['country_code' => 'BY', 'country_name' => 'Belarus', 'phonecode' => 375],
+            ['country_code' => 'MD', 'country_name' => 'Moldova', 'phonecode' => 373],
+            ['country_code' => 'UA', 'country_name' => 'Ukraine', 'phonecode' => 380],
+            ['country_code' => 'RS', 'country_name' => 'Serbia', 'phonecode' => 381],
+            ['country_code' => 'ME', 'country_name' => 'Montenegro', 'phonecode' => 382],
+            ['country_code' => 'BA', 'country_name' => 'Bosnia and Herzegovina', 'phonecode' => 387],
+            ['country_code' => 'MK', 'country_name' => 'North Macedonia', 'phonecode' => 389],
+            ['country_code' => 'AL', 'country_name' => 'Albania', 'phonecode' => 355],
+            ['country_code' => 'XK', 'country_name' => 'Kosovo', 'phonecode' => 383],
         ];
 
         foreach ($countries as $country) {
-            Country::create($country);
+            Country::updateOrCreate(
+                ['country_code' => $country['country_code']],
+                $country
+            );
         }
 
         $this->command->info('Country seeder completed successfully. Created ' . count($countries) . ' countries.');
