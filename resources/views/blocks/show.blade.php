@@ -175,7 +175,7 @@
                     <div class="card-body p-0">
                         <!-- Modern Nav Pills Tabs -->
                         <div class="border-bottom">
-                            <ul class="nav nav-pills arrow-navtabs nav-secondary gap-2 flex-grow-1 order-2 order-lg-1 px-3 pt-3" id="blockShowTabs" role="tablist">
+                            <ul class="nav nav-pills nav-secondary gap-2 flex-grow-1 order-2 order-lg-1 px-3 pt-3" id="blockShowTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" id="block-info-tab" data-bs-toggle="tab" href="#block-info" role="tab" aria-controls="block-info" aria-selected="true">
                                         <i class="ph-info me-1"></i>Block Information
@@ -301,182 +301,9 @@
     --bs-bg-opacity: 0.1;
 }
 
-/* Enhanced arrow-navtabs styling for block tabs */
-.arrow-navtabs {
-    border: none;
-    margin-bottom: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-    max-width: 100%;
-    flex-wrap: nowrap;
-    background: transparent;
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-.arrow-navtabs::-webkit-scrollbar {
-    display: none;
-}
-
 /* Section spacing */
 .row + .row {
     margin-top: 2rem !important;
-}
-
-
-
-.arrow-navtabs .nav-item {
-    margin-bottom: 0;
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.arrow-navtabs .nav-link {
-    border: none;
-    border-radius: 8px 8px 0 0;
-    padding: 12px 20px;
-    font-weight: 500;
-    color: #6c757d;
-    background: transparent;
-    position: relative;
-    transition: all 0.3s ease;
-    margin-right: 4px;
-}
-
-.arrow-navtabs .nav-link:hover {
-    color: #495057;
-    background-color: rgba(108, 117, 125, 0.1);
-    border-color: transparent;
-}
-
-.arrow-navtabs .nav-link.active {
-    color: #fff;
-    background-color: #495057;
-    border-color: transparent;
-    position: relative;
-}
-
-.arrow-navtabs .nav-link.active::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 8px solid #495057;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .arrow-navtabs .nav-link {
-        padding: 8px 12px;
-        font-size: 0.875rem;
-        min-width: auto;
-        border-radius: 6px 6px 0 0;
-    }
-    
-    .arrow-navtabs .nav-link.active::after {
-        border-left-width: 6px;
-        border-right-width: 6px;
-        border-top-width: 6px;
-        bottom: -6px;
-    }
-    
-    .arrow-navtabs .nav-link.active {
-        transform: translateY(-1px);
-    }
-    
-    .arrow-navtabs .nav-link:hover:not(.active) {
-        transform: none;
-    }
-}
-
-@media (max-width: 1200px) {
-    .arrow-navtabs .nav-link {
-        padding: 10px 16px;
-        font-size: 0.9rem;
-        border-radius: 6px 6px 0 0;
-    }
-}
-
-/* Large screen enhancements */
-@media (min-width: 1400px) {
-    .arrow-navtabs .nav-link {
-        padding: 14px 24px;
-        font-size: 1rem;
-    }
-}
-
-/* Tab container overflow prevention */
-.card-body {
-    overflow-x: hidden;
-    max-width: 100%;
-}
-
-/* Enhanced tab spacing and shadows */
-.arrow-navtabs .nav-link {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.arrow-navtabs .nav-link.active {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-/* Tab content animations */
-.tab-pane {
-    transition: opacity 0.3s ease-in-out;
-}
-
-.tab-pane.fade {
-    opacity: 0;
-}
-
-.tab-pane.fade.show {
-    opacity: 1;
-}
-
-/* Smooth transitions for tab links */
-.arrow-navtabs .nav-link::before {
-    transition: all 0.3s ease;
-}
-
-/* Tab content styling */
-.tab-content {
-    border-top: 1px solid #e9ecef;
-    margin-top: 0;
-}
-
-/* Modern tab enhancements */
-.arrow-navtabs .nav-link {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-}
-
-.arrow-navtabs .nav-link.active {
-    background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
-    transform: translateY(-2px);
-}
-
-.arrow-navtabs .nav-link:hover:not(.active) {
-    transform: translateY(-1px);
-    background-color: rgba(108, 117, 125, 0.15);
-}
-
-/* Enhanced focus states */
-.arrow-navtabs .nav-link:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.25);
-}
-
-/* Improved active arrow */
-.arrow-navtabs .nav-link.active::after {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 /* Ensure tabs don't interfere with sidebar */
@@ -549,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle horizontal scroll for tabs on mobile
-    const tabContainer = document.querySelector('.arrow-navtabs');
+    const tabContainer = document.querySelector('#blockShowTabs');
     if (tabContainer) {
         let isDown = false;
         let startX;
