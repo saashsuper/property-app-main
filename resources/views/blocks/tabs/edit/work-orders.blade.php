@@ -303,38 +303,56 @@
 
 <script>
 $(document).ready(function() {
-    $('#workOrdersTable').DataTable({
-        responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-        ],
-        autoWidth: false,
-        scrollX: true,
-        scrollCollapse: true,
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            zeroRecords: "No Work Order Informations found",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        },
-        initComplete: function() {
-            // Increase search box size
-            $('.dataTables_filter input').addClass('form-control').css({
-                'width': '300px',
-                'height': '38px',
-                'font-size': '14px'
-            });
+    // Function to initialize DataTable
+    function initializeWorkOrdersTable() {
+        // Destroy existing DataTable if it exists
+        if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
+            $('#workOrdersTable').DataTable().destroy();
         }
-    });
+        
+        // Initialize DataTable only if the table exists and has proper structure
+        if ($('#workOrdersTable').length && $('#workOrdersTable thead tr th').length > 0) {
+            try {
+                $('#workOrdersTable').DataTable({
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+                    ],
+                    autoWidth: false,
+                    scrollX: true,
+                    scrollCollapse: true,
+                    language: {
+                        search: "Search:",
+                        lengthMenu: "Show _MENU_ entries",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        infoEmpty: "No work orders found",
+                        infoFiltered: "(filtered from _MAX_ total entries)",
+                        zeroRecords: "No work orders found",
+                        paginate: {
+                            first: "First",
+                            last: "Last",
+                            next: "Next",
+                            previous: "Previous"
+                        }
+                    },
+                    initComplete: function() {
+                        // Increase search box size
+                        $('.dataTables_filter input').addClass('form-control').css({
+                            'width': '300px',
+                            'height': '38px',
+                            'font-size': '14px'
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error initializing DataTable:', error);
+            }
+        }
+    }
+    
+    // Initialize the table
+    initializeWorkOrdersTable();
 
     // Work Order Creation Form Handling
     const createWorkOrderForm = document.getElementById('createWorkOrderForm');
@@ -377,6 +395,7 @@ $(document).ready(function() {
 
                     // Refresh the work orders table
                     setTimeout(() => {
+                        // Reload the page to show the new work order
                         location.reload();
                     }, 1500);
                 } else {
