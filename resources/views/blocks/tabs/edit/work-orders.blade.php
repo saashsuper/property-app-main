@@ -20,42 +20,40 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if(isset($blockWorkOrders) && $blockWorkOrders->count() > 0)
-                        @foreach($blockWorkOrders as $workOrder)
-                            <tr>
-                                <td>#{{ $workOrder->id }}</td>
-                                <td>{{ $workOrder->issue ?? 'N/A' }}</td>
-                                <td>
-                                    @if($workOrder->priority_id == 1)
-                                        <span class="badge bg-success">Low</span>
-                                    @elseif($workOrder->priority_id == 2)
-                                        <span class="badge bg-info">Normal</span>
-                                    @elseif($workOrder->priority_id == 3)
-                                        <span class="badge bg-warning">High</span>
-                                    @elseif($workOrder->priority_id == 4)
-                                        <span class="badge bg-danger">Urgent</span>
-                                    @elseif($workOrder->priority_id == 5)
-                                        <span class="badge bg-dark">Critical</span>
-                                    @else
-                                        <span class="badge bg-secondary">Unknown</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($workOrder->status == 1)
-                                        <span class="badge bg-warning">Open</span>
-                                    @elseif($workOrder->status == 2)
-                                        <span class="badge bg-info">In Progress</span>
-                                    @else
-                                        <span class="badge bg-success">Completed</span>
-                                    @endif
-                                </td>
-                                <td>{{ $workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A' }}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline-primary">View</button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
+                    @forelse($blockWorkOrders ?? [] as $workOrder)
+                        <tr>
+                            <td>#{{ $workOrder->id }}</td>
+                            <td>{{ $workOrder->issue ?? 'N/A' }}</td>
+                            <td>
+                                @if($workOrder->priority_id == 1)
+                                    <span class="badge bg-success">Low</span>
+                                @elseif($workOrder->priority_id == 2)
+                                    <span class="badge bg-info">Normal</span>
+                                @elseif($workOrder->priority_id == 3)
+                                    <span class="badge bg-warning">High</span>
+                                @elseif($workOrder->priority_id == 4)
+                                    <span class="badge bg-danger">Urgent</span>
+                                @elseif($workOrder->priority_id == 5)
+                                    <span class="badge bg-dark">Critical</span>
+                                @else
+                                    <span class="badge bg-secondary">Unknown</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($workOrder->status == 1)
+                                    <span class="badge bg-warning">Open</span>
+                                @elseif($workOrder->status == 2)
+                                    <span class="badge bg-info">In Progress</span>
+                                @else
+                                    <span class="badge bg-success">Completed</span>
+                                @endif
+                            </td>
+                            <td>{{ $workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A' }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary">View</button>
+                            </td>
+                        </tr>
+                    @empty
                         <tr>
                             <td colspan="6" class="text-center py-4">
                                 <div class="text-muted">
@@ -67,7 +65,7 @@
                                 </div>
                             </td>
                         </tr>
-                    @endif
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -303,56 +301,55 @@
 
 <script>
 $(document).ready(function() {
-    // Function to initialize DataTable
-    function initializeWorkOrdersTable() {
-        // Destroy existing DataTable if it exists
-        if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
-            $('#workOrdersTable').DataTable().destroy();
-        }
-        
-        // Initialize DataTable only if the table exists and has proper structure
-        if ($('#workOrdersTable').length && $('#workOrdersTable thead tr th').length > 0) {
-            try {
-                $('#workOrdersTable').DataTable({
-                    responsive: true,
-                    dom: 'Bfrtip',
-                    buttons: [
-                        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-                    ],
-                    autoWidth: false,
-                    scrollX: true,
-                    scrollCollapse: true,
-                    language: {
-                        search: "Search:",
-                        lengthMenu: "Show _MENU_ entries",
-                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                        infoEmpty: "No work orders found",
-                        infoFiltered: "(filtered from _MAX_ total entries)",
-                        zeroRecords: "No work orders found",
-                        paginate: {
-                            first: "First",
-                            last: "Last",
-                            next: "Next",
-                            previous: "Previous"
-                        }
-                    },
-                    initComplete: function() {
-                        // Increase search box size
-                        $('.dataTables_filter input').addClass('form-control').css({
-                            'width': '300px',
-                            'height': '38px',
-                            'font-size': '14px'
-                        });
-                    }
-                });
-            } catch (error) {
-                console.error('Error initializing DataTable:', error);
+    // Initialize DataTable with better error handling
+    try {
+        // Check if table exists and has proper structure
+        const table = $('#workOrdersTable');
+        if (table.length && table.find('thead tr th').length === 6) {
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
+                table.DataTable().destroy();
             }
+            
+            // Initialize DataTable
+            table.DataTable({
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+                ],
+                autoWidth: false,
+                scrollX: true,
+                scrollCollapse: true,
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No work orders found",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    zeroRecords: "No work orders found",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                },
+                initComplete: function() {
+                    // Increase search box size
+                    $('.dataTables_filter input').addClass('form-control').css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px'
+                    });
+                }
+            });
+        } else {
+            console.warn('Work orders table not found or has incorrect structure');
         }
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
     }
-    
-    // Initialize the table
-    initializeWorkOrdersTable();
 
     // Work Order Creation Form Handling
     const createWorkOrderForm = document.getElementById('createWorkOrderForm');
