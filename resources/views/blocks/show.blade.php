@@ -175,7 +175,7 @@
                     <div class="card-body p-0">
                         <!-- Modern Nav Pills Tabs -->
                         <div class="border-bottom">
-                            <ul class="nav nav-pills nav-secondary gap-2 flex-grow-1 order-2 order-lg-1 px-3 pt-3" id="blockShowTabs" role="tablist">
+                            <ul class="nav nav-pills arrow-navtabs nav-secondary gap-2 flex-grow-1 order-2 order-lg-1 px-3 pt-3" id="blockShowTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" id="block-info-tab" data-bs-toggle="tab" href="#block-info" role="tab" aria-controls="block-info" aria-selected="true">
                                         <i class="ph-info me-1"></i>Block Information
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Handle horizontal scroll for tabs on mobile
-    const tabContainer = document.querySelector('#blockShowTabs');
+    const tabContainer = document.querySelector('.arrow-navtabs');
     if (tabContainer) {
         let isDown = false;
         let startX;
