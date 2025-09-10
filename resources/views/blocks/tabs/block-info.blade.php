@@ -1,6 +1,14 @@
+<!-- Block Information Header -->
+<div class="d-flex align-items-center mb-3 gap-3">
+    <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Information</h6>
+    <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addBlockInformationModal">
+        <i class="ph-plus align-bottom me-1"></i> Add Information
+    </button>
+</div>
+
 <!-- Block Information List -->
-        <table id="blockInformationTable" class="table table-bordered table-hover w-100">
-        <table id="blockInformationTable" class="table table-bordered table-hover w-100">
+<div class="table-responsive w-100">
+    <table id="blockInformationTable" class="table table-bordered table-hover w-100">
             <thead class="table-light">
                 <tr>
                     <th>Information Type</th>
@@ -20,6 +28,59 @@
                 @endforeach
             </tbody>
         </table>
+</div>
+
+<!-- Add Block Information Modal -->
+<div class="modal fade" id="addBlockInformationModal" tabindex="-1" aria-labelledby="addBlockInformationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="addBlockInformationModalLabel">Add Block Information</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addBlockInformationForm" method="POST" action="{{ route('block-information.store') }}">
+                @csrf
+                <input type="hidden" name="block_id" value="{{ $block->id }}">
+                <div class="modal-body">
+                    <div id="addBlockInformationMessage" class="alert d-none" role="alert"></div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="information_type_id" class="form-label">Information Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="information_type_id" name="information_type_id" required>
+                                    <option value="">Select Information Type</option>
+                                    @if(isset($blockInformationTypes) && $blockInformationTypes->count() > 0)
+                                        @foreach($blockInformationTypes as $infoType)
+                                            <option value="{{ $infoType->id }}">{{ $infoType->name }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>No information types available</option>
+                                    @endif
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x align-bottom me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-floppy-disk align-bottom me-1"></i> Save Information
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Edit Block Information Modal -->
 <div class="modal fade" id="editBlockInformationModal" tabindex="-1" aria-labelledby="editBlockInformationModalLabel" aria-hidden="true">
@@ -130,6 +191,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Add event listeners for modal close events
+    document.getElementById('addBlockInformationModal').addEventListener('hidden.bs.modal', function() {
+        // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
+        setTimeout(() => {
+            refreshBlockInformationTable();
+        }, 100);
+    });
+
     document.getElementById('editBlockInformationModal').addEventListener('hidden.bs.modal', function() {
         // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
         setTimeout(() => {
@@ -266,7 +334,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Handle form submission for add block information - Form not found, skipping
+    // Handle form submission for add block information
+    document.getElementById('addBlockInformationForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        let messageDiv = document.getElementById('addBlockInformationMessage');
+        if (!messageDiv) {
+            messageDiv = document.createElement('div');
+            messageDiv.id = 'addBlockInformationMessage';
+            messageDiv.className = 'alert d-none';
+            this.prepend(messageDiv);
+        }
+        messageDiv.classList.add('d-none');
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                messageDiv.className = 'alert alert-success';
+                messageDiv.textContent = 'Block information added successfully!';
+                messageDiv.classList.remove('d-none');
+                this.reset();
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addBlockInformationModal'));
+                    if (modal) modal.hide();
+                    // DataTable will refresh automatically when modal closes
+                }, 800);
+            } else {
+                messageDiv.className = 'alert alert-danger';
+                messageDiv.textContent = data.message || 'Error adding information.';
+                messageDiv.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            messageDiv.className = 'alert alert-danger';
+            messageDiv.textContent = 'Error adding information';
+            messageDiv.classList.remove('d-none');
+        });
+    });
 
     // Handle form submission for edit block information
     document.getElementById('editBlockInformationForm').addEventListener('submit', function(e) {

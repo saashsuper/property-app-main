@@ -133,6 +133,7 @@ class BlockController extends Controller
         
         // Load additional data needed for the view
         $blockInformation = $block->blockInformation()->with('informationType')->get();
+        $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
         $blockVisits = \App\Models\BlockVisit::where('block_id', $block->id)->with(['team.user', 'createdByUser'])->latest()->get();
@@ -156,6 +157,7 @@ class BlockController extends Controller
         return view('blocks.show', compact(
             'block',
             'blockInformation',
+            'blockInformationTypes',
             'blockWorkOrders',
             'blockInspections',
             'blockVisits',
@@ -166,9 +168,6 @@ class BlockController extends Controller
             'contractTypes',
             'contractors',
             'contactMethods',
-            'jobReasons',
-            'jobStatuses',
-            'priorities',
             'jobReasons',
             'jobStatuses',
             'priorities'

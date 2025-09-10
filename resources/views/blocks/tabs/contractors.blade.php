@@ -1,4 +1,12 @@
-        @if($block->contractors && $block->contractors->count() > 0)
+<!-- Contractors Header -->
+<div class="d-flex align-items-center mb-3 gap-3">
+    <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Contractors</h6>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContractorModal">
+        <i class="ph-plus align-bottom me-1"></i> Assign Contractor
+    </button>
+</div>
+
+@if($block->contractors && $block->contractors->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover w-100" id="contractorTable">
                     <thead class="table-light">
@@ -34,6 +42,63 @@
                 <button class="btn btn-primary">Assign Contractor</button>
             </div>
         @endif
+
+<!-- Add Contractor Modal -->
+<div class="modal fade" id="addContractorModal" tabindex="-1" aria-labelledby="addContractorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="addContractorModalLabel">Assign Contractor</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addContractorForm" method="POST" action="{{ route('block-contractors.store') }}">
+                @csrf
+                <input type="hidden" name="block_id" value="{{ $block->id }}">
+                <div class="modal-body">
+                    <div id="addContractorMessage" class="alert d-none" role="alert"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="contractor_type_id" class="form-label">Contract Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="contractor_type_id" name="contractor_type_id" required>
+                                    <option value="">Select Contract Type</option>
+                                    @foreach($contractTypes as $type)
+                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="contractor_id" class="form-label">Contractor <span class="text-danger">*</span></label>
+                                <select class="form-select" id="contractor_id" name="contractor_id" required>
+                                    <option value="">Select Contractor</option>
+                                    @foreach($contractors as $contractor)
+                                        <option value="{{ $contractor->id }}">{{ $contractor->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="default_contractor" name="default_contractor" value="1">
+                        <label class="form-check-label" for="default_contractor">
+                            Set as Default Contractor
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x align-bottom me-1"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ph-check align-bottom me-1"></i> Assign Contractor
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Edit Contractor Modal -->
 <div class="modal fade" id="editContractorModal" tabindex="-1" aria-labelledby="editContractorModalLabel" aria-hidden="true">

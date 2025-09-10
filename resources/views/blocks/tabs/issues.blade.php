@@ -1,8 +1,13 @@
+<!-- Block Issues Header -->
+<div class="d-flex align-items-center mb-3 gap-3">
+    <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Issues</h6>
+    <a href="{{ route('block-issues.create', ['block_id' => $block->id]) }}" class="btn btn-primary">
+        <i class="ph-plus align-bottom me-1"></i> Add Issue
+    </a>
+</div>
+
 <div class="row">
     <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="mb-0">Block Issues</h6>
-        </div>
         
         @if($block->issues && $block->issues->count() > 0)
             <div class="table-responsive">

@@ -1,4 +1,12 @@
-        @if(isset($blockWorkOrders) && $blockWorkOrders->count() > 0)
+<!-- Work Orders Header -->
+<div class="d-flex align-items-center mb-3 gap-3">
+    <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Work Orders</h6>
+    <a href="{{ route('work-orders.create', ['block_id' => $block->id]) }}" class="btn btn-primary">
+        <i class="ph-plus align-bottom me-1"></i> Add Work Order
+    </a>
+</div>
+
+@if(isset($blockWorkOrders) && $blockWorkOrders->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
                     <thead class="table-light">

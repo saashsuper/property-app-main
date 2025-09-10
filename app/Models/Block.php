@@ -141,6 +141,14 @@ class Block extends Model
     }
 
     /**
+     * Get the block information for the block.
+     */
+    public function blockInformation()
+    {
+        return $this->hasMany(BlockInformation::class);
+    }
+
+    /**
      * Get the creator of the block.
      */
     public function creator()
@@ -234,13 +242,6 @@ class Block extends Model
         $this->attributes['address2'] = $value;
     }
 
-    /**
-     * Get the block information for this block
-     */
-    public function blockInformation()
-    {
-        return $this->hasMany(BlockInformation::class);
-    }
 
     /**
      * Get the block information types available

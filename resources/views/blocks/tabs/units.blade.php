@@ -1,4 +1,12 @@
-        @if($block->units && $block->units->count() > 0)
+<!-- Units Header -->
+<div class="d-flex align-items-center mb-3 gap-3">
+    <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Units</h6>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+        <i class="ph-plus align-bottom me-1"></i> Add Unit
+    </button>
+</div>
+
+@if($block->units && $block->units->count() > 0)
             <div class="table-responsive">
                 <table id="blockUnitsTable" class="table table-bordered table-hover w-100">
                     <thead class="table-light">
