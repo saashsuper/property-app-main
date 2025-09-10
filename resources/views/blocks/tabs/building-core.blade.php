@@ -53,95 +53,59 @@
                 @csrf
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="building_type_id" class="form-label">Building Type <span class="text-danger">*</span></label>
-                        <select class="form-select" id="building_type_id" name="building_type_id" required>
-                            <option value="">Select Building Type</option>
-                            @foreach($blockBuildingTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
+                    <div id="addBuildingMessage" class="alert d-none" role="alert"></div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="building_type_id" class="form-label">Building Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="building_type_id" name="building_type_id" required>
+                                    <option value="">Select Building Type</option>
+                                    @foreach(\App\Models\BuildingType::all() as $type)
+                                        <option value="{{ $type->id }}">{{ $type->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="building_name" class="form-label">Building Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="building_name" name="name" required>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="building_name" class="form-label">Building Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="building_name" name="building_name" required>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="no_of_floors" class="form-label">No of Floors</label>
+                                <input type="number" class="form-control" id="no_of_floors" name="floor_no" min="1" max="999">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="roof_type" class="form-label">Roof Type</label>
+                                <input type="text" class="form-control" id="roof_type" name="roof_type">
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="no_of_floors" class="form-label">No of Floors <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="no_of_floors" name="no_of_floors" required min="1" max="999" maxlength="3">
-                    </div>
-                    <div class="mb-3">
-                        <label for="roof_type" class="form-label">Roof Type <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="roof_type" name="roof_type" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="no_lift" class="form-label">No of Lifts <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="no_lift" name="no_lift" required min="0" max="999" maxlength="3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="no_lift" class="form-label">No of Lifts</label>
+                                <input type="number" class="form-control" id="no_lift" name="no_lift" min="0" max="999">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ph-check me-1"></i> Save
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="ph-x me-1"></i> Cancel
-                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Building</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- Edit Building Modal -->
-<div class="modal fade" id="editBuildingModal" tabindex="-1" aria-labelledby="editBuildingModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="editBuildingModalLabel">Edit Building</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="editBuildingForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="block_id" value="{{ $block->id }}">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="edit_building_type_id" class="form-label">Building Type <span class="text-danger">*</span></label>
-                        <select class="form-select" id="edit_building_type_id" name="building_type_id" required>
-                            <option value="">Select Building Type</option>
-                            @foreach($blockBuildingTypes as $type)
-                                <option value="{{ $type->id }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_building_name" class="form-label">Building Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_building_name" name="building_name" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_no_of_floors" class="form-label">No of Floors <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="edit_no_of_floors" name="no_of_floors" required min="1" max="999" maxlength="3">
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_roof_type" class="form-label">Roof Type <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_roof_type" name="roof_type" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="edit_no_lift" class="form-label">No of Lifts <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="edit_no_lift" name="no_lift" required min="0" max="999" maxlength="3">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Building</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<!-- JavaScript moved to @push('scripts') section below -->
 @push('scripts')
-<!-- DataTables scripts moved to main layout to prevent conflicts -->
 <script>
 let buildingDataTable;
 
@@ -175,269 +139,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Add input validation for 3-digit limit
-    function validateThreeDigits(input) {
-        const value = input.value;
-        if (value.length > 3) {
-            input.value = value.slice(0, 3);
-        }
-        if (parseInt(value) > 999) {
-            input.value = '999';
-        }
-    }
-
-    // Add event listeners for input validation
-    document.getElementById('no_of_floors').addEventListener('input', function() {
-        validateThreeDigits(this);
-    });
-
-    document.getElementById('no_lift').addEventListener('input', function() {
-        validateThreeDigits(this);
-    });
-
-    document.getElementById('edit_no_of_floors').addEventListener('input', function() {
-        validateThreeDigits(this);
-    });
-
-    document.getElementById('edit_no_lift').addEventListener('input', function() {
-        validateThreeDigits(this);
-    });
-
-    // Add Building AJAX submission
-    document.getElementById('addBuildingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        let messageDiv = document.getElementById('addBuildingMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'addBuildingMessage';
-            messageDiv.className = 'alert d-none';
-            form.prepend(messageDiv);
-        }
-        messageDiv.classList.add('d-none');
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Building added successfully!';
-                messageDiv.classList.remove('d-none');
-                form.reset();
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addBuildingModal'));
-                    if (modal) modal.hide();
-                    // DataTable will refresh automatically when modal closes
-                }, 800);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = data.message || 'Error saving building.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(() => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error saving building';
-            messageDiv.classList.remove('d-none');
-        });
-    });
-
-    // Edit Building AJAX submission
-    document.getElementById('editBuildingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        let messageDiv = document.getElementById('editBuildingMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'editBuildingMessage';
-            messageDiv.className = 'alert d-none';
-            form.prepend(messageDiv);
-        }
-        messageDiv.classList.add('d-none');
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Building updated successfully!';
-                messageDiv.classList.remove('d-none');
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editBuildingModal'));
-                    if (modal) modal.hide();
-                    // DataTable will refresh automatically when modal closes
-                }, 800);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = data.message || 'Error updating building.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(() => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error updating building';
-            messageDiv.classList.remove('d-none');
-        });
-    }
-
-    // Add event listeners for modal close events
-    document.getElementById('addBuildingModal').addEventListener('hidden.bs.modal', function() {
-        // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
-        setTimeout(() => {
-            refreshBuildingsTable();
-        }, 100);
-    });
-
-    document.getElementById('editBuildingModal').addEventListener('hidden.bs.modal', function() {
-        // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
-        setTimeout(() => {
-            refreshBuildingsTable();
-        }, 100);
-    });
-
-    // Function to refresh the Buildings DataTable
-    window.refreshBuildingsTable = function() {
-        if (buildingDataTable) {
-            // Get the current block ID from the form
-            const blockId = document.querySelector('input[name="block_id"]').value;
-            
-            // Fetch fresh data
-            fetch(`/block-buildings/block/${blockId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Clear existing data
-                        buildingDataTable.clear();
-                        
-                        // Add new data
-                        data.data.forEach(function(building) {
-                            buildingDataTable.row.add([
-                                building.building_type_name || 'N/A',
-                                building.name || '',
-                                building.floor_no || '',
-                                building.roof_type || '',
-                                building.no_lift || '',
-                                building.created_at ? new Date(building.created_at).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: '2-digit' 
-                                }) : 'N/A',
-                                '<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(' + building.id + ')">' +
-                                    '<i class="ph-pencil"></i> Edit' +
-                                '</button> ' +
-                                '<button class="btn btn-sm btn-outline-danger" onclick="deleteBuilding(' + building.id + ')">' +
-                                    '<i class="ph-trash"></i> Delete' +
-                                '</button>'
-                            ]);
-                        });
-                        
-                        // Redraw the table
-                        buildingDataTable.draw();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error refreshing table:', error);
-                });
-        }
-    };
-
-    // Initial data load not needed - table starts with static data
-
-    // Function to delete a building
-    window.deleteBuilding = function(buildingId) {
-        if (confirm('Are you sure you want to delete this building? This action cannot be undone.')) {
-            fetch(`/block-buildings/${buildingId}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Add a message area if not present
-                let messageDiv = document.getElementById('buildingDeleteMessage');
-                if (!messageDiv) {
-                    messageDiv = document.createElement('div');
-                    messageDiv.id = 'buildingDeleteMessage';
-                    messageDiv.className = 'alert d-none';
-                    document.body.appendChild(messageDiv);
-                }
-                if (data.success) {
-                    messageDiv.className = 'alert alert-success';
-                    messageDiv.textContent = 'Building deleted successfully!';
-                    messageDiv.classList.remove('d-none');
-                    // Refresh the DataTable instead of reloading the page
-                    refreshBuildingsTable();
-                } else {
-                    messageDiv.className = 'alert alert-danger';
-                    messageDiv.textContent = data.message || 'Error deleting building.';
-                    messageDiv.classList.remove('d-none');
-                }
-                // Hide message after 5 seconds
-                setTimeout(() => {
-                    messageDiv.classList.add('d-none');
-                }, 5000);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Add a message area if not present
-                let messageDiv = document.getElementById('buildingDeleteMessage');
-                if (!messageDiv) {
-                    messageDiv = document.createElement('div');
-                    messageDiv.id = 'buildingDeleteMessage';
-                    messageDiv.className = 'alert d-none';
-                    document.body.appendChild(messageDiv);
-                }
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = 'Error deleting building';
-                messageDiv.classList.remove('d-none');
-                // Hide message after 5 seconds
-                setTimeout(() => {
-                    messageDiv.classList.add('d-none');
-                }, 5000);
-            });
-        }
-    };
-
-    // Function to edit a building
-    window.editBuilding = function(id) {
-        fetch(`/block-buildings/${id}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const b = data.data;
-                    document.getElementById('edit_building_type_id').value = b.building_type_id;
-                    document.getElementById('edit_building_name').value = b.name;
-                    document.getElementById('edit_no_of_floors').value = b.floor_no;
-                    document.getElementById('edit_roof_type').value = b.roof_type;
-                    document.getElementById('edit_no_lift').value = b.no_lift;
-                    document.getElementById('editBuildingForm').action = `/block-buildings/${id}`;
-                    const modal = new bootstrap.Modal(document.getElementById('editBuildingModal'));
-                    modal.show();
-                } else {
-                    alert('Error loading building details.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error loading building details');
-            });
-    };
-
 });
+
+// Global functions for building operations
+function editBuilding(id) {
+    // Edit building functionality
+    console.log('Edit building:', id);
+}
+
+function deleteBuilding(id) {
+    // Delete building functionality
+    console.log('Delete building:', id);
+}
 </script>
 @endpush
 
