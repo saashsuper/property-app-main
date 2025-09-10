@@ -303,7 +303,7 @@
 
 /* Enhanced arrow-navtabs styling for block tabs */
 .arrow-navtabs {
-    border-bottom: 2px solid #e9ecef;
+    border: none;
     margin-bottom: 0;
     overflow-x: auto;
     overflow-y: hidden;
@@ -313,6 +313,7 @@
     -ms-overflow-style: none; /* IE and Edge */
     max-width: 100%;
     flex-wrap: nowrap;
+    background: transparent;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -386,6 +387,14 @@
         border-top-width: 6px;
         bottom: -6px;
     }
+    
+    .arrow-navtabs .nav-link.active {
+        transform: translateY(-1px);
+    }
+    
+    .arrow-navtabs .nav-link:hover:not(.active) {
+        transform: none;
+    }
 }
 
 @media (max-width: 1200px) {
@@ -393,6 +402,14 @@
         padding: 10px 16px;
         font-size: 0.9rem;
         border-radius: 6px 6px 0 0;
+    }
+}
+
+/* Large screen enhancements */
+@media (min-width: 1400px) {
+    .arrow-navtabs .nav-link {
+        padding: 14px 24px;
+        font-size: 1rem;
     }
 }
 
@@ -422,6 +439,44 @@
 
 .tab-pane.fade.show {
     opacity: 1;
+}
+
+/* Smooth transitions for tab links */
+.arrow-navtabs .nav-link::before {
+    transition: all 0.3s ease;
+}
+
+/* Tab content styling */
+.tab-content {
+    border-top: 1px solid #e9ecef;
+    margin-top: 0;
+}
+
+/* Modern tab enhancements */
+.arrow-navtabs .nav-link {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.arrow-navtabs .nav-link.active {
+    background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+    transform: translateY(-2px);
+}
+
+.arrow-navtabs .nav-link:hover:not(.active) {
+    transform: translateY(-1px);
+    background-color: rgba(108, 117, 125, 0.15);
+}
+
+/* Enhanced focus states */
+.arrow-navtabs .nav-link:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(73, 80, 87, 0.25);
+}
+
+/* Improved active arrow */
+.arrow-navtabs .nav-link.active::after {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 /* Ensure tabs don't interfere with sidebar */
