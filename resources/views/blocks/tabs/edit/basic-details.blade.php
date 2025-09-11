@@ -231,51 +231,54 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
     
-    const stateOptions = stateSelect.querySelectorAll('option[data-country]');
-    console.log('Found', stateOptions.length, 'state options');
+    console.log('Country-State dependency initialized in basic-details tab');
+
+    function loadStatesByCountry(countryId) {
+        if (!countryId) {
+            // Clear states if no country selected
+            stateSelect.innerHTML = '<option value="">Select County/State</option>';
+            return;
+        }
+
+        console.log('Loading states for country ID:', countryId);
+        
+        // Show loading state
+        stateSelect.innerHTML = '<option value="">Loading states...</option>';
+        stateSelect.disabled = true;
+
+        // Make AJAX request to get states
+        fetch(`/api/states/${countryId}`)
+            .then(response => response.json())
+            .then(states => {
+                console.log('Received states:', states);
+                
+                // Clear existing options
+                stateSelect.innerHTML = '<option value="">Select County/State</option>';
+                
+                // Add new state options
+                states.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.id;
+                    option.textContent = state.name;
+                    stateSelect.appendChild(option);
+                });
+                
+                stateSelect.disabled = false;
+                console.log('States loaded successfully:', states.length, 'states');
+            })
+            .catch(error => {
+                console.error('Error loading states:', error);
+                stateSelect.innerHTML = '<option value="">Error loading states</option>';
+                stateSelect.disabled = false;
+            });
+    }
 
     function updateStates() {
         const selectedCountryId = countrySelect.value;
         console.log('Selected country ID:', selectedCountryId);
         
-        // Show all state options first
-        stateOptions.forEach(option => {
-            option.style.display = '';
-            option.disabled = false;
-        });
-        
-        // If a country is selected, hide states that don't belong to it
-        if (selectedCountryId) {
-            let visibleCount = 0;
-            stateOptions.forEach(option => {
-                const stateCountryId = option.dataset.country;
-                
-                if (String(stateCountryId) === String(selectedCountryId)) {
-                    option.style.display = '';
-                    option.disabled = false;
-                    visibleCount++;
-                } else {
-                    option.style.display = 'none';
-                    option.disabled = true;
-                }
-            });
-            console.log('Showing', visibleCount, 'states for country', selectedCountryId);
-        } else {
-            // If no country selected, show all states
-            stateOptions.forEach(option => {
-                option.style.display = '';
-                option.disabled = false;
-            });
-            console.log('No country selected, showing all states');
-        }
-        
-        // Reset state selection if current selection is not valid for selected country
-        const currentStateId = stateSelect.value;
-        const currentStateOption = stateSelect.querySelector(`option[value="${currentStateId}"]`);
-        if (currentStateOption && currentStateOption.dataset.country !== selectedCountryId) {
-            stateSelect.value = '';
-            console.log('Reset state selection - invalid for selected country');
-        }
+        // Load states for the selected country
+        loadStatesByCountry(selectedCountryId);
     }
 
     // Initialize states on page load
@@ -283,8 +286,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update states when country changes
     countrySelect.addEventListener('change', updateStates);
-    
-    console.log('Country-State dependency initialized in basic-details tab');
 });
 </script>
 @endpush
