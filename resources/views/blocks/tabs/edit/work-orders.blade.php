@@ -55,7 +55,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4">
+                            <td colspan="6" class="text-center py-4">                    
                                 <div class="text-muted">
                                     <i class="ph-wrench font-size-24 mb-2"></i>
                                     <p>No work orders created for this block.</p>

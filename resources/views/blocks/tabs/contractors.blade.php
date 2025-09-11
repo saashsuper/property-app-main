@@ -1,9 +1,6 @@
 <!-- Contractors Header -->
 <div class="d-flex align-items-center mb-3 gap-3">
     <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Contractors</h6>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addContractorModal">
-        <i class="ph-plus align-bottom me-1"></i> Assign Contractor
-    </button>
 </div>
 
 @if($block->contractors && $block->contractors->count() > 0)

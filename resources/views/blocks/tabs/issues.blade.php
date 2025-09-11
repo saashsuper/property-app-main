@@ -1,9 +1,6 @@
 <!-- Block Issues Header -->
 <div class="d-flex align-items-center mb-3 gap-3">
     <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Issues</h6>
-    <a href="{{ route('block-issues.create', ['block_id' => $block->id]) }}" class="btn btn-primary">
-        <i class="ph-plus align-bottom me-1"></i> Add Issue
-    </a>
 </div>
 
 <div class="row">
@@ -66,9 +63,6 @@
                 <div class="text-muted">
                     <i class="ph-warning font-size-24 mb-2"></i>
                     <p>No issues reported for this block.</p>
-                    <a href="{{ route('block-issues.create', ['block_id' => $block->id]) }}" class="btn btn-primary btn-sm">
-                        <i class="ph-plus me-1"></i> Report First Issue
-                    </a>
                 </div>
             </div>
         @endif

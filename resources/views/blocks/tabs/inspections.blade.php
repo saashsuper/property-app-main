@@ -1,9 +1,6 @@
 <!-- Block Inspections Header -->
 <div class="d-flex align-items-center mb-3 gap-3">
     <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Inspections</h6>
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInspectionModal">
-        <i class="ph-plus align-bottom me-1"></i> Schedule Inspection
-    </button>
 </div>
 
 @if(isset($blockInspections) && $blockInspections->count() > 0)
