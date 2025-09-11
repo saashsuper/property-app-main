@@ -275,95 +275,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let countrySelect, stateSelect, stateOptions;
-    let isInitialized = false;
-
-    function initializeCountryStateDependency() {
-        countrySelect = document.getElementById('country_id');
-        stateSelect = document.getElementById('state_id');
-        
-        if (!countrySelect || !stateSelect) {
-            console.warn('Country or State select elements not found, will retry when tab is shown');
-            return false;
-        }
-        
-        if (isInitialized) {
-            return true; // Already initialized
-        }
-        
-        stateOptions = stateSelect.querySelectorAll('option[data-country]');
-        isInitialized = true;
-        console.log('Country/State dependency initialized');
-        return true;
-    }
-
-    function updateStates() {
-        if (!initializeCountryStateDependency()) {
-            return;
-        }
-        
-        const selectedCountryId = countrySelect.value;
-        console.log('Selected country ID:', selectedCountryId);
-        
-        // Show all state options first
-        stateOptions.forEach(option => {
-            option.style.display = '';
-            option.disabled = false;
-        });
-        
-        // If a country is selected, hide states that don't belong to it
-        if (selectedCountryId) {
-            let visibleCount = 0;
-            stateOptions.forEach(option => {
-                const stateCountryId = option.dataset.country;
-                
-                if (String(stateCountryId) === String(selectedCountryId)) {
-                    option.style.display = '';
-                    option.disabled = false;
-                    visibleCount++;
-                } else {
-                    option.style.display = 'none';
-                    option.disabled = true;
-                }
-            });
-            console.log('Showing', visibleCount, 'states for country', selectedCountryId);
-        } else {
-            // If no country selected, show all states
-            stateOptions.forEach(option => {
-                option.style.display = '';
-                option.disabled = false;
-            });
-            console.log('No country selected, showing all states');
-        }
-        
-        // Reset state selection if current selection is not valid for selected country
-        const currentStateId = stateSelect.value;
-        const currentStateOption = stateSelect.querySelector(`option[value="${currentStateId}"]`);
-        if (currentStateOption && currentStateOption.dataset.country !== selectedCountryId) {
-            stateSelect.value = '';
-            console.log('Reset state selection - invalid for selected country');
-        }
-    }
-
-    // Initialize on page load
-    if (initializeCountryStateDependency()) {
-        updateStates();
-        countrySelect.addEventListener('change', updateStates);
-    }
-
-    // Also initialize when the basic-details tab is shown
-    const basicDetailsTab = document.getElementById('basic-details-tab');
-    if (basicDetailsTab) {
-        basicDetailsTab.addEventListener('shown.bs.tab', function() {
-            console.log('Basic details tab shown, initializing country/state dependency');
-            if (initializeCountryStateDependency()) {
-                updateStates();
-                // Remove existing listener to avoid duplicates
-                countrySelect.removeEventListener('change', updateStates);
-                countrySelect.addEventListener('change', updateStates);
-            }
-        });
-    }
 
     // Initialize Bootstrap tabs
     const triggerTabList = document.querySelectorAll('#blockEditTabs a[data-bs-toggle="tab"]');
@@ -405,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    console.log('Country/State dependency and tabs initialized');
+    console.log('Tabs initialized');
 });
 </script>
 @endpush 
