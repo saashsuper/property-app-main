@@ -457,9 +457,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
                     if (modal) modal.hide();
-                    // Refresh the DataTable instead of reloading the page
-                    refreshBlockUnitsTable();
-                }, 800);
+                    // Reload the page to show the new unit
+                    location.reload();
+                }, 1500);
             } else {
                 messageDiv.className = 'alert alert-danger';
                 messageDiv.textContent = (data && data.message) || 'Error saving unit.';
@@ -503,9 +503,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editUnitModal'));
                     if (modal) modal.hide();
-                    // Refresh the DataTable instead of reloading the page
-                    refreshBlockUnitsTable();
-                }, 800);
+                    // Reload the page to show the updated unit
+                    location.reload();
+                }, 1500);
             } else {
                 messageDiv.className = 'alert alert-danger';
                 messageDiv.textContent = (data && data.message) || 'Error updating unit.';
@@ -520,51 +520,50 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Add event listeners for modal close events
-    document.getElementById('addUnitModal').addEventListener('hidden.bs.modal', function() {
-        setTimeout(() => {
-            refreshBlockUnitsTable();
-        }, 100);
-    });
-    
-    // Add event listener for modal show events to reinitialize address fields
-    document.getElementById('addUnitModal').addEventListener('shown.bs.modal', function() {
-        console.log('Add Unit modal shown, reinitializing address fields...');
-        
-        // Force show address fields by default when modal opens
-        const addressFields = document.getElementById('addressFields');
-        if (addressFields) {
-            addressFields.style.display = 'block !important';
-            addressFields.style.visibility = 'visible !important';
-            addressFields.style.height = 'auto';
-            addressFields.style.opacity = '1';
-            console.log('Address fields forced to show by default');
-            console.log('Address fields element:', addressFields);
-            console.log('Address fields computed style:', window.getComputedStyle(addressFields).display);
-        } else {
-            console.error('Address fields element not found!');
-        }
-        
-        // Reinitialize address field toggle for the modal
-        toggleAddressFields('resident', 'addressFields');
-        
-        // Check current resident value and adjust accordingly
-        const residentSelect = document.getElementById('resident');
-        if (residentSelect) {
-            console.log('Resident select value in modal:', residentSelect.value);
-            if (residentSelect.value === '1') {
-                console.log('Resident is Yes, hiding address fields');
-                if (addressFields) {
-                    addressFields.style.display = 'none';
-                }
+    const addUnitModal = document.getElementById('addUnitModal');
+    if (addUnitModal) {
+        addUnitModal.addEventListener('hidden.bs.modal', function() {
+            // Clear any error messages and reset form
+            const messageDiv = document.getElementById('addUnitMessage');
+            if (messageDiv) {
+                messageDiv.classList.add('d-none');
             }
-        }
-    });
+            const form = document.getElementById('addUnitForm');
+            if (form) {
+                form.reset();
+            }
+        });
+    }
+    
+    // Add event listener for modal show events
+    if (addUnitModal) {
+        addUnitModal.addEventListener('shown.bs.modal', function() {
+            console.log('Add Unit modal shown');
+            
+            // Initialize address fields
+            const addressFields = document.getElementById('addressFields');
+            if (addressFields) {
+                addressFields.style.display = 'block';
+            }
+            
+            // Reinitialize address field toggle
+            toggleAddressFields('resident', 'addressFields');
+            
+            // Reinitialize state loading
+            loadStates('country_id', 'state_id');
+        });
+    }
 
-    document.getElementById('editUnitModal').addEventListener('hidden.bs.modal', function() {
-        setTimeout(() => {
-            refreshBlockUnitsTable();
-        }, 100);
-    });
+    const editUnitModal = document.getElementById('editUnitModal');
+    if (editUnitModal) {
+        editUnitModal.addEventListener('hidden.bs.modal', function() {
+            // Clear any error messages and reset form
+            const messageDiv = document.getElementById('editUnitMessage');
+            if (messageDiv) {
+                messageDiv.classList.add('d-none');
+            }
+        });
+    }
     
     // Add event listener for edit modal show events
     document.getElementById('editUnitModal').addEventListener('shown.bs.modal', function() {
