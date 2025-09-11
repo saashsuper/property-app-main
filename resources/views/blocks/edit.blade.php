@@ -275,21 +275,37 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const countrySelect = document.getElementById('country_id');
-    const stateSelect = document.getElementById('state_id');
-    
-    if (!countrySelect || !stateSelect) {
-        console.warn('Country or State select elements not found');
-        return;
+    let countrySelect, stateSelect, stateOptions;
+    let isInitialized = false;
+
+    function initializeCountryStateDependency() {
+        countrySelect = document.getElementById('country_id');
+        stateSelect = document.getElementById('state_id');
+        
+        if (!countrySelect || !stateSelect) {
+            console.warn('Country or State select elements not found, will retry when tab is shown');
+            return false;
+        }
+        
+        if (isInitialized) {
+            return true; // Already initialized
+        }
+        
+        stateOptions = stateSelect.querySelectorAll('option[data-country]');
+        isInitialized = true;
+        console.log('Country/State dependency initialized');
+        return true;
     }
-    
-    const stateOptions = stateSelect.querySelectorAll('option[data-country]');
 
     function updateStates() {
+        if (!initializeCountryStateDependency()) {
+            return;
+        }
+        
         const selectedCountryId = countrySelect.value;
         console.log('Selected country ID:', selectedCountryId);
         
-        // Show all state options first (for debugging)
+        // Show all state options first
         stateOptions.forEach(option => {
             option.style.display = '';
             option.disabled = false;
@@ -300,7 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
             let visibleCount = 0;
             stateOptions.forEach(option => {
                 const stateCountryId = option.dataset.country;
-                console.log('State option:', option.value, 'Country ID:', stateCountryId, 'Selected:', selectedCountryId, 'Match:', stateCountryId === selectedCountryId);
                 
                 if (String(stateCountryId) === String(selectedCountryId)) {
                     option.style.display = '';
@@ -330,11 +345,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initial update
-    updateStates();
+    // Initialize on page load
+    if (initializeCountryStateDependency()) {
+        updateStates();
+        countrySelect.addEventListener('change', updateStates);
+    }
 
-    // Update states when country changes
-    countrySelect.addEventListener('change', updateStates);
+    // Also initialize when the basic-details tab is shown
+    const basicDetailsTab = document.getElementById('basic-details-tab');
+    if (basicDetailsTab) {
+        basicDetailsTab.addEventListener('shown.bs.tab', function() {
+            console.log('Basic details tab shown, initializing country/state dependency');
+            if (initializeCountryStateDependency()) {
+                updateStates();
+                // Remove existing listener to avoid duplicates
+                countrySelect.removeEventListener('change', updateStates);
+                countrySelect.addEventListener('change', updateStates);
+            }
+        });
+    }
 
     // Initialize Bootstrap tabs
     const triggerTabList = document.querySelectorAll('#blockEditTabs a[data-bs-toggle="tab"]');

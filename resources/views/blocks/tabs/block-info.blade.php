@@ -1,14 +1,12 @@
 <!-- Block Information Header -->
 <div class="d-flex align-items-center mb-3 gap-3">
     <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Information</h6>
-    <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addBlockInformationModal">
-        <i class="ph-plus align-bottom me-1"></i> Add Information
-    </button>
 </div>
 
-<!-- Block Information List -->
-<div class="table-responsive w-100">
-    <table id="blockInformationTable" class="table table-bordered table-hover w-100">
+@if($blockInformation && $blockInformation->count() > 0)
+    <!-- Block Information List -->
+    <div class="table-responsive w-100">
+        <table id="blockInformationTable" class="table table-bordered table-hover w-100">
             <thead class="table-light">
                 <tr>
                     <th>Information Type</th>
@@ -28,126 +26,21 @@
                 @endforeach
             </tbody>
         </table>
-</div>
-
-<!-- Add Block Information Modal -->
-<div class="modal fade" id="addBlockInformationModal" tabindex="-1" aria-labelledby="addBlockInformationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="addBlockInformationModalLabel">Add Block Information</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="addBlockInformationForm" method="POST" action="{{ route('block-information.store') }}">
-                @csrf
-                <input type="hidden" name="block_id" value="{{ $block->id }}">
-                <div class="modal-body">
-                    <div id="addBlockInformationMessage" class="alert d-none" role="alert"></div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="information_type_id" class="form-label">Information Type <span class="text-danger">*</span></label>
-                                <select class="form-select" id="information_type_id" name="information_type_id" required>
-                                    <option value="">Select Information Type</option>
-                                    @if(isset($blockInformationTypes) && $blockInformationTypes->count() > 0)
-                                        @foreach($blockInformationTypes as $infoType)
-                                            <option value="{{ $infoType->id }}">{{ $infoType->name }}</option>
-                                        @endforeach
-                                    @else
-                                        <option value="" disabled>No information types available</option>
-                                    @endif
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="ph-x align-bottom me-1"></i> Cancel
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ph-floppy-disk align-bottom me-1"></i> Save Information
-                    </button>
-                </div>
-            </form>
+    </div>
+@else
+    <div class="text-center py-4">
+        <div class="text-muted">
+            <i class="ph-info font-size-24 mb-2"></i>
+            <p>No information available for this block.</p>
         </div>
     </div>
-</div>
+@endif
 
-<!-- Edit Block Information Modal -->
-<div class="modal fade" id="editBlockInformationModal" tabindex="-1" aria-labelledby="editBlockInformationModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="editBlockInformationModalLabel">Edit Block Information</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            @php
-                $usedTypeIds = isset($blockInformation) ? $blockInformation->pluck('information_type_id')->toArray() : [];
-            @endphp
-            <form id="editBlockInformationForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="block_id" value="{{ $block->id }}">
-                <div id="editBlockInformationMessage" class="alert d-none" role="alert"></div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="edit_information_type_id" class="form-label">Information Type <span class="text-danger">*</span></label>
-                                <select class="form-select" id="edit_information_type_id" name="information_type_id" required>
-                                    <option value="">Select Information Type</option>
-                                    @if(isset($blockInformationTypes) && $blockInformationTypes->count() > 0)
-                                        @foreach($blockInformationTypes as $infoType)
-                                            <option value="{{ $infoType->id }}"
-                                                @if(in_array($infoType->id, $usedTypeIds)) disabled @endif>
-                                                {{ $infoType->name }}@if(in_array($infoType->id, $usedTypeIds)) (Already added)@endif
-                                            </option>
-                                        @endforeach
-                                    @else
-                                        <option value="" disabled>No information types available</option>
-                                    @endif
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label for="edit_description" class="form-label">Description <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="edit_description" name="description" rows="4" required></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="ph-x align-bottom me-1"></i> Cancel
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ph-floppy-disk align-bottom me-1"></i> Update Information
-                        </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-@push('scripts')
-<!-- DataTables CSS -->
+<!-- DataTables CSS and JS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
 
-<!-- DataTables JS -->
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
@@ -162,271 +55,47 @@
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
 
+@push('scripts')
 <script>
-let blockInformationDataTable;
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.jQuery && $('#blockInformationTable').length) {
-        blockInformationDataTable = $('#blockInformationTable').DataTable({
+$(document).ready(function() {
+    // Initialize DataTable for block information
+    if ($('#blockInformationTable').length) {
+        $('#blockInformationTable').DataTable({
             responsive: true,
             dom: 'Bfrtip',
             buttons: [
                 'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
             ],
+            autoWidth: false,
+            scrollX: true,
+            scrollCollapse: true,
+            order: [[2, 'desc']], // default sort by Added Date (newest first)
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
             language: {
                 search: "Search:",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                infoEmpty: "No entries to show",
-                infoFiltered: "(filtered from _MAX_ total entries)",
-                zeroRecords: "No matching records found",
+                lengthMenu: "Show _MENU_ information per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ information",
+                infoEmpty: "No information found",
+                infoFiltered: "(filtered from _MAX_ total information)",
+                zeroRecords: "No information found",
                 paginate: {
                     first: "First",
                     last: "Last",
                     next: "Next",
                     previous: "Previous"
                 }
-            }
-        });
-    }
-
-    // Add event listeners for modal close events
-    document.getElementById('addBlockInformationModal').addEventListener('hidden.bs.modal', function() {
-        // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
-        setTimeout(() => {
-            refreshBlockInformationTable();
-        }, 100);
-    });
-
-    document.getElementById('editBlockInformationModal').addEventListener('hidden.bs.modal', function() {
-        // Refresh the DataTable when modal is closed (with small delay to ensure modal is fully closed)
-        setTimeout(() => {
-            refreshBlockInformationTable();
-        }, 100);
-    });
-
-    // Function to refresh the DataTable
-    window.refreshBlockInformationTable = function() {
-        if (blockInformationDataTable) {
-            // Get the current block ID from the form
-            const blockId = document.querySelector('input[name="block_id"]').value;
-            
-            // Fetch fresh data
-            fetch(`/block-information/block/${blockId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Clear existing data
-                        blockInformationDataTable.clear();
-                        
-                        // Add new data
-                        data.data.forEach(function(info) {
-                            blockInformationDataTable.row.add([
-                                '<span class="fw-semibold">' + (info.information_type ? info.information_type.name : 'N/A') + '</span>',
-                                (info.description && info.description.length > 50 ? info.description.substring(0, 50) + '...' : info.description) || 'No description provided',
-                                info.created_at ? new Date(info.created_at).toLocaleDateString('en-US', { 
-                                    year: 'numeric', 
-                                    month: 'short', 
-                                    day: '2-digit' 
-                                }) : 'N/A',
-                                '<button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation(' + info.id + ')">' +
-                                    '<i class="ph-pencil"></i> Edit' +
-                                '</button> ' +
-                                '<button class="btn btn-sm btn-outline-danger" onclick="deleteBlockInformation(' + info.id + ')">' +
-                                    '<i class="ph-trash"></i> Delete' +
-                                '</button>'
-                            ]);
-                        });
-                        
-                        // Redraw the table
-                        blockInformationDataTable.draw();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error refreshing table:', error);
+            },
+            initComplete: function() {
+                // Increase search box size
+                $('.dataTables_filter input').addClass('form-control').css({
+                    'width': '300px',
+                    'height': '38px',
+                    'font-size': '14px'
                 });
-        }
-    };
-    // Function to edit block information
-    window.editBlockInformation = function(id) {
-        // Fetch the block information data
-        fetch(`/block-information/${id}/edit`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const info = data.data;
-                    // Enable all options first
-                    const select = document.getElementById('edit_information_type_id');
-                    for (let i = 0; i < select.options.length; i++) {
-                        select.options[i].disabled = false;
-                    }
-                    // Disable used types except the current one
-                    const usedTypeIds = @json($usedTypeIds);
-                    for (let i = 0; i < select.options.length; i++) {
-                        const opt = select.options[i];
-                        if (usedTypeIds.includes(parseInt(opt.value)) && parseInt(opt.value) !== info.information_type_id) {
-                            opt.disabled = true;
-                            opt.text = opt.text.replace(' (Already added)', '') + ' (Already added)';
-                        } else if (parseInt(opt.value) === info.information_type_id) {
-                            opt.disabled = false;
-                            opt.text = opt.text.replace(' (Already added)', '');
-                        }
-                    }
-                    select.value = info.information_type_id;
-                    document.getElementById('edit_description').value = info.description;
-                    document.getElementById('editBlockInformationForm').action = `/block-information/${id}`;
-                    // Show the edit modal
-                    const editModal = new bootstrap.Modal(document.getElementById('editBlockInformationModal'));
-                    editModal.show();
-                } else {
-                    alert('Error loading information: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error loading information');
-            });
-    }
-
-    // Function to delete block information
-    window.deleteBlockInformation = function(id) {
-        if (confirm('Are you sure you want to delete this information? This action cannot be undone.')) {
-            fetch(`/block-information/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Add a message area if not present
-                let messageDiv = document.getElementById('blockInformationDeleteMessage');
-                if (!messageDiv) {
-                    messageDiv = document.createElement('div');
-                    messageDiv.id = 'blockInformationDeleteMessage';
-                    messageDiv.className = 'alert d-none';
-                    document.body.appendChild(messageDiv);
-                }
-                if (data.success) {
-                    messageDiv.className = 'alert alert-success';
-                    messageDiv.textContent = 'Block information deleted successfully!';
-                    messageDiv.classList.remove('d-none');
-                    // Refresh the DataTable instead of reloading the page
-                    refreshBlockInformationTable();
-                } else {
-                    messageDiv.className = 'alert alert-danger';
-                    messageDiv.textContent = data.message || 'Error deleting information.';
-                    messageDiv.classList.remove('d-none');
-                }
-            })
-            .catch(error => {
-                let messageDiv = document.getElementById('blockInformationDeleteMessage');
-                if (!messageDiv) {
-                    messageDiv = document.createElement('div');
-                    messageDiv.id = 'blockInformationDeleteMessage';
-                    messageDiv.className = 'alert d-none';
-                    document.body.appendChild(messageDiv);
-                }
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = 'Error deleting information';
-                messageDiv.classList.remove('d-none');
-            });
-        }
-    }
-
-    // Handle form submission for add block information
-    document.getElementById('addBlockInformationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        let messageDiv = document.getElementById('addBlockInformationMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'addBlockInformationMessage';
-            messageDiv.className = 'alert d-none';
-            this.prepend(messageDiv);
-        }
-        messageDiv.classList.add('d-none');
-
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Block information added successfully!';
-                messageDiv.classList.remove('d-none');
-                this.reset();
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addBlockInformationModal'));
-                    if (modal) modal.hide();
-                    // DataTable will refresh automatically when modal closes
-                }, 800);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = data.message || 'Error adding information.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(error => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error adding information';
-            messageDiv.classList.remove('d-none');
         });
-    });
-
-    // Handle form submission for edit block information
-    document.getElementById('editBlockInformationForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        // Add a message area if not present
-        let messageDiv = document.getElementById('editBlockInformationMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'editBlockInformationMessage';
-            messageDiv.className = 'alert d-none';
-            this.prepend(messageDiv);
-        }
-        messageDiv.classList.add('d-none');
-
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Block information updated successfully!';
-                messageDiv.classList.remove('d-none');
-                // Close the modal after a short delay, then refresh the table
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editBlockInformationModal'));
-                    if (modal) modal.hide();
-                    // DataTable will refresh automatically when modal closes
-                }, 800);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = data.message || 'Error updating information.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(error => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error updating information';
-            messageDiv.classList.remove('d-none');
-        });
-    });
-
+    }
 });
 </script>
 @endpush
