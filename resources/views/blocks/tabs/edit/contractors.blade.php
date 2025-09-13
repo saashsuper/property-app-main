@@ -155,7 +155,147 @@
 
 @push('scripts')
 <script>
+let contractorDataTable;
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable with proper existence checking
+    if (window.jQuery && $('#contractorTable').length) {
+        // Check if DataTable is already initialized
+        if (!$.fn.DataTable.isDataTable('#contractorTable')) {
+            contractorDataTable = $('#contractorTable').DataTable({
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+                ],
+                autoWidth: false,
+                scrollX: true,
+                scrollCollapse: true,
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    zeroRecords: "No Contractor Informations found",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                },
+                initComplete: function() {
+                    // Increase search box size
+                    $('.dataTables_filter input').addClass('form-control').css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px'
+                    });
+                }
+            });
+        } else {
+            // Get existing DataTable instance
+            contractorDataTable = $('#contractorTable').DataTable();
+        }
+    }
+
+    // Function to refresh the DataTable
+    window.refreshBlockContractorsTable = function() {
+        if (contractorDataTable) {
+            // Get the current block ID from the form
+            const blockId = document.querySelector('input[name="block_id"]').value;
+            
+            // Fetch fresh data
+            fetch(`/block-contractors/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        contractorDataTable.clear();
+                        
+                        // Add new data
+                        data.data.forEach(function(contractor) {
+                            const statusBadge = contractor.status == 1 
+                                ? '<span class="badge bg-success">Default</span>'
+                                : '<span class="badge bg-info">Active</span>';
+                            
+                            contractorDataTable.row.add([
+                                contractor.contractor_name || 'N/A',
+                                contractor.contractor_email || 'N/A',
+                                contractor.contractor_type_name || 'N/A',
+                                statusBadge,
+                                '<button class="btn btn-sm btn-outline-secondary me-1 edit-contractor-btn" data-id="' + contractor.id + '">Edit</button> ' +
+                                '<button class="btn btn-sm btn-outline-danger delete-contractor-btn" data-id="' + contractor.id + '">Delete</button>'
+                            ]);
+                        });
+                        
+                        // Redraw the table
+                        contractorDataTable.draw();
+                        
+                        // Re-attach event listeners for new buttons
+                        attachContractorEventListeners();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing table:', error);
+                });
+        }
+    };
+
+    // Function to attach event listeners to contractor buttons
+    function attachContractorEventListeners() {
+        // Edit Contractor logic
+        document.querySelectorAll('.edit-contractor-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var rowId = this.getAttribute('data-id');
+                fetch(`/block-contractors/${rowId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.contractor) {
+                            document.getElementById('edit_contractor_row_id').value = rowId;
+                            document.getElementById('edit_contract_type_id').value = data.contractor.contractor_type_id;
+                            document.getElementById('edit_contractor_id').value = data.contractor.contractor_id;
+                            document.getElementById('edit_default_contractor').checked = data.contractor.status == 1;
+                            var modal = new bootstrap.Modal(document.getElementById('editContractorModal'));
+                            modal.show();
+                        } else {
+                            alert('Could not fetch contractor details.');
+                        }
+                    })
+                    .catch(() => alert('Could not fetch contractor details.'));
+            });
+        });
+
+        // Delete Contractor logic
+        document.querySelectorAll('.delete-contractor-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var rowId = this.getAttribute('data-id');
+                if (confirm('Are you sure you want to delete this contractor?')) {
+                    fetch(`/block-contractors/${rowId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Contractor deleted successfully!');
+                            // Refresh the DataTable instead of reloading the page
+                            refreshBlockContractorsTable();
+                        } else {
+                            alert(data.message || 'Error deleting contractor.');
+                        }
+                    })
+                    .catch(() => alert('Error deleting contractor.'));
+                }
+            });
+        });
+    }
+
+    // Initial attachment of event listeners
+    attachContractorEventListeners();
     const form = document.getElementById('addContractorForm');
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -170,38 +310,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Tab switching code removed
                 var modal = bootstrap.Modal.getInstance(document.getElementById('addContractorModal'));
                 modal.hide();
-                // DataTable will refresh automatically when modal closes
+                // Refresh the DataTable instead of reloading the page
+                refreshBlockContractorsTable();
             } else {
                 alert(data.message || 'Error adding contractor.');
             }
         })
         .catch(() => {
             alert('Error adding contractor.');
-        });
-    });
-
-    // Edit Contractor logic
-    document.querySelectorAll('.edit-contractor-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var rowId = this.getAttribute('data-id');
-            fetch(`/block-contractors/${rowId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.contractor) {
-                        document.getElementById('edit_contractor_row_id').value = rowId;
-                        document.getElementById('edit_contract_type_id').value = data.contractor.contractor_type_id;
-                        document.getElementById('edit_contractor_id').value = data.contractor.contractor_id;
-                        document.getElementById('edit_default_contractor').checked = data.contractor.status == 1;
-                        var modal = new bootstrap.Modal(document.getElementById('editContractorModal'));
-                        modal.show();
-                    } else {
-                        alert('Could not fetch contractor details.');
-                    }
-                })
-                .catch(() => alert('Could not fetch contractor details.'));
         });
     });
 
@@ -225,11 +343,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.className = 'alert alert-success mb-2';
                 messageDiv.textContent = 'Contractor updated successfully!';
                 messageDiv.classList.remove('d-none');
-                // Tab switching code removed
                 setTimeout(() => {
                     var modal = bootstrap.Modal.getInstance(document.getElementById('editContractorModal'));
                     modal.hide();
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockContractorsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger mb-2';
@@ -239,69 +357,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(() => alert('Error updating contractor.'));
     });
-
-    // Delete Contractor logic
-    document.querySelectorAll('.delete-contractor-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var rowId = this.getAttribute('data-id');
-            if (confirm('Are you sure you want to delete this contractor?')) {
-                fetch(`/block-contractors/${rowId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Tab switching code removed
-                        alert('Contractor deleted successfully!');
-                        // DataTable will refresh automatically when modal closes
-                    } else {
-                        alert(data.message || 'Error deleting contractor.');
-                    }
-                })
-                .catch(() => alert('Error deleting contractor.'));
-            }
-        });
-    });
 });
 
-$(document).ready(function() {
-    $('#contractorTable').DataTable({
-        responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-        ],
-        autoWidth: false,
-        scrollX: true,
-        scrollCollapse: true,
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            zeroRecords: "No Contractor Informations found",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        },
-        initComplete: function() {
-            // Increase search box size
-            $('.dataTables_filter input').addClass('form-control').css({
-                'width': '300px',
-                'height': '38px',
-                'font-size': '14px'
-            });
-        }
-    });
-});
-
-// Tab switching code removed
 </script>
 @endpush

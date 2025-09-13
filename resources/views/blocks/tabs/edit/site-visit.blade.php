@@ -329,9 +329,14 @@
 </style>
 
 <script>
+let siteVisitsDataTable;
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize DataTable
-    const siteVisitsTable = $('#siteVisitsTable').DataTable({
+    // Initialize DataTable with proper existence checking
+    if (window.jQuery && $('#siteVisitsTable').length) {
+        // Check if DataTable is already initialized
+        if (!$.fn.DataTable.isDataTable('#siteVisitsTable')) {
+            siteVisitsDataTable = $('#siteVisitsTable').DataTable({
         responsive: true,
         dom: 'Bfrtip',
         buttons: [
@@ -376,6 +381,244 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+        } else {
+            // Get existing DataTable instance
+            siteVisitsDataTable = $('#siteVisitsTable').DataTable();
+        }
+    }
+
+    // Function to refresh the DataTable
+    window.refreshBlockVisitsTable = function() {
+        if (siteVisitsDataTable) {
+            // Get the current block ID from the form
+            const blockId = {{ $block->id }};
+            
+            // Fetch fresh data
+            fetch(`/block-visits/block/${blockId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear existing data
+                        siteVisitsDataTable.clear();
+                        
+                        // Add new data
+                        data.data.forEach(function(visit) {
+                            // Determine status
+                            let status = 'Scheduled';
+                            if (visit.end_date_time) {
+                                status = 'Completed';
+                            } else if (visit.start_date_time) {
+                                status = 'In Progress';
+                            }
+                            
+                            const statusBadge = status === 'Completed' 
+                                ? '<span class="badge bg-success">Completed</span>'
+                                : status === 'In Progress' 
+                                ? '<span class="badge bg-warning">In Progress</span>'
+                                : '<span class="badge bg-info">Scheduled</span>';
+                            
+                            const scheduledDateTime = visit.scheduled_date_time 
+                                ? new Date(visit.scheduled_date_time).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                })
+                                : 'N/A';
+                            
+                            const notes = visit.notes && visit.notes.length > 50 
+                                ? visit.notes.substring(0, 50) + '...' 
+                                : visit.notes || 'N/A';
+                            
+                            siteVisitsDataTable.row.add([
+                                '<a href="#" class="text-primary fw-bold view-site-visit-details" data-visit-id="' + visit.id + '" style="text-decoration: none;">' + (visit.ref_no || 'N/A') + '</a>',
+                                scheduledDateTime,
+                                visit.user_name || 'N/A',
+                                visit.job_reason_name || 'N/A',
+                                statusBadge,
+                                notes,
+                                '<button class="btn btn-sm btn-outline-primary edit-site-visit" data-visit-id="' + visit.id + '">Edit</button> ' +
+                                '<button class="btn btn-sm btn-outline-danger delete-site-visit" data-visit-id="' + visit.id + '">Delete</button>'
+                            ]);
+                        });
+                        
+                        // Redraw the table
+                        siteVisitsDataTable.draw();
+                        
+                        // Re-attach event listeners for new buttons
+                        attachSiteVisitEventListeners();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error refreshing table:', error);
+                });
+        }
+    };
+
+    // Function to attach event listeners to site visit buttons
+    function attachSiteVisitEventListeners() {
+        // Edit Site Visit
+        document.querySelectorAll('.edit-site-visit').forEach(button => {
+            button.addEventListener('click', function() {
+                const visitId = this.getAttribute('data-visit-id');
+                
+                fetch(`/block-visits/${visitId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const visit = data.data;
+                            const scheduledDateTime = new Date(visit.scheduled_date_time);
+                            
+                            // Get the user from the team relationship
+                            let assignedUser = null;
+                            if (visit.team && visit.team.length > 0) {
+                                assignedUser = visit.team[0].user_id;
+                            } else if (visit.created_by) {
+                                assignedUser = visit.created_by;
+                            }
+                            
+                            document.getElementById('edit_visit_id').value = visit.id;
+                            document.getElementById('edit_user_id').value = assignedUser || '';
+                            document.getElementById('edit_scheduled_date').value = scheduledDateTime.toISOString().split('T')[0];
+                            document.getElementById('edit_scheduled_time').value = scheduledDateTime.toTimeString().slice(0, 5);
+                            document.getElementById('edit_job_reason_id').value = visit.job_reason_id;
+                            document.getElementById('edit_notes').value = visit.notes;
+                            
+                            $('#editSiteVisitModal').modal('show');
+                        } else {
+                            alert('Could not fetch site visit details: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching site visit details:', error);
+                        alert('Error fetching site visit details: ' + error.message);
+                    });
+            });
+        });
+
+        // Delete Site Visit
+        document.querySelectorAll('.delete-site-visit').forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this site visit?')) {
+                    const visitId = this.getAttribute('data-visit-id');
+                    
+                    fetch(`/block-visits/${visitId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Site visit deleted successfully!');
+                            // Refresh the DataTable instead of reloading the page
+                            refreshBlockVisitsTable();
+                        } else {
+                            alert('Error deleting site visit');
+                        }
+                    })
+                    .catch(error => {
+                        alert('Error deleting site visit');
+                    });
+                }
+            });
+        });
+
+        // View Site Visit Details
+        document.querySelectorAll('.view-site-visit-details').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const visitId = this.getAttribute('data-visit-id');
+                
+                fetch(`/block-visits/${visitId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const visit = data.data;
+                            
+                            // Populate modal with visit details
+                            document.getElementById('detail_ref_no').textContent = visit.ref_no || 'N/A';
+                            
+                            // Determine status
+                            let status = 'Scheduled';
+                            if (visit.end_date_time) {
+                                status = 'Completed';
+                            } else if (visit.start_date_time) {
+                                status = 'In Progress';
+                            }
+                            document.getElementById('detail_status').innerHTML = `<span class="badge bg-${status === 'Completed' ? 'success' : status === 'In Progress' ? 'warning' : 'info'}">${status}</span>`;
+                            
+                            // Format scheduled date time
+                            const scheduledDateTime = visit.scheduled_date_time ? new Date(visit.scheduled_date_time).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'N/A';
+                            document.getElementById('detail_scheduled_date_time').textContent = scheduledDateTime;
+                            
+                            // Get assigned user
+                            let assignedUser = 'N/A';
+                            if (visit.team && visit.team.length > 0) {
+                                assignedUser = visit.team[0].user ? visit.team[0].user.name : 'N/A';
+                            } else if (visit.createdByUser) {
+                                assignedUser = visit.createdByUser.name;
+                            }
+                            document.getElementById('detail_user').textContent = assignedUser;
+                            
+                            // Job reason
+                            document.getElementById('detail_job_reason').textContent = visit.jobReason ? visit.jobReason.name : 'N/A';
+                            
+                            // Created by
+                            document.getElementById('detail_created_by').textContent = visit.createdByUser ? visit.createdByUser.name : 'N/A';
+                            
+                            // Start date time
+                            const startDateTime = visit.start_date_time ? new Date(visit.start_date_time).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'N/A';
+                            document.getElementById('detail_start_date_time').textContent = startDateTime;
+                            
+                            // End date time
+                            const endDateTime = visit.end_date_time ? new Date(visit.end_date_time).toLocaleString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            }) : 'N/A';
+                            document.getElementById('detail_end_date_time').textContent = endDateTime;
+                            
+                            // Notes
+                            document.getElementById('detail_notes').textContent = visit.notes || 'N/A';
+                            
+                            // Comments
+                            document.getElementById('detail_comments').textContent = visit.comment || 'N/A';
+                            
+                            // Show modal
+                            const modal = new bootstrap.Modal(document.getElementById('siteVisitDetailsModal'));
+                            modal.show();
+                        } else {
+                            alert('Could not fetch site visit details: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching site visit details:', error);
+                        alert('Error fetching site visit details: ' + error.message);
+                    });
+            });
+        });
+    }
+
+    // Initial attachment of event listeners
+    attachSiteVisitEventListeners();
 
     // Add Site Visit Form Submission
     document.getElementById('addSiteVisitForm').addEventListener('submit', function(e) {
@@ -405,12 +648,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showMessage('addSiteVisitMessage', 'success', data.message);
                 setTimeout(() => {
                     $('#addSiteVisitModal').modal('hide');
-                    // Store current tab and reload page
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        // Tab switching code removed
-                    }
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockVisitsTable();
                 }, 1500);
             } else {
                 showMessage('addSiteVisitMessage', 'danger', data.message || 'Error scheduling site visit');
@@ -418,47 +657,6 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             showMessage('addSiteVisitMessage', 'danger', 'Error scheduling site visit');
-        });
-    });
-
-    // Edit Site Visit
-    document.querySelectorAll('.edit-site-visit').forEach(button => {
-        button.addEventListener('click', function() {
-            const visitId = this.getAttribute('data-visit-id');
-            
-            fetch(`/block-visits/${visitId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const visit = data.data;
-                        const scheduledDateTime = new Date(visit.scheduled_date_time);
-                        
-                        // Get the user from the team relationship
-                        // Handle both old records (no team) and new records (with team)
-                        let assignedUser = null;
-                        if (visit.team && visit.team.length > 0) {
-                            assignedUser = visit.team[0].user_id;
-                        } else if (visit.created_by) {
-                            // Fallback to created_by for old records that don't have team members
-                            assignedUser = visit.created_by;
-                        }
-                        
-                        document.getElementById('edit_visit_id').value = visit.id;
-                        document.getElementById('edit_user_id').value = assignedUser || '';
-                        document.getElementById('edit_scheduled_date').value = scheduledDateTime.toISOString().split('T')[0];
-                        document.getElementById('edit_scheduled_time').value = scheduledDateTime.toTimeString().slice(0, 5);
-                        document.getElementById('edit_job_reason_id').value = visit.job_reason_id;
-                        document.getElementById('edit_notes').value = visit.notes;
-                        
-                        $('#editSiteVisitModal').modal('show');
-                    } else {
-                        alert('Could not fetch site visit details: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching site visit details:', error);
-                    alert('Error fetching site visit details: ' + error.message);
-                });
         });
     });
 
@@ -490,12 +688,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 showMessage('editSiteVisitMessage', 'success', data.message);
                 setTimeout(() => {
                     $('#editSiteVisitModal').modal('hide');
-                    // Store current tab and reload page
-                    var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                    if (activeTab) {
-                        // Tab switching code removed
-                    }
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable instead of reloading the page
+                    refreshBlockVisitsTable();
                 }, 1500);
             } else {
                 showMessage('editSiteVisitMessage', 'danger', data.message || 'Error updating site visit');
@@ -504,128 +698,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             showMessage('editSiteVisitMessage', 'danger', 'Error updating site visit');
         });
-    });
-
-    // Delete Site Visit
-    document.querySelectorAll('.delete-site-visit').forEach(button => {
-        button.addEventListener('click', function() {
-            if (confirm('Are you sure you want to delete this site visit?')) {
-                const visitId = this.getAttribute('data-visit-id');
-                
-                fetch(`/block-visits/${visitId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Store current tab and reload page
-                        var activeTab = document.querySelector('.nav-link.active[data-bs-toggle="tab"]');
-                        if (activeTab) {
-                            // Tab switching code removed
-                        }
-                        // DataTable will refresh automatically when modal closes
-                    } else {
-                        alert('Error deleting site visit');
-                    }
-                })
-                .catch(error => {
-                    alert('Error deleting site visit');
-                });
-            }
-        });
-    });
-
-    // View Site Visit Details
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('view-site-visit-details')) {
-            e.preventDefault();
-            const visitId = e.target.getAttribute('data-visit-id');
-            
-            fetch(`/block-visits/${visitId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const visit = data.data;
-                        
-                        // Populate modal with visit details
-                        document.getElementById('detail_ref_no').textContent = visit.ref_no || 'N/A';
-                        
-                        // Determine status
-                        let status = 'Scheduled';
-                        if (visit.end_date_time) {
-                            status = 'Completed';
-                        } else if (visit.start_date_time) {
-                            status = 'In Progress';
-                        }
-                        document.getElementById('detail_status').innerHTML = `<span class="badge bg-${status === 'Completed' ? 'success' : status === 'In Progress' ? 'warning' : 'info'}">${status}</span>`;
-                        
-                        // Format scheduled date time
-                        const scheduledDateTime = visit.scheduled_date_time ? new Date(visit.scheduled_date_time).toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }) : 'N/A';
-                        document.getElementById('detail_scheduled_date_time').textContent = scheduledDateTime;
-                        
-                        // Get assigned user
-                        let assignedUser = 'N/A';
-                        if (visit.team && visit.team.length > 0) {
-                            assignedUser = visit.team[0].user ? visit.team[0].user.name : 'N/A';
-                        } else if (visit.createdByUser) {
-                            assignedUser = visit.createdByUser.name;
-                        }
-                        document.getElementById('detail_user').textContent = assignedUser;
-                        
-                        // Job reason
-                        document.getElementById('detail_job_reason').textContent = visit.jobReason ? visit.jobReason.name : 'N/A';
-                        
-                        // Created by
-                        document.getElementById('detail_created_by').textContent = visit.createdByUser ? visit.createdByUser.name : 'N/A';
-                        
-                        // Start date time
-                        const startDateTime = visit.start_date_time ? new Date(visit.start_date_time).toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }) : 'N/A';
-                        document.getElementById('detail_start_date_time').textContent = startDateTime;
-                        
-                        // End date time
-                        const endDateTime = visit.end_date_time ? new Date(visit.end_date_time).toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        }) : 'N/A';
-                        document.getElementById('detail_end_date_time').textContent = endDateTime;
-                        
-                        // Notes
-                        document.getElementById('detail_notes').textContent = visit.notes || 'N/A';
-                        
-                        // Comments
-                        document.getElementById('detail_comments').textContent = visit.comment || 'N/A';
-                        
-                        // Show modal
-                        const modal = new bootstrap.Modal(document.getElementById('siteVisitDetailsModal'));
-                        modal.show();
-                    } else {
-                        alert('Could not fetch site visit details: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching site visit details:', error);
-                    alert('Error fetching site visit details: ' + error.message);
-                });
-        }
     });
 });
 

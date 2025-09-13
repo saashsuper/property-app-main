@@ -87,6 +87,7 @@ class BlockContractorController extends Controller
                         'id' => $contractor->id,
                         'contractor_type_name' => $contractor->contractorType->name ?? 'N/A',
                         'contractor_name' => $contractor->contractor->name ?? 'N/A',
+                        'contractor_email' => $contractor->contractor->email ?? 'N/A',
                         'status' => $contractor->status,
                         'created_at' => $contractor->created_at,
                     ];
