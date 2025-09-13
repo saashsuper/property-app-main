@@ -866,18 +866,65 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Function to refresh the units table
-function refreshBlockUnitsTable() {
-    // Get the current DataTable instance
-    const table = $('#blockUnitsTable');
-    if ($.fn.DataTable.isDataTable('#blockUnitsTable')) {
-        // Reload the page to get fresh data
-        location.reload();
+window.refreshBlockUnitsTable = function() {
+    if (blockUnitsDataTable) {
+        // Get the current block ID from the form
+        const blockId = document.querySelector('input[name="block_id"]').value;
+        
+        // Fetch fresh data
+        fetch(`/block-units/block/${blockId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear existing data
+                    blockUnitsDataTable.clear();
+                    
+                    // Add new data
+                    data.data.forEach(function(unit) {
+                        blockUnitsDataTable.row.add([
+                            unit.unit_code || 'N/A',
+                            unit.unit_name || 'N/A',
+                            unit.block_unit_type?.name || 'N/A',
+                            unit.owners_name || 'N/A',
+                            unit.salutation || 'N/A',
+                            unit.email || 'N/A',
+                            unit.resident ? 'Yes' : 'No',
+                            unit.mobile_no || 'N/A',
+                            unit.phone_number || 'N/A',
+                            unit.letting_agent || 'N/A',
+                            unit.misc_info || 'N/A',
+                            '<button class="btn btn-sm btn-outline-primary" onclick="editUnit(' + unit.id + ')">' +
+                                '<i class="ph-pencil"></i> Edit' +
+                            '</button> ' +
+                            '<form action="/block-units/' + unit.id + '" method="POST" class="d-inline-block" onsubmit="return confirm(\'Are you sure you want to delete this unit?\');">' +
+                                '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
+                                '<input type="hidden" name="_method" value="DELETE">' +
+                                '<button type="submit" class="btn btn-sm btn-outline-danger">' +
+                                    '<i class="ph-trash"></i> Delete' +
+                                '</button>' +
+                            '</form>'
+                        ]);
+                    });
+                    
+                    // Redraw the table
+                    blockUnitsDataTable.draw();
+                    console.log('Units table refreshed with', data.data.length, 'units');
+                } else {
+                    console.error('Error refreshing units table:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching units data:', error);
+            });
     }
-}
+};
+
+// Global variable to store DataTable instance
+let blockUnitsDataTable;
 
 // DataTables for Units
 $(document).ready(function() {
-    $('#blockUnitsTable').DataTable({
+    blockUnitsDataTable = $('#blockUnitsTable').DataTable({
         responsive: true,
         dom: 'rtip', // Removed 'f' (filter/search) to remove the search box on the left
         order: [[0, 'asc']], // default sort by Unit Code
