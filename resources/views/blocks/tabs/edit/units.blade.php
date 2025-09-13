@@ -865,22 +865,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Global variable to store DataTable instance
+let blockUnitsDataTable;
+
 // Function to refresh the units table
 window.refreshBlockUnitsTable = function() {
+    console.log('refreshBlockUnitsTable called');
+    console.log('blockUnitsDataTable:', blockUnitsDataTable);
+    
     if (blockUnitsDataTable) {
         // Get the current block ID from the form
         const blockId = document.querySelector('input[name="block_id"]').value;
+        console.log('Block ID:', blockId);
         
         // Fetch fresh data
         fetch(`/block-units/block/${blockId}`)
-            .then(response => response.json())
+            .then(response => {
+                console.log('API response status:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('API response data:', data);
                 if (data.success) {
                     // Clear existing data
                     blockUnitsDataTable.clear();
+                    console.log('DataTable cleared');
                     
                     // Add new data
                     data.data.forEach(function(unit) {
+                        console.log('Adding unit:', unit);
                         blockUnitsDataTable.row.add([
                             unit.unit_code || 'N/A',
                             unit.unit_name || 'N/A',
@@ -916,11 +929,10 @@ window.refreshBlockUnitsTable = function() {
             .catch(error => {
                 console.error('Error fetching units data:', error);
             });
+    } else {
+        console.error('blockUnitsDataTable is not initialized');
     }
 };
-
-// Global variable to store DataTable instance
-let blockUnitsDataTable;
 
 // DataTables for Units
 $(document).ready(function() {
