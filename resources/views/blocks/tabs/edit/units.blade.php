@@ -582,8 +582,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
                     if (modal) modal.hide();
-                    // Tab switching code removed
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the units table to show the new unit
+                    refreshBlockUnitsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -628,8 +628,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editUnitModal'));
                     if (modal) modal.hide();
-                    // Tab switching code removed
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the units table to show the updated unit
+                    refreshBlockUnitsTable();
                 }, 800);
             } else {
                 messageDiv.className = 'alert alert-danger';
@@ -810,11 +810,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 console.log('Found units tab:', unitsTab);
                                 unitsTab.click();
                                 
-                                // Reload page after a short delay to show new units
-                                // DataTable will refresh automatically when modal closes
+                                // Refresh the units table to show new units
+                                refreshBlockUnitsTable();
                             } else {
                                 console.log('Units tab not found, just reloading page');
-                                // If tab not found, DataTable will refresh automatically
+                                // Refresh the units table
+                                refreshBlockUnitsTable();
                             }
                         }, 300);
                     }, 3000);
@@ -863,6 +864,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Function to refresh the units table
+function refreshBlockUnitsTable() {
+    // Get the current DataTable instance
+    const table = $('#blockUnitsTable');
+    if ($.fn.DataTable.isDataTable('#blockUnitsTable')) {
+        // Reload the page to get fresh data
+        location.reload();
+    }
+}
 
 // DataTables for Units
 $(document).ready(function() {
