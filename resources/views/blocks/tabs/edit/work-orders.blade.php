@@ -306,44 +306,52 @@ $(document).ready(function() {
         // Check if table exists and has proper structure
         const table = $('#workOrdersTable');
         if (table.length && table.find('thead tr th').length === 6) {
-            // Destroy existing DataTable if it exists
-            if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
-                table.DataTable().destroy();
-            }
+            // Check if there are actual data rows (not just the empty state row)
+            const dataRows = table.find('tbody tr').not(':has(td[colspan])');
             
-            // Initialize DataTable
-            table.DataTable({
-                responsive: true,
-                dom: 'Bfrtip',
-                buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-                ],
-                autoWidth: false,
-                scrollX: true,
-                scrollCollapse: true,
-                language: {
-                    search: "Search:",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    infoEmpty: "No work orders found",
-                    infoFiltered: "(filtered from _MAX_ total entries)",
-                    zeroRecords: "No work orders found",
-                    paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
-                    }
-                },
-                initComplete: function() {
-                    // Increase search box size
-                    $('.dataTables_filter input').addClass('form-control').css({
-                        'width': '300px',
-                        'height': '38px',
-                        'font-size': '14px'
-                    });
+            if (dataRows.length > 0) {
+                // Destroy existing DataTable if it exists
+                if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
+                    table.DataTable().destroy();
                 }
-            });
+                
+                // Initialize DataTable only if there are data rows
+                table.DataTable({
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+                    ],
+                    autoWidth: false,
+                    scrollX: true,
+                    scrollCollapse: true,
+                    language: {
+                        search: "Search:",
+                        lengthMenu: "Show _MENU_ entries",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        infoEmpty: "No work orders found",
+                        infoFiltered: "(filtered from _MAX_ total entries)",
+                        zeroRecords: "No work orders found",
+                        paginate: {
+                            first: "First",
+                            last: "Last",
+                            next: "Next",
+                            previous: "Previous"
+                        }
+                    },
+                    initComplete: function() {
+                        // Increase search box size
+                        $('.dataTables_filter input').addClass('form-control').css({
+                            'width': '300px',
+                            'height': '38px',
+                            'font-size': '14px'
+                        });
+                    }
+                });
+                console.log('DataTable initialized for work orders with', dataRows.length, 'rows');
+            } else {
+                console.log('No work order data rows found, skipping DataTable initialization');
+            }
         } else {
             console.warn('Work orders table not found or has incorrect structure');
         }
