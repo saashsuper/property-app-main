@@ -18,7 +18,7 @@
                         <i class="ph-printer"></i>
                     </a>
                 </div>
-                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#unitModal" onclick="openUnitModal('add')">
                     <i class="ph-plus align-bottom me-1"></i> Add Unit
                 </button>
                 <button class="btn btn-success custom-toggle" data-bs-toggle="modal" data-bs-target="#uploadUnitModal">
@@ -77,18 +77,21 @@
     </div>
 </div>
 
-<!-- Add Unit Modal -->
-<div class="modal fade" id="addUnitModal" tabindex="-1" aria-labelledby="addUnitModalLabel" aria-hidden="true">
+<!-- Unit Modal (Add/Edit) -->
+<div class="modal fade" id="unitModal" tabindex="-1" aria-labelledby="unitModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="addUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Unit</h5>
+                <h5 class="modal-title" id="unitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Unit</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
-            <form id="addUnitForm" method="POST" action="{{ route('block-units.store') }}">
+            <form id="unitForm" method="POST">
                 @csrf
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
+                    <!-- Message container -->
+                    <div id="unitMessage"></div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="block_building_id" class="form-label">Building/Core <span class="text-danger">*</span></label>
@@ -192,7 +195,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="unitSubmitBtn">
                         <i class="ph-check me-1"></i> Save
                     </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -204,133 +207,6 @@
     </div>
 </div>
 
-<!-- Edit Unit Modal -->
-<div class="modal fade" id="editUnitModal" tabindex="-1" aria-labelledby="editUnitModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="editUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Unit</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
-            </div>
-            <form id="editUnitForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="block_id" value="{{ $block->id }}">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_block_building_id" class="form-label">Building/Core <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_block_building_id" name="block_building_id" required>
-                                <option value="">Select Building/Core</option>
-                                @foreach($block->buildings as $building)
-                                    <option value="{{ $building->id }}">{{ $building->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_block_unit_type_id" class="form-label">Unit Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_block_unit_type_id" name="block_unit_type_id" required>
-                                <option value="">Select Unit Type</option>
-                                @foreach($blockUnitTypes as $type)
-                                    <option value="{{ $type->id }}">{{ $type->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_unit_code" class="form-label">Unit Code <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_unit_code" name="unit_code" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_unit_name" class="form-label">Unit Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_unit_name" name="unit_name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_owners_name" class="form-label">Owner's Name</label>
-                            <input type="text" class="form-control" id="edit_owners_name" name="owners_name">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_salutation" class="form-label">Salutation</label>
-                            <select class="form-select" id="edit_salutation" name="salutation">
-                                <option value="">Select Salutation</option>
-                                @foreach(\App\Models\Salutation::orderBy('name')->get() as $salutation)
-                                    <option value="{{ $salutation->name }}">{{ $salutation->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="edit_email" name="email">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_resident" class="form-label">Resident</label>
-                            <select class="form-select" id="edit_resident" name="resident">
-                                <option value="1">Yes</option>
-                                <option value="0">No</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_mobile_no" class="form-label">Mobile Number</label>
-                            <input type="number" class="form-control" id="edit_mobile_no" name="mobile_no" min="0" max="99999999999999999999">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_phone_number" class="form-label">Phone Number</label>
-                            <input type="number" class="form-control" id="edit_phone_number" name="phone_number" min="0" max="99999999999999999999">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_letting_agent" class="form-label">Letting Agent</label>
-                            <input type="text" class="form-control" id="edit_letting_agent" name="letting_agent">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="edit_misc_info" class="form-label">Miscellaneous Info</label>
-                            <textarea class="form-control" id="edit_misc_info" name="misc_info" rows="2"></textarea>
-                        </div>
-                        
-                        <!-- Address Fields - Shown when Resident = No -->
-                        <div class="col-md-6 mb-3" id="edit_address1_field" style="display: none;">
-                            <label for="edit_address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="edit_address1" name="address1">
-                        </div>
-                        <div class="col-md-6 mb-3" id="edit_address2_field" style="display: none;">
-                            <label for="edit_address2" class="form-label">Address Line 2</label>
-                            <input type="text" class="form-control" id="edit_address2" name="address2">
-                        </div>
-                        <div class="col-md-6 mb-3" id="edit_address3_field" style="display: none;">
-                            <label for="edit_address3" class="form-label">Address Line 3</label>
-                            <input type="text" class="form-control" id="edit_address3" name="address3">
-                        </div>
-                        <div class="col-md-6 mb-3" id="edit_country_field" style="display: none;">
-                            <label for="edit_country_id" class="form-label">Country <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_country_id" name="country_id">
-                                <option value="">Select Country</option>
-                                @foreach(\App\Models\Country::orderBy('country_name')->get() as $country)
-                                    <option value="{{ $country->id }}">{{ $country->country_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3" id="edit_state_field" style="display: none;">
-                            <label for="edit_state_id" class="form-label">County / State <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_state_id" name="state_id">
-                                <option value="">Select County / State</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 mb-3" id="edit_zip_field" style="display: none;">
-                            <label for="edit_zip" class="form-label">Zip / Eircode</label>
-                            <input type="text" class="form-control" id="edit_zip" name="zip">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ph-check me-1"></i> Update
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="ph-x me-1"></i> Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- Upload Unit Modal -->
 <div class="modal fade" id="uploadUnitModal" tabindex="-1" aria-labelledby="uploadUnitModalLabel" aria-hidden="true">
@@ -419,539 +295,648 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#blockUnitsTable').DataTable({
-        responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
-        ],
-        autoWidth: false,
-        scrollX: true,
-        scrollCollapse: true,
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            zeroRecords: "No Unit Informations found",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
-        },
-        initComplete: function() {
-            // Increase search box size
-            $('.dataTables_filter input').addClass('form-control').css({
-                'width': '300px',
-                'height': '38px',
-                'font-size': '14px'
-            });
-        }
-    });
-});
-</script>
 @endpush
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to toggle address fields based on resident selection
-    function toggleAddressFields(residentSelectId, isEdit = false) {
-        const residentSelect = document.getElementById(residentSelectId);
+/**
+ * Units Management jQuery Implementation
+ * 
+ * This script handles all unit-related functionality including:
+ * - Add/Edit/Upload unit operations
+ * - DataTable management with auto-refresh
+ * - Country-state dropdown dependency
+ * - Address field visibility toggling
+ * - Form validation and AJAX submissions
+ */
+
+$(document).ready(function() {
+    // ========================================
+    // GLOBAL VARIABLES
+    // ========================================
+    
+    /** @var {DataTable} blockUnitsDataTable - Global DataTable instance for units table */
+    let blockUnitsDataTable;
+    
+    // ========================================
+    // UTILITY FUNCTIONS
+    // ========================================
+    
+    /**
+     * Loads states/provinces based on selected country
+     * 
+     * @param {string|number} countryId - The ID of the selected country
+     * @param {string} stateSelectId - The ID of the state dropdown element
+     * 
+     * This function makes an AJAX call to fetch states for the given country
+     * and populates the state dropdown with the response data.
+     */
+    
+    
+    /**
+     * Shows a message in a modal form
+     * 
+     * @param {string} containerId - The ID of the message container
+     * @param {string} type - The type of message ('success' or 'danger')
+     * @param {string} message - The message text to display
+     * 
+     * Creates or updates a message div in the specified form and shows it.
+     * Automatically removes existing alert classes and applies the new type.
+     */
+    function showMessage(containerId, type, message) {
+        let $messageDiv = $('#' + containerId);
         
-        if (residentSelect) {
-            const prefix = isEdit ? 'edit_' : '';
-            const addressFields = [
-                `${prefix}address1_field`,
-                `${prefix}address2_field`, 
-                `${prefix}address3_field`,
-                `${prefix}country_field`,
-                `${prefix}state_field`,
-                `${prefix}zip_field`
-            ];
+        // Create message div if it doesn't exist
+        if (!$messageDiv.length) {
+            $messageDiv = $(`<div id="${containerId}" class="alert d-none"></div>`);
+            $('#' + containerId.replace('Message', 'Form')).prepend($messageDiv);
+        }
+        
+        // Update message content and styling
+        $messageDiv.removeClass('alert-success alert-danger')
+                  .addClass(`alert-${type}`)
+                  .text(message)
+                  .removeClass('d-none');
+    }
+    
+    // ========================================
+    // DATATABLE INITIALIZATION
+    // ========================================
+    
+    /**
+     * Initializes the DataTable for the units table
+     * 
+     * Sets up DataTable with responsive design, pagination, and custom language settings.
+     * Prevents re-initialization if the table is already initialized.
+     */
+    function initializeDataTable() {
+        if ($('#blockUnitsTable').length) {
+            // Check if DataTable is already initialized to prevent conflicts
+            if (!$.fn.DataTable.isDataTable('#blockUnitsTable')) {
+                blockUnitsDataTable = $('#blockUnitsTable').DataTable({
+                    responsive: true,           // Enable responsive design
+                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    order: [[0, 'asc']],       // Default sort by first column (Unit Code) ascending
+                    columnDefs: [
+                        { targets: [11], orderable: false } // Actions column (last column) not sortable
+                    ],
+                    pageLength: 10,            // Default page size
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
+                    language: {
+                        lengthMenu: "Show _MENU_ units per page",
+                        info: "Showing _START_ to _END_ of _TOTAL_ units",
+                        infoEmpty: "Showing 0 to 0 of 0 units",
+                        infoFiltered: "(filtered from _MAX_ total units)",
+                        search: "Search units:",
+                        searchPlaceholder: "Search by unit code, name, owner...",
+                        paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+                    }
+                });
+            } else {
+                // Get existing DataTable instance if already initialized
+                blockUnitsDataTable = $('#blockUnitsTable').DataTable();
+            }
+        }
+    }
+    
+    /**
+     * Refreshes the DataTable with fresh data from the server
+     * 
+     * This function is exposed globally so it can be called from other parts of the application.
+     * It fetches the latest unit data for the current block and updates the DataTable.
+     * 
+     * @global
+     */
+    window.refreshBlockUnitsTable = function() {
+        console.log('refreshBlockUnitsTable called');
+        console.log('blockUnitsDataTable:', blockUnitsDataTable);
+        
+        if (blockUnitsDataTable) {
+            // Get the current block ID from the form
+            const blockId = $('input[name="block_id"]').val();
+            console.log('Block ID:', blockId);
             
-            residentSelect.addEventListener('change', function() {
-                console.log('Resident changed to:', this.value);
-                if (this.value === '0') {
-                    console.log('Showing address fields:', addressFields);
-                    // Show all address fields
-                    addressFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
-                        console.log('Looking for field:', fieldId, 'Found:', field);
-                        if (field) field.style.display = 'block';
-                    });
-                    
-                    // Set required attributes for required fields
-                    const address1Field = document.getElementById(`${prefix}address1`);
-                    const countryField = document.getElementById(`${prefix}country_id`);
-                    const stateField = document.getElementById(`${prefix}state_id`);
-                    
-                    if (address1Field) address1Field.setAttribute('required', 'required');
-                    if (countryField) countryField.setAttribute('required', 'required');
-                    if (stateField) stateField.setAttribute('required', 'required');
-                } else {
-                    // Hide all address fields
-                    addressFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
-                        if (field) field.style.display = 'none';
-                    });
-                    
-                    // Remove required attributes
-                    addressFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
-                        if (field) {
-                            const inputs = field.querySelectorAll('input, select');
-                            inputs.forEach(input => input.removeAttribute('required'));
-                        }
-                    });
+            // Fetch fresh data from the server
+            $.ajax({
+                url: `/block-units/block/${blockId}`,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    console.log('API response data:', data);
+                    if (data.success) {
+                        // Clear existing data from DataTable
+                        blockUnitsDataTable.clear();
+                        console.log('DataTable cleared');
+                        
+                        // Add new data rows to DataTable
+                        data.data.forEach(function(unit) {
+                            console.log('Adding unit:', unit);
+                            blockUnitsDataTable.row.add([
+                                unit.unit_code || 'N/A',
+                                unit.unit_name || 'N/A',
+                                unit.block_unit_type?.name || 'N/A',
+                                unit.owners_name || 'N/A',
+                                unit.salutation || 'N/A',
+                                unit.email || 'N/A',
+                                unit.resident ? 'Yes' : 'No',
+                                unit.mobile_no || 'N/A',
+                                unit.phone_number || 'N/A',
+                                unit.letting_agent || 'N/A',
+                                unit.misc_info || 'N/A',
+                                // Action buttons with inline event handlers
+                                '<button class="btn btn-sm btn-outline-primary" onclick="editUnit(' + unit.id + ')">' +
+                                    '<i class="ph-pencil"></i> Edit' +
+                                '</button> ' +
+                                '<form action="/block-units/' + unit.id + '" method="POST" class="d-inline-block" onsubmit="return confirm(\'Are you sure you want to delete this unit?\');">' +
+                                    '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
+                                    '<input type="hidden" name="_method" value="DELETE">' +
+                                    '<button type="submit" class="btn btn-sm btn-outline-danger">' +
+                                        '<i class="ph-trash"></i> Delete' +
+                                    '</button>' +
+                                '</form>'
+                            ]);
+                        });
+                        
+                        // Redraw the table to show new data
+                        blockUnitsDataTable.draw();
+                        console.log('Units table refreshed with', data.data.length, 'units');
+                    } else {
+                        console.error('Error refreshing units table:', data.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error fetching units data:', error);
                 }
             });
-        }
-    }
-    
-    // Initialize address fields toggle for Add Unit modal
-    toggleAddressFields('resident', false);
-    
-    // Initialize address fields toggle for Edit Unit modal
-    toggleAddressFields('edit_resident', true);
-    
-    // Function to load states based on country selection
-    function loadStates(countryId, stateSelectId) {
-        const stateSelect = document.getElementById(stateSelectId);
-        if (countryId && stateSelect) {
-            fetch(`/api/states/${countryId}`)
-                .then(response => response.json())
-                .then(data => {
-                    stateSelect.innerHTML = '<option value="">Select County / State</option>';
-                    if (data.success && data.states) {
-                        data.states.forEach(state => {
-                            const option = document.createElement('option');
-                            option.value = state.id;
-                            option.textContent = state.name;
-                            stateSelect.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading states:', error);
-                });
-        }
-    }
-    
-    // Add country change listeners for both modals
-    document.getElementById('country_id').addEventListener('change', function() {
-        loadStates(this.value, 'state_id');
-    });
-    
-    document.getElementById('edit_country_id').addEventListener('change', function() {
-        loadStates(this.value, 'edit_state_id');
-    });
-    
-    // Add Unit AJAX submission
-    document.getElementById('addUnitForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        let messageDiv = document.getElementById('addUnitMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'addUnitMessage';
-            messageDiv.className = 'alert d-none';
-            form.prepend(messageDiv);
-        }
-        messageDiv.classList.add('d-none');
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json().catch(() => null) || response)
-        .then(data => {
-            if (data && data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Unit added successfully!';
-                messageDiv.classList.remove('d-none');
-                form.reset();
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUnitModal'));
-                    if (modal) modal.hide();
-                    // Refresh the units table to show the new unit
-                    refreshBlockUnitsTable();
-                }, 800);
             } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = (data && data.message) || 'Error saving unit.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(() => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error saving unit';
-            messageDiv.classList.remove('d-none');
-        });
-    });
-
-    // Edit Unit AJAX submission
-    document.getElementById('editUnitForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const form = this;
-        const formData = new FormData(form);
-        let messageDiv = document.getElementById('editUnitMessage');
-        if (!messageDiv) {
-            messageDiv = document.createElement('div');
-            messageDiv.id = 'editUnitMessage';
-            messageDiv.className = 'alert d-none';
-            form.prepend(messageDiv);
+            console.error('blockUnitsDataTable is not initialized');
         }
-        messageDiv.classList.add('d-none');
-        fetch(form.action, {
+    };
+    
+    // ========================================
+    // FORM HANDLERS
+    // ========================================
+    
+    /**
+     * Handles unit form submission (both Add and Edit)
+     * 
+     * @param {string} formId - The ID of the form
+     * @param {string} modalId - The ID of the modal
+     * @param {string} messageId - The ID for the message container
+     * @param {string} successMessage - Success message to display
+     * @param {string} errorMessage - Error message to display
+     * @param {boolean} shouldReset - Whether to reset the form after success
+     */
+    function handleUnitFormSubmission(formId, modalId, messageId, successMessage, errorMessage, shouldReset = false) {
+        $('#' + formId).on('submit', function(e) {
+        e.preventDefault();
+            const $form = $(this);
+            const formData = new FormData(this);
+            
+            $.ajax({
+                url: $form.attr('action'),
             method: 'POST',
-            body: formData,
+                data: formData,
+                processData: false,        // Don't process data (for file uploads)
+                contentType: false,       // Don't set content type (let browser set it)
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                 'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json().catch(() => null) || response)
-        .then(data => {
+                },
+                success: function(data) {
             if (data && data.success) {
-                messageDiv.className = 'alert alert-success';
-                messageDiv.textContent = 'Unit updated successfully!';
-                messageDiv.classList.remove('d-none');
-                setTimeout(() => {
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUnitModal'));
-                    if (modal) modal.hide();
-                    // Refresh the units table to show the updated unit
-                    refreshBlockUnitsTable();
-                }, 800);
-            } else {
-                messageDiv.className = 'alert alert-danger';
-                messageDiv.textContent = (data && data.message) || 'Error updating unit.';
-                messageDiv.classList.remove('d-none');
-            }
-        })
-        .catch(() => {
-            messageDiv.className = 'alert alert-danger';
-            messageDiv.textContent = 'Error updating unit';
-            messageDiv.classList.remove('d-none');
-        });
-    });
-
-});
-
-function editUnit(id) {
-    fetch(`/block-units/${id}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const u = data.data;
-                document.getElementById('edit_block_building_id').value = u.block_building_id;
-                document.getElementById('edit_block_unit_type_id').value = u.block_unit_type_id;
-                document.getElementById('edit_unit_code').value = u.unit_code;
-                document.getElementById('edit_unit_name').value = u.unit_name;
-                document.getElementById('edit_owners_name').value = u.owners_name;
-                document.getElementById('edit_salutation').value = u.salutation;
-                document.getElementById('edit_email').value = u.email;
-                document.getElementById('edit_resident').value = u.resident ? '1' : '0';
-                document.getElementById('edit_mobile_no').value = u.mobile_no;
-                document.getElementById('edit_phone_number').value = u.phone_number;
-                document.getElementById('edit_letting_agent').value = u.letting_agent;
-                document.getElementById('edit_misc_info').value = u.misc_info;
-                
-                // Populate address fields
-                document.getElementById('edit_address1').value = u.address1 || '';
-                document.getElementById('edit_address2').value = u.address2 || '';
-                document.getElementById('edit_address3').value = u.address3 || '';
-                document.getElementById('edit_country_id').value = u.country_id || '';
-                document.getElementById('edit_state_id').value = u.state_id || '';
-                document.getElementById('edit_zip').value = u.zip || '';
-                
-                // Show/hide address fields based on resident status
-                const addressFields = [
-                    'edit_address1_field',
-                    'edit_address2_field', 
-                    'edit_address3_field',
-                    'edit_country_field',
-                    'edit_state_field',
-                    'edit_zip_field'
-                ];
-                
-                if (u.resident === 0) {
-                    // Show all address fields
-                    addressFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
-                        if (field) field.style.display = 'block';
-                    });
-                    
-                    // Set required attributes for required fields
-                    const address1Field = document.getElementById('edit_address1');
-                    const countryField = document.getElementById('edit_country_id');
-                    const stateField = document.getElementById('edit_state_id');
-                    
-                    if (address1Field) address1Field.setAttribute('required', 'required');
-                    if (countryField) countryField.setAttribute('required', 'required');
-                    if (stateField) stateField.setAttribute('required', 'required');
-                } else {
-                    // Hide all address fields
-                    addressFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
-                        if (field) field.style.display = 'none';
-                    });
-                    
-                    // Remove required attributes
-                    addressFields.forEach(fieldId => {
-                        const field = document.getElementById(fieldId);
-                        if (field) {
-                            const inputs = field.querySelectorAll('input, select');
-                            inputs.forEach(input => input.removeAttribute('required'));
+                        // Show success message
+                        showMessage(messageId, 'success', successMessage);
+                        // Reset form if needed
+                        if (shouldReset) {
+                            $form[0].reset();
                         }
-                    });
-                }
-                
-                document.getElementById('editUnitForm').action = `/block-units/${id}`;
-                const modal = new bootstrap.Modal(document.getElementById('editUnitModal'));
-                modal.show();
+                        // Close modal and refresh table after delay
+                        setTimeout(function() {
+                            $('#' + modalId).modal('hide');
+                            refreshBlockUnitsTable();
+                }, 800);
             } else {
-                alert('Error loading unit details.');
-            }
-        });
-}
-
-
-
-// Handle upload form submission
-document.addEventListener('DOMContentLoaded', function() {
-    const uploadForm = document.getElementById('uploadUnitForm');
-    if (uploadForm) {
-        uploadForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(uploadForm);
-            const fileInput = document.getElementById('unit_file');
-            
-            if (!fileInput.files[0]) {
-                // Show error in modal instead of alert
-                let errorDiv = document.getElementById('uploadErrors');
-                const errorList = document.getElementById('errorList');
-                errorList.innerHTML = 'Please select a file to upload.';
-                errorDiv.style.display = 'block';
-                return;
-            }
-            
-            // Hide any previous messages
-            const messageContainer = document.getElementById('uploadMessageContainer');
-            const successDiv = document.getElementById('uploadSuccess');
-            if (messageContainer) {
-                messageContainer.style.display = 'none';
-            }
-            if (successDiv) {
-                successDiv.style.display = 'none';
-            }
-            document.getElementById('uploadErrors').style.display = 'none';
-            
-            // Show loading state
-            const submitBtn = uploadForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="ph-spinner ph-spin me-1"></i> Uploading...';
-            submitBtn.disabled = true;
-            
-            fetch(uploadForm.action, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        // Show error message
+                        showMessage(messageId, 'danger', (data && data.message) || errorMessage);
+                    }
+                },
+                error: function() {
+                    // Show generic error message
+                    showMessage(messageId, 'danger', errorMessage);
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
+        });
+    });
+    }
+    
+    // Initialize unified form handler
+    handleUnitFormSubmission('unitForm', 'unitModal', 'unitMessage', 'Unit saved successfully!', 'Error saving unit', true);
+    
+    /**
+     * Handles Upload Unit form submission
+     * 
+     * Validates file selection, shows loading state, and uploads file via AJAX.
+     * Displays success/error messages and refreshes the DataTable on success.
+     */
+    $('#uploadUnitForm').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $fileInput = $('#unit_file');
+        
+        // Validate file selection
+        if (!$fileInput[0].files[0]) {
+            $('#errorList').html('Please select a file to upload.');
+            $('#uploadErrors').show();
+            return;
+        }
+        
+        // Hide any previous messages
+        $('#uploadMessageContainer, #uploadSuccess, #uploadErrors').hide();
+        
+        // Show loading state on submit button
+        const $submitBtn = $form.find('button[type="submit"]');
+        const originalText = $submitBtn.html();
+        $submitBtn.html('<i class="ph-spinner ph-spin me-1"></i> Uploading...').prop('disabled', true);
+        
+        $.ajax({
+            url: $form.attr('action'),
+            method: 'POST',
+            data: new FormData(this),
+            processData: false,        // Don't process data (for file uploads)
+            contentType: false,       // Don't set content type (let browser set it)
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data) {
                 if (data.success) {
-                    // Hide any previous errors
-                    document.getElementById('uploadErrors').style.display = 'none';
+                    $('#uploadErrors').hide();
                     
-                    // Show success message in modal
-                    const messageContainer = document.getElementById('uploadMessageContainer');
-                    const successDiv = document.getElementById('uploadSuccess');
-                    const successMessage = document.getElementById('successMessage');
+                    // Show success message
+                    $('#successMessage').text(data.message);
+                    $('#uploadMessageContainer, #uploadSuccess').show();
                     
-                    successMessage.textContent = data.message;
-                    messageContainer.style.display = 'block';
-                    successDiv.style.display = 'block';
-                    
-                    // Show errors if any
+                    // Show validation errors if any
                     if (data.errors && data.errors.length > 0) {
-                        const errorList = document.getElementById('errorList');
-                        errorList.innerHTML = '<ul class="mb-0">' + data.errors.map(error => '<li>' + error + '</li>').join('') + '</ul>';
-                        document.getElementById('uploadErrors').style.display = 'block';
+                        const errorList = '<ul class="mb-0">' + data.errors.map(function(error) {
+                            return '<li>' + error + '</li>';
+                        }).join('') + '</ul>';
+                        $('#errorList').html(errorList);
+                        $('#uploadErrors').show();
                     }
                     
                     // Reset form
-                    uploadForm.reset();
+                    $form[0].reset();
                     
-                    // Close modal and redirect to Units tab after 3 seconds
-                    setTimeout(() => {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadUnitModal'));
-                        if (modal) modal.hide();
-                        
-                        // Wait for modal to close, then navigate to Units tab
-                        setTimeout(() => {
-                            // Find the Units tab using the correct selector
-                            let unitsTab = document.querySelector('#units-tab') ||
-                                          document.querySelector('a[href="#units"]') || 
-                                          document.querySelector('[aria-controls="units"]');
-                            
-                            if (unitsTab) {
-                                console.log('Found units tab:', unitsTab);
-                                unitsTab.click();
-                                
-                                // Refresh the units table to show new units
-                                refreshBlockUnitsTable();
-                            } else {
-                                console.log('Units tab not found, just reloading page');
-                                // Refresh the units table
-                                refreshBlockUnitsTable();
-                            }
+                    // Close modal and refresh table after 3 seconds
+                    setTimeout(function() {
+                        $('#uploadUnitModal').modal('hide');
+                        setTimeout(function() {
+                            refreshBlockUnitsTable();
                         }, 300);
                     }, 3000);
-                } else {
-                    // Show error message in modal
-                    let errorDiv = document.getElementById('uploadErrors');
-                    const errorList = document.getElementById('errorList');
-                    errorList.innerHTML = data.message || 'Error uploading units.';
-                    errorDiv.style.display = 'block';
+            } else {
+                    // Show error message
+                    $('#errorList').html(data.message || 'Error uploading units.');
+                    $('#uploadErrors').show();
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                
-                // Show error message in modal
-                let errorDiv = document.getElementById('uploadErrors');
-                const errorList = document.getElementById('errorList');
-                errorList.innerHTML = 'An error occurred while uploading. Please try again.';
-                errorDiv.style.display = 'block';
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            });
+            },
+            error: function() {
+                // Show generic error message
+                $('#errorList').html('An error occurred while uploading. Please try again.');
+                $('#uploadErrors').show();
+            },
+            complete: function() {
+                // Reset button state regardless of success/failure
+                $submitBtn.html(originalText).prop('disabled', false);
+            }
         });
-    }
+    });
+
+    /**
+     * Clear messages when upload modal is opened
+     * 
+     * Hides all previous success/error messages when the upload modal is shown.
+     */
+    $('#uploadUnitModal').on('show.bs.modal', function() {
+        $('#uploadMessageContainer, #uploadSuccess, #uploadErrors').hide();
+    });
     
-    // Clear messages when upload modal is opened
-    const uploadModal = document.getElementById('uploadUnitModal');
-    if (uploadModal) {
-        uploadModal.addEventListener('show.bs.modal', function() {
-            // Hide any previous messages
-            const messageContainer = document.getElementById('uploadMessageContainer');
-            const successDiv = document.getElementById('uploadSuccess');
-            if (messageContainer) {
-                messageContainer.style.display = 'none';
-            }
-            if (successDiv) {
-                successDiv.style.display = 'none';
-            }
-            const errorDiv = document.getElementById('uploadErrors');
-            if (errorDiv) {
-                errorDiv.style.display = 'none';
-            }
-        });
-    }
+    // ========================================
+    // INITIALIZATION
+    // ========================================
+    
+    
+    
+    // Initialize DataTable for units listing
+    initializeDataTable();
 });
 
-// Global variable to store DataTable instance
-let blockUnitsDataTable;
+// ========================================
+// MODAL EVENT LISTENERS (Outside document ready)
+// ========================================
 
-// Function to refresh the units table
-window.refreshBlockUnitsTable = function() {
-    console.log('refreshBlockUnitsTable called');
-    console.log('blockUnitsDataTable:', blockUnitsDataTable);
+// Initialize unified modal when opened
+$(document).on('shown.bs.modal', '#unitModal', function() {
+    console.log('Modal shown event triggered');
+    initializeModal('unitModal', 'resident');
+});
+
+// ========================================
+// GLOBAL FUNCTIONS
+// ========================================
+
+/**
+ * Loads states/provinces based on selected country
+ * 
+ * @param {string} countryId - The ID of the selected country
+ * @param {string} stateSelectId - The ID of the state dropdown element
+ * 
+ * This function makes an AJAX call to fetch states for the given country
+ * and populates the state dropdown with the response data.
+ */
+function loadStates(countryId, stateSelectId) {
+    console.log('loadStates called with countryId:', countryId, 'stateSelectId:', stateSelectId);
+    const $stateSelect = $('#' + stateSelectId);
+    console.log('State select found:', $stateSelect.length);
     
-    if (blockUnitsDataTable) {
-        // Get the current block ID from the form
-        const blockId = document.querySelector('input[name="block_id"]').value;
-        console.log('Block ID:', blockId);
-        
-        // Fetch fresh data
-        fetch(`/block-units/block/${blockId}`)
-            .then(response => {
-                console.log('API response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('API response data:', data);
-                if (data.success) {
-                    // Clear existing data
-                    blockUnitsDataTable.clear();
-                    console.log('DataTable cleared');
-                    
-                    // Add new data
-                    data.data.forEach(function(unit) {
-                        console.log('Adding unit:', unit);
-                        blockUnitsDataTable.row.add([
-                            unit.unit_code || 'N/A',
-                            unit.unit_name || 'N/A',
-                            unit.block_unit_type?.name || 'N/A',
-                            unit.owners_name || 'N/A',
-                            unit.salutation || 'N/A',
-                            unit.email || 'N/A',
-                            unit.resident ? 'Yes' : 'No',
-                            unit.mobile_no || 'N/A',
-                            unit.phone_number || 'N/A',
-                            unit.letting_agent || 'N/A',
-                            unit.misc_info || 'N/A',
-                            '<button class="btn btn-sm btn-outline-primary" onclick="editUnit(' + unit.id + ')">' +
-                                '<i class="ph-pencil"></i> Edit' +
-                            '</button> ' +
-                            '<form action="/block-units/' + unit.id + '" method="POST" class="d-inline-block" onsubmit="return confirm(\'Are you sure you want to delete this unit?\');">' +
-                                '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
-                                '<input type="hidden" name="_method" value="DELETE">' +
-                                '<button type="submit" class="btn btn-sm btn-outline-danger">' +
-                                    '<i class="ph-trash"></i> Delete' +
-                                '</button>' +
-                            '</form>'
-                        ]);
-                    });
-                    
-                    // Redraw the table
-                    blockUnitsDataTable.draw();
-                    console.log('Units table refreshed with', data.data.length, 'units');
-                } else {
-                    console.error('Error refreshing units table:', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching units data:', error);
-            });
-    } else {
-        console.error('blockUnitsDataTable is not initialized');
+    // Validate inputs and element existence
+    if (!countryId || !$stateSelect.length) {
+        console.warn('Missing countryId or stateSelect element', 'countryId:', countryId, 'stateSelect length:', $stateSelect.length);
+        if ($stateSelect.length) {
+            $stateSelect.html('<option value="">Select County / State</option>');
+        }
+        return;
     }
-};
-
-// DataTables for Units
-$(document).ready(function() {
-    blockUnitsDataTable = $('#blockUnitsTable').DataTable({
-        responsive: true,
-        dom: 'rtip', // Removed 'f' (filter/search) to remove the search box on the left
-        order: [[0, 'asc']], // default sort by Unit Code
-        columnDefs: [
-            { targets: [11], orderable: false } // Actions (last column)
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            lengthMenu: "Show _MENU_ units per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ units",
-            infoEmpty: "Showing 0 to 0 of 0 units",
-            infoFiltered: "(filtered from _MAX_ total units)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+    
+    console.log('Making API call to /api/states/' + countryId);
+    // Show loading state and disable dropdown
+    $stateSelect.html('<option value="">Loading states...</option>').prop('disabled', true);
+    
+    // Make AJAX call to fetch states
+    $.ajax({
+        url: `/api/states/${countryId}`,
+        method: 'GET',
+        dataType: 'json',
+        success: function(states) {
+            console.log('Received states:', states);
+            // Build options HTML string
+            let options = '<option value="">Select County / State</option>';
+            states.forEach(function(state) {
+                options += `<option value="${state.id}">${state.name}</option>`;
+            });
+            // Update dropdown and re-enable it
+            $stateSelect.html(options).prop('disabled', false);
+            console.log('States loaded successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading states:', error);
+            // Show error state and re-enable dropdown
+            $stateSelect.html('<option value="">Error loading states</option>').prop('disabled', false);
         }
     });
-});
+}
+
+/**
+ * Toggles address fields visibility based on resident selection
+ * 
+ * @param {string} residentSelectId - The ID of the resident dropdown
+ * 
+ * When resident is set to "No" (value="0"), address fields become visible and required.
+ * When resident is set to "Yes" (value="1"), address fields are hidden and not required.
+ */
+function toggleAddressFields(residentSelectId) {
+    console.log('toggleAddressFields called with:', residentSelectId);
+    const $residentSelect = $('#' + residentSelectId);
+    console.log('Resident select found:', $residentSelect.length);
+    
+    if ($residentSelect.length) {
+        // Remove any existing event listeners to prevent duplicates
+        $residentSelect.off('change.toggleAddress');
+        console.log('Removed existing event listeners');
+        
+                const addressFields = [
+            'address1_field',
+            'address2_field', 
+            'address3_field',
+            'country_field',
+            'state_field',
+            'zip_field'
+        ];
+        
+        // Attach change event listener to resident dropdown with namespace
+        $residentSelect.on('change.toggleAddress', function() {
+            console.log('Resident changed to:', this.value);
+            
+            if (this.value === '0') {
+                // Resident = No: Show address fields
+                console.log('Showing address fields:', addressFields);
+                
+                // Show all address fields
+                addressFields.forEach(function(fieldId) {
+                    const $field = $('#' + fieldId);
+                    console.log('Looking for field:', fieldId, 'Found:', $field.length);
+                    $field.show();
+                });
+                
+                // Set required attributes for required fields
+                $('#address1').attr('required', 'required');
+                $('#country_id').attr('required', 'required');
+                $('#state_id').attr('required', 'required');
+                
+                // Attach country change listener now that country dropdown is visible
+                const $countrySelect = $('#country_id');
+                console.log('Attaching country change listener, country select found:', $countrySelect.length);
+                if ($countrySelect.length) {
+                    $countrySelect.off('change.loadStates').on('change.loadStates', function() {
+                        console.log('Country changed in Unit modal:', this.value);
+                        loadStates(this.value, 'state_id');
+                    });
+                    console.log('Country change listener attached');
+                }
+                } else {
+                // Resident = Yes: Hide address fields
+                addressFields.forEach(function(fieldId) {
+                    $('#' + fieldId).hide();
+                });
+                
+                // Remove required attributes from all address fields
+                addressFields.forEach(function(fieldId) {
+                    $('#' + fieldId).find('input, select').removeAttr('required');
+                });
+            }
+        });
+    }
+}
+
+/**
+ * Initialize modal with default state (resident = Yes, address fields hidden)
+ * 
+ * @param {string} modalId - The ID of the modal
+ * @param {string} residentId - The ID of the resident dropdown
+ */
+function initializeModal(modalId, residentId) {
+    console.log('initializeModal called with modalId:', modalId, 'residentId:', residentId);
+    
+    const addressFields = [
+        'address1_field',
+        'address2_field',
+        'address3_field',
+        'country_field',
+        'state_field',
+        'zip_field'
+    ];
+    
+    // Hide all address fields
+    addressFields.forEach(function(fieldId) {
+        const $field = $('#' + fieldId);
+        console.log('Hiding field:', fieldId, 'Found:', $field.length);
+        $field.hide();
+    });
+    
+    // Set resident dropdown to Yes
+    const $residentSelect = $('#' + residentId);
+    console.log('Setting resident dropdown:', residentId, 'Found:', $residentSelect.length);
+    $residentSelect.val('1');
+    
+    // Attach toggle functionality to resident dropdown
+    console.log('Attaching toggle functionality to:', residentId);
+    toggleAddressFields(residentId);
+}
+
+/**
+ * Opens the unit modal in Add or Edit mode
+ * 
+ * @param {string} mode - 'add' or 'edit'
+ * @param {number} id - Unit ID (only needed for edit mode)
+ */
+function openUnitModal(mode, id = null) {
+    const $modal = $('#unitModal');
+    const $modalLabel = $('#unitModalLabel');
+    const $form = $('#unitForm');
+    const $submitBtn = $('#unitSubmitBtn');
+    
+    if (mode === 'add') {
+        // Add mode
+        $modalLabel.text('Add Unit');
+        $submitBtn.html('<i class="ph-check me-1"></i> Save');
+        $form.attr('action', '{{ route("block-units.store") }}');
+        $form.find('input[name="_method"]').remove(); // Remove PUT method for add
+        $form[0].reset(); // Reset form
+        
+        // Initialize modal before showing
+        initializeModal('unitModal', 'resident');
+        
+        $modal.modal('show');
+    } else if (mode === 'edit' && id) {
+        // Edit mode - load unit data
+        loadUnitForEdit(id);
+    }
+}
+
+/**
+ * Loads unit data and populates the modal for editing
+ * 
+ * @param {number} id - The ID of the unit to edit
+ */
+function loadUnitForEdit(id) {
+            // Show loading state
+    const $editBtn = $(`button[onclick="editUnit(${id})"]`);
+    const originalText = $editBtn.html();
+    $editBtn.html('<i class="ph-spinner ph-spin me-1"></i>Loading...').prop('disabled', true);
+    
+    $.ajax({
+        url: `/block-units/${id}`,
+        method: 'GET',
+                headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(data) {
+            if (data && data.success) {
+                const unit = data.data;
+                const $modal = $('#unitModal');
+                const $modalLabel = $('#unitModalLabel');
+                const $form = $('#unitForm');
+                const $submitBtn = $('#unitSubmitBtn');
+                
+                // Set modal to edit mode
+                $modalLabel.text('Edit Unit');
+                $submitBtn.html('<i class="ph-check me-1"></i> Update');
+                $form.attr('action', `/block-units/${id}`);
+                
+                // Add PUT method for edit
+                if ($form.find('input[name="_method"]').length === 0) {
+                    $form.append('<input type="hidden" name="_method" value="PUT">');
+                }
+                
+                // Populate form fields
+                $('#block_building_id').val(unit.block_building_id);
+                $('#block_unit_type_id').val(unit.block_unit_type_id);
+                $('#unit_code').val(unit.unit_code);
+                $('#unit_name').val(unit.unit_name);
+                $('#owners_name').val(unit.owners_name);
+                $('#salutation').val(unit.salutation);
+                $('#email').val(unit.email);
+                $('#mobile_no').val(unit.mobile_no);
+                $('#phone_number').val(unit.phone_number);
+                $('#letting_agent').val(unit.letting_agent);
+                $('#misc_info').val(unit.misc_info);
+                $('#resident').val(unit.resident);
+                
+                // Handle address fields based on resident status
+                if (unit.resident == 0) {
+                    // Non-resident: Show address fields and populate them
+                    const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
+                    addressFields.forEach(function(fieldId) {
+                        $('#' + fieldId).show();
+                    });
+                    
+                    $('#address1').val(unit.address1);
+                    $('#address2').val(unit.address2);
+                    $('#address3').val(unit.address3);
+                    $('#zip').val(unit.zip);
+                    
+                    // Set country and load states
+                    if (unit.country_id) {
+                        $('#country_id').val(unit.country_id);
+                        loadStates(unit.country_id, 'state_id').then(function() {
+                            if (unit.state_id) {
+                                $('#state_id').val(unit.state_id);
+                            }
+                        });
+                    }
+                } else {
+                    // Resident: Hide address fields
+                    const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
+                    addressFields.forEach(function(fieldId) {
+                        $('#' + fieldId).hide();
+                    });
+                }
+                
+                // Initialize modal before showing
+                initializeModal('unitModal', 'resident');
+                
+                // Show the modal
+                $modal.modal('show');
+            } else {
+                showMessage('unitMessage', 'danger', 'Error loading unit data');
+            }
+        },
+        error: function() {
+            showMessage('unitMessage', 'danger', 'Error loading unit data');
+        },
+        complete: function() {
+            // Restore button state
+            $editBtn.html(originalText).prop('disabled', false);
+            }
+        });
+    }
+
+/**
+ * Edit unit function (for backward compatibility)
+ * 
+ * @param {number} id - The ID of the unit to edit
+ */
+function editUnit(id) {
+    openUnitModal('edit', id);
+}
 </script>
