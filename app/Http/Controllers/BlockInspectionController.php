@@ -99,12 +99,12 @@ class BlockInspectionController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BlockInspection $blockInspection)
+    public function show(Request $request, BlockInspection $blockInspection)
     {
         $blockInspection->load(['block', 'creator', 'inspectionTeams.user', 'inspectionAssets.buildingAsset', 'inspectionAssets.inspectionValue']);
         
-        // Check if request expects JSON (AJAX request)
-        if (request()->expectsJson()) {
+        // Return JSON when requested (AJAX/Accept headers)
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,
                 'data' => $blockInspection

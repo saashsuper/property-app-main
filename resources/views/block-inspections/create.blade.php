@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title') Schedule Block Inspection @endsection
+@section('title') Add Block Inspection @endsection
 
 @section('css')
     <!-- Choices css (replaces Select2) -->
@@ -13,15 +13,15 @@
     @component('components.breadcrumb')
         @slot('li_1') @lang('translation.blocks') @endslot
         @slot('li_2') @lang('translation.block-inspections') @endslot
-        @slot('title') Schedule Inspection @endslot
+        @slot('title') Add Inspection @endslot
     @endcomponent
 
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="card-title">Schedule New Block Inspection</h4>
-                    <p class="card-title-desc">Fill in the details below to schedule a new block inspection.</p>
+                    <h4 class="card-title">Add New Block Inspection</h4>
+                    <p class="card-title-desc">Fill in the details below to add a new block inspection.</p>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('block-inspections.store') }}" method="POST">
@@ -116,7 +116,7 @@
                                         <i class="ph-arrow-left me-2"></i>Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary">
-                                        <i class="ph-calendar-plus me-2"></i>Schedule Inspection
+                                        <i class="ph-calendar-plus me-2"></i>Add Inspection
                                     </button>
                                 </div>
                             </div>

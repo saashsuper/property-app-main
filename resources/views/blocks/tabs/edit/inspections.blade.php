@@ -3,7 +3,7 @@
         <div class="d-flex align-items-center mb-3 gap-3">
             <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Inspection History</h6>
             <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addInspectionModal">
-                <i class="ph-plus align-bottom me-1"></i> Schedule Inspection
+                <i class="ph-plus align-bottom me-1"></i> Add Inspection
             </button>
         </div>
         
@@ -11,10 +11,11 @@
             <table class="table table-bordered table-hover" id="inspectionsTable">
                 <thead class="table-light">
                     <tr>
-                        <th>Inspection Date</th>
                         <th>Reference</th>
+                        <th>Inspection Date</th>
                         <th>Inspector</th>
                         <th>Status</th>
+                        <th>Notes</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -22,9 +23,14 @@
                     @if(isset($blockInspections) && $blockInspections->count() > 0)
                         @foreach($blockInspections as $inspection)
                             <tr>
-                                <td>{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}</td>
                                 <td>{{ $inspection->ref_no ?? 'N/A' }}</td>
-                                <td>{{ $inspection->creator->name ?? 'N/A' }}</td>
+                                <td>{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}</td>
+                                <td>
+                                    @php
+                                        $leadInspector = $inspection->inspectionTeams->where('is_lead', true)->first();
+                                    @endphp
+                                    {{ $leadInspector ? ($leadInspector->user->name ?? 'N/A') : ($inspection->creator->name ?? 'N/A') }}
+                                </td>
                                 <td>
                                     @if($inspection->job_status_id == 1)
                                         <span class="badge bg-info">Scheduled</span>
@@ -40,8 +46,9 @@
                                         <span class="badge bg-secondary">Unknown</span>
                                     @endif
                                 </td>
+                                <td>{{ Str::limit($inspection->notes, 50) ?? 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editInspection({{ $inspection->id }})">
+                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editInspection({{ $inspection->id }}, this)">
                                         <i class="ph-pencil"></i> Edit
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="deleteInspection({{ $inspection->id }})">
@@ -189,15 +196,24 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize DataTable
-    $('#inspectionsTable').DataTable({
+    var inspectionsDT = $('#inspectionsTable').DataTable({
         responsive: true,
         dom: 'Bfrtip',
         buttons: [
             'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
         ],
+        pageLength: 10,
         autoWidth: false,
         scrollX: true,
         scrollCollapse: true,
+        columnDefs: [
+            { width: '15%', targets: 0 }, // Reference
+            { width: '15%', targets: 1 }, // Inspection Date
+            { width: '20%', targets: 2 }, // Inspector
+            { width: '12%', targets: 3 }, // Status
+            { width: '28%', targets: 4 }, // Notes
+            { width: '10%', targets: 5 }  // Actions
+        ],
         language: {
             search: "Search:",
             lengthMenu: "Show _MENU_ entries",
@@ -219,6 +235,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 'height': '38px',
                 'font-size': '14px'
             });
+
+            // Fix header/body alignment after render
+            setTimeout(function() {
+                inspectionsDT.columns.adjust();
+            }, 0);
+        }
+    });
+
+    // Adjust columns on window resize to keep header/body aligned
+    window.addEventListener('resize', function() {
+        if (inspectionsDT) {
+            inspectionsDT.columns.adjust();
         }
     });
 
@@ -370,200 +398,104 @@ function showAlert(type, message) {
 }
 
 // Function to edit inspection
-function editInspection(inspectionId) {
+function editInspection(inspectionId, btn) {
     console.log('editInspection called with ID:', inspectionId);
-    
-    // Find the inspection data from the table row
-    const row = event.target.closest('tr');
-    console.log('Found row:', row);
-    
-    if (!row) {
-        console.error('Could not find table row');
-        return;
-    }
-    
-    // Map the table columns correctly:
-    // Column 0: Inspection Date (e.g., "Dec 15, 2024")
-    // Column 1: Reference
-    // Column 2: Inspector
-    // Column 3: Status
-    // Column 4: Actions (buttons)
-    
-    const inspectionDate = row.cells[0].textContent.trim();
-    const reference = row.cells[1].textContent.trim();
-    const inspector = row.cells[2].textContent.trim();
-    const status = row.cells[3].textContent.trim();
-    
-    console.log('Raw cell data:', {
-        cell0: row.cells[0].textContent,
-        cell1: row.cells[1].textContent,
-        cell2: row.cells[2].textContent,
-        cell3: row.cells[3].textContent,
-        cell4: row.cells[4].textContent
-    });
-    
-    console.log('Extracted data:', { 
-        inspectionId, 
-        inspectionDate, 
-        reference, 
-        inspector, 
-        status,
-        rowCells: row.cells.length 
-    });
-    
-    // Parse the date and time from the inspection date cell
-    let scheduledDate = '';
-    let scheduledTime = '';
-    
-    if (inspectionDate !== 'N/A') {
-        try {
-            // Handle "Sep 01, 2025" format - use a more reliable date parsing
-            const months = {
-                'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
-                'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
-                'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
-            };
-            
-            // Parse "Sep 01, 2025" format manually
-            const parts = inspectionDate.split(' ');
-            if (parts.length === 3) {
-                const month = months[parts[0]];
-                const day = parts[1].replace(',', '').padStart(2, '0');
-                const year = parts[2];
-                
-                if (month && day && year) {
-                    scheduledDate = `${year}-${month}-${day}`;
-                    scheduledTime = '09:00'; // Default time
-                    console.log('Manually parsed date successfully:', { 
-                        original: inspectionDate, 
-                        scheduledDate, 
-                        scheduledTime,
-                        month, day, year 
-                    });
-                } else {
-                    console.log('Could not parse date parts:', { month, day, year });
-                }
+    // Fetch canonical inspection JSON to populate the modal reliably
+    fetch(`/block-inspections/${inspectionId}`, {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(r => r.json())
+    .then(payload => {
+        console.log('Edit load payload:', payload);
+        if (!payload || !payload.success) throw new Error('Failed to load');
+        const insp = payload.data || {};
+
+        // scheduled_date_time can be ISO or "YYYY-MM-DD HH:MM:SS"
+        let dateStr = '';
+        let timeStr = '';
+        const dt = insp.scheduled_date_time;
+        if (dt) {
+            if (typeof dt === 'string' && dt.includes(' ')) {
+                const parts = dt.split(' ');
+                dateStr = parts[0];
+                timeStr = (parts[1] || '').slice(0, 5);
             } else {
-                console.log('Date format not recognized:', inspectionDate);
+                const d = new Date(dt);
+                if (!isNaN(d.getTime())) {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const da = String(d.getDate()).padStart(2, '0');
+                    const hh = String(d.getHours()).padStart(2, '0');
+                    const mm = String(d.getMinutes()).padStart(2, '0');
+                    dateStr = `${y}-${m}-${da}`;
+                    timeStr = `${hh}:${mm}`;
+                }
             }
-        } catch (e) {
-            console.log('Error parsing date:', inspectionDate, e);
         }
-    }
-    
-    // Populate the edit modal fields
-    try {
-        const inspectionIdField = document.getElementById('edit_inspection_id');
+
+        // Determine lead inspector
+        const team = Array.isArray(insp.inspection_teams) ? insp.inspection_teams : (Array.isArray(insp.inspectionTeams) ? insp.inspectionTeams : []);
+        const leadMember = team.find(t => !!t.is_lead) || team[0];
+        const leadUserId = leadMember ? String(leadMember.user_id) : '';
+
+        const idEl = document.getElementById('edit_inspection_id');
+        const dateEl = document.getElementById('edit_scheduled_date');
+        const timeEl = document.getElementById('edit_scheduled_time');
+        const notesEl = document.getElementById('edit_notes');
         const userSelect = document.getElementById('edit_user_id');
-        const dateField = document.getElementById('edit_scheduled_date');
-        const timeField = document.getElementById('edit_scheduled_time');
-        const notesField = document.getElementById('edit_notes');
-        
-        console.log('Found modal fields:', {
-            inspectionIdField: !!inspectionIdField,
-            userSelect: !!userSelect,
-            dateField: !!dateField,
-            timeField: !!timeField,
-            notesField: !!notesField
-        });
-        
-        console.log('Values to set:', {
-            inspectionId,
-            scheduledDate,
-            scheduledTime,
-            notes: `Inspection for ${reference} - ${inspector}`
-        });
-        
-        if (inspectionIdField) {
-            inspectionIdField.value = inspectionId;
-            console.log('Set inspection ID to:', inspectionId);
+
+        if (idEl) idEl.value = inspectionId;
+        if (dateEl) dateEl.value = dateStr;
+        if (timeEl) timeEl.value = timeStr;
+        if (notesEl) notesEl.value = insp.notes || '';
+        if (userSelect && leadUserId) {
+            userSelect.value = leadUserId;
+            userSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        if (dateField) {
-            dateField.value = scheduledDate;
-            console.log('Set date to:', scheduledDate);
-        }
-        if (timeField) {
-            timeField.value = scheduledTime;
-            console.log('Set time to:', scheduledTime);
-        }
-        if (notesField) {
-            notesField.value = `Inspection for ${reference} - ${inspector}`;
-            console.log('Set notes to:', `Inspection for ${reference} - ${inspector}`);
-        }
-        
-        // Try to find and select the user based on inspector name
-        if (userSelect) {
-            console.log('Looking for user:', inspector);
-            console.log('Available options:', Array.from(userSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
-            
-            for (let option of userSelect.options) {
-                if (option.text.includes(inspector) || option.text === inspector) {
-                    userSelect.value = option.value;
-                    console.log('Selected user:', option.text, 'with value:', option.value);
-                    break;
-                }
-            }
-        }
-        
-        console.log('Modal fields populated successfully');
-        
-        // Show the edit modal using jQuery (same as working modals)
+
+        console.log('Edit form populated:', { inspectionId, dateStr, timeStr, leadUserId, notes: insp.notes });
+
         $('#editInspectionModal').modal('show');
-        console.log('Edit modal shown');
-        
-        // Populate fields after modal is shown (more reliable)
-        $('#editInspectionModal').on('shown.bs.modal', function() {
-            console.log('Modal fully shown, populating fields...');
-            
-            // Use jQuery to set values (more reliable)
-            $('#edit_inspection_id').val(inspectionId);
-            $('#edit_scheduled_date').val(scheduledDate);
-            $('#edit_scheduled_time').val(scheduledTime);
-            $('#edit_notes').val(`Inspection for ${reference} - ${inspector}`);
-            
-            console.log('Set values using jQuery:');
-            console.log('Inspection ID:', inspectionId);
-            console.log('Date:', scheduledDate);
-            console.log('Time:', scheduledTime);
-            console.log('Notes:', `Inspection for ${reference} - ${inspector}`);
-            
-            // Try to find and select the user based on inspector name
-            const userSelect = document.getElementById('edit_user_id');
-            if (userSelect) {
-                console.log('Looking for user:', inspector);
-                console.log('Available options:', Array.from(userSelect.options).map(opt => ({ value: opt.value, text: opt.text })));
-                
-                for (let option of userSelect.options) {
-                    if (option.text.includes(inspector) || option.text === inspector) {
-                        userSelect.value = option.value;
-                        console.log('Selected user:', option.text, 'with value:', option.value);
-                        break;
-                    }
+    })
+    .catch(err => {
+        console.warn('Edit fetch failed, falling back to table row parse:', err);
+        try {
+            // Fallback: find the row and scrape values
+            let row = (btn ? btn.closest('tr') : (event && event.target ? event.target.closest('tr') : null));
+            if (row && row.classList.contains('child') && row.previousElementSibling) {
+                row = row.previousElementSibling;
+            }
+            if (!row) throw new Error('Row not found');
+
+            const reference = row.cells[0].textContent.trim();
+            const inspectionDate = row.cells[1].textContent.trim();
+            const inspector = row.cells[2].textContent.trim();
+            const notesText = row.cells[4] ? row.cells[4].textContent.trim() : '';
+
+            // Basic date parsing for formats like "Sep 01, 2025"
+            let scheduledDate = '';
+            if (inspectionDate && inspectionDate !== 'N/A') {
+                const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+                const parts = inspectionDate.split(' ');
+                if (parts.length === 3) {
+                    const m = months[parts[0]]; const d = parts[1].replace(',', '').padStart(2,'0'); const y = parts[2];
+                    if (m && d && y) scheduledDate = `${y}-${m}-${d}`;
                 }
             }
-            
-            // Force a refresh of the form fields
-            $('#editInspectionModal input, #editInspectionModal select, #editInspectionModal textarea').each(function() {
-                console.log('Field:', this.id, 'Value:', $(this).val());
-            });
-            
-            // Additional debugging - check if fields are actually set
-            setTimeout(() => {
-                console.log('=== FINAL FIELD VALUES ===');
-                console.log('Inspection ID:', $('#edit_inspection_id').val());
-                console.log('Date:', $('#edit_scheduled_date').val());
-                console.log('Time:', $('#edit_scheduled_time').val());
-                console.log('Notes:', $('#edit_notes').val());
-                console.log('User:', $('#edit_user_id').val());
-                console.log('=== END FIELD VALUES ===');
-            }, 100);
-            
-            console.log('Fields populated after modal show');
-        });
-        
-    } catch (error) {
-        console.error('Error populating modal fields:', error);
-    }
+
+            document.getElementById('edit_inspection_id').value = inspectionId;
+            document.getElementById('edit_scheduled_date').value = scheduledDate;
+            document.getElementById('edit_scheduled_time').value = '';
+            document.getElementById('edit_notes').value = notesText || `Inspection for ${reference} - ${inspector}`;
+            $('#editInspectionModal').modal('show');
+        } catch (e) {
+            console.error('Edit fallback failed:', e);
+            alert('Unable to load inspection details for editing.');
+        }
+    });
 }
 
 // Function to delete inspection

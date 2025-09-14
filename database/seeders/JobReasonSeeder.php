@@ -23,11 +23,14 @@ class JobReasonSeeder extends Seeder
         ];
 
         foreach ($reasons as $reason) {
-            DB::table('job_reasons')->insertOrIgnore([
-                'name' => $reason['name'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            DB::table('job_reasons')->updateOrInsert(
+                ['name' => $reason['name']],
+                [
+                    'name' => $reason['name'],
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
         }
     }
 }

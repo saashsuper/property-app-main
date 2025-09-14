@@ -128,10 +128,41 @@ class BlockVisitController extends Controller
         }
     }
 
-    public function show(BlockVisit $blockVisit)
+    public function show(Request $request, BlockVisit $blockVisit)
     {
         $blockVisit->load(['block.blockType', 'jobReason', 'jobStatus', 'createdByUser', 'updatedByUser', 'team.user', 'images']);
-        
+
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            $data = [
+                'id' => $blockVisit->id,
+                'ref_no' => $blockVisit->ref_no,
+                'scheduled_date_time' => $blockVisit->scheduled_date_time,
+                'job_reason_id' => $blockVisit->job_reason_id,
+                'notes' => $blockVisit->notes,
+                'start_date_time' => $blockVisit->start_date_time,
+                'end_date_time' => $blockVisit->end_date_time,
+                'created_by' => $blockVisit->created_by,
+                // relations in camelCase to match frontend expectations
+                'jobReason' => $blockVisit->jobReason,
+                'jobStatus' => $blockVisit->jobStatus,
+                'createdByUser' => $blockVisit->createdByUser,
+                'updatedByUser' => $blockVisit->updatedByUser,
+                'images' => $blockVisit->images,
+                'team' => $blockVisit->team->map(function($member) {
+                    return [
+                        'user_id' => $member->user_id,
+                        'leed' => (bool) $member->leed,
+                        'user' => $member->user,
+                    ];
+                })->values(),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ]);
+        }
+
         return view('block-visits.show', compact('blockVisit'));
     }
 

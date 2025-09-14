@@ -3,7 +3,7 @@
         <div class="d-flex align-items-center mb-3 gap-3">
             <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Site Visit History</h6>
             <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addSiteVisitModal">
-                <i class="ph-plus align-bottom me-1"></i> Schedule Visit
+                <i class="ph-plus align-bottom me-1"></i> Add Site Visit
             </button>
         </div>
         
@@ -462,8 +462,17 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.edit-site-visit').forEach(button => {
             button.addEventListener('click', function() {
                 const visitId = this.getAttribute('data-visit-id');
+                // Clear any previous success/error message before loading new data
+                const editMsgEl = document.getElementById('editSiteVisitMessage');
+                if (editMsgEl) {
+                    editMsgEl.innerHTML = '';
+                }
                 
-                fetch(`/block-visits/${visitId}`)
+                fetch(`/block-visits/${visitId}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -533,7 +542,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 const visitId = this.getAttribute('data-visit-id');
                 
-                fetch(`/block-visits/${visitId}`)
+                fetch(`/block-visits/${visitId}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
@@ -619,6 +632,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial attachment of event listeners
     attachSiteVisitEventListeners();
+
+    // Also clear messages when the edit modal is shown/hidden to avoid stale alerts
+    if (window.jQuery) {
+        $('#editSiteVisitModal').on('show.bs.modal hidden.bs.modal', function () {
+            const msg = document.getElementById('editSiteVisitMessage');
+            if (msg) {
+                msg.innerHTML = '';
+            }
+        });
+    }
 
     // Add Site Visit Form Submission
     document.getElementById('addSiteVisitForm').addEventListener('submit', function(e) {
