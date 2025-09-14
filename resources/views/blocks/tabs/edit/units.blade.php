@@ -175,7 +175,7 @@
                         </div>
                         <div class="col-md-6 mb-3" id="country_field" style="display: none;">
                             <label for="country_id" class="form-label">Country <span class="text-danger">*</span></label>
-                            <select class="form-select" id="country_id" name="country_id">
+                            <select class="form-select" id="country_id" name="country_id" onchange="handleCountryChange(this.value)">
                                 <option value="">Select Country</option>
                                 @foreach(\App\Models\Country::orderBy('country_name')->get() as $country)
                                     <option value="{{ $country->id }}">{{ $country->country_name }}</option>
@@ -630,15 +630,28 @@ $(document).ready(function() {
     initializeDataTable();
 });
 
+// (No global modal listeners needed; modal is initialized via openUnitModal/loadUnitForEdit)
+
 // ========================================
-// MODAL EVENT LISTENERS (Outside document ready)
+// SIMPLE ONCHANGE HANDLERS
 // ========================================
 
-// Initialize unified modal when opened
-$(document).on('shown.bs.modal', '#unitModal', function() {
-    console.log('Modal shown event triggered');
-    initializeModal('unitModal', 'resident');
-});
+/**
+ * Handles country dropdown change event
+ * 
+ * @param {string} countryId - The selected country ID
+ */
+function handleCountryChange(countryId) {
+    const $container = $('#unitModal');
+    if (countryId) {
+        loadStates(countryId, 'state_id');
+    } else {
+        const $stateSelect = $container.find('#state_id');
+        if ($stateSelect.length) {
+            $stateSelect.html('<option value="">Select County / State</option>');
+        }
+    }
+}
 
 // ========================================
 // GLOBAL FUNCTIONS
@@ -654,44 +667,48 @@ $(document).on('shown.bs.modal', '#unitModal', function() {
  * and populates the state dropdown with the response data.
  */
 function loadStates(countryId, stateSelectId) {
-    console.log('loadStates called with countryId:', countryId, 'stateSelectId:', stateSelectId);
-    const $stateSelect = $('#' + stateSelectId);
-    console.log('State select found:', $stateSelect.length);
-    
+    const $container = $('#unitModal');
+    const $stateSelect = $container.find('#' + stateSelectId);
+
     // Validate inputs and element existence
     if (!countryId || !$stateSelect.length) {
-        console.warn('Missing countryId or stateSelect element', 'countryId:', countryId, 'stateSelect length:', $stateSelect.length);
         if ($stateSelect.length) {
             $stateSelect.html('<option value="">Select County / State</option>');
         }
-        return;
+        // Return a resolved promise so callers using .then do not break
+        return $.Deferred().resolve([]).promise();
     }
-    
-    console.log('Making API call to /api/states/' + countryId);
+
     // Show loading state and disable dropdown
     $stateSelect.html('<option value="">Loading states...</option>').prop('disabled', true);
-    
-    // Make AJAX call to fetch states
-    $.ajax({
+
+    // Make AJAX call to fetch states and return the jqXHR (thenable)
+    return $.ajax({
         url: `/api/states/${countryId}`,
         method: 'GET',
-        dataType: 'json',
-        success: function(states) {
-            console.log('Received states:', states);
-            // Build options HTML string
-            let options = '<option value="">Select County / State</option>';
-            states.forEach(function(state) {
-                options += `<option value="${state.id}">${state.name}</option>`;
-            });
-            // Update dropdown and re-enable it
-            $stateSelect.html(options).prop('disabled', false);
-            console.log('States loaded successfully');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error loading states:', error);
-            // Show error state and re-enable dropdown
-            $stateSelect.html('<option value="">Error loading states</option>').prop('disabled', false);
-        }
+        dataType: 'json'
+    }).then(function(response) {
+
+        // Accept either an array directly or { data: [...] }
+        const states = Array.isArray(response) ? response : (response && Array.isArray(response.data) ? response.data : []);
+
+        // Build options HTML string
+        let options = '<option value="">Select County / State</option>';
+        states.forEach(function(state, index) {
+            const id = state && (state.id ?? state.value);
+            const name = state && (state.name ?? state.text);
+            if (id != null && name != null) {
+                options += `<option value="${id}">${name}</option>`;
+            }
+        });
+
+        // Update dropdown, ensure it is enabled and visible
+        $stateSelect.html(options).prop('disabled', false);
+        $container.find('#state_field').show();
+        return states;
+    }).catch(function(error) {
+        $stateSelect.html('<option value="">Error loading states</option>').prop('disabled', false);
+        return [];
     });
 }
 
@@ -704,14 +721,11 @@ function loadStates(countryId, stateSelectId) {
  * When resident is set to "Yes" (value="1"), address fields are hidden and not required.
  */
 function toggleAddressFields(residentSelectId) {
-    console.log('toggleAddressFields called with:', residentSelectId);
     const $residentSelect = $('#' + residentSelectId);
-    console.log('Resident select found:', $residentSelect.length);
     
     if ($residentSelect.length) {
         // Remove any existing event listeners to prevent duplicates
         $residentSelect.off('change.toggleAddress');
-        console.log('Removed existing event listeners');
         
                 const addressFields = [
             'address1_field',
@@ -724,34 +738,20 @@ function toggleAddressFields(residentSelectId) {
         
         // Attach change event listener to resident dropdown with namespace
         $residentSelect.on('change.toggleAddress', function() {
-            console.log('Resident changed to:', this.value);
             
             if (this.value === '0') {
                 // Resident = No: Show address fields
-                console.log('Showing address fields:', addressFields);
                 
-                // Show all address fields
+                    // Show all address fields
                 addressFields.forEach(function(fieldId) {
                     const $field = $('#' + fieldId);
-                    console.log('Looking for field:', fieldId, 'Found:', $field.length);
                     $field.show();
-                });
-                
-                // Set required attributes for required fields
+                    });
+                    
+                    // Set required attributes for required fields
                 $('#address1').attr('required', 'required');
                 $('#country_id').attr('required', 'required');
                 $('#state_id').attr('required', 'required');
-                
-                // Attach country change listener now that country dropdown is visible
-                const $countrySelect = $('#country_id');
-                console.log('Attaching country change listener, country select found:', $countrySelect.length);
-                if ($countrySelect.length) {
-                    $countrySelect.off('change.loadStates').on('change.loadStates', function() {
-                        console.log('Country changed in Unit modal:', this.value);
-                        loadStates(this.value, 'state_id');
-                    });
-                    console.log('Country change listener attached');
-                }
                 } else {
                 // Resident = Yes: Hide address fields
                 addressFields.forEach(function(fieldId) {
@@ -762,9 +762,9 @@ function toggleAddressFields(residentSelectId) {
                 addressFields.forEach(function(fieldId) {
                     $('#' + fieldId).find('input, select').removeAttr('required');
                 });
-            }
-        });
-    }
+                        }
+                    });
+                }
 }
 
 /**
@@ -774,8 +774,6 @@ function toggleAddressFields(residentSelectId) {
  * @param {string} residentId - The ID of the resident dropdown
  */
 function initializeModal(modalId, residentId) {
-    console.log('initializeModal called with modalId:', modalId, 'residentId:', residentId);
-    
     const addressFields = [
         'address1_field',
         'address2_field',
@@ -788,17 +786,14 @@ function initializeModal(modalId, residentId) {
     // Hide all address fields
     addressFields.forEach(function(fieldId) {
         const $field = $('#' + fieldId);
-        console.log('Hiding field:', fieldId, 'Found:', $field.length);
         $field.hide();
     });
     
     // Set resident dropdown to Yes
     const $residentSelect = $('#' + residentId);
-    console.log('Setting resident dropdown:', residentId, 'Found:', $residentSelect.length);
     $residentSelect.val('1');
     
     // Attach toggle functionality to resident dropdown
-    console.log('Attaching toggle functionality to:', residentId);
     toggleAddressFields(residentId);
 }
 
@@ -821,7 +816,6 @@ function openUnitModal(mode, id = null) {
         $form.attr('action', '{{ route("block-units.store") }}');
         $form.find('input[name="_method"]').remove(); // Remove PUT method for add
         $form[0].reset(); // Reset form
-        
         // Initialize modal before showing
         initializeModal('unitModal', 'resident');
         
