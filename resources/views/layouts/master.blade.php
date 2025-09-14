@@ -7,8 +7,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta content="Property Management System" name="description" />
     <meta content="PROMAN" name="author" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ProMan">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
     <!-- App favicon -->
     <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/proman-favicon.svg') }}">
+    <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
+    
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('layouts.head-css')
 </head>
@@ -43,6 +57,107 @@
     <!-- JAVASCRIPT -->
     @include('layouts.vendor-scripts')
     @stack('scripts')
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content is available, show update notification
+                                    if (confirm('New version available! Reload to update?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+        
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show install button or notification
+            showInstallPrompt();
+        });
+        
+        function showInstallPrompt() {
+            // You can show a custom install button here
+            console.log('PWA install prompt available');
+            
+            // Example: Show a custom install button
+            if (deferredPrompt) {
+                // Create and show install button
+                const installButton = document.createElement('button');
+                installButton.textContent = 'Install App';
+                installButton.className = 'btn btn-primary';
+                installButton.style.position = 'fixed';
+                installButton.style.bottom = '20px';
+                installButton.style.right = '20px';
+                installButton.style.zIndex = '9999';
+                
+                installButton.addEventListener('click', () => {
+                    // Show the install prompt
+                    deferredPrompt.prompt();
+                    // Wait for the user to respond to the prompt
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        } else {
+                            console.log('User dismissed the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+                
+                document.body.appendChild(installButton);
+                
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    if (installButton.parentNode) {
+                        installButton.parentNode.removeChild(installButton);
+                    }
+                }, 10000);
+            }
+        }
+        
+        // Handle app installed event
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('PWA was installed');
+            // Hide install button if visible
+            const installButton = document.querySelector('button[style*="position: fixed"]');
+            if (installButton) {
+                installButton.remove();
+            }
+        });
+        
+        // Online/Offline status
+        window.addEventListener('online', () => {
+            console.log('App is online');
+            // You can show a notification or update UI
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('App is offline');
+            // You can show a notification or update UI
+        });
+    </script>
 </body>
 
 </html>

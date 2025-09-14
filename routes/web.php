@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\BlockBuildingController;
 use App\Http\Controllers\BlockUnitController;
+use App\Http\Controllers\PWAController;
 
 
 /*
@@ -21,6 +22,12 @@ Auth::routes(['verify' => true]);
 
 Route::get('index/{locale}',[App\Http\Controllers\HomeController::class, 'lang']);
 Route::get('/', [App\Http\Controllers\HomeController::class, 'root'])->name('root');
+
+// PWA Routes - must be before catch-all route
+Route::get('/manifest.json', [PWAController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/sw.js', [PWAController::class, 'serviceWorker'])->name('pwa.service-worker');
+Route::get('/offline', [PWAController::class, 'offline'])->name('pwa.offline');
+Route::get('/api/pwa/install-status', [PWAController::class, 'installStatus'])->name('pwa.install-status');
 
 // Dashboard Routes
 Route::middleware(['auth'])->group(function () {
