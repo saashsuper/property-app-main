@@ -8,6 +8,8 @@ use App\Models\Block;
 use App\Models\IssueStatus;
 use App\Models\Priority;
 use App\Models\User;
+use App\Models\JobReason;
+use App\Models\JobStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -205,8 +207,28 @@ class BlockIssueController extends Controller
         $users = User::orderBy('name')->get();
         $priorities = Priority::orderBy('id')->get();
         $issue_status = IssueStatus::orderBy('id')->get();
+        $jobReasons = JobReason::orderBy('name')->get();
+        $jobStatuses = JobStatus::orderBy('name')->get();
+        
+        // Load work orders for this issue
+        $workOrders = $blockIssue->workOrders()
+            ->with(['issuedBy', 'creator', 'priority'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users', 'priorities', 'issue_status'));
+        // Load site visits for this issue (both specific to this issue and general block visits)
+        $siteVisits = $blockIssue->block->blockVisits()
+            ->with(['jobReason', 'jobStatus', 'team.user', 'createdByUser', 'blockIssue'])
+            ->orderBy('scheduled_date_time', 'desc')
+            ->get();
+
+        // Also load site visits specifically created for this issue
+        $relatedSiteVisits = $blockIssue->relatedSiteVisits()
+            ->with(['jobReason', 'jobStatus', 'team.user', 'createdByUser'])
+            ->orderBy('scheduled_date_time', 'desc')
+            ->get();
+
+        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses'));
     }
 
     /**

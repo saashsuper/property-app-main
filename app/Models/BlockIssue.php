@@ -197,6 +197,30 @@ class BlockIssue extends Model
     }
 
     /**
+     * Get the work orders for the issue
+     */
+    public function workOrders()
+    {
+        return $this->hasMany(BlockWorkOrder::class, 'block_issue_id');
+    }
+
+    /**
+     * Get the site visit for the issue
+     */
+    public function siteVisit()
+    {
+        return $this->belongsTo(BlockVisit::class, 'block_visit_id');
+    }
+
+    /**
+     * Get all site visits created for this specific issue
+     */
+    public function relatedSiteVisits()
+    {
+        return $this->hasMany(BlockVisit::class, 'block_issue_id');
+    }
+
+    /**
      * Scope for active issues
      */
     public function scopeActive($query)

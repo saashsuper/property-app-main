@@ -72,7 +72,6 @@ class IssueController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'ref_no' => 'required|string|max:100|unique:issues',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category' => 'required|string|max:100',
@@ -91,6 +90,10 @@ class IssueController extends Controller
         }
 
         $data = $request->except('images');
+        
+        // Auto-generate reference number
+        $data['ref_no'] = $this->generateIssueRefNo();
+        
         $data['reported_by'] = $data['reported_by'] ?? Auth::id();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
@@ -229,5 +232,32 @@ class IssueController extends Controller
             'success' => true,
             'data' => $issue
         ]);
+    }
+
+    /**
+     * Generate a unique issue reference number
+     */
+    private function generateIssueRefNo()
+    {
+        $prefix = 'ISSUE';
+        $year = date('Y');
+        $month = date('m');
+        
+        // Get the last issue number for this month
+        $lastIssue = Issue::where('ref_no', 'like', "{$prefix}-{$year}{$month}-%")
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastIssue) {
+            // Extract the number part and increment
+            $parts = explode('-', $lastIssue->ref_no);
+            $lastNumber = (int) end($parts);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        // Format: ISSUE-202509-001
+        return sprintf('%s-%s%s-%03d', $prefix, $year, $month, $newNumber);
     }
 }

@@ -142,7 +142,7 @@
 
                                         <div class="mb-3">
                                             <label for="priority_id" class="form-label">Priority <span
-                                                    class="text-danger">*</span></label>
+                                                    class="text-danger">*</span>{{$blockIssue->priority_id}}</label>
                                             <select class="form-select @error('priority_id') is-invalid @enderror"
                                                 id="priority_id" name="priority_id" required>
                                                 <option value="">Select Priority</option>
@@ -381,12 +381,223 @@
                                     </div>
                                 </div>
 
+                                <!-- Work Orders Section -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="ph-wrench me-2"></i>Work Orders for this Issue
+                                                    <span class="badge bg-primary ms-2">{{ $workOrders->count() }}</span>
+                                                </h5>
+                                            </div>
+                                            <div class="card-body">
+                                                @if($workOrders->count() > 0)
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Reference</th>
+                                                                    <th>Status</th>
+                                                                    <th>Priority</th>
+                                                                    <th>Issued By</th>
+                                                                    <th>Created</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($workOrders as $workOrder)
+                                                                <tr>
+                                                                    <td>
+                                                                        <strong>{{ $workOrder->ref_no }}</strong>
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($workOrder->status == 1)
+                                                                            <span class="badge bg-warning">Pending</span>
+                                                                        @elseif($workOrder->status == 2)
+                                                                            <span class="badge bg-info">In Progress</span>
+                                                                        @elseif($workOrder->status == 3)
+                                                                            <span class="badge bg-success">Completed</span>
+                                                                        @elseif($workOrder->status == 4)
+                                                                            <span class="badge bg-danger">Cancelled</span>
+                                                                        @elseif($workOrder->status == 5)
+                                                                            <span class="badge bg-secondary">On Hold</span>
+                                                                        @else
+                                                                            <span class="badge bg-secondary">Unknown</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($workOrder->priority_id == 1)
+                                                                            <span class="badge bg-success">Low</span>
+                                                                        @elseif($workOrder->priority_id == 2)
+                                                                            <span class="badge bg-info">Normal</span>
+                                                                        @elseif($workOrder->priority_id == 3)
+                                                                            <span class="badge bg-warning">High</span>
+                                                                        @elseif($workOrder->priority_id == 4)
+                                                                            <span class="badge bg-danger">Urgent</span>
+                                                                        @elseif($workOrder->priority_id == 5)
+                                                                            <span class="badge bg-dark">Critical</span>
+                                                                        @else
+                                                                            <span class="badge bg-secondary">Unknown</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $workOrder->issuedBy->name ?? 'N/A' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $workOrder->created_at ? $workOrder->created_at->format('M d, Y H:i') : 'N/A' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="btn-group" role="group">
+                                                                            <a href="{{ route('block-work-orders.show', $workOrder->id) }}" 
+                                                                               class="btn btn-sm btn-outline-primary" 
+                                                                               title="View Work Order">
+                                                                                <i class="ph-eye"></i>
+                                                                            </a>
+                                                                            <a href="{{ route('block-work-orders.edit', $workOrder->id) }}" 
+                                                                               class="btn btn-sm btn-outline-secondary" 
+                                                                               title="Edit Work Order">
+                                                                                <i class="ph-pencil"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <div class="text-center py-4">
+                                                        <div class="mb-3">
+                                                            <i class="ph-wrench display-4 text-muted"></i>
+                                                        </div>
+                                                        <h6 class="text-muted">No work orders found for this issue</h6>
+                                                        <p class="text-muted mb-0">Create a work order to get started with resolving this issue.</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Site Visits Section -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="ph-map-pin me-2"></i>Site Visits for this Block
+                                                    <span class="badge bg-info ms-2">{{ $siteVisits->count() }}</span>
+                                                </h5>
+                                            </div>
+                                            <div class="card-body">
+                                                @if($siteVisits->count() > 0)
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Reference</th>
+                                                                    <th>Scheduled Date</th>
+                                                                    <th>Job Reason</th>
+                                                                    <th>Status</th>
+                                                                    <th>Team</th>
+                                                                    <th>Created By</th>
+                                                                    <th>Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($siteVisits as $siteVisit)
+                                                                <tr class="{{ $siteVisit->block_issue_id == $blockIssue->id ? 'table-success' : '' }}">
+                                                                    <td>
+                                                                        <strong>{{ $siteVisit->ref_no }}</strong>
+                                                                        @if($siteVisit->block_issue_id == $blockIssue->id)
+                                                                            <span class="badge bg-success ms-1" title="Created for this specific issue">
+                                                                                <i class="ph-check"></i>
+                                                                            </span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $siteVisit->scheduled_date_time ? $siteVisit->scheduled_date_time->format('M d, Y H:i') : 'N/A' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        <span class="badge bg-secondary">{{ $siteVisit->jobReason->name ?? 'N/A' }}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($siteVisit->jobStatus)
+                                                                            @if($siteVisit->jobStatus->id == 1)
+                                                                                <span class="badge bg-warning">{{ $siteVisit->jobStatus->name }}</span>
+                                                                            @elseif($siteVisit->jobStatus->id == 2)
+                                                                                <span class="badge bg-info">{{ $siteVisit->jobStatus->name }}</span>
+                                                                            @elseif($siteVisit->jobStatus->id == 3)
+                                                                                <span class="badge bg-success">{{ $siteVisit->jobStatus->name }}</span>
+                                                                            @elseif($siteVisit->jobStatus->id == 4)
+                                                                                <span class="badge bg-danger">{{ $siteVisit->jobStatus->name }}</span>
+                                                                            @else
+                                                                                <span class="badge bg-secondary">{{ $siteVisit->jobStatus->name }}</span>
+                                                                            @endif
+                                                                        @else
+                                                                            <span class="badge bg-light text-dark">Pending</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($siteVisit->team->count() > 0)
+                                                                            @foreach($siteVisit->team->take(2) as $teamMember)
+                                                                                <span class="badge bg-light text-dark me-1">{{ $teamMember->user->name ?? 'N/A' }}</span>
+                                                                            @endforeach
+                                                                            @if($siteVisit->team->count() > 2)
+                                                                                <span class="badge bg-light text-dark">+{{ $siteVisit->team->count() - 2 }} more</span>
+                                                                            @endif
+                                                                        @else
+                                                                            <span class="text-muted">No team assigned</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $siteVisit->createdByUser->name ?? 'N/A' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="btn-group" role="group">
+                                                                            <a href="{{ route('block-visits.show', $siteVisit->id) }}" 
+                                                                               class="btn btn-sm btn-outline-primary" 
+                                                                               title="View Site Visit">
+                                                                                <i class="ph-eye"></i>
+                                                                            </a>
+                                                                            <a href="{{ route('block-visits.edit', $siteVisit->id) }}" 
+                                                                               class="btn btn-sm btn-outline-secondary" 
+                                                                               title="Edit Site Visit">
+                                                                                <i class="ph-pencil"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <div class="text-center py-4">
+                                                        <div class="mb-3">
+                                                            <i class="ph-map-pin display-4 text-muted"></i>
+                                                        </div>
+                                                        <h6 class="text-muted">No site visits found for this block</h6>
+                                                        <p class="text-muted mb-0">Create a site visit to schedule inspections or maintenance activities.</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="row mt-4">
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createWorkOrderModal">
-                                                <i class="ph-plus-circle me-1"></i> Create Work Order
-                                            </button>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createWorkOrderModal">
+                                                    <i class="ph-plus-circle me-1"></i> Create Work Order
+                                                </button>
+                                                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createSiteVisitModal">
+                                                    <i class="ph-map-pin me-1"></i> Create Site Visit
+                                                </button>
+                                            </div>
                                             
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('block-issues.index') }}" class="btn btn-secondary">
@@ -415,7 +626,7 @@
                     <h5 class="modal-title" id="createWorkOrderModalLabel">Create Work Order for Issue: {{ $blockIssue->ref_no }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="createWorkOrderForm" action="{{ route('block-work-orders.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="createWorkOrderForm" >
                     @csrf
                     
                     <!-- Hidden fields pre-populated from the issue -->
@@ -432,11 +643,6 @@
                                 <div class="work-order-section">
                                     <h6>Basic Information</h6>
                                 
-                                <div class="mb-3">
-                                    <label for="work_order_ref_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="work_order_ref_no" name="ref_no" 
-                                           value="WO-{{ date('Ymd') }}-{{ str_pad($blockIssue->id, 4, '0', STR_PAD_LEFT) }}" required>
-                                </div>
 
                                 <div class="mb-3">
                                     <label for="work_order_priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
@@ -547,6 +753,112 @@
                         <button type="submit" class="btn btn-success">
                             <i class="ph-plus-circle me-1"></i> Create Work Order
                         </button>
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Site Visit Modal -->
+    <div class="modal fade" id="createSiteVisitModal" tabindex="-1" aria-labelledby="createSiteVisitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSiteVisitModalLabel">Create Site Visit for Issue: {{ $blockIssue->ref_no }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createSiteVisitForm">
+                    @csrf
+                    <input type="hidden" name="block_issue_id" value="{{ $blockIssue->id }}">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="site_visit_block_id" class="form-label">Block <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="site_visit_block_id" name="block_id" required>
+                                        <option value="">Select a block</option>
+                                        @foreach($blocks as $block)
+                                            <option value="{{ $block->id }}" {{ $blockIssue->block_id == $block->id ? 'selected' : '' }}>
+                                                {{ $block->name }} - {{ $block->management_company }}
+                                                @if($block->blockType)
+                                                    ({{ $block->blockType->name }})
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="site_visit_ref_no" class="form-label">Reference No <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="site_visit_ref_no" name="ref_no" required readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="scheduled_date_time" class="form-label">Scheduled Date & Time <span class="text-danger">*</span></label>
+                                    <input type="datetime-local" class="form-control" id="scheduled_date_time" name="scheduled_date_time" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="site_visit_user_id" class="form-label">Assigned User <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="site_visit_user_id" name="user_id" required>
+                                        <option value="">Select a user</option>
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="job_reason_id" class="form-label">Job Reason <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="job_reason_id" name="job_reason_id" required>
+                                        <option value="">Select a reason</option>
+                                        @foreach($jobReasons as $reason)
+                                            <option value="{{ $reason->id }}">{{ $reason->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="job_status_id" class="form-label">Job Status</label>
+                                    <select class="form-select" id="job_status_id" name="job_status_id">
+                                        <option value="">Select a status</option>
+                                        @foreach($jobStatuses as $status)
+                                            <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="site_visit_notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="site_visit_notes" name="notes" rows="3" 
+                                      placeholder="Enter any additional notes for this site visit...">{{ $blockIssue->issue_details }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="site_visit_comment" class="form-label">Comment</label>
+                            <textarea class="form-control" id="site_visit_comment" name="comment" rows="3" 
+                                      placeholder="Enter any additional comments...">{{ $blockIssue->comment }}</textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-info">
+                            <i class="ph-map-pin me-1"></i> Create Site Visit
+                        </button>
                     </div>
                 </form>
             </div>
@@ -556,90 +868,115 @@
 
 @section('script')
     <script>
-        // Handle work order form submission
-        document.getElementById('createWorkOrderForm').addEventListener('submit', function(e) {
+        // Handle work order form submission using jQuery AJAX
+        $('#createWorkOrderForm').on('submit', function(e) {
             e.preventDefault();
             
             // Show loading state
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="ph-spinner ph-spin me-1"></i> Creating...';
-            submitBtn.disabled = true;
+            const $submitBtn = $(this).find('button[type="submit"]');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="ph-spinner ph-spin me-1"></i> Creating...').prop('disabled', true);
             
-            // Submit form via AJAX
-            fetch(this.action, {
-                method: 'POST',
-                body: new FormData(this),
+            // Prepare form data
+            const formData = new FormData(this);
+            
+            // Submit form via jQuery AJAX
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success message
-                    Toastify({
-                        text: data.message || 'Work order has been created successfully!',
-                        duration: 3000,
-                        gravity: "top",
-                        position: "right",
-                        backgroundColor: "#28a745",
-                        stopOnFocus: true
-                    }).showToast();
-                    
-                    // Close modal and redirect to work order
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('createWorkOrderModal'));
-                    modal.hide();
-                    
-                    // Redirect to the created work order
-                    if (data.work_order_id) {
-                        window.location.href = `{{ route('block-work-orders.index') }}?highlight=${data.work_order_id}`;
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Show success message
+                        Toastify({
+                            text: data.message || 'Work order has been created successfully!',
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#28a745",
+                            stopOnFocus: true
+                        }).showToast();
+                        
+                        // Close modal immediately
+                        closeWorkOrderModal();
+                        
+                        // Also try direct modal close as backup
+                        setTimeout(() => {
+                            const $modalElement = $('#createWorkOrderModal');
+                            if ($modalElement.length && !$modalElement.hasClass('show')) {
+                                // Modal is already closed, proceed with redirect
+                                if (data.work_order_id) {
+                                    window.location.href = `{{ route('block-work-orders.index') }}?highlight=${data.work_order_id}`;
+                                }
+                            } else {
+                                // Force close and then redirect
+                                closeWorkOrderModal();
+                                setTimeout(() => {
+                                    if (data.work_order_id) {
+                                        window.location.href = `{{ route('block-work-orders.index') }}?highlight=${data.work_order_id}`;
+                                    }
+                                }, 500);
+                            }
+                        }, 100);
+                    } else {
+                        // Show error message
+                        Toastify({
+                            text: data.message || 'Failed to create work order. Please try again.',
+                            duration: 5000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#dc3545",
+                            stopOnFocus: true
+                        }).showToast();
                     }
-                } else {
-                    // Show error message
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    let errorMessage = 'An unexpected error occurred. Please try again.';
+                    
+                    // Try to get error message from response
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.message) {
+                                errorMessage = response.message;
+                            }
+                        } catch (e) {
+                            // Keep default error message
+                        }
+                    }
+                    
                     Toastify({
-                        text: data.message || 'Failed to create work order. Please try again.',
+                        text: errorMessage,
                         duration: 5000,
                         gravity: "top",
                         position: "right",
                         backgroundColor: "#dc3545",
                         stopOnFocus: true
                     }).showToast();
+                },
+                complete: function() {
+                    // Reset button state
+                    $submitBtn.html(originalText).prop('disabled', false);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Toastify({
-                    text: 'An unexpected error occurred. Please try again.',
-                    duration: 5000,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "#dc3545",
-                    stopOnFocus: true
-                }).showToast();
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
             });
         });
 
-        // Auto-generate reference number when modal opens
-        document.getElementById('createWorkOrderModal').addEventListener('show.bs.modal', function() {
-            const refNoField = document.getElementById('work_order_ref_no');
-            const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            const issueId = '{{ $blockIssue->id }}';
-            refNoField.value = `WO-${currentDate}-${issueId.padStart(4, '0')}`;
-        });
 
-        // Copy issue details to work order form
-        document.getElementById('createWorkOrderModal').addEventListener('show.bs.modal', function() {
+        // Copy issue details to work order form using jQuery
+        $('#createWorkOrderModal').on('show.bs.modal', function() {
             // Copy issue details
             const issueDetails = '{{ $blockIssue->issue_details }}';
             if (issueDetails) {
-                document.getElementById('work_order_issue').value = issueDetails;
+                $('#work_order_issue').val(issueDetails);
             }
         });
 
@@ -722,5 +1059,161 @@
                 });
             }
         }
+
+        // Handle site visit form submission using jQuery AJAX
+        $('#createSiteVisitForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const $submitBtn = $(this).find('button[type="submit"]');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="ph-spinner ph-spin me-1"></i> Creating...').prop('disabled', true);
+            
+            // Prepare form data
+            const formData = new FormData(this);
+            
+            // Submit form via jQuery AJAX
+            $.ajax({
+                url: '{{ route("block-visits.store") }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    if (data.success) {
+                        // Show success message
+                        Toastify({
+                            text: data.message || 'Site visit created successfully!',
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#28a745",
+                            stopOnFocus: true
+                        }).showToast();
+                        
+                        // Close modal immediately
+                        closeSiteVisitModal();
+                        
+                        // Also try direct modal close as backup
+                        setTimeout(() => {
+                            const $modalElement = $('#createSiteVisitModal');
+                            if ($modalElement.length && !$modalElement.hasClass('show')) {
+                                // Modal is already closed, proceed with redirect
+                                window.location.href = '{{ route("block-visits.index") }}';
+                            } else {
+                                // Force close and then redirect
+                                closeSiteVisitModal();
+                                setTimeout(() => {
+                                    window.location.href = '{{ route("block-visits.index") }}';
+                                }, 500);
+                            }
+                        }, 100);
+                    } else {
+                        // Show error message
+                        Toastify({
+                            text: data.message || 'Failed to create site visit. Please try again.',
+                            duration: 5000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#dc3545",
+                            stopOnFocus: true
+                        }).showToast();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('AJAX Error:', error);
+                    let errorMessage = 'An unexpected error occurred. Please try again.';
+                    
+                    // Try to get error message from response
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.message) {
+                                errorMessage = response.message;
+                            }
+                        } catch (e) {
+                            // Keep default error message
+                        }
+                    }
+                    
+                    Toastify({
+                        text: errorMessage,
+                        duration: 5000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#dc3545",
+                        stopOnFocus: true
+                    }).showToast();
+                },
+                complete: function() {
+                    // Reset button state
+                    $submitBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        });
+
+        // Generate reference number for site visit using jQuery
+        $('#createSiteVisitModal').on('show.bs.modal', function() {
+            const currentDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const issueId = '{{ $blockIssue->id }}';
+            $('#site_visit_ref_no').val(`SV-${currentDate}-${issueId.padStart(4, '0')}`);
+        });
+
+        // Copy issue details to site visit form using jQuery
+        $('#createSiteVisitModal').on('show.bs.modal', function() {
+            // Copy issue details to notes
+            const issueDetails = '{{ $blockIssue->issue_details }}';
+            const $notesField = $('#site_visit_notes');
+            if (issueDetails && !$notesField.val()) {
+                $notesField.val(issueDetails);
+            }
+        });
+
+        // Function to close work order modal
+        function closeWorkOrderModal() {
+            const modalElement = document.getElementById('createWorkOrderModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            } else {
+                // Trigger the close button click as fallback
+                const closeBtn = modalElement.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            }
+        }
+
+        // Function to close site visit modal
+        function closeSiteVisitModal() {
+            const modalElement = document.getElementById('createSiteVisitModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            } else {
+                // Trigger the close button click as fallback
+                const closeBtn = modalElement.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            }
+        }
+
+        // Add modal event listeners for better control using jQuery
+        $('#createWorkOrderModal').on('hidden.bs.modal', function() {
+            // Reset form when modal is closed
+            $('#createWorkOrderForm')[0].reset();
+        });
+
+        $('#createSiteVisitModal').on('hidden.bs.modal', function() {
+            // Reset form when modal is closed
+            $('#createSiteVisitForm')[0].reset();
+        });
     </script>
 @endsection

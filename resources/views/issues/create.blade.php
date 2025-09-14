@@ -40,14 +40,6 @@
                                 <div class="col-md-6">
                                     <h5 class="mb-3">Basic Information</h5>
                                     
-                                    <div class="mb-3">
-                                        <label for="ref_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('ref_no') is-invalid @enderror" 
-                                               id="ref_no" name="ref_no" value="{{ old('ref_no') }}" required>
-                                        @error('ref_no')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
 
                                     <div class="mb-3">
                                         <label for="title" class="form-label">Issue Title <span class="text-danger">*</span></label>

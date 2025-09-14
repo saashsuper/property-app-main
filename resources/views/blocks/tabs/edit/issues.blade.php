@@ -110,7 +110,6 @@
                 </button>
             </div>
         </div>
-
          @if ($block->issues && $block->issues->count() > 0)
              <div class="table-responsive">
                  <table class="table table-bordered table-hover" id="issuesTable">
@@ -289,7 +288,7 @@
 
                                 <!-- Row 3: Dynamic Contact Details based on Contact Method -->
                                 <div class="col-md-6 mb-3" id="contact_details_container">
-                                    <label for="contact_details" class="form-label">Contact Details <span
+                                    <label for="contact_details" class="form-label">Reoted from <span
                                             class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="contact_details"
                                         name="contact_details" placeholder="Enter contact details..." required>

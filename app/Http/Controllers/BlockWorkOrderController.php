@@ -96,7 +96,6 @@ class BlockWorkOrderController extends Controller
             'preferred_end_date_time' => 'nullable|date',
             'deadline_date' => 'nullable|date',
             'status' => 'required|integer|min:1|max:5',
-            'ref_no' => 'required|string|max:100|unique:block_work_orders',
             'repair_category_id' => 'nullable|integer',
             'issue' => 'nullable|string|max:255',
             'note_for_access' => 'nullable|string|max:255',
@@ -121,6 +120,10 @@ class BlockWorkOrderController extends Controller
         }
 
         $data = $request->except(['images', 'pdf']);
+        
+        // Auto-generate reference number
+        $data['ref_no'] = $this->generateWorkOrderRefNo();
+        
         $data['issued_by'] = Auth::id();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
@@ -324,5 +327,32 @@ class BlockWorkOrderController extends Controller
             'success' => true,
             'data' => $blockWorkOrder
         ]);
+    }
+
+    /**
+     * Generate a unique work order reference number
+     */
+    private function generateWorkOrderRefNo()
+    {
+        $prefix = 'WO';
+        $year = date('Y');
+        $month = date('m');
+        
+        // Get the last work order number for this month
+        $lastWorkOrder = BlockWorkOrder::where('ref_no', 'like', "{$prefix}-{$year}{$month}-%")
+            ->orderBy('id', 'desc')
+            ->first();
+        
+        if ($lastWorkOrder) {
+            // Extract the number part and increment
+            $parts = explode('-', $lastWorkOrder->ref_no);
+            $lastNumber = (int) end($parts);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        // Format: WO-202509-001
+        return sprintf('%s-%s%s-%03d', $prefix, $year, $month, $newNumber);
     }
 }
