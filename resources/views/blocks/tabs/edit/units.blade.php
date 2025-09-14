@@ -688,7 +688,6 @@ function loadStates(countryId, stateSelectId) {
         method: 'GET',
         dataType: 'json'
     }).then(function(response) {
-
         // Accept either an array directly or { data: [...] }
         const states = Array.isArray(response) ? response : (response && Array.isArray(response.data) ? response.data : []);
 
@@ -862,6 +861,9 @@ function loadUnitForEdit(id) {
                     $form.append('<input type="hidden" name="_method" value="PUT">');
                 }
                 
+                // Initialize modal first (this sets up the toggle functionality and hides address fields)
+                initializeModal('unitModal', 'resident');
+                
                 // Populate form fields
                 $('#block_building_id').val(unit.block_building_id);
                 $('#block_unit_type_id').val(unit.block_unit_type_id);
@@ -874,10 +876,13 @@ function loadUnitForEdit(id) {
                 $('#phone_number').val(unit.phone_number);
                 $('#letting_agent').val(unit.letting_agent);
                 $('#misc_info').val(unit.misc_info);
-                $('#resident').val(unit.resident);
                 
-                // Handle address fields based on resident status
-                if (unit.resident == 0) {
+                // Convert boolean to string for dropdown (API returns boolean, dropdown expects string)
+                const residentValue = unit.resident ? '1' : '0';
+                $('#resident').val(residentValue);
+                
+                // Handle address fields based on resident status AFTER setting resident value
+                if (!unit.resident) { // Check boolean directly
                     // Non-resident: Show address fields and populate them
                     const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
                     addressFields.forEach(function(fieldId) {
@@ -891,26 +896,23 @@ function loadUnitForEdit(id) {
                     
                     // Set country and load states
                     if (unit.country_id) {
-                        $('#country_id').val(unit.country_id);
-                        loadStates(unit.country_id, 'state_id').then(function() {
+                        $('#country_id').val(unit.country_id).trigger('change');
+                        
+                        loadStates(unit.country_id, 'state_id').then(function(states) {
                             if (unit.state_id) {
-                                $('#state_id').val(unit.state_id);
+                                $('#state_id').val(unit.state_id).trigger('change');
+
+                                                // Show the modal
+                $modal.modal('show');
                             }
+                        }).catch(function(error) {
+                            console.error('Error loading states:', error);
                         });
                     }
-                } else {
-                    // Resident: Hide address fields
-                    const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
-                    addressFields.forEach(function(fieldId) {
-                        $('#' + fieldId).hide();
-                    });
                 }
+                // If resident is true, address fields remain hidden (as set by initializeModal)
                 
-                // Initialize modal before showing
-                initializeModal('unitModal', 'resident');
                 
-                // Show the modal
-                $modal.modal('show');
             } else {
                 showMessage('unitMessage', 'danger', 'Error loading unit data');
             }
