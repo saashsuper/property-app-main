@@ -41,7 +41,7 @@
                             <!-- Add Button -->
                             @admin
                             <a href="{{ route('block-inspections.create') }}" class="btn btn-primary">
-                                <i class="ph-plus me-2"></i>Schedule Inspection
+                                <i class="ph-plus me-2"></i>Add Inspection
                             </a>
                             @endadmin
                         </div>
@@ -156,7 +156,7 @@
                                                 <p>No block inspections match your current filters.</p>
                                                 @admin
                                                 <a href="{{ route('block-inspections.create') }}" class="btn btn-primary">
-                                                    <i class="ph-plus me-2"></i>Schedule First Inspection
+                                                    <i class="ph-plus me-2"></i>Add First Inspection
                                                 </a>
                                                 @endadmin
                                             </div>
