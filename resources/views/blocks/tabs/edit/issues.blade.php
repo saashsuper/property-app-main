@@ -110,7 +110,6 @@
                 </button>
             </div>
         </div>
-         @if ($block->issues && $block->issues->count() > 0)
              <div class="table-responsive">
                  <table class="table table-bordered table-hover" id="issuesTable">
                      <thead class="table-light">
@@ -168,17 +167,7 @@
                      </tbody>
                  </table>
              </div>
-         @else
-             <div class="text-center py-4">
-                 <div class="text-muted">
-                     <i class="ph-warning font-size-24 mb-2"></i>
-                     <p>No issues reported for this block.</p>
-                     <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createIssueModal">
-                         <i class="ph-plus me-1"></i> Report First Issue
-                     </button>
-                 </div>
-             </div>
-         @endif
+         
     </div>
 </div>
 
@@ -228,7 +217,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="assigned_to" class="form-label">Assigned To <span
+                                    <label for="assigned_to" class="form-label">Assigned To<span
                                             class="text-danger">*</span></label>
                                     <select class="form-select" id="assigned_to" name="assigned_to" required>
                                         <option value="">Select Property Manager</option>
@@ -811,6 +800,7 @@
         }
 
         // Initialize autocomplete when modal opens
+        */
         createIssueModal.addEventListener('show.bs.modal', function() {
             console.log('Modal opened - initializing autocomplete...');
 
@@ -894,6 +884,7 @@
 
 
         });
+        */
 
          // Handle checkbox toggle for contact details
          const useDefaultContactCheckbox = document.getElementById('use_default_contact');
