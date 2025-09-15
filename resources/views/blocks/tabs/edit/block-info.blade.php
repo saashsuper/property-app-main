@@ -130,7 +130,7 @@
             @php
                 $usedTypeIds = isset($blockInformation) ? $blockInformation->pluck('information_type_id')->toArray() : [];
             @endphp
-            <form id="editBlockInformationForm" method="POST">
+            <form id="editBlockInformationForm" method="POST" action="{{ route('block-information.update', 0) }}">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
