@@ -105,9 +105,42 @@ class BlockInspectionController extends Controller
         
         // Return JSON when requested (AJAX/Accept headers)
         if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            $data = [
+                'id' => $blockInspection->id,
+                'ref_no' => $blockInspection->ref_no,
+                'scheduled_date_time' => $blockInspection->scheduled_date_time,
+                'start_date_time' => $blockInspection->start_date_time,
+                'end_date_time' => $blockInspection->end_date_time,
+                'notes' => $blockInspection->notes,
+                'job_status_id' => $blockInspection->job_status_id,
+                'created_by' => $blockInspection->created_by,
+                // Relations in camelCase to match frontend expectations
+                'creator' => $blockInspection->creator,
+                'block' => $blockInspection->block,
+                'inspectionTeams' => $blockInspection->inspectionTeams->map(function($member) {
+                    return [
+                        'id' => $member->id,
+                        'user_id' => $member->user_id,
+                        'is_lead' => (bool) $member->is_lead,
+                        'role' => $member->role,
+                        'user' => $member->user,
+                    ];
+                })->values(),
+                // Also provide with snake_case for backward compatibility
+                'inspection_teams' => $blockInspection->inspectionTeams->map(function($member) {
+                    return [
+                        'id' => $member->id,
+                        'user_id' => $member->user_id,
+                        'is_lead' => (bool) $member->is_lead,
+                        'role' => $member->role,
+                        'user' => $member->user,
+                    ];
+                })->values(),
+            ];
+
             return response()->json([
                 'success' => true,
-                'data' => $blockInspection
+                'data' => $data,
             ]);
         }
         

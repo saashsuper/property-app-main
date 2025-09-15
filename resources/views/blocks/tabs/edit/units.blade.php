@@ -85,7 +85,7 @@
                 <h5 class="modal-title" id="unitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Unit</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
-            <form id="unitForm" method="POST">
+            <form id="unitForm" method="POST" action="{{ route('block-units.store') }}">
                 @csrf
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
@@ -459,6 +459,13 @@ $(document).ready(function() {
                         // Redraw the table to show new data
                         blockUnitsDataTable.draw();
                         console.log('Units table refreshed with', data.data.length, 'units');
+                        
+                        // Ensure Units tab remains active after table refresh
+                        const unitsTab = document.querySelector('#units-tab');
+                        if (unitsTab) {
+                            const tab = new bootstrap.Tab(unitsTab);
+                            tab.show();
+                        }
                     } else {
                         console.error('Error refreshing units table:', data.message);
                     }
@@ -494,18 +501,28 @@ $(document).ready(function() {
             
             $.ajax({
                 url: $form.attr('action'),
-            method: 'POST',
+                method: 'POST',
                 data: formData,
                 processData: false,        // Don't process data (for file uploads)
                 contentType: false,       // Don't set content type (let browser set it)
-            headers: {
+                headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                'Accept': 'application/json'
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 success: function(data) {
+                    console.log('Form submission success response:', data);
             if (data && data.success) {
                         // Show success message
                         showMessage(messageId, 'success', successMessage);
+                        
+                        // Switch to Units tab immediately after success
+                        const unitsTab = document.querySelector('#units-tab');
+                        if (unitsTab) {
+                            const tab = new bootstrap.Tab(unitsTab);
+                            tab.show();
+                        }
+                        
                         // Reset form if needed
                         if (shouldReset) {
                             $form[0].reset();
@@ -514,13 +531,27 @@ $(document).ready(function() {
                         setTimeout(function() {
                             $('#' + modalId).modal('hide');
                             refreshBlockUnitsTable();
+                            
+                            // Ensure Units tab remains active after form submission
+                            console.log('Attempting to switch to Units tab after form submission...');
+                            const unitsTab = document.querySelector('#units-tab');
+                            if (unitsTab) {
+                                console.log('Units tab found, switching...');
+                                const tab = new bootstrap.Tab(unitsTab);
+                                tab.show();
+                                console.log('Units tab switch command executed');
+                            } else {
+                                console.log('Units tab not found');
+                            }
                 }, 800);
             } else {
                         // Show error message
                         showMessage(messageId, 'danger', (data && data.message) || errorMessage);
                     }
                 },
-                error: function() {
+                error: function(xhr, status, error) {
+                    console.log('Form submission error:', xhr, status, error);
+                    console.log('Response text:', xhr.responseText);
                     // Show generic error message
                     showMessage(messageId, 'danger', errorMessage);
                 }
@@ -591,6 +622,13 @@ $(document).ready(function() {
                         $('#uploadUnitModal').modal('hide');
                         setTimeout(function() {
                             refreshBlockUnitsTable();
+                            
+                            // Ensure Units tab remains active after upload
+                            const unitsTab = document.querySelector('#units-tab');
+                            if (unitsTab) {
+                                const tab = new bootstrap.Tab(unitsTab);
+                                tab.show();
+                            }
                         }, 300);
                     }, 3000);
             } else {
@@ -617,6 +655,13 @@ $(document).ready(function() {
      * Hides all previous success/error messages when the upload modal is shown.
      */
     $('#uploadUnitModal').on('show.bs.modal', function() {
+        // Switch to Units tab when opening upload unit modal
+        const unitsTab = document.querySelector('#units-tab');
+        if (unitsTab) {
+            const tab = new bootstrap.Tab(unitsTab);
+            tab.show();
+        }
+        
         $('#uploadMessageContainer, #uploadSuccess, #uploadErrors').hide();
     });
     
@@ -629,6 +674,190 @@ $(document).ready(function() {
     // Initialize DataTable for units listing
     initializeDataTable();
 });
+
+// ========================================
+// GLOBAL FUNCTIONS (accessible from HTML onclick)
+// ========================================
+
+/**
+ * Opens the unit modal in Add or Edit mode
+ * 
+ * @param {string} mode - 'add' or 'edit'
+ * @param {number} id - Unit ID (only needed for edit mode)
+ */
+function openUnitModal(mode, id = null) {
+    // Ensure jQuery is available
+    if (typeof $ === 'undefined') {
+        return;
+    }
+    
+    const $modal = $('#unitModal');
+    const $modalLabel = $('#unitModalLabel');
+    const $form = $('#unitForm');
+    const $submitBtn = $('#unitSubmitBtn');
+    
+    // Switch to Units tab when opening unit modal
+    const unitsTab = document.querySelector('#units-tab');
+    if (unitsTab) {
+        const tab = new bootstrap.Tab(unitsTab);
+        tab.show();
+    }
+    
+        if (mode === 'add') {
+            // Add mode
+            $modalLabel.text('Add Unit');
+            $submitBtn.html('<i class="ph-check me-1"></i> Save');
+            $form.attr('action', '{{ route("block-units.store") }}');
+            $form.find('input[name="_method"]').remove(); // Remove PUT method for add
+            $form[0].reset(); // Reset form
+            // Initialize modal before showing
+            initializeModal('unitModal', 'resident');
+            
+            $modal.modal('show');
+        } else if (mode === 'edit' && id) {
+        // Edit mode - load unit data
+        loadUnitForEdit(id);
+    }
+}
+
+/**
+ * Loads unit data and populates the modal for editing
+ * 
+ * @param {number} id - The ID of the unit to edit
+ */
+function loadUnitForEdit(id) {
+    // Ensure jQuery is available
+    if (typeof $ === 'undefined') {
+        return;
+    }
+    
+    // Switch to Units tab when editing unit
+    const unitsTab = document.querySelector('#units-tab');
+    if (unitsTab) {
+        const tab = new bootstrap.Tab(unitsTab);
+        tab.show();
+    }
+    
+    // Show loading state - try multiple selectors to find the edit button
+    let $editBtn = $(`button[onclick="editUnit(${id})"]`);
+    if ($editBtn.length === 0) {
+        // Try alternative selector
+        $editBtn = $(`button:contains("Edit")`).filter(function() {
+            return $(this).attr('onclick') && $(this).attr('onclick').includes(`editUnit(${id})`);
+        });
+    }
+    
+    const originalText = $editBtn.length > 0 ? $editBtn.html() : 'Edit';
+    if ($editBtn.length > 0) {
+        $editBtn.html('<i class="ph-spinner ph-spin me-1"></i>Loading...').prop('disabled', true);
+    }
+        
+        $.ajax({
+            url: `/block-units/${id}`,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data) {
+                if (data && data.success) {
+                    const unit = data.data;
+                    const $modal = $('#unitModal');
+                    const $modalLabel = $('#unitModalLabel');
+                    const $form = $('#unitForm');
+                    const $submitBtn = $('#unitSubmitBtn');
+                    
+                    // Set modal to edit mode
+                    $modalLabel.text('Edit Unit');
+                    $submitBtn.html('<i class="ph-check me-1"></i> Update');
+                    $form.attr('action', `/block-units/${id}`);
+                    
+                    // Add PUT method for edit
+                    if ($form.find('input[name="_method"]').length === 0) {
+                        $form.append('<input type="hidden" name="_method" value="PUT">');
+                    }
+                    
+                    // Initialize modal first (this sets up the toggle functionality and hides address fields)
+                    initializeModal('unitModal', 'resident');
+                    
+                    // Populate form fields
+                    $('#block_building_id').val(unit.block_building_id);
+                    $('#block_unit_type_id').val(unit.block_unit_type_id);
+                    $('#unit_code').val(unit.unit_code);
+                    $('#unit_name').val(unit.unit_name);
+                    $('#owners_name').val(unit.owners_name);
+                    $('#salutation').val(unit.salutation);
+                    $('#email').val(unit.email);
+                    $('#mobile_no').val(unit.mobile_no);
+                    $('#phone_number').val(unit.phone_number);
+                    $('#letting_agent').val(unit.letting_agent);
+                    $('#misc_info').val(unit.misc_info);
+                    
+                    // Convert boolean to string for dropdown (API returns boolean, dropdown expects string)
+                    const residentValue = unit.resident ? '1' : '0';
+                    $('#resident').val(residentValue);
+                    
+                    // Handle address fields based on resident status AFTER setting resident value
+                    if (!unit.resident) { // Check boolean directly
+                        // Non-resident: Show address fields and populate them
+                        const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
+                        addressFields.forEach(function(fieldId) {
+                            $('#' + fieldId).show();
+                        });
+                        
+                        $('#address1').val(unit.address1);
+                        $('#address2').val(unit.address2);
+                        $('#address3').val(unit.address3);
+                        $('#zip').val(unit.zip);
+                        
+                        // Set country and load states
+                        if (unit.country_id) {
+                            $('#country_id').val(unit.country_id).trigger('change');
+                            
+                            loadStates(unit.country_id, 'state_id').then(function(states) {
+                                if (unit.state_id) {
+                                    $('#state_id').val(unit.state_id).trigger('change');
+                                }
+                                
+                                // Show the modal after states are loaded
+                                $modal.modal('show');
+                            }).catch(function(error) {
+                                // Show modal even if states fail to load
+                                $modal.modal('show');
+                            });
+                        } else {
+                            $modal.modal('show');
+                        }
+                    } else {
+                        // If resident is true, address fields remain hidden (as set by initializeModal)
+                        // Show the modal for resident units
+                        $modal.modal('show');
+                    }
+                    
+                } else {
+                    showMessage('unitMessage', 'danger', 'Error loading unit data');
+                }
+            },
+            error: function(xhr, status, error) {
+                showMessage('unitMessage', 'danger', 'Error loading unit data');
+            },
+            complete: function() {
+                // Restore button state
+                if ($editBtn.length > 0) {
+                    $editBtn.html(originalText).prop('disabled', false);
+                }
+            }
+        });
+}
+
+/**
+ * Edit unit function (for backward compatibility)
+ * 
+ * @param {number} id - The ID of the unit to edit
+ */
+function editUnit(id) {
+    openUnitModal('edit', id);
+}
 
 // (No global modal listeners needed; modal is initialized via openUnitModal/loadUnitForEdit)
 
@@ -688,7 +917,6 @@ function loadStates(countryId, stateSelectId) {
         method: 'GET',
         dataType: 'json'
     }).then(function(response) {
-
         // Accept either an array directly or { data: [...] }
         const states = Array.isArray(response) ? response : (response && Array.isArray(response.data) ? response.data : []);
 
@@ -797,140 +1025,4 @@ function initializeModal(modalId, residentId) {
     toggleAddressFields(residentId);
 }
 
-/**
- * Opens the unit modal in Add or Edit mode
- * 
- * @param {string} mode - 'add' or 'edit'
- * @param {number} id - Unit ID (only needed for edit mode)
- */
-function openUnitModal(mode, id = null) {
-    const $modal = $('#unitModal');
-    const $modalLabel = $('#unitModalLabel');
-    const $form = $('#unitForm');
-    const $submitBtn = $('#unitSubmitBtn');
-    
-    if (mode === 'add') {
-        // Add mode
-        $modalLabel.text('Add Unit');
-        $submitBtn.html('<i class="ph-check me-1"></i> Save');
-        $form.attr('action', '{{ route("block-units.store") }}');
-        $form.find('input[name="_method"]').remove(); // Remove PUT method for add
-        $form[0].reset(); // Reset form
-        // Initialize modal before showing
-        initializeModal('unitModal', 'resident');
-        
-        $modal.modal('show');
-    } else if (mode === 'edit' && id) {
-        // Edit mode - load unit data
-        loadUnitForEdit(id);
-    }
-}
-
-/**
- * Loads unit data and populates the modal for editing
- * 
- * @param {number} id - The ID of the unit to edit
- */
-function loadUnitForEdit(id) {
-            // Show loading state
-    const $editBtn = $(`button[onclick="editUnit(${id})"]`);
-    const originalText = $editBtn.html();
-    $editBtn.html('<i class="ph-spinner ph-spin me-1"></i>Loading...').prop('disabled', true);
-    
-    $.ajax({
-        url: `/block-units/${id}`,
-        method: 'GET',
-                headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(data) {
-            if (data && data.success) {
-                const unit = data.data;
-                const $modal = $('#unitModal');
-                const $modalLabel = $('#unitModalLabel');
-                const $form = $('#unitForm');
-                const $submitBtn = $('#unitSubmitBtn');
-                
-                // Set modal to edit mode
-                $modalLabel.text('Edit Unit');
-                $submitBtn.html('<i class="ph-check me-1"></i> Update');
-                $form.attr('action', `/block-units/${id}`);
-                
-                // Add PUT method for edit
-                if ($form.find('input[name="_method"]').length === 0) {
-                    $form.append('<input type="hidden" name="_method" value="PUT">');
-                }
-                
-                // Populate form fields
-                $('#block_building_id').val(unit.block_building_id);
-                $('#block_unit_type_id').val(unit.block_unit_type_id);
-                $('#unit_code').val(unit.unit_code);
-                $('#unit_name').val(unit.unit_name);
-                $('#owners_name').val(unit.owners_name);
-                $('#salutation').val(unit.salutation);
-                $('#email').val(unit.email);
-                $('#mobile_no').val(unit.mobile_no);
-                $('#phone_number').val(unit.phone_number);
-                $('#letting_agent').val(unit.letting_agent);
-                $('#misc_info').val(unit.misc_info);
-                $('#resident').val(unit.resident);
-                
-                // Handle address fields based on resident status
-                if (unit.resident == 0) {
-                    // Non-resident: Show address fields and populate them
-                    const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
-                    addressFields.forEach(function(fieldId) {
-                        $('#' + fieldId).show();
-                    });
-                    
-                    $('#address1').val(unit.address1);
-                    $('#address2').val(unit.address2);
-                    $('#address3').val(unit.address3);
-                    $('#zip').val(unit.zip);
-                    
-                    // Set country and load states
-                    if (unit.country_id) {
-                        $('#country_id').val(unit.country_id);
-                        loadStates(unit.country_id, 'state_id').then(function() {
-                            if (unit.state_id) {
-                                $('#state_id').val(unit.state_id);
-                            }
-                        });
-                    }
-                } else {
-                    // Resident: Hide address fields
-                    const addressFields = ['address1_field', 'address2_field', 'address3_field', 'country_field', 'state_field', 'zip_field'];
-                    addressFields.forEach(function(fieldId) {
-                        $('#' + fieldId).hide();
-                    });
-                }
-                
-                // Initialize modal before showing
-                initializeModal('unitModal', 'resident');
-                
-                // Show the modal
-                $modal.modal('show');
-            } else {
-                showMessage('unitMessage', 'danger', 'Error loading unit data');
-            }
-        },
-        error: function() {
-            showMessage('unitMessage', 'danger', 'Error loading unit data');
-        },
-        complete: function() {
-            // Restore button state
-            $editBtn.html(originalText).prop('disabled', false);
-            }
-        });
-    }
-
-/**
- * Edit unit function (for backward compatibility)
- * 
- * @param {number} id - The ID of the unit to edit
- */
-function editUnit(id) {
-    openUnitModal('edit', id);
-}
 </script>

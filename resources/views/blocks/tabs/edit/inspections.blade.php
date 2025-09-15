@@ -48,7 +48,12 @@
                                 </td>
                                 <td>{{ Str::limit($inspection->notes, 50) ?? 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" onclick="editInspection({{ $inspection->id }}, this)">
+                                    <button class="btn btn-sm btn-outline-primary me-1 edit-inspection"
+                                            data-inspection-id="{{ $inspection->id }}"
+                                            data-user-id="{{ isset($leadInspector) && $leadInspector ? $leadInspector->user_id : '' }}"
+                                            data-date="{{ optional($inspection->scheduled_date_time)->format('Y-m-d') }}"
+                                            data-time="{{ optional($inspection->scheduled_date_time)->format('H:i') }}"
+                                            data-notes="{{ e($inspection->notes) }}">
                                         <i class="ph-pencil"></i> Edit
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="deleteInspection({{ $inspection->id }})">
@@ -145,12 +150,13 @@
                 <h5 class="modal-title" id="editInspectionModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Inspection</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
-            <form id="editInspectionForm" method="POST">
+            <form id="editInspectionForm" method="POST" action="{{ route('block-inspections.update', 0) }}">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="inspection_id" id="edit_inspection_id">
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
+                    <div id="editInspectionMessage"></div>
                     <div class="row">
                         <!-- User Selection -->
                         <div class="col-12 mb-3">
@@ -367,6 +373,81 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Edit Inspection Event Listener (following site visit pattern)
+    function attachInspectionEventListeners() {
+        document.querySelectorAll('.edit-inspection').forEach(button => {
+            button.addEventListener('click', function() {
+                const inspectionId = this.getAttribute('data-inspection-id');
+                // Clear any previous success/error message before loading new data
+                const editMsgEl = document.getElementById('editInspectionMessage');
+                if (editMsgEl) {
+                    editMsgEl.innerHTML = '';
+                }
+                
+                fetch(`/block-inspections/${inspectionId}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const inspection = data.data;
+                        const scheduledDateTime = new Date(inspection.scheduled_date_time);
+                        
+                        // Get the lead inspector from the inspection teams
+                        let assignedUser = null;
+                        if (inspection.inspectionTeams && inspection.inspectionTeams.length > 0) {
+                            const leadMember = inspection.inspectionTeams.find(team => team.is_lead) || inspection.inspectionTeams[0];
+                            assignedUser = leadMember.user_id;
+                        } else if (inspection.inspection_teams && inspection.inspection_teams.length > 0) {
+                            const leadMember = inspection.inspection_teams.find(team => team.is_lead) || inspection.inspection_teams[0];
+                            assignedUser = leadMember.user_id;
+                        } else if (inspection.created_by) {
+                            assignedUser = inspection.created_by;
+                        }
+                        
+                        document.getElementById('edit_inspection_id').value = inspection.id;
+                        document.getElementById('edit_user_id').value = assignedUser || '';
+                        document.getElementById('edit_scheduled_date').value = scheduledDateTime.toISOString().split('T')[0];
+                        document.getElementById('edit_scheduled_time').value = scheduledDateTime.toTimeString().slice(0, 5);
+                        document.getElementById('edit_notes').value = inspection.notes || '';
+                        
+                        $('#editInspectionModal').modal('show');
+                    } else {
+                        alert('Could not fetch inspection details: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching inspection details:', error);
+                    alert('Error fetching inspection details: ' + error.message);
+                });
+            });
+        });
+    }
+    
+    // Attach event listeners on page load
+    attachInspectionEventListeners();
+
+    // Clear messages when edit inspection modal is shown/hidden (following site visit pattern)
+    const editInspectionModal = document.getElementById('editInspectionModal');
+    if (editInspectionModal) {
+        editInspectionModal.addEventListener('show.bs.modal', function() {
+            const editMsgEl = document.getElementById('editInspectionMessage');
+            if (editMsgEl) {
+                editMsgEl.innerHTML = '';
+            }
+        });
+        
+        editInspectionModal.addEventListener('hide.bs.modal', function() {
+            const editMsgEl = document.getElementById('editInspectionMessage');
+            if (editMsgEl) {
+                editMsgEl.innerHTML = '';
+            }
+        });
+    }
 });
 
 // Function to reset form
@@ -397,106 +478,6 @@ function showAlert(type, message) {
     }, 5000);
 }
 
-// Function to edit inspection
-function editInspection(inspectionId, btn) {
-    console.log('editInspection called with ID:', inspectionId);
-    // Fetch canonical inspection JSON to populate the modal reliably
-    fetch(`/block-inspections/${inspectionId}`, {
-        headers: {
-            'Accept': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-    .then(r => r.json())
-    .then(payload => {
-        console.log('Edit load payload:', payload);
-        if (!payload || !payload.success) throw new Error('Failed to load');
-        const insp = payload.data || {};
-
-        // scheduled_date_time can be ISO or "YYYY-MM-DD HH:MM:SS"
-        let dateStr = '';
-        let timeStr = '';
-        const dt = insp.scheduled_date_time;
-        if (dt) {
-            if (typeof dt === 'string' && dt.includes(' ')) {
-                const parts = dt.split(' ');
-                dateStr = parts[0];
-                timeStr = (parts[1] || '').slice(0, 5);
-            } else {
-                const d = new Date(dt);
-                if (!isNaN(d.getTime())) {
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const da = String(d.getDate()).padStart(2, '0');
-                    const hh = String(d.getHours()).padStart(2, '0');
-                    const mm = String(d.getMinutes()).padStart(2, '0');
-                    dateStr = `${y}-${m}-${da}`;
-                    timeStr = `${hh}:${mm}`;
-                }
-            }
-        }
-
-        // Determine lead inspector
-        const team = Array.isArray(insp.inspection_teams) ? insp.inspection_teams : (Array.isArray(insp.inspectionTeams) ? insp.inspectionTeams : []);
-        const leadMember = team.find(t => !!t.is_lead) || team[0];
-        const leadUserId = leadMember ? String(leadMember.user_id) : '';
-
-        const idEl = document.getElementById('edit_inspection_id');
-        const dateEl = document.getElementById('edit_scheduled_date');
-        const timeEl = document.getElementById('edit_scheduled_time');
-        const notesEl = document.getElementById('edit_notes');
-        const userSelect = document.getElementById('edit_user_id');
-
-        if (idEl) idEl.value = inspectionId;
-        if (dateEl) dateEl.value = dateStr;
-        if (timeEl) timeEl.value = timeStr;
-        if (notesEl) notesEl.value = insp.notes || '';
-        if (userSelect && leadUserId) {
-            userSelect.value = leadUserId;
-            userSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-
-        console.log('Edit form populated:', { inspectionId, dateStr, timeStr, leadUserId, notes: insp.notes });
-
-        $('#editInspectionModal').modal('show');
-    })
-    .catch(err => {
-        console.warn('Edit fetch failed, falling back to table row parse:', err);
-        try {
-            // Fallback: find the row and scrape values
-            let row = (btn ? btn.closest('tr') : (event && event.target ? event.target.closest('tr') : null));
-            if (row && row.classList.contains('child') && row.previousElementSibling) {
-                row = row.previousElementSibling;
-            }
-            if (!row) throw new Error('Row not found');
-
-            const reference = row.cells[0].textContent.trim();
-            const inspectionDate = row.cells[1].textContent.trim();
-            const inspector = row.cells[2].textContent.trim();
-            const notesText = row.cells[4] ? row.cells[4].textContent.trim() : '';
-
-            // Basic date parsing for formats like "Sep 01, 2025"
-            let scheduledDate = '';
-            if (inspectionDate && inspectionDate !== 'N/A') {
-                const months = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
-                const parts = inspectionDate.split(' ');
-                if (parts.length === 3) {
-                    const m = months[parts[0]]; const d = parts[1].replace(',', '').padStart(2,'0'); const y = parts[2];
-                    if (m && d && y) scheduledDate = `${y}-${m}-${d}`;
-                }
-            }
-
-            document.getElementById('edit_inspection_id').value = inspectionId;
-            document.getElementById('edit_scheduled_date').value = scheduledDate;
-            document.getElementById('edit_scheduled_time').value = '';
-            document.getElementById('edit_notes').value = notesText || `Inspection for ${reference} - ${inspector}`;
-            $('#editInspectionModal').modal('show');
-        } catch (e) {
-            console.error('Edit fallback failed:', e);
-            alert('Unable to load inspection details for editing.');
-        }
-    });
-}
 
 // Function to delete inspection
 function deleteInspection(inspectionId) {

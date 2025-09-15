@@ -100,7 +100,7 @@
                 <h5 class="modal-title" id="editBuildingModalLabel">Edit Building</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="editBuildingForm" method="POST">
+            <form id="editBuildingForm" method="POST" action="{{ route('block-buildings.update', 0) }}">
                 @csrf
                 @method('PUT')
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
