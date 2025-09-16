@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Test - ProMan</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .icon {
+            width: 100px;
+            height: 100px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .install-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            display: none;
+        }
+
+        .install-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .feature {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="icon">PM</div>
+        <h1>ProMan PWA Test</h1>
+        <p>Test your Progressive Web App installation</p>
+
+        <button id="installBtn" class="install-btn">📱 Install App</button>
+
+        <div class="status">
+            <h3>PWA Status</h3>
+            <div id="status">Checking...</div>
+        </div>
+
+        <div class="feature">
+            <h4>✅ Features Available</h4>
+            <p>• Installable on mobile & desktop</p>
+            <p>• Works offline</p>
+            <p>• App-like experience</p>
+            <p>• Fast loading</p>
+        </div>
+
+        <div class="feature">
+            <h4>📱 How to Install</h4>
+            <p><strong>Android:</strong> Tap "Add to Home Screen"</p>
+            <p><strong>iOS:</strong> Tap Share → "Add to Home Screen"</p>
+            <p><strong>Desktop:</strong> Click install button in address bar</p>
+        </div>
+
+        <div class="feature">
+            <h4>🔗 Test Links</h4>
+            <p><a href="/" style="color: white;">← Back to Main App</a></p>
+            <p><a href="/dashboard" style="color: white;">Go to Dashboard</a></p>
+        </div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+        const status = document.getElementById('status');
+
+        // Check PWA status
+        function checkPWAStatus() {
+            let statusText = '';
+
+            // Check if running as PWA
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                statusText += '✅ Running as PWA<br>';
+            } else {
+                statusText += '🌐 Running in browser<br>';
+            }
+
+            // Check service worker
+            if ('serviceWorker' in navigator) {
+                statusText += '✅ Service Worker supported<br>';
+            } else {
+                statusText += '❌ Service Worker not supported<br>';
+            }
+
+            // Check manifest
+            if (document.querySelector('link[rel="manifest"]')) {
+                statusText += '✅ Manifest found<br>';
+            } else {
+                statusText += '❌ Manifest not found<br>';
+            }
+
+            // Check HTTPS
+            if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                statusText += '✅ HTTPS/Localhost<br>';
+            } else {
+                statusText += '⚠️ HTTP (PWA limited)<br>';
+                statusText += '<small>For full PWA features, use HTTPS</small><br>';
+            }
+
+            status.innerHTML = statusText;
+        }
+
+        // Install button functionality
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'block';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installBtn.style.display = 'none';
+            }
+        });
+
+        // Check if already installed
+        window.addEventListener('appinstalled', () => {
+            status.innerHTML += '<br>🎉 App installed successfully!';
+            installBtn.style.display = 'none';
+        });
+
+        // Initialize
+        checkPWAStatus();
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('SW registered: ', registration);
+                })
+                .catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+        }
+    </script>
+</body>
+
+</html>
