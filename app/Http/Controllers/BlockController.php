@@ -87,7 +87,7 @@ class BlockController extends Controller
             'car_spaces' => 'required|integer|min:0',
             'inspection_count' => 'nullable|integer|min:0',
             'no_of_units' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -259,7 +259,7 @@ class BlockController extends Controller
             'car_spaces' => 'required|integer|min:0',
             'inspection_count' => 'nullable|integer|min:0',
             'no_of_units' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         if ($validator->fails()) {
