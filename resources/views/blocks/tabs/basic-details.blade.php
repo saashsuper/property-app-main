@@ -9,7 +9,7 @@
     </div>
 @endif
 
-<form action="{{ route('blocks.update', $block) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('blocks.update', $block) }}" method="POST">
     @csrf
     @method('PUT')
     
@@ -180,30 +180,6 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6">
-            <div class="mb-3">
-                <label for="image" class="form-label">Change Block Image</label>
-                @if($block->image_url)
-                    <div class="mb-2">
-                        <img src="{{ $block->image_url }}" alt="{{ $block->name }}" 
-                             class="rounded" style="width: 100px; height: 100px; object-fit: cover;">
-                        <small class="d-block text-muted">Current image</small>
-                    </div>
-                @endif
-                <input type="file" class="form-control @error('image') is-invalid @enderror" 
-                       id="image" name="image" accept="image/*">
-                <div class="form-text">Accepted formats: JPEG, PNG, JPG, GIF (Max: 2MB)</div>
-                @error('image')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-        
-        <div class="col-md-6">
-            <!-- Empty column for layout balance -->
-        </div>
-    </div>
 
     <div class="row">
         <div class="col-12">

@@ -13,10 +13,11 @@ use App\Models\BuildingType;
 use App\Models\BlockUnitType;
 use App\Models\ContactMethod;
 use App\Models\JobReason;
+use App\Models\BlockImage;
+use Illuminate\Support\Facades\Storage;
 use App\Models\JobStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use App\Models\User; // Added this import for the new edit method
@@ -87,7 +88,6 @@ class BlockController extends Controller
             'car_spaces' => 'required|integer|min:0',
             'inspection_count' => 'nullable|integer|min:0',
             'no_of_units' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -96,7 +96,7 @@ class BlockController extends Controller
                 ->withInput();
         }
 
-        $data = $request->except('image');
+        $data = $request->all();
         $data['user_id'] = Auth::id();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
@@ -106,18 +106,6 @@ class BlockController extends Controller
         $data['address2'] = $request->management_company_address;
         $data['address3'] = null; // No longer used
 
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $imagePath = 'blocks';
-            
-            $image->storeAs('public/' . $imagePath, $imageName);
-            
-            $data['image_path'] = $imagePath;
-            $data['image_name'] = $imageName;
-        }
-
         $block = Block::create($data);
 
         return redirect()->route('blocks.index')
@@ -125,11 +113,202 @@ class BlockController extends Controller
     }
 
     /**
+     * Show the block images upload page
+     */
+    public function showImages($id)
+    {
+        $block = Block::with('images.uploader')->findOrFail($id);
+        
+        return view('blocks.images', compact('block'));
+    }
+
+    /**
+     * Upload images for a block
+     */
+    public function uploadImages(Request $request, $id)
+    {
+        $block = Block::findOrFail($id);
+        
+        $validator = Validator::make($request->all(), [
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB per image
+        ], [
+            'images.*.required' => 'Please select at least one image.',
+            'images.*.image' => 'Each file must be an image.',
+            'images.*.mimes' => 'Images must be in JPEG, PNG, JPG, or GIF format.',
+            'images.*.max' => 'Each image must not exceed 5MB.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $images = $request->file('images');
+        $totalSize = 0;
+        $maxTotalSize = 15 * 1024 * 1024; // 15MB in bytes
+        $maxImages = 10; // Configurable maximum number of images
+
+        // Check total size
+        foreach ($images as $image) {
+            $totalSize += $image->getSize();
+        }
+
+        if ($totalSize > $maxTotalSize) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Total size of all images must not exceed 15MB.'
+            ], 422);
+        }
+
+        if (count($images) > $maxImages) {
+            return response()->json([
+                'success' => false,
+                'message' => "Maximum {$maxImages} images allowed."
+            ], 422);
+        }
+
+        // Check existing images count
+        $existingCount = $block->images()->count();
+        if ($existingCount + count($images) > $maxImages) {
+            return response()->json([
+                'success' => false,
+                'message' => "Maximum {$maxImages} images allowed. You already have {$existingCount} images."
+            ], 422);
+        }
+
+        $uploadedImages = [];
+        $imagePath = 'blocks/' . $block->id;
+        
+        // Get the next sort order
+        $nextSortOrder = $block->images()->max('sort_order') + 1;
+
+        foreach ($images as $index => $image) {
+            $storedName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+            
+            // Store the file
+            $image->storeAs('public/' . $imagePath, $storedName);
+            
+            // Create database record
+            $blockImage = BlockImage::create([
+                'block_id' => $block->id,
+                'original_name' => $image->getClientOriginalName(),
+                'stored_name' => $storedName,
+                'file_path' => $imagePath,
+                'file_extension' => $image->getClientOriginalExtension(),
+                'file_size' => $image->getSize(),
+                'mime_type' => $image->getMimeType(),
+                'sort_order' => $nextSortOrder + $index,
+                'is_primary' => $existingCount === 0 && $index === 0, // First image is primary if no existing images
+                'uploaded_by' => Auth::id(),
+            ]);
+
+            $uploadedImages[] = [
+                'id' => $blockImage->id,
+                'original_name' => $blockImage->original_name,
+                'stored_name' => $blockImage->stored_name,
+                'file_size' => $blockImage->file_size,
+                'file_size_human' => $blockImage->file_size_human,
+                'url' => $blockImage->url,
+                'is_primary' => $blockImage->is_primary,
+                'uploaded_at' => $blockImage->created_at->format('Y-m-d H:i:s')
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Images uploaded successfully.',
+            'images' => $uploadedImages
+        ]);
+    }
+
+    /**
+     * Delete a block image
+     */
+    public function deleteImage(Request $request, $id)
+    {
+        $block = Block::findOrFail($id);
+        $imageId = $request->input('image_id');
+        
+        if (!$imageId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image ID is required.'
+            ], 400);
+        }
+
+        $blockImage = $block->images()->find($imageId);
+        
+        if (!$blockImage) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image not found.'
+            ], 404);
+        }
+
+        // Check if this is the primary image
+        $isPrimary = $blockImage->is_primary;
+        
+        // Delete the image (this will also delete the file due to model boot method)
+        $blockImage->delete();
+
+        // If we deleted the primary image, set another image as primary
+        if ($isPrimary) {
+            $nextPrimary = $block->images()->first();
+            if ($nextPrimary) {
+                $nextPrimary->update(['is_primary' => true]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image deleted successfully.'
+        ]);
+    }
+
+    /**
+     * Set an image as primary
+     */
+    public function setPrimaryImage(Request $request, $id)
+    {
+        $block = Block::findOrFail($id);
+        $imageId = $request->input('image_id');
+        
+        if (!$imageId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image ID is required.'
+            ], 400);
+        }
+
+        $blockImage = $block->images()->find($imageId);
+        
+        if (!$blockImage) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Image not found.'
+            ], 404);
+        }
+
+        // Remove primary flag from all images
+        $block->images()->update(['is_primary' => false]);
+        
+        // Set this image as primary
+        $blockImage->update(['is_primary' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Primary image updated successfully.'
+        ]);
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(Block $block)
     {
-        $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues']);
+        $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues', 'images.uploader']);
         
         // Load additional data needed for the view
         $blockInformation = $block->blockInformation()->with('informationType')->get();
@@ -259,7 +438,6 @@ class BlockController extends Controller
             'car_spaces' => 'required|integer|min:0',
             'inspection_count' => 'nullable|integer|min:0',
             'no_of_units' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ]);
 
         if ($validator->fails()) {
@@ -268,30 +446,13 @@ class BlockController extends Controller
                 ->withInput();
         }
 
-        $data = $request->except('image');
+        $data = $request->all();
         $data['updated_by'] = Auth::id();
         
         // Map new field names to existing database columns
         $data['address1'] = $request->block_address;
         $data['address2'] = $request->management_company_address;
         $data['address3'] = null; // No longer used
-
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            // Delete old image if exists
-            if ($block->image_path && $block->image_name) {
-                Storage::delete('public/' . $block->image_path . '/' . $block->image_name);
-            }
-
-            $image = $request->file('image');
-            $imageName = time() . '_' . $image->getClientOriginalName();
-            $imagePath = 'blocks';
-            
-            $image->storeAs('public/' . $imagePath, $imageName);
-            
-            $data['image_path'] = $imagePath;
-            $data['image_name'] = $imageName;
-        }
 
         $block->update($data);
 

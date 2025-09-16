@@ -211,23 +211,6 @@
                                 </div>
                             </div>
 
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="image" class="form-label">Block Image</label>
-                                        <input type="file" class="form-control @error('image') is-invalid @enderror" 
-                                               id="image" name="image" accept="image/*">
-                                        <div class="form-text">Accepted formats: JPEG, PNG, JPG, GIF (Max: 2MB)</div>
-                                        @error('image')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    <!-- Empty column for layout balance -->
-                                </div>
-                            </div>
 
                             <div class="row">
                                 <div class="col-12">

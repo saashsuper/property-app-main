@@ -266,4 +266,20 @@ class Block extends Model
     {
         return $this->hasMany(BlockWorkOrder::class);
     }
+
+    /**
+     * Get the images for the block.
+     */
+    public function images()
+    {
+        return $this->hasMany(BlockImage::class)->ordered();
+    }
+
+    /**
+     * Get the primary image for the block.
+     */
+    public function primaryImage()
+    {
+        return $this->hasOne(BlockImage::class)->where('is_primary', true);
+    }
 }

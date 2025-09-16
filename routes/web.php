@@ -61,6 +61,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
     Route::get('api/blocks/{block}/units-autocomplete', [App\Http\Controllers\BlockController::class, 'getUnitsAutocomplete'])->name('api.blocks.units-autocomplete');
     
+    // Block Images Routes
+    Route::get('blocks/{block}/images', [App\Http\Controllers\BlockController::class, 'showImages'])->name('blocks.images');
+    Route::post('blocks/{block}/images', [App\Http\Controllers\BlockController::class, 'uploadImages'])->name('blocks.images.upload');
+    Route::delete('blocks/{block}/images', [App\Http\Controllers\BlockController::class, 'deleteImage'])->name('blocks.images.delete');
+    Route::post('blocks/{block}/images/primary', [App\Http\Controllers\BlockController::class, 'setPrimaryImage'])->name('blocks.images.primary');
+    
     // Work Orders
     Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
     Route::post('work-orders/{workOrder}/reassign', [App\Http\Controllers\WorkOrderController::class, 'reassign'])->name('work-orders.reassign');
