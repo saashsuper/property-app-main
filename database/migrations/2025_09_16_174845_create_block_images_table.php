@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('block_images', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('block_id')->constrained('blocks')->onDelete('cascade');
+            $table->unsignedInteger('block_id');
+            $table->foreign('block_id')->references('id')->on('blocks')->onDelete('cascade');
             $table->string('original_name'); // Original filename
             $table->string('stored_name'); // Generated filename for storage
             $table->string('file_path'); // Path where file is stored
