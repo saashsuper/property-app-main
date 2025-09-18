@@ -26,6 +26,8 @@ class UserFactory extends Factory
             'avatar' => null,
             'user_type_id' => null,
             'created_by' => null,
+            'updated_by' => null,
+            'deleted_by' => null,
         ];
     }
 

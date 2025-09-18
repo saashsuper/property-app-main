@@ -210,6 +210,9 @@ class UserController extends Controller
         }
 
         $data = $request->except(['password', 'password_confirmation', 'avatar']);
+        
+        // Track who is updating the user
+        $data['updated_by'] = $currentUser->id;
 
         // Update password if provided
         if ($request->filled('password')) {
@@ -257,11 +260,10 @@ class UserController extends Controller
                 ->with('error', 'Cannot delete your own account.');
         }
 
-        // Delete avatar if exists
-        if ($user->avatar) {
-            \Storage::delete('public/' . $user->avatar);
-        }
-
+        // Track who is deleting the user
+        $user->update(['deleted_by' => $currentUser->id]);
+        
+        // Soft delete the user
         $user->delete();
 
         return redirect()->route('users.index')

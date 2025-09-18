@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -11,7 +12,7 @@ use App\Models\UserType;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -25,6 +26,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'user_type_id',
         'created_by',
+        'updated_by',
+        'deleted_by',
     ];
 
     /**
@@ -44,6 +47,9 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'created_by' => 'integer',
+        'updated_by' => 'integer',
+        'deleted_by' => 'integer',
     ];
 
     /**
@@ -68,6 +74,38 @@ class User extends Authenticatable implements MustVerifyEmail
     public function createdUsers()
     {
         return $this->hasMany('App\Models\User', 'created_by');
+    }
+
+    /**
+     * Get the user who last updated this user
+     */
+    public function updater()
+    {
+        return $this->belongsTo('App\Models\User', 'updated_by');
+    }
+
+    /**
+     * Get users updated by this user
+     */
+    public function updatedUsers()
+    {
+        return $this->hasMany('App\Models\User', 'updated_by');
+    }
+
+    /**
+     * Get the user who deleted this user
+     */
+    public function deleter()
+    {
+        return $this->belongsTo('App\Models\User', 'deleted_by');
+    }
+
+    /**
+     * Get users deleted by this user
+     */
+    public function deletedUsers()
+    {
+        return $this->hasMany('App\Models\User', 'deleted_by');
     }
 
     /**
