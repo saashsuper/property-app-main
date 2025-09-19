@@ -19,12 +19,16 @@ class JobStatusSeeder extends Seeder
         ];
 
         foreach ($statuses as $status) {
-            DB::table('job_statuses')->insertOrIgnore([
-                'name' => $status['name'],
-                'is_updated' => $status['is_updated'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // Use updateOrInsert to prevent duplicates
+            DB::table('job_statuses')->updateOrInsert(
+                ['name' => $status['name']], // Search criteria
+                [
+                    'name' => $status['name'],
+                    'is_updated' => $status['is_updated'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
         }
     }
 }

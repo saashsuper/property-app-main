@@ -42,6 +42,8 @@
                                         <span class="badge bg-danger">Cancelled</span>
                                     @elseif($inspection->job_status_id == 5)
                                         <span class="badge bg-secondary">On Hold</span>
+                                    @elseif($inspection->job_status_id == 6)
+                                        <span class="badge bg-primary">Rescheduled</span>
                                     @else
                                         <span class="badge bg-secondary">Unknown</span>
                                     @endif
@@ -51,8 +53,8 @@
                                     <button class="btn btn-sm btn-outline-primary me-1 edit-inspection"
                                             data-inspection-id="{{ $inspection->id }}"
                                             data-user-id="{{ isset($leadInspector) && $leadInspector ? $leadInspector->user_id : '' }}"
-                                            data-date="{{ optional($inspection->scheduled_date_time)->format('Y-m-d') }}"
-                                            data-time="{{ optional($inspection->scheduled_date_time)->format('H:i') }}"
+                                            data-date="{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('Y-m-d') : '' }}"
+                                            data-time="{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('H:i') : '' }}"
                                             data-notes="{{ e($inspection->notes) }}">
                                         <i class="ph-pencil"></i> Edit
                                     </button>
@@ -158,11 +160,33 @@
                 <div class="modal-body">
                     <div id="editInspectionMessage"></div>
                     <div class="row">
+                        <!-- Reference Number (Read-only) -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_ref_no" class="form-label">Reference Number</label>
+                            <input type="text" class="form-control" id="edit_ref_no" name="ref_no" readonly style="background-color: #f8f9fa;">
+                            <div class="form-text">Reference number cannot be changed</div>
+                        </div>
+                        
+                        <!-- Status Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_job_status_id" class="form-label">Status</label>
+                            <select class="form-select" id="edit_job_status_id" name="job_status_id">
+                                <option value="">Select Status</option>
+                                @php
+                                    $jobStatuses = \App\Models\JobStatus::where('is_updated', true)->get();
+                                @endphp
+                                @foreach($jobStatuses as $status)
+                                    <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Only updatable statuses are shown</div>
+                        </div>
+                        
                         <!-- User Selection -->
                         <div class="col-12 mb-3">
-                            <label for="edit_user_id" class="form-label">User <span class="text-danger">*</span></label>
+                            <label for="edit_user_id" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
                             <select class="form-select" id="edit_user_id" name="user_id" required>
-                                <option value="">Select User</option>
+                                <option value="">Select Lead Inspector</option>
                                 @foreach($users ?? [] as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
                                 @endforeach
@@ -179,16 +203,39 @@
                             <input type="time" class="form-control" id="edit_scheduled_time" name="scheduled_time" required>
                         </div>
                         
+                        
+                        <!-- End Date & Time (if inspection is completed) -->
+                        <div class="col-md-6 mb-3" id="edit_end_date_group" style="display: none;">
+                            <label for="edit_end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="edit_end_date" name="end_date" readonly style="background-color: #f8f9fa;">
+                        </div>
+                        <div class="col-md-6 mb-3" id="edit_end_time_group" style="display: none;">
+                            <label for="edit_end_time" class="form-label">End Time</label>
+                            <input type="time" class="form-control" id="edit_end_time" name="end_time" readonly style="background-color: #f8f9fa;">
+                        </div>
+                        
                         <!-- Notes -->
                         <div class="col-12 mb-3">
-                            <label for="edit_notes" class="form-label">Notes <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="edit_notes" name="notes" rows="4" placeholder="Enter inspection notes..." required></textarea>
+                            <label for="edit_notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="edit_notes" name="notes" rows="4" placeholder="Enter inspection notes..."></textarea>
+                        </div>
+                        
+                        <!-- Created/Updated Info -->
+                        <div class="col-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body py-2">
+                                    <small class="text-muted">
+                                        <strong>Created:</strong> <span id="edit_created_info">-</span><br>
+                                        <strong>Last Updated:</strong> <span id="edit_updated_info">-</span>
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary">
-                        <i class="ph-check me-1"></i> Update
+                        <i class="ph-check me-1"></i> Update Inspection
                     </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="ph-x me-1"></i> Cancel
@@ -334,11 +381,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 user_id: formData.get('user_id'),
                 scheduled_date_time: scheduledDateTime,
                 notes: formData.get('notes'),
+                job_status_id: formData.get('job_status_id') || null,
                 _token: formData.get('_token'),
                 _method: formData.get('_method')
             };
             
-            // Submit form via AJAX (you'll need to create this route)
+            // Show loading state on submit button
+            const submitBtn = editInspectionForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="ph-spinner ph-spin me-1"></i>Updating...';
+            submitBtn.disabled = true;
+            
+            // Submit form via AJAX
             const inspectionId = formData.get('inspection_id');
             fetch(`/block-inspections/${inspectionId}`, {
                 method: 'PUT',
@@ -353,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     // Show success message
-                    showAlert('success', 'Inspection updated successfully!');
+                    showAlert('success', data.message || 'Inspection updated successfully!');
                     
                     // Close modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editInspectionModal'));
@@ -362,29 +416,80 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Reset form
                     editInspectionForm.reset();
                     
-                    // DataTable will refresh automatically when modal closes
+                    // Refresh the DataTable
+                    if (typeof refreshInspectionsTable === 'function') {
+                        refreshInspectionsTable();
+                    } else {
+                        // Fallback: reload the page
+                        setTimeout(() => window.location.reload(), 1500);
+                    }
                 } else {
-                    showAlert('error', data.message || 'Failed to update inspection.');
+                    // Show error message in modal
+                    const messageDiv = document.getElementById('editInspectionMessage');
+                    if (messageDiv) {
+                        messageDiv.innerHTML = `<div class="alert alert-danger">${data.message || 'Failed to update inspection.'}</div>`;
+                    } else {
+                        showAlert('error', data.message || 'Failed to update inspection.');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('error', 'An error occurred. Please try again.');
+                const messageDiv = document.getElementById('editInspectionMessage');
+                if (messageDiv) {
+                    messageDiv.innerHTML = `<div class="alert alert-danger">An error occurred. Please try again.</div>`;
+                } else {
+                    showAlert('error', 'An error occurred. Please try again.');
+                }
+            })
+            .finally(() => {
+                // Restore button state
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             });
         });
     }
 
-    // Edit Inspection Event Listener (following site visit pattern)
+    // Edit Inspection Event Listener (enhanced version)
     function attachInspectionEventListeners() {
         document.querySelectorAll('.edit-inspection').forEach(button => {
             button.addEventListener('click', function() {
                 const inspectionId = this.getAttribute('data-inspection-id');
+                const scheduledDate = this.getAttribute('data-date');
+                const scheduledTime = this.getAttribute('data-time');
+                const notes = this.getAttribute('data-notes');
+                const userId = this.getAttribute('data-user-id');
+                
                 // Clear any previous success/error message before loading new data
                 const editMsgEl = document.getElementById('editInspectionMessage');
                 if (editMsgEl) {
                     editMsgEl.innerHTML = '';
                 }
                 
+                // Show loading state
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="ph-spinner ph-spin me-1"></i>Loading...';
+                this.disabled = true;
+                
+                // Clear form first
+                document.getElementById('editInspectionForm').reset();
+                
+                // Set basic data
+                document.getElementById('edit_inspection_id').value = inspectionId;
+                
+                // Debug logging to see what data we have
+                console.log('Edit button clicked - Data attributes:', {
+                    inspectionId: inspectionId,
+                    scheduledDate: scheduledDate,
+                    scheduledTime: scheduledTime,
+                    notes: notes,
+                    userId: userId
+                });
+                
+                // Show modal first
+                $('#editInspectionModal').modal('show');
+                
+                // Then fetch detailed data from server
                 fetch(`/block-inspections/${inspectionId}`, {
                     headers: {
                         'Accept': 'application/json',
@@ -409,20 +514,80 @@ document.addEventListener('DOMContentLoaded', function() {
                             assignedUser = inspection.created_by;
                         }
                         
+                        // Update form fields with fresh data from server
                         document.getElementById('edit_inspection_id').value = inspection.id;
+                        document.getElementById('edit_ref_no').value = inspection.ref_no || '';
                         document.getElementById('edit_user_id').value = assignedUser || '';
-                        document.getElementById('edit_scheduled_date').value = scheduledDateTime.toISOString().split('T')[0];
-                        document.getElementById('edit_scheduled_time').value = scheduledDateTime.toTimeString().slice(0, 5);
-                        document.getElementById('edit_notes').value = inspection.notes || '';
                         
-                        $('#editInspectionModal').modal('show');
+                        // Ensure scheduled date and time are properly formatted
+                        if (inspection.scheduled_date_time) {
+                            const scheduledDateTime = new Date(inspection.scheduled_date_time);
+                            const formattedDate = scheduledDateTime.toISOString().split('T')[0];
+                            const formattedTime = scheduledDateTime.toTimeString().slice(0, 5);
+                            
+                            console.log('Server data - scheduled_date_time:', inspection.scheduled_date_time);
+                            console.log('Server data - formatted date:', formattedDate);
+                            console.log('Server data - formatted time:', formattedTime);
+                            
+                            // Force set the values with a small delay to ensure DOM is ready
+                            setTimeout(() => {
+                                const dateField = document.getElementById('edit_scheduled_date');
+                                const timeField = document.getElementById('edit_scheduled_time');
+                                
+                                if (dateField) {
+                                    dateField.value = formattedDate;
+                                    console.log('Set scheduled date from server to:', formattedDate, 'Field value:', dateField.value);
+                                } else {
+                                    console.error('Date field not found!');
+                                }
+                                
+                                if (timeField) {
+                                    timeField.value = formattedTime;
+                                    console.log('Set scheduled time from server to:', formattedTime, 'Field value:', timeField.value);
+                                } else {
+                                    console.error('Time field not found!');
+                                }
+                            }, 100);
+                        } else {
+                            console.log('No scheduled_date_time found in server data');
+                        }
+                        
+                        document.getElementById('edit_notes').value = inspection.notes || '';
+                        document.getElementById('edit_job_status_id').value = inspection.job_status_id || '';
+                        
+                        
+                        // Handle end date/time
+                        if (inspection.end_date_time) {
+                            const endDateTime = new Date(inspection.end_date_time);
+                            document.getElementById('edit_end_date').value = endDateTime.toISOString().split('T')[0];
+                            document.getElementById('edit_end_time').value = endDateTime.toTimeString().slice(0, 5);
+                            document.getElementById('edit_end_date_group').style.display = 'block';
+                            document.getElementById('edit_end_time_group').style.display = 'block';
+                        } else {
+                            document.getElementById('edit_end_date_group').style.display = 'none';
+                            document.getElementById('edit_end_time_group').style.display = 'none';
+                        }
+                        
+                        // Update created/updated info
+                        document.getElementById('edit_created_info').textContent = 
+                            inspection.created_at ? new Date(inspection.created_at).toLocaleString() : '-';
+                        document.getElementById('edit_updated_info').textContent = 
+                            inspection.updated_at ? new Date(inspection.updated_at).toLocaleString() : '-';
+                        
+                        // Update form action URL
+                        document.getElementById('editInspectionForm').action = `/block-inspections/${inspection.id}`;
                     } else {
-                        alert('Could not fetch inspection details: ' + (data.message || 'Unknown error'));
+                        showAlert('error', 'Could not fetch inspection details: ' + (data.message || 'Unknown error'));
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching inspection details:', error);
-                    alert('Error fetching inspection details: ' + error.message);
+                    showAlert('error', 'Error fetching inspection details: ' + error.message);
+                })
+                .finally(() => {
+                    // Restore button state
+                    this.innerHTML = originalText;
+                    this.disabled = false;
                 });
             });
         });
@@ -431,13 +596,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Attach event listeners on page load
     attachInspectionEventListeners();
 
-    // Clear messages when edit inspection modal is shown/hidden (following site visit pattern)
+    // Clear messages when edit inspection modal is shown/hidden
     const editInspectionModal = document.getElementById('editInspectionModal');
     if (editInspectionModal) {
         editInspectionModal.addEventListener('show.bs.modal', function() {
             const editMsgEl = document.getElementById('editInspectionMessage');
             if (editMsgEl) {
                 editMsgEl.innerHTML = '';
+            }
+            // Reset form validation states
+            const form = document.getElementById('editInspectionForm');
+            if (form) {
+                form.classList.remove('was-validated');
+                const invalidElements = form.querySelectorAll('.is-invalid');
+                invalidElements.forEach(el => el.classList.remove('is-invalid'));
             }
         });
         
@@ -446,6 +618,26 @@ document.addEventListener('DOMContentLoaded', function() {
             if (editMsgEl) {
                 editMsgEl.innerHTML = '';
             }
+            // Reset form
+            const form = document.getElementById('editInspectionForm');
+            if (form) {
+                form.reset();
+                form.classList.remove('was-validated');
+                const invalidElements = form.querySelectorAll('.is-invalid');
+                invalidElements.forEach(el => el.classList.remove('is-invalid'));
+            }
+        });
+    }
+    
+    // Add form validation
+    const editForm = document.getElementById('editInspectionForm');
+    if (editForm) {
+        editForm.addEventListener('submit', function(event) {
+            if (!editForm.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            editForm.classList.add('was-validated');
         });
     }
 });
@@ -479,28 +671,124 @@ function showAlert(type, message) {
 }
 
 
+// Function to refresh inspections table
+function refreshInspectionsTable() {
+    if (typeof inspectionsDT !== 'undefined' && inspectionsDT) {
+        // Get the current block ID
+        const blockId = document.querySelector('input[name="block_id"]').value;
+        
+        // Fetch fresh data
+        fetch(`/api/blocks/${blockId}/inspections`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear existing data
+                    inspectionsDT.clear();
+                    
+                    // Add new data
+                    data.data.forEach(function(inspection) {
+                        const leadInspector = inspection.inspection_teams?.find(team => team.is_lead) || 
+                                           inspection.inspectionTeams?.find(team => team.is_lead);
+                        const inspectorName = leadInspector?.user?.name || inspection.creator?.name || 'N/A';
+                        
+                        const scheduledDate = inspection.scheduled_date_time ? 
+                            new Date(inspection.scheduled_date_time).toLocaleDateString('en-US', { 
+                                year: 'numeric', month: 'short', day: '2-digit' 
+                            }) : 'N/A';
+                        
+                        const statusBadge = getStatusBadge(inspection.job_status_id);
+                        
+                        // Get scheduled date and time for data attributes
+                        const scheduledDateTime = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time) : null;
+                        const scheduledDateAttr = scheduledDateTime ? scheduledDateTime.toISOString().split('T')[0] : '';
+                        const scheduledTimeAttr = scheduledDateTime ? scheduledDateTime.toTimeString().slice(0, 5) : '';
+                        
+                        inspectionsDT.row.add([
+                            inspection.ref_no || 'N/A',
+                            scheduledDate,
+                            inspectorName,
+                            statusBadge,
+                            inspection.notes ? (inspection.notes.length > 50 ? inspection.notes.substring(0, 50) + '...' : inspection.notes) : 'N/A',
+                            '<button class="btn btn-sm btn-outline-primary me-1 edit-inspection" ' +
+                                'data-inspection-id="' + inspection.id + '" ' +
+                                'data-user-id="' + (leadInspector?.user_id || '') + '" ' +
+                                'data-date="' + scheduledDateAttr + '" ' +
+                                'data-time="' + scheduledTimeAttr + '" ' +
+                                'data-notes="' + (inspection.notes || '').replace(/"/g, '&quot;') + '">' +
+                                '<i class="ph-pencil"></i> Edit' +
+                            '</button> ' +
+                            '<button class="btn btn-sm btn-outline-danger" onclick="deleteInspection(' + inspection.id + ')">' +
+                                '<i class="ph-trash"></i> Delete' +
+                            '</button>'
+                        ]);
+                    });
+                    
+                    // Redraw the table
+                    inspectionsDT.draw();
+                    
+                    // Reattach event listeners for new edit buttons
+                    attachInspectionEventListeners();
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing inspections table:', error);
+            });
+    }
+}
+
+// Function to get status badge HTML
+function getStatusBadge(statusId) {
+    const statuses = {
+        1: '<span class="badge bg-info">Scheduled</span>',
+        2: '<span class="badge bg-warning">In Progress</span>',
+        3: '<span class="badge bg-success">Completed</span>',
+        4: '<span class="badge bg-danger">Cancelled</span>',
+        5: '<span class="badge bg-secondary">On Hold</span>',
+        6: '<span class="badge bg-primary">Rescheduled</span>'
+    };
+    return statuses[statusId] || '<span class="badge bg-secondary">Unknown</span>';
+}
+
 // Function to delete inspection
 function deleteInspection(inspectionId) {
-    if (confirm('Are you sure you want to delete this inspection?')) {
-        // You can implement delete functionality here
-        // For now, show an alert
-        showAlert('info', `Delete inspection with ID: ${inspectionId}`);
+    if (confirm('Are you sure you want to delete this inspection? This action cannot be undone.')) {
+        // Show loading state
+        const deleteBtn = document.querySelector(`button[onclick="deleteInspection(${inspectionId})"]`);
+        if (deleteBtn) {
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.innerHTML = '<i class="ph-spinner ph-spin me-1"></i>Deleting...';
+            deleteBtn.disabled = true;
+        }
         
-        // TODO: Implement delete via AJAX
-        // Example: 
-        // fetch(`/inspections/${inspectionId}`, {
-        //     method: 'DELETE',
-        //     headers: {
-        //         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        //     }
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //     if (data.success) {
-        //         showAlert('success', 'Inspection deleted successfully!');
-        //         setTimeout(() => window.location.reload(), 1500);
-        //     }
-        // });
+        fetch(`/block-inspections/${inspectionId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message || 'Inspection deleted successfully!');
+                // Refresh the table
+                refreshInspectionsTable();
+            } else {
+                showAlert('error', data.message || 'Failed to delete inspection.');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting inspection:', error);
+            showAlert('error', 'An error occurred while deleting the inspection.');
+        })
+        .finally(() => {
+            // Restore button state
+            if (deleteBtn) {
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.disabled = false;
+            }
+        });
     }
 }
 </script>

@@ -167,29 +167,57 @@ class BlockInspectionController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
-            'notes' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:500',
+            'job_status_id' => 'nullable|integer|exists:job_statuses,id',
         ]);
 
-        $blockInspection->update([
+        // Only allow status updates if the status allows it
+        $jobStatus = null;
+        if ($request->filled('job_status_id')) {
+            $jobStatus = \App\Models\JobStatus::find($request->job_status_id);
+            if (!$jobStatus || !$jobStatus->is_updated) {
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This status cannot be updated through edit.'
+                    ], 422);
+                }
+                return redirect()->back()->withErrors(['job_status_id' => 'This status cannot be updated through edit.']);
+            }
+        }
+
+        $updateData = [
             'scheduled_date_time' => $request->scheduled_date_time,
             'notes' => $request->notes,
             'updated_by' => Auth::id(),
-        ]);
+        ];
+
+        // Only update status if provided and valid
+        if ($jobStatus) {
+            $updateData['job_status_id'] = $jobStatus->id;
+        }
+
+        $blockInspection->update($updateData);
 
         // Update team member (single user for modal)
         $blockInspection->inspectionTeams()->delete();
         $blockInspection->inspectionTeams()->create([
             'user_id' => $request->user_id,
-            'role' => 'Inspector',
+            'role' => 'Lead Inspector',
             'is_lead' => true,
         ]);
+
+        // Load the updated inspection with relationships
+        $blockInspection->load(['block', 'creator', 'inspectionTeams.user']);
 
         // Check if request expects JSON (AJAX request)
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Inspection updated successfully!',
-                'inspection' => $blockInspection
+                'inspection' => $blockInspection,
+                'status_text' => $blockInspection->status_text,
+                'status_color' => $blockInspection->status_color
             ]);
         }
 
@@ -287,5 +315,53 @@ class BlockInspectionController extends Controller
                 'message' => 'Failed to schedule inspection: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get inspections for a specific block.
+     */
+    public function getBlockInspections(Block $block)
+    {
+        $inspections = BlockInspection::where('block_id', $block->id)
+            ->with(['creator', 'inspectionTeams.user'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($inspection) {
+                return [
+                    'id' => $inspection->id,
+                    'ref_no' => $inspection->ref_no,
+                    'scheduled_date_time' => $inspection->scheduled_date_time,
+                    'start_date_time' => $inspection->start_date_time,
+                    'end_date_time' => $inspection->end_date_time,
+                    'notes' => $inspection->notes,
+                    'job_status_id' => $inspection->job_status_id,
+                    'created_at' => $inspection->created_at,
+                    'updated_at' => $inspection->updated_at,
+                    'creator' => $inspection->creator,
+                    'inspection_teams' => $inspection->inspectionTeams->map(function($member) {
+                        return [
+                            'id' => $member->id,
+                            'user_id' => $member->user_id,
+                            'is_lead' => (bool) $member->is_lead,
+                            'role' => $member->role,
+                            'user' => $member->user,
+                        ];
+                    })->values(),
+                    'inspectionTeams' => $inspection->inspectionTeams->map(function($member) {
+                        return [
+                            'id' => $member->id,
+                            'user_id' => $member->user_id,
+                            'is_lead' => (bool) $member->is_lead,
+                            'role' => $member->role,
+                            'user' => $member->user,
+                        ];
+                    })->values(),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $inspections
+        ]);
     }
 }
