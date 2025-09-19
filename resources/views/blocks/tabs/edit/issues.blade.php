@@ -361,6 +361,50 @@
         box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
     }
 
+    /* Toggle Search Button Styles */
+    .custom-toggle {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .custom-toggle:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+        transform: translateY(-1px);
+    }
+
+    .custom-toggle.active {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-color: rgba(255, 255, 255, 1) !important;
+        color: #667eea !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Search Panel Animation */
+    #searchIssuesPanel {
+        transition: all 0.3s ease;
+        transform-origin: top;
+    }
+
+    /* Fade in animation keyframes */
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in {
+        animation: fadeInDown 0.3s ease forwards;
+    }
+
     .is-invalid {
         border-color: #dc3545 !important;
         box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
@@ -668,7 +712,7 @@
                 e.preventDefault();
 
                 // Show loading state
-                const submitBtn = createIssueForm.querySelector('button[type="submit"]');
+                const submitBtn = createIssueForm.querySeleducctor('button[type="submit"]');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
                 submitBtn.disabled = true;
@@ -1158,21 +1202,45 @@
         const searchResults = document.getElementById('searchResults');
         const searchResultsBody = document.getElementById('searchResultsBody');
 
-        // Toggle search panel visibility
-        if (toggleSearchBtn) {
-            toggleSearchBtn.addEventListener('click', function() {
-                if (searchIssuesPanel.style.display === 'none') {
+        // Toggle search panel visibility function
+        function toggleSearchDiv() {
+            if (searchIssuesPanel && toggleSearchBtn) {
+                if (searchIssuesPanel.style.display === 'none' || searchIssuesPanel.style.display === '') {
+                    // Show the panel
                     searchIssuesPanel.style.display = 'block';
+                    toggleSearchBtn.classList.add('active');
+                    
+                    // Add fade-in animation
+                    searchIssuesPanel.classList.add('fade-in');
+                    
+                    // Remove animation class after animation completes
+                    setTimeout(() => {
+                        searchIssuesPanel.classList.remove('fade-in');
+                    }, 300);
                 } else {
+                    // Hide the panel
                     searchIssuesPanel.style.display = 'none';
+                    toggleSearchBtn.classList.remove('active');
+                    searchIssuesPanel.classList.remove('fade-in');
                 }
-            });
+            }
         }
+
+        // Make toggleSearchDiv available globally for potential inline calls
+        window.toggleSearchDiv = toggleSearchDiv;
+
+        // Attach event listener to toggle button
+        if (toggleSearchBtn) {
+            toggleSearchBtn.addEventListener('click', toggleSearchDiv);
+        }
+
+        
 
         // Close search panel
         if (closeSearchBtn) {
             closeSearchBtn.addEventListener('click', function() {
                 searchIssuesPanel.style.display = 'none';
+                toggleSearchBtn.classList.remove('active');
             });
         }
 
@@ -1180,6 +1248,7 @@
         if (closeSearchHeaderBtn) {
             closeSearchHeaderBtn.addEventListener('click', function() {
                 searchIssuesPanel.style.display = 'none';
+                toggleSearchBtn.classList.remove('active');
             });
         }
 
