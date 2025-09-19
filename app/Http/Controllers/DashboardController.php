@@ -55,11 +55,11 @@ class DashboardController extends Controller
                 'total_blocks' => Block::count(),
                 'total_block_types' => BlockType::count(),
                 'total_units' => BlockUnit::count(),
-                'total_issues' => BlockIssue::count(),
-                'open_issues' => BlockIssue::where('issue_status_id', 1)->count(),
-                'in_progress_issues' => BlockIssue::where('issue_status_id', 2)->count(),
-                'resolved_issues' => BlockIssue::where('issue_status_id', 3)->count(),
-                'high_priority_issues' => BlockIssue::where('priority_id', '>=', 3)->count(),
+                'total_work_orders' => BlockWorkOrder::count(),
+                'pending_work_orders' => BlockWorkOrder::where('status', 1)->count(),
+                'ongoing_work_orders' => BlockWorkOrder::where('status', 2)->count(),
+                'completed_work_orders' => BlockWorkOrder::where('status', 3)->count(),
+                'emergency_issues' => BlockIssue::whereIn('priority_id', [4, 5])->count(),
             ];
 
             // Get recent data for widgets
@@ -68,12 +68,25 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
-            $recentIssues = BlockIssue::with('block')
+            $recentPendingWorkOrders = BlockWorkOrder::with(['block', 'contractor'])
+                ->where('status', 1) // Pending
                 ->latest()
                 ->take(5)
                 ->get();
 
-            return view('dashboard.index', compact('stats', 'recentBlocks', 'recentIssues', 'isContractorAdmin'));
+            $recentOngoingWorkOrders = BlockWorkOrder::with(['block', 'contractor'])
+                ->where('status', 2) // In Progress
+                ->latest()
+                ->take(5)
+                ->get();
+
+            $emergencyIssues = BlockIssue::with(['block', 'priority'])
+                ->whereIn('priority_id', [4, 5]) // Urgent and Critical
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return view('dashboard.index', compact('stats', 'recentBlocks', 'recentPendingWorkOrders', 'recentOngoingWorkOrders', 'emergencyIssues', 'isContractorAdmin'));
         }
     }
 
@@ -153,11 +166,13 @@ class DashboardController extends Controller
             'total_blocks' => Block::count(),
             'total_block_types' => BlockType::count(),
             'total_units' => BlockUnit::count(),
-            'total_issues' => BlockIssue::count(),
-            'open_issues' => BlockIssue::where('issue_status_id', 1)->count(),
-            'in_progress_issues' => BlockIssue::where('issue_status_id', 2)->count(),
-            'resolved_issues' => BlockIssue::where('issue_status_id', 3)->count(),
-            'high_priority_issues' => BlockIssue::where('priority_id', '>=', 3)->count(),
+            'total_work_orders' => BlockWorkOrder::count(),
+            'pending_work_orders' => BlockWorkOrder::where('status', 1)->count(),
+            'ongoing_work_orders' => BlockWorkOrder::where('status', 2)->count(),
+            'completed_work_orders' => BlockWorkOrder::where('status', 3)->count(),
+            'emergency_issues' => BlockIssue::whereIn('priority_id', [4, 5])->count(),
+            'urgent_issues' => BlockIssue::where('priority_id', 4)->count(),
+            'critical_issues' => BlockIssue::where('priority_id', 5)->count(),
         ];
 
         return response()->json($stats);

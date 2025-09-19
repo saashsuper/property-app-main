@@ -29,8 +29,6 @@ class BlockFactory extends Factory
             'address3' => $this->faker->city(),
             'block_address' => $this->faker->address(),
             'management_company_address' => $this->faker->address(),
-            'image_path' => null,
-            'image_name' => null,
             'country_id' => 1,
             'state_id' => 1,
             'car_spaces' => $this->faker->numberBetween(10, 100),

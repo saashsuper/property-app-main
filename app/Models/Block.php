@@ -26,8 +26,6 @@ class Block extends Model
         'address3',
         'block_address',
         'management_company_address',
-        'image_path',
-        'image_name',
         'country_id',
         'state_id',
         'car_spaces',
@@ -65,7 +63,7 @@ class Block extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /**
@@ -73,7 +71,7 @@ class Block extends Model
      */
     public function blockManager()
     {
-        return $this->belongsTo(User::class, 'block_manager_id');
+        return $this->belongsTo(User::class, 'block_manager_id')->withTrashed();
     }
 
     /**
@@ -153,7 +151,7 @@ class Block extends Model
      */
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by')->withTrashed();
     }
 
     /**
@@ -161,7 +159,7 @@ class Block extends Model
      */
     public function updater()
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->belongsTo(User::class, 'updated_by')->withTrashed();
     }
 
     /**
@@ -169,7 +167,7 @@ class Block extends Model
      */
     public function deleter()
     {
-        return $this->belongsTo(User::class, 'deleted_by');
+        return $this->belongsTo(User::class, 'deleted_by')->withTrashed();
     }
 
     /**

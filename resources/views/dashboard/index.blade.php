@@ -204,18 +204,18 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fw-medium">Active Issues</span>
+                                <span class="text-muted text-uppercase fw-medium">Completed Work Orders</span>
                                 <h4 class="mb-0">
-                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-danger">
-                                        {{ $stats['total_issues'] }}
+                                    <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none text-success">
+                                        {{ $stats['completed_work_orders'] }}
                                     </a>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none">
                                     <div class="avatar-sm">
-                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
-                                            <i class="ph-warning"></i>
+                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
+                                            <i class="ph-check"></i>
                                         </span>
                                     </div>
                                 </a>
@@ -228,22 +228,22 @@
         @endif
 
         @if(!($isContractorAdmin ?? false))
-        <!-- Issue Statistics Cards -->
+        <!-- Work Order & Emergency Issue Statistics Cards -->
         <div class="row">
             <div class="col-xl-3 col-md-6">
                 <div class="card">
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fw-medium">Open Issues</span>
+                                <span class="text-muted text-uppercase fw-medium">Pending Work Orders</span>
                                 <h4 class="mb-0">
-                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-warning">
-                                        {{ $stats['open_issues'] }}
+                                    <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none text-warning">
+                                        {{ $stats['pending_work_orders'] }}
                                     </a>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none">
                                     <div class="avatar-sm">
                                         <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
                                             <i class="ph-clock"></i>
@@ -260,15 +260,15 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fw-medium">In Progress</span>
+                                <span class="text-muted text-uppercase fw-medium">Ongoing Work Orders</span>
                                 <h4 class="mb-0">
-                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-info">
-                                        {{ $stats['in_progress_issues'] }}
+                                    <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none text-info">
+                                        {{ $stats['ongoing_work_orders'] }}
                                     </a>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none">
                                     <div class="avatar-sm">
                                         <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
                                             <i class="ph-spinner-gap"></i>
@@ -285,18 +285,18 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fw-medium">Resolved</span>
+                                <span class="text-muted text-uppercase fw-medium">Emergency Issues</span>
                                 <h4 class="mb-0">
-                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-success">
-                                        {{ $stats['resolved_issues'] }}
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-danger">
+                                        {{ $stats['emergency_issues'] }}
                                     </a>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
                                 <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
                                     <div class="avatar-sm">
-                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
-                                            <i class="ph-check"></i>
+                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                            <i class="ph-warning"></i>
                                         </span>
                                     </div>
                                 </a>
@@ -310,18 +310,18 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fw-medium">High Priority</span>
+                                <span class="text-muted text-uppercase fw-medium">Total Work Orders</span>
                                 <h4 class="mb-0">
-                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-danger">
-                                        {{ $stats['high_priority_issues'] }}
+                                    <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none text-primary">
+                                        {{ $stats['total_work_orders'] }}
                                     </a>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
+                                <a href="{{ route('block-work-orders.index') }}" class="text-decoration-none">
                                     <div class="avatar-sm">
-                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
-                                            <i class="ph-warning"></i>
+                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
+                                            <i class="ph-wrench"></i>
                                         </span>
                                     </div>
                                 </a>
@@ -517,9 +517,9 @@
             </div>
         </div>
         @else
-        <!-- Regular Admin Quick Actions and Recent Data -->
+        <!-- Regular Admin Quick Actions -->
         <div class="row">
-            <div class="col-xl-8">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">Quick Actions</h4>
@@ -586,7 +586,12 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Work Orders and Emergency Issues Row -->
+        <div class="row">
             <div class="col-xl-4">
+                <!-- Recent Blocks -->
                 <div class="card">
                     <div class="card-header">
                         <h4 class="card-title">Recent Blocks</h4>
@@ -619,22 +624,32 @@
                         @endif
                     </div>
                 </div>
+            </div>
+            <div class="col-xl-4">
 
+                <!-- Pending Work Orders -->
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">Recent Issues</h4>
+                        <h4 class="card-title">
+                            <i class="ph-clock me-2 text-warning"></i>Pending Work Orders
+                        </h4>
                     </div>
                     <div class="card-body">
-                        @if(isset($recentIssues) && $recentIssues->count() > 0)
+                        @if(isset($recentPendingWorkOrders) && $recentPendingWorkOrders->count() > 0)
                             <div class="list-group list-group-flush">
-                                @foreach($recentIssues as $issue)
+                                @foreach($recentPendingWorkOrders as $workOrder)
                                     <div class="list-group-item">
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
-                                                <h6 class="mb-1">{{ Str::limit($issue->issue ?? 'No title', 30) }}</h6>
-                                                <small class="text-muted">{{ $issue->block->name ?? 'N/A' }} - {{ $issue->ref_no }}</small>
+                                                <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No title', 30) }}</h6>
+                                                <small class="text-muted">{{ $workOrder->block->name ?? 'N/A' }} - {{ $workOrder->ref_no }}</small>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="ph-user me-1"></i>{{ $workOrder->contractor->name ?? 'Unassigned' }}
+                                                    </small>
+                                                </div>
                                             </div>
-                                            <span class="badge bg-{{ $issue->status_color }}">{{ $issue->status_text }}</span>
+                                            <span class="badge bg-warning">Pending</span>
                                         </div>
                                     </div>
                                 @endforeach
@@ -642,8 +657,87 @@
                         @else
                             <div class="text-center py-4">
                                 <div class="text-muted">
-                                    <i class="ph-warning fs-2"></i>
-                                    <p class="mt-2">No issues found</p>
+                                    <i class="ph-clock fs-2"></i>
+                                    <p class="mt-2">No pending work orders</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Ongoing Work Orders -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            <i class="ph-spinner-gap me-2 text-info"></i>Ongoing Work Orders
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        @if(isset($recentOngoingWorkOrders) && $recentOngoingWorkOrders->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($recentOngoingWorkOrders as $workOrder)
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No title', 30) }}</h6>
+                                                <small class="text-muted">{{ $workOrder->block->name ?? 'N/A' }} - {{ $workOrder->ref_no }}</small>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="ph-user me-1"></i>{{ $workOrder->contractor->name ?? 'Unassigned' }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-info">In Progress</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ph-spinner-gap fs-2"></i>
+                                    <p class="mt-2">No ongoing work orders</p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-xl-4">
+                <!-- Emergency Issues -->
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title">
+                            <i class="ph-warning me-2 text-danger"></i>Emergency Issues
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        @if(isset($emergencyIssues) && $emergencyIssues->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($emergencyIssues as $issue)
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1">{{ Str::limit($issue->issue ?? 'No title', 30) }}</h6>
+                                                <small class="text-muted">{{ $issue->block->name ?? 'N/A' }} - {{ $issue->ref_no }}</small>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-danger-subtle text-danger">
+                                                        {{ $issue->priority->label ?? 'High Priority' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-{{ $issue->status_color ?? 'secondary' }}">{{ $issue->status_text ?? 'Open' }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ph-shield-check fs-2 text-success"></i>
+                                    <p class="mt-2">No emergency issues</p>
+                                    <small>All critical issues resolved</small>
                                 </div>
                             </div>
                         @endif
