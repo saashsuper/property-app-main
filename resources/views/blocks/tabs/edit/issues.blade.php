@@ -58,21 +58,9 @@
                             <label for="search_type" class="form-label">Issue Type</label>
                             <select class="form-select" id="search_type" name="issue_type">
                                 <option value="">All Types</option>
-                                <option value="plumbing">Plumbing</option>
-                                <option value="electrical">Electrical</option>
-                                <option value="hvac">HVAC</option>
-                                <option value="structural">Structural</option>
-                                <option value="security">Security</option>
-                                <option value="fire_safety">Fire Safety</option>
-                                <option value="water_leakage">Water Leakage</option>
-                                <option value="noise">Noise Complaint</option>
-                                <option value="parking">Parking Issue</option>
-                                <option value="landscaping">Landscaping</option>
-                                <option value="elevator">Elevator</option>
-                                <option value="internet">Internet</option>
-                                <option value="trash">Trash Collection</option>
-                                <option value="lighting">Lighting</option>
-                                <option value="access_control">Access Control</option>
+                                @foreach($issueTypes as $issueType)
+                                    <option value="{{ $issueType->name }}">{{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -237,21 +225,9 @@
                                             class="text-danger">*</span></label>
                                     <select class="form-select" id="issue_type" name="issue_type" required>
                                         <option value="">Select Issue Type</option>
-                                        <option value="plumbing">Plumbing</option>
-                                        <option value="electrical">Electrical</option>
-                                        <option value="hvac">HVAC</option>
-                                        <option value="structural">Structural</option>
-                                        <option value="security">Security</option>
-                                        <option value="fire_safety">Fire Safety</option>
-                                        <option value="water_leakage">Water Leakage</option>
-                                        <option value="noise">Noise Complaint</option>
-                                        <option value="parking">Parking Issue</option>
-                                        <option value="landscaping">Landscaping</option>
-                                        <option value="elevator">Elevator</option>
-                                        <option value="internet">Internet</option>
-                                        <option value="trash">Trash Collection</option>
-                                        <option value="lighting">Lighting</option>
-                                        <option value="access_control">Access Control</option>
+                                        @foreach($issueTypes as $issueType)
+                                            <option value="{{ $issueType->name }}">{{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">

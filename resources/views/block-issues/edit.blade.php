@@ -587,6 +587,110 @@
                                     </div>
                                 </div>
 
+                                <!-- Actions Section -->
+                                <div class="row mt-4">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="ph-activity me-2"></i>Actions for this Issue
+                                                    <span class="badge bg-primary ms-2">{{ $actions->count() }}</span>
+                                                </h5>
+                                            </div>
+                                            <div class="card-body">
+                                                @if($actions->count() > 0)
+                                                    <div class="table-responsive">
+                                                        <table class="table table-nowrap table-hover">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Action Type</th>
+                                                                    <th>Description</th>
+                                                                    <th>Performed By</th>
+                                                                    <th>Action Date</th>
+                                                                    <th>Status</th>
+                                                                    <th>Priority</th>
+                                                                    <th>Cost</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($actions as $action)
+                                                                <tr>
+                                                                    <td>
+                                                                        <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $action->action_type)) }}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <strong>{{ $action->description }}</strong>
+                                                                        @if($action->notes)
+                                                                            <br><small class="text-muted">{{ Str::limit($action->notes, 100) }}</small>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="d-flex align-items-center">
+                                                                            <div class="avatar-xs me-2">
+                                                                                <div class="avatar-title rounded-circle bg-primary">
+                                                                                    {{ substr($action->performedBy->name ?? 'N/A', 0, 1) }}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div>
+                                                                                <h6 class="mb-0 font-size-14">{{ $action->performedBy->name ?? 'N/A' }}</h6>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>
+                                                                        {{ $action->action_date ? $action->action_date->format('M d, Y H:i') : 'N/A' }}
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($action->status == 'completed')
+                                                                            <span class="badge bg-success">{{ ucfirst($action->status) }}</span>
+                                                                        @elseif($action->status == 'in_progress')
+                                                                            <span class="badge bg-info">{{ ucfirst(str_replace('_', ' ', $action->status)) }}</span>
+                                                                        @elseif($action->status == 'pending')
+                                                                            <span class="badge bg-warning">{{ ucfirst($action->status) }}</span>
+                                                                        @else
+                                                                            <span class="badge bg-danger">{{ ucfirst($action->status) }}</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($action->priority)
+                                                                            @if($action->priority == 'critical')
+                                                                                <span class="badge bg-danger">{{ ucfirst($action->priority) }}</span>
+                                                                            @elseif($action->priority == 'urgent')
+                                                                                <span class="badge bg-warning">{{ ucfirst($action->priority) }}</span>
+                                                                            @elseif($action->priority == 'high')
+                                                                                <span class="badge bg-info">{{ ucfirst($action->priority) }}</span>
+                                                                            @else
+                                                                                <span class="badge bg-secondary">{{ ucfirst($action->priority) }}</span>
+                                                                            @endif
+                                                                        @else
+                                                                            <span class="text-muted">-</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td>
+                                                                        @if($action->cost)
+                                                                            <span class="text-success fw-semibold">${{ number_format($action->cost, 2) }}</span>
+                                                                        @else
+                                                                            <span class="text-muted">-</span>
+                                                                        @endif
+                                                                    </td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                @else
+                                                    <div class="text-center py-4">
+                                                        <div class="mb-3">
+                                                            <i class="ph-activity display-4 text-muted"></i>
+                                                        </div>
+                                                        <h6 class="text-muted">No actions recorded for this issue</h6>
+                                                        <p class="text-muted mb-0">Create an action to track progress and activities for this issue.</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="row mt-4">
                                     <div class="col-12">
                                         <div class="d-flex justify-content-between align-items-center">
@@ -596,6 +700,9 @@
                                                 </button>
                                                 <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#createSiteVisitModal">
                                                     <i class="ph-map-pin me-1"></i> Create Site Visit
+                                                </button>
+                                                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#createActionModal">
+                                                    <i class="ph-activity me-1"></i> Create Action
                                                 </button>
                                             </div>
                                             
@@ -858,6 +965,101 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-info">
                             <i class="ph-map-pin me-1"></i> Create Site Visit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Action Modal -->
+    <div class="modal fade" id="createActionModal" tabindex="-1" aria-labelledby="createActionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createActionModalLabel">Create Action for Issue: {{ $blockIssue->ref_no }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createActionForm">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- Action Type and Status -->
+                            <div class="col-md-6 mb-3">
+                                <label for="action_type" class="form-label">Action Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="action_type" name="action_type" required>
+                                    <option value="">Select Action Type</option>
+                                    @foreach(\App\Models\BlockIssueAction::ACTION_TYPES as $key => $value)
+                                        <option value="{{ $key }}">{{ $value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="action_status" class="form-label">Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="action_status" name="status" required>
+                                    @foreach(\App\Models\BlockIssueAction::STATUSES as $key => $value)
+                                        <option value="{{ $key }}" {{ $key == 'completed' ? 'selected' : '' }}>{{ $value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Performed By and Action Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="performed_by" class="form-label">Performed By <span class="text-danger">*</span></label>
+                                <select class="form-select" id="performed_by" name="performed_by" required>
+                                    <option value="">Select User</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}" {{ $user->id == Auth::id() ? 'selected' : '' }}>{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="action_date" class="form-label">Action Date <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" id="action_date" name="action_date" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Priority and Cost -->
+                            <div class="col-md-6 mb-3">
+                                <label for="action_priority" class="form-label">Priority</label>
+                                <select class="form-select" id="action_priority" name="priority">
+                                    <option value="">Select Priority</option>
+                                    @foreach(\App\Models\BlockIssueAction::PRIORITIES as $key => $value)
+                                        <option value="{{ $key }}" {{ $key == 'normal' ? 'selected' : '' }}>{{ $value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="action_cost" class="form-label">Cost</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="action_cost" name="cost" 
+                                           min="0" step="0.01" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="action_description" class="form-label">Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="action_description" name="description" rows="3" 
+                                      placeholder="Enter action description..." required></textarea>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-3">
+                            <label for="action_notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="action_notes" name="notes" rows="3" 
+                                      placeholder="Enter any additional notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="ph-activity me-1"></i> Create Action
                         </button>
                     </div>
                 </form>
@@ -1173,6 +1375,103 @@
             if (issueDetails && !$notesField.val()) {
                 $notesField.val(issueDetails);
             }
+        });
+
+        // Handle action form submission using jQuery AJAX
+        $('#createActionForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const $submitBtn = $(this).find('button[type="submit"]');
+            const originalText = $submitBtn.html();
+            $submitBtn.html('<i class="ph-spinner ph-spin me-1"></i> Creating...').prop('disabled', true);
+            
+            // Prepare form data
+            const formData = new FormData(this);
+            
+            // Submit form via jQuery AJAX
+            $.ajax({
+                url: '{{ route("block-issues.store-action", $blockIssue) }}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    if (data.success) {
+                        Toastify({
+                            text: data.message,
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "#28a745",
+                            stopOnFocus: true
+                        }).showToast();
+
+                        // Close modal and reload page to show new action
+                        closeActionModal();
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        throw new Error(data.message || 'Unknown error occurred');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = 'An error occurred while creating the action.';
+                    
+                    if (xhr.responseJSON) {
+                        if (xhr.responseJSON.errors) {
+                            // Validation errors
+                            const errors = Object.values(xhr.responseJSON.errors).flat();
+                            errorMessage = errors.join('\n');
+                        } else if (xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                    }
+                    
+                    Toastify({
+                        text: errorMessage,
+                        duration: 5000,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "#dc3545",
+                        stopOnFocus: true
+                    }).showToast();
+                },
+                complete: function() {
+                    // Reset button state
+                    $submitBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        });
+
+        // Set current date/time when action modal opens
+        $('#createActionModal').on('show.bs.modal', function() {
+            const now = new Date();
+            const formattedDateTime = now.toISOString().slice(0, 16);
+            $('#action_date').val(formattedDateTime);
+        });
+
+        // Function to close action modal
+        function closeActionModal() {
+            const modalElement = document.getElementById('createActionModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            } else {
+                // Trigger the close button click as fallback
+                modalElement.querySelector('.btn-close').click();
+            }
+        }
+
+        // Add modal event listener for action modal
+        $('#createActionModal').on('hidden.bs.modal', function() {
+            // Reset form when modal is closed
+            $('#createActionForm')[0].reset();
         });
 
         // Function to close work order modal

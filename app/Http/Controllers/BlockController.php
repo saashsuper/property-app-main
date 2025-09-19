@@ -16,6 +16,7 @@ use App\Models\JobReason;
 use App\Models\BlockImage;
 use Illuminate\Support\Facades\Storage;
 use App\Models\JobStatus;
+use App\Models\IssueType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -324,7 +325,7 @@ class BlockController extends Controller
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
-        $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
+        $contractTypes = DB::table('block_contractor_types')->orderBy('name')->get();
         $contractors = \App\Models\User::whereHas('userType', function($q) { 
             $q->whereIn('name', ['Contractor Admin', 'Contractor User']); 
         })->orderBy('name')->get();
@@ -390,7 +391,7 @@ class BlockController extends Controller
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
-        $contractTypes = \DB::table('block_contractor_types')->orderBy('name')->get();
+        $contractTypes = DB::table('block_contractor_types')->orderBy('name')->get();
         $contractors = \App\Models\User::whereHas('userType', function($q) { 
             $q->whereIn('name', ['Contractor Admin', 'Contractor User']); 
         })->orderBy('name')->get();
@@ -398,6 +399,7 @@ class BlockController extends Controller
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
         $priorities = \App\Models\Priority::ordered()->get();
+        $issueTypes = IssueType::where('is_active', true)->orderBy('name')->get();
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
@@ -417,7 +419,8 @@ class BlockController extends Controller
             'contactMethods',
             'jobReasons',
             'jobStatuses',
-            'priorities'
+            'priorities',
+            'issueTypes'
         ));
     }
 

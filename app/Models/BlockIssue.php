@@ -221,6 +221,14 @@ class BlockIssue extends Model
     }
 
     /**
+     * Get all actions for this block issue
+     */
+    public function actions()
+    {
+        return $this->hasMany(BlockIssueAction::class, 'block_issue_id');
+    }
+
+    /**
      * Scope for active issues
      */
     public function scopeActive($query)

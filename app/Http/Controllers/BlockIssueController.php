@@ -10,6 +10,8 @@ use App\Models\Priority;
 use App\Models\User;
 use App\Models\JobReason;
 use App\Models\JobStatus;
+use App\Models\IssueType;
+use App\Models\BlockIssueAction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -209,6 +211,7 @@ class BlockIssueController extends Controller
         $issue_status = IssueStatus::orderBy('id')->get();
         $jobReasons = JobReason::orderBy('name')->get();
         $jobStatuses = JobStatus::orderBy('name')->get();
+        $issueTypes = IssueType::where('is_active', true)->orderBy('name')->get();
         
         // Load work orders for this issue
         $workOrders = $blockIssue->workOrders()
@@ -228,7 +231,13 @@ class BlockIssueController extends Controller
             ->orderBy('scheduled_date_time', 'desc')
             ->get();
 
-        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses'));
+        // Load actions for this issue
+        $actions = $blockIssue->actions()
+            ->with(['performedBy', 'createdBy', 'updatedBy'])
+            ->orderBy('action_date', 'desc')
+            ->get();
+
+        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses', 'issueTypes', 'actions'));
     }
 
     /**
@@ -491,6 +500,80 @@ class BlockIssueController extends Controller
                 'success' => false,
                 'message' => 'Failed to delete image: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Store a new action for a block issue.
+     */
+    public function storeAction(Request $request, BlockIssue $blockIssue)
+    {
+        $validator = Validator::make($request->all(), [
+            'action_type' => 'required|string|max:50',
+            'description' => 'required|string|max:1000',
+            'notes' => 'nullable|string|max:2000',
+            'performed_by' => 'required|exists:users,id',
+            'action_date' => 'required|date',
+            'status' => 'required|string|in:pending,in_progress,completed,cancelled',
+            'cost' => 'nullable|numeric|min:0|max:999999.99',
+            'priority' => 'nullable|string|in:low,normal,high,urgent,critical',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $data = $request->only([
+                'action_type',
+                'description', 
+                'notes',
+                'performed_by',
+                'action_date',
+                'status',
+                'cost',
+                'priority'
+            ]);
+            
+            $data['block_issue_id'] = $blockIssue->id;
+            $data['created_by'] = Auth::id();
+            $data['updated_by'] = Auth::id();
+
+            $action = BlockIssueAction::create($data);
+            $action->load(['performedBy', 'createdBy']);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Action created successfully!',
+                    'data' => $action
+                ]);
+            }
+
+            return redirect()->back()
+                ->with('success', 'Action created successfully!');
+
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create action: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Failed to create action: ' . $e->getMessage())
+                ->withInput();
         }
     }
 }
