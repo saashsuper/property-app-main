@@ -585,7 +585,7 @@ class BlockUnitController extends Controller
     {
         try {
             $blockUnits = BlockUnit::where('block_id', $blockId)
-                ->with(['blockBuilding', 'blockUnitType'])
+                ->with(['building', 'unitType'])
                 ->orderBy('unit_code', 'asc')
                 ->get();
 
@@ -600,4 +600,5 @@ class BlockUnitController extends Controller
             ], 500);
         }
     }
+
 }

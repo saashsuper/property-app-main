@@ -554,4 +554,25 @@ class BlockController extends Controller
 
         return response()->json($units);
     }
+
+    /**
+     * Get buildings for a specific block (API endpoint)
+     */
+    public function getBlockBuildings(Block $block)
+    {
+        $buildings = $block->buildings()
+                          ->select('id', 'name', 'building_type_id')
+                          ->with('buildingType:id,name')
+                          ->orderBy('name')
+                          ->get()
+                          ->map(function($building) {
+                              return [
+                                  'id' => $building->id,
+                                  'name' => $building->name,
+                                  'type' => $building->buildingType->name ?? 'N/A'
+                              ];
+                          });
+
+        return response()->json($buildings);
+    }
 }
