@@ -100,6 +100,14 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Get the block unit for the work order.
+     */
+    public function contractor()
+    {
+        return $this->belongsTo(BlockContractor::class);
+    }
+
+    /**
      * Get the block building for the work order.
      */
     public function blockBuilding()

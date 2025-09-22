@@ -335,6 +335,7 @@ class BlockController extends Controller
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
         $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
+        $issueTypes = \App\Models\IssueType::orderBy('name')->get();
         
         return view('blocks.show', compact(
             'block',
@@ -353,7 +354,8 @@ class BlockController extends Controller
             'jobReasons',
             'jobStatuses',
             'issueStatuses',
-            'priorities'
+            'priorities',
+            'issueTypes'
         ));
     }
 
