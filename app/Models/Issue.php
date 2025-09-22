@@ -114,11 +114,11 @@ class Issue extends Model
     public function getStatusTextAttribute()
     {
         $statuses = [
-            1 => 'Open',
+            1 => 'Created',
             2 => 'In Progress',
-            3 => 'Resolved',
-            4 => 'Closed',
-            5 => 'On Hold'
+            3 => 'Work Order',
+            4 => 'Completed',
+            5 => 'Invoiced'
         ];
 
         return $statuses[$this->status] ?? 'Unknown';
@@ -146,11 +146,11 @@ class Issue extends Model
     public function getStatusColorAttribute()
     {
         $colors = [
-            1 => 'warning',
-            2 => 'info',
-            3 => 'success',
-            4 => 'secondary',
-            5 => 'danger'
+            1 => 'warning',    // Created - btn-warning
+            2 => 'primary',    // In Progress - btn-primary
+            3 => 'secondary',  // Work Order - btn-secondary
+            4 => 'success',    // Completed - btn-success
+            5 => 'light'       // Invoiced - btn-light
         ];
 
         return $colors[$this->status] ?? 'secondary';

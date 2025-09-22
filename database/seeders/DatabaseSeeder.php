@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             BuildingAssetSeeder::class,
             JobReasonSeeder::class,
             JobStatusSeeder::class,
+            IssueStatusSeeder::class,
         ]);
 
         // Seed main data
@@ -71,6 +72,7 @@ class DatabaseSeeder extends Seeder
             'block_inspection_value_types',
             'block_unit_types',
             'block_types',
+            'issue_statuses',
             'user_types',
             'states',
             'countries',

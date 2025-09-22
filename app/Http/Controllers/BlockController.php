@@ -321,6 +321,7 @@ class BlockController extends Controller
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+        // Get only Property Manager users for the dropdown
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
@@ -331,6 +332,7 @@ class BlockController extends Controller
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+        $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         
         return view('blocks.show', compact(
@@ -349,6 +351,7 @@ class BlockController extends Controller
             'contactMethods',
             'jobReasons',
             'jobStatuses',
+            'issueStatuses',
             'priorities'
         ));
     }
@@ -387,6 +390,7 @@ class BlockController extends Controller
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+        // Get only Property Manager users for the dropdown
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
@@ -397,6 +401,7 @@ class BlockController extends Controller
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+        $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         return view('blocks.edit', compact(
             'block', 
@@ -417,6 +422,7 @@ class BlockController extends Controller
             'contactMethods',
             'jobReasons',
             'jobStatuses',
+            'issueStatuses',
             'priorities'
         ));
     }

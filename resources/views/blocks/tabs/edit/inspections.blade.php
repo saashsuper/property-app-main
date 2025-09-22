@@ -1,3 +1,14 @@
+<style>
+/* Status badge colors for inspections */
+.badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+.badge.bg-primary { background-color: #0d6efd !important; color: #fff !important; }
+.badge.bg-secondary { background-color: #6c757d !important; color: #fff !important; }
+.badge.bg-success { background-color: #198754 !important; color: #fff !important; }
+.badge.bg-light { background-color: #f8f9fa !important; color: #000 !important; }
+.badge.bg-info { background-color: #0dcaf0 !important; color: #000 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; color: #fff !important; }
+</style>
+
 <div class="row">
     <div class="col-12">
         <div class="d-flex align-items-center mb-3 gap-3">
@@ -28,31 +39,26 @@
                                 <td>
                                     @php
                                         $leadInspector = $inspection->inspectionTeams->where('is_lead', true)->first();
+                                        $displayInspector = $leadInspector ? ($leadInspector->user->name ?? 'N/A') : ($inspection->creator->name ?? 'N/A');
+                                        $userForEdit = $leadInspector ? $leadInspector->user_id : $inspection->created_by;
                                     @endphp
-                                    {{ $leadInspector ? ($leadInspector->user->name ?? 'N/A') : ($inspection->creator->name ?? 'N/A') }}
+                                    {{ $displayInspector }}
                                 </td>
                                 <td>
-                                    @if($inspection->job_status_id == 1)
-                                        <span class="badge bg-info">Scheduled</span>
-                                    @elseif($inspection->job_status_id == 2)
-                                        <span class="badge bg-warning">In Progress</span>
-                                    @elseif($inspection->job_status_id == 3)
-                                        <span class="badge bg-success">Completed</span>
-                                    @elseif($inspection->job_status_id == 4)
-                                        <span class="badge bg-danger">Cancelled</span>
-                                    @elseif($inspection->job_status_id == 5)
-                                        <span class="badge bg-secondary">On Hold</span>
-                                    @elseif($inspection->job_status_id == 6)
-                                        <span class="badge bg-primary">Rescheduled</span>
+                                    @php
+                                        $status = $issueStatuses->where('value', $inspection->job_status_id)->first();
+                                    @endphp
+                                    @if($status)
+                                        <span class="badge {{ $status->btn_class ?: 'bg-secondary' }}">{{ $status->label }}</span>
                                     @else
-                                        <span class="badge bg-secondary">Unknown</span>
+                                        <span class="badge bg-secondary">Unknown (ID: {{ $inspection->job_status_id }})</span>
                                     @endif
                                 </td>
                                 <td>{{ Str::limit($inspection->notes, 50) ?? 'N/A' }}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary me-1 edit-inspection"
                                             data-inspection-id="{{ $inspection->id }}"
-                                            data-user-id="{{ isset($leadInspector) && $leadInspector ? $leadInspector->user_id : '' }}"
+                                            data-user-id="{{ $userForEdit ?? '' }}"
                                             data-date="{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('Y-m-d') : '' }}"
                                             data-time="{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('H:i') : '' }}"
                                             data-notes="{{ e($inspection->notes) }}">
@@ -104,12 +110,24 @@
                 <div class="modal-body">
                     <div class="row">
                         <!-- User Selection -->
-                        <div class="col-12 mb-3">
-                            <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
+                        <div class="col-md-6 mb-3">
+                            <label for="user_id" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
                             <select class="form-select" id="user_id" name="user_id" required>
-                                <option value="">Select User</option>
+                                <option value="">Select Lead Inspector</option>
                                 @foreach($users ?? [] as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Only Property Manager users can be assigned as Lead Inspector</div>
+                        </div>
+                        
+                        <!-- Status Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label for="job_status_id" class="form-label">Status</label>
+                            <select class="form-select" id="job_status_id" name="job_status_id">
+                                <option value="">Select Status</option>
+                                @foreach($issueStatuses as $status)
+                                    <option value="{{ $status->value }}">{{ $status->label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -172,14 +190,11 @@
                             <label for="edit_job_status_id" class="form-label">Status</label>
                             <select class="form-select" id="edit_job_status_id" name="job_status_id">
                                 <option value="">Select Status</option>
-                                @php
-                                    $jobStatuses = \App\Models\JobStatus::where('is_updated', true)->get();
-                                @endphp
-                                @foreach($jobStatuses as $status)
-                                    <option value="{{ $status->id }}">{{ $status->name }}</option>
+                                @foreach($issueStatuses as $status)
+                                    <option value="{{ $status->value }}">{{ $status->label }}</option>
                                 @endforeach
                             </select>
-                            <div class="form-text">Only updatable statuses are shown</div>
+                            <div class="form-text">Select inspection status</div>
                         </div>
                         
                         <!-- User Selection -->
@@ -188,9 +203,10 @@
                             <select class="form-select" id="edit_user_id" name="user_id" required>
                                 <option value="">Select Lead Inspector</option>
                                 @foreach($users ?? [] as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->userType->name ?? 'N/A' }})</option>
                                 @endforeach
                             </select>
+                            <div class="form-text">Only Property Manager users can be assigned as Lead Inspector</div>
                         </div>
                         
                         <!-- Scheduled Date & Time -->
@@ -324,6 +340,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 user_id: formData.get('user_id'),
                 scheduled_date_time: scheduledDateTime,
                 notes: formData.get('notes'),
+                job_status_id: formData.get('job_status_id'),
                 _token: formData.get('_token')
             };
             
@@ -450,151 +467,192 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Edit Inspection Event Listener (enhanced version)
+    // Edit Inspection Event Listener (exactly like Edit Site Visit)
     function attachInspectionEventListeners() {
         document.querySelectorAll('.edit-inspection').forEach(button => {
             button.addEventListener('click', function() {
                 const inspectionId = this.getAttribute('data-inspection-id');
-                const scheduledDate = this.getAttribute('data-date');
-                const scheduledTime = this.getAttribute('data-time');
-                const notes = this.getAttribute('data-notes');
-                const userId = this.getAttribute('data-user-id');
                 
-                // Clear any previous success/error message before loading new data
+                // Clear any previous success/error message
                 const editMsgEl = document.getElementById('editInspectionMessage');
                 if (editMsgEl) {
                     editMsgEl.innerHTML = '';
                 }
                 
-                // Show loading state
-                const originalText = this.innerHTML;
-                this.innerHTML = '<i class="ph-spinner ph-spin me-1"></i>Loading...';
-                this.disabled = true;
-                
-                // Clear form first
-                document.getElementById('editInspectionForm').reset();
-                
-                // Set basic data
-                document.getElementById('edit_inspection_id').value = inspectionId;
-                
-                // Debug logging to see what data we have
-                console.log('Edit button clicked - Data attributes:', {
-                    inspectionId: inspectionId,
-                    scheduledDate: scheduledDate,
-                    scheduledTime: scheduledTime,
-                    notes: notes,
-                    userId: userId
-                });
-                
-                // Show modal first
-                $('#editInspectionModal').modal('show');
-                
-                // Then fetch detailed data from server
-                fetch(`/block-inspections/${inspectionId}`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const inspection = data.data;
-                        const scheduledDateTime = new Date(inspection.scheduled_date_time);
-                        
-                        // Get the lead inspector from the inspection teams
-                        let assignedUser = null;
-                        if (inspection.inspectionTeams && inspection.inspectionTeams.length > 0) {
-                            const leadMember = inspection.inspectionTeams.find(team => team.is_lead) || inspection.inspectionTeams[0];
-                            assignedUser = leadMember.user_id;
-                        } else if (inspection.inspection_teams && inspection.inspection_teams.length > 0) {
-                            const leadMember = inspection.inspection_teams.find(team => team.is_lead) || inspection.inspection_teams[0];
-                            assignedUser = leadMember.user_id;
-                        } else if (inspection.created_by) {
-                            assignedUser = inspection.created_by;
-                        }
-                        
-                        // Update form fields with fresh data from server
-                        document.getElementById('edit_inspection_id').value = inspection.id;
-                        document.getElementById('edit_ref_no').value = inspection.ref_no || '';
-                        document.getElementById('edit_user_id').value = assignedUser || '';
-                        
-                        // Ensure scheduled date and time are properly formatted
-                        if (inspection.scheduled_date_time) {
-                            const scheduledDateTime = new Date(inspection.scheduled_date_time);
-                            const formattedDate = scheduledDateTime.toISOString().split('T')[0];
-                            const formattedTime = scheduledDateTime.toTimeString().slice(0, 5);
-                            
-                            console.log('Server data - scheduled_date_time:', inspection.scheduled_date_time);
-                            console.log('Server data - formatted date:', formattedDate);
-                            console.log('Server data - formatted time:', formattedTime);
-                            
-                            // Force set the values with a small delay to ensure DOM is ready
-                            setTimeout(() => {
-                                const dateField = document.getElementById('edit_scheduled_date');
-                                const timeField = document.getElementById('edit_scheduled_time');
-                                
-                                if (dateField) {
-                                    dateField.value = formattedDate;
-                                    console.log('Set scheduled date from server to:', formattedDate, 'Field value:', dateField.value);
-                                } else {
-                                    console.error('Date field not found!');
-                                }
-                                
-                                if (timeField) {
-                                    timeField.value = formattedTime;
-                                    console.log('Set scheduled time from server to:', formattedTime, 'Field value:', timeField.value);
-                                } else {
-                                    console.error('Time field not found!');
-                                }
-                            }, 100);
-                        } else {
-                            console.log('No scheduled_date_time found in server data');
-                        }
-                        
-                        document.getElementById('edit_notes').value = inspection.notes || '';
-                        document.getElementById('edit_job_status_id').value = inspection.job_status_id || '';
-                        
-                        
-                        // Handle end date/time
-                        if (inspection.end_date_time) {
-                            const endDateTime = new Date(inspection.end_date_time);
-                            document.getElementById('edit_end_date').value = endDateTime.toISOString().split('T')[0];
-                            document.getElementById('edit_end_time').value = endDateTime.toTimeString().slice(0, 5);
-                            document.getElementById('edit_end_date_group').style.display = 'block';
-                            document.getElementById('edit_end_time_group').style.display = 'block';
-                        } else {
-                            document.getElementById('edit_end_date_group').style.display = 'none';
-                            document.getElementById('edit_end_time_group').style.display = 'none';
-                        }
-                        
-                        // Update created/updated info
-                        document.getElementById('edit_created_info').textContent = 
-                            inspection.created_at ? new Date(inspection.created_at).toLocaleString() : '-';
-                        document.getElementById('edit_updated_info').textContent = 
-                            inspection.updated_at ? new Date(inspection.updated_at).toLocaleString() : '-';
-                        
-                        // Update form action URL
-                        document.getElementById('editInspectionForm').action = `/block-inspections/${inspection.id}`;
-                    } else {
-                        showAlert('error', 'Could not fetch inspection details: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching inspection details:', error);
-                    showAlert('error', 'Error fetching inspection details: ' + error.message);
-                })
-                .finally(() => {
-                    // Restore button state
-                    this.innerHTML = originalText;
-                    this.disabled = false;
-                });
+                // Fetch inspection data (exactly like Edit Site Visit)
+                fetchInspectionData(inspectionId);
             });
         });
     }
     
+    // Function to fetch inspection data
+    function fetchInspectionData(inspectionId) {
+        fetch(`/block-inspections/${inspectionId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const inspection = data.data;
+                
+                // Get the user from the team relationship (same as Edit Site Visit)
+                let assignedUser = null;
+                const teams = inspection.inspectionTeams || inspection.inspection_teams || [];
+                if (teams && teams.length > 0) {
+                    const leadMember = teams.find(team => team.is_lead === true || team.is_lead === 1);
+                    assignedUser = leadMember ? leadMember.user_id : teams[0].user_id;
+                } else if (inspection.created_by) {
+                    assignedUser = inspection.created_by;
+                }
+                
+                // Populate form fields (exactly like Edit Site Visit)
+                document.getElementById('edit_inspection_id').value = inspection.id || '';
+                document.getElementById('edit_ref_no').value = inspection.ref_no || '';
+                document.getElementById('edit_notes').value = inspection.notes || '';
+                document.getElementById('edit_job_status_id').value = inspection.job_status_id || '';
+                document.getElementById('edit_user_id').value = assignedUser || '';
+                
+                // Handle scheduled date and time
+                if (inspection.scheduled_date_time) {
+                    console.log('Original scheduled_date_time:', inspection.scheduled_date_time);
+                    
+                    const scheduledDateTime = new Date(inspection.scheduled_date_time);
+                    console.log('Parsed scheduledDateTime:', scheduledDateTime);
+                    
+                    if (!isNaN(scheduledDateTime.getTime())) {
+                        // Get local date and time to avoid timezone issues
+                        const year = scheduledDateTime.getFullYear();
+                        const month = String(scheduledDateTime.getMonth() + 1).padStart(2, '0');
+                        const day = String(scheduledDateTime.getDate()).padStart(2, '0');
+                        const hours = String(scheduledDateTime.getHours()).padStart(2, '0');
+                        const minutes = String(scheduledDateTime.getMinutes()).padStart(2, '0');
+                        
+                        const formattedDate = `${year}-${month}-${day}`;
+                        const formattedTime = `${hours}:${minutes}`;
+                        
+                        console.log('Formatted date:', formattedDate);
+                        console.log('Formatted time:', formattedTime);
+                        
+                        const dateField = document.getElementById('edit_scheduled_date');
+                        const timeField = document.getElementById('edit_scheduled_time');
+                        
+                        if (dateField) {
+                            dateField.value = formattedDate;
+                            console.log('Date field set to:', dateField.value);
+                        }
+                        if (timeField) {
+                            timeField.value = formattedTime;
+                            console.log('Time field set to:', timeField.value);
+                        }
+                    } else {
+                        console.error('Invalid scheduled_date_time:', inspection.scheduled_date_time);
+                    }
+                } else {
+                    console.log('No scheduled_date_time found in inspection data');
+                }
+                
+                // Handle end date/time
+                if (inspection.end_date_time) {
+                    console.log('Original end_date_time:', inspection.end_date_time);
+                    
+                    const endDateTime = new Date(inspection.end_date_time);
+                    console.log('Parsed endDateTime:', endDateTime);
+                    
+                    if (!isNaN(endDateTime.getTime())) {
+                        // Get local date and time to avoid timezone issues
+                        const year = endDateTime.getFullYear();
+                        const month = String(endDateTime.getMonth() + 1).padStart(2, '0');
+                        const day = String(endDateTime.getDate()).padStart(2, '0');
+                        const hours = String(endDateTime.getHours()).padStart(2, '0');
+                        const minutes = String(endDateTime.getMinutes()).padStart(2, '0');
+                        
+                        const formattedEndDate = `${year}-${month}-${day}`;
+                        const formattedEndTime = `${hours}:${minutes}`;
+                        
+                        console.log('Formatted end date:', formattedEndDate);
+                        console.log('Formatted end time:', formattedEndTime);
+                        
+                        document.getElementById('edit_end_date').value = formattedEndDate;
+                        document.getElementById('edit_end_time').value = formattedEndTime;
+                        document.getElementById('edit_end_date_group').style.display = 'block';
+                        document.getElementById('edit_end_time_group').style.display = 'block';
+                    } else {
+                        console.error('Invalid end_date_time:', inspection.end_date_time);
+                        document.getElementById('edit_end_date_group').style.display = 'none';
+                        document.getElementById('edit_end_time_group').style.display = 'none';
+                    }
+                } else {
+                    console.log('No end_date_time found in inspection data');
+                    document.getElementById('edit_end_date_group').style.display = 'none';
+                    document.getElementById('edit_end_time_group').style.display = 'none';
+                }
+                
+                // Update created/updated info
+                const createdInfo = document.getElementById('edit_created_info');
+                const updatedInfo = document.getElementById('edit_updated_info');
+                
+                if (createdInfo) {
+                    createdInfo.textContent = inspection.created_at ? 
+                        new Date(inspection.created_at).toLocaleString() : '-';
+                }
+                
+                if (updatedInfo) {
+                    updatedInfo.textContent = inspection.updated_at ? 
+                        new Date(inspection.updated_at).toLocaleString() : '-';
+                }
+                
+                // Update form action URL
+                document.getElementById('editInspectionForm').action = `/block-inspections/${inspection.id}`;
+                
+                // Show modal and set value after it's shown
+                $('#editInspectionModal').modal('show');
+                
+                // Simple approach - wait for modal to be shown then set value
+                $('#editInspectionModal').on('shown.bs.modal', function() {
+                    // Simple and direct approach
+                    const userField = document.getElementById('edit_user_id');
+                    userField.value = assignedUser;
+                    
+                    // Force a click to open and close the dropdown to refresh it
+                    userField.click();
+                    setTimeout(() => {
+                        userField.blur();
+                    }, 50);
+                });
+            } else {
+                showAlert('error', 'Could not fetch inspection details: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching inspection details:', error);
+            showAlert('error', 'Error fetching inspection details: ' + error.message);
+        });
+    }
+    
+    
     // Attach event listeners on page load
     attachInspectionEventListeners();
+    
+    // Add CSS to force select element to show selected value
+    const style = document.createElement('style');
+    style.textContent = `
+        #edit_user_id:focus {
+            outline: none !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+        }
+        #edit_user_id option:checked {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+        #edit_user_id option[selected] {
+            background-color: #007bff !important;
+            color: white !important;
+        }
+    `;
+    document.head.appendChild(style);
 
     // Clear messages when edit inspection modal is shown/hidden
     const editInspectionModal = document.getElementById('editInspectionModal');
@@ -612,6 +670,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 invalidElements.forEach(el => el.classList.remove('is-invalid'));
             }
         });
+        
         
         editInspectionModal.addEventListener('hide.bs.modal', function() {
             const editMsgEl = document.getElementById('editInspectionMessage');
@@ -739,12 +798,11 @@ function refreshInspectionsTable() {
 // Function to get status badge HTML
 function getStatusBadge(statusId) {
     const statuses = {
-        1: '<span class="badge bg-info">Scheduled</span>',
-        2: '<span class="badge bg-warning">In Progress</span>',
-        3: '<span class="badge bg-success">Completed</span>',
-        4: '<span class="badge bg-danger">Cancelled</span>',
-        5: '<span class="badge bg-secondary">On Hold</span>',
-        6: '<span class="badge bg-primary">Rescheduled</span>'
+        1: '<span class="badge bg-warning">Created</span>',
+        2: '<span class="badge bg-primary">In Progress</span>',
+        3: '<span class="badge bg-secondary">Work Order</span>',
+        4: '<span class="badge bg-success">Completed</span>',
+        5: '<span class="badge bg-light text-dark">Invoiced</span>'
     };
     return statuses[statusId] || '<span class="badge bg-secondary">Unknown</span>';
 }
