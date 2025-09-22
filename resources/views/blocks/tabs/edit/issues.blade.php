@@ -30,7 +30,8 @@
                         <!-- Unit Selection -->
                         <div class="col-md-4 mb-3">
                             <label for="search_unit" class="form-label">Unit</label>
-                            <select class="form-select" id="search_unit" name="block_unit_id" onchange="getUnitDetails()">
+                            <select class="form-select" id="search_unit" name="block_unit_id"
+                                onchange="getUnitDetails()">
                                 <option value="">All Units</option>
                                 @foreach ($block->units as $unit)
                                     <option value="{{ $unit->id }}">{{ $unit->unit_code }} - {{ $unit->unit_name }}
@@ -58,8 +59,9 @@
                             <label for="search_type" class="form-label">Issue Type</label>
                             <select class="form-select" id="search_type" name="issue_type">
                                 <option value="">All Types</option>
-                                @foreach($issueTypes as $issueType)
-                                    <option value="{{ $issueType->name }}">{{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                @foreach ($issueTypes as $issueType)
+                                    <option value="{{ $issueType->name }}">
+                                        {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -98,64 +100,63 @@
                 </button>
             </div>
         </div>
-             <div class="table-responsive">
-                 <table class="table table-bordered table-hover" id="issuesTable">
-                     <thead class="table-light">
-                         <tr>
-                             <th>Issue ID</th>
-                             <th>Title</th>
-                             <th>Priority</th>
-                             <th>Status</th>
-                             <th>Reported Date</th>
-                         </tr>
-                     </thead>
-                     <tbody>
-                        @foreach ($block->issues as $issue)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('block-issues.show', $issue) }}">
-                                        <b>#{{ $issue->ref_no }}</b>
-                                    </a>
-                                </td>
-                                <td>{{ $issue->issue ?? 'N/A' }}</td>
-                                <td>
-                                    @if ($issue->priority_id == 1)
-                                        <span class="badge bg-success">Low</span>
-                                    @elseif($issue->priority_id == 2)
-                                        <span class="badge bg-info">Normal</span>
-                                    @elseif($issue->priority_id == 3)
-                                        <span class="badge bg-warning">High</span>
-                                    @elseif($issue->priority_id == 4)
-                                        <span class="badge bg-danger">Urgent</span>
-                                    @elseif($issue->priority_id == 5)
-                                        <span class="badge bg-dark">Critical</span>
-                                    @else
-                                        <span class="badge bg-secondary">Unknown</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if ($issue->issue_status_id == 1)
-                                        <span class="badge bg-warning">Open</span>
-                                    @elseif($issue->issue_status_id == 2)
-                                        <span class="badge bg-info">In Progress</span>
-                                    @elseif($issue->issue_status_id == 3)
-                                        <span class="badge bg-success">Resolved</span>
-                                    @elseif($issue->issue_status_id == 4)
-                                        <span class="badge bg-secondary">Closed</span>
-                                    @elseif($issue->issue_status_id == 5)
-                                        <span class="badge bg-danger">On Hold</span>
-                                    @else
-                                        <span class="badge bg-secondary">Unknown</span>
-                                    @endif
-                                </td>
-                                <td>{{ $issue->created_at ? $issue->created_at->format('M d, Y') : 'N/A' }}</td>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="issuesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Issue ID</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Reported Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($block->issues as $issue)
+                        <tr>
+                            <td>
+                                <a href="{{ route('block-issues.show', $issue) }}">
+                                    <b>#{{ $issue->ref_no }}</b>
+                                </a>
+                            </td>
+                            <td>{{ $issue->issue ?? 'N/A' }}</td>
+                            <td>
+                                @if ($issue->priority_id == 1)
+                                    <span class="badge bg-success">Low</span>
+                                @elseif($issue->priority_id == 2)
+                                    <span class="badge bg-info">Normal</span>
+                                @elseif($issue->priority_id == 3)
+                                    <span class="badge bg-warning">High</span>
+                                @elseif($issue->priority_id == 4)
+                                    <span class="badge bg-danger">Urgent</span>
+                                @elseif($issue->priority_id == 5)
+                                    <span class="badge bg-dark">Critical</span>
+                                @else
+                                    <span class="badge bg-secondary">Unknown</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($issue->issue_status_id == 1)
+                                    <span class="badge bg-warning">Open</span>
+                                @elseif($issue->issue_status_id == 2)
+                                    <span class="badge bg-info">In Progress</span>
+                                @elseif($issue->issue_status_id == 3)
+                                    <span class="badge bg-success">Resolved</span>
+                                @elseif($issue->issue_status_id == 4)
+                                    <span class="badge bg-secondary">Closed</span>
+                                @elseif($issue->issue_status_id == 5)
+                                    <span class="badge bg-danger">On Hold</span>
+                                @else
+                                    <span class="badge bg-secondary">Unknown</span>
+                                @endif
+                            </td>
+                            <td>{{ $issue->created_at ? $issue->created_at->format('M d, Y') : 'N/A' }}</td>
 
-                            </tr>
-                        @endforeach
-                     </tbody>
-                 </table>
-             </div>
-         
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -225,8 +226,9 @@
                                             class="text-danger">*</span></label>
                                     <select class="form-select" id="issue_type" name="issue_type" required>
                                         <option value="">Select Issue Type</option>
-                                        @foreach($issueTypes as $issueType)
-                                            <option value="{{ $issueType->name }}">{{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                        @foreach ($issueTypes as $issueType)
+                                            <option value="{{ $issueType->name }}">
+                                                {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -270,7 +272,8 @@
                                     <label for="default_contact_details" class="form-label">Default Contact
                                         Details</label>
                                     <div class="form-check mb-2">
-                                         <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
+                                        <input class="form-check-input" type="checkbox" id="use_default_contact"
+                                            checked>
                                         <label class="form-check-label" for="use_default_contact">
                                             Use default contact details
                                         </label>
@@ -359,50 +362,6 @@
     .is-valid {
         border-color: #198754 !important;
         box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
-    }
-
-    /* Toggle Search Button Styles */
-    .custom-toggle {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: white !important;
-        transition: all 0.3s ease !important;
-    }
-
-    .custom-toggle:hover {
-        background: rgba(255, 255, 255, 0.2) !important;
-        border-color: rgba(255, 255, 255, 0.3) !important;
-        color: white !important;
-        transform: translateY(-1px);
-    }
-
-    .custom-toggle.active {
-        background: rgba(255, 255, 255, 0.9) !important;
-        border-color: rgba(255, 255, 255, 1) !important;
-        color: #667eea !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Search Panel Animation */
-    #searchIssuesPanel {
-        transition: all 0.3s ease;
-        transform-origin: top;
-    }
-
-    /* Fade in animation keyframes */
-    @keyframes fadeInDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .fade-in {
-        animation: fadeInDown 0.3s ease forwards;
     }
 
     .is-invalid {
@@ -820,7 +779,7 @@
         }
 
         // Initialize autocomplete when modal opens
-        */
+
         createIssueModal.addEventListener('show.bs.modal', function() {
             console.log('Modal opened - initializing autocomplete...');
 
@@ -904,37 +863,37 @@
 
 
         });
-        */
 
-         // Handle checkbox toggle for contact details
-         const useDefaultContactCheckbox = document.getElementById('use_default_contact');
-         const defaultContactDetailsField = document.getElementById('default_contact_details');
 
-         if (useDefaultContactCheckbox && defaultContactDetailsField) {
-             useDefaultContactCheckbox.addEventListener('change', function() {
-                 if (this.checked) {
-                     // Checkbox is checked (value = 1)
-                     this.value = '1';
-                     // Enable readonly mode
-                     defaultContactDetailsField.readOnly = true;
-                     defaultContactDetailsField.classList.add('bg-light');
-                     // Load unit details to populate the field
-                     getUnitDetails();
-                 } else {
-                     // Checkbox is unchecked (value = 0)
-                     this.value = '0';
-                     // Disable readonly mode for manual editing
-                     defaultContactDetailsField.readOnly = false;
-                     defaultContactDetailsField.classList.remove('bg-light');
-                     defaultContactDetailsField.focus();
-                 }
-             });
+        // Handle checkbox toggle for contact details
+        const useDefaultContactCheckbox = document.getElementById('use_default_contact');
+        const defaultContactDetailsField = document.getElementById('default_contact_details');
 
-             // Initialize readonly state and checkbox value
-             useDefaultContactCheckbox.value = '1'; // Set initial value to 1 (checked)
-             defaultContactDetailsField.readOnly = true;
-             defaultContactDetailsField.classList.add('bg-light');
-         }
+        if (useDefaultContactCheckbox && defaultContactDetailsField) {
+            useDefaultContactCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // Checkbox is checked (value = 1)
+                    this.value = '1';
+                    // Enable readonly mode
+                    defaultContactDetailsField.readOnly = true;
+                    defaultContactDetailsField.classList.add('bg-light');
+                    // Load unit details to populate the field
+                    getUnitDetails();
+                } else {
+                    // Checkbox is unchecked (value = 0)
+                    this.value = '0';
+                    // Disable readonly mode for manual editing
+                    defaultContactDetailsField.readOnly = false;
+                    defaultContactDetailsField.classList.remove('bg-light');
+                    defaultContactDetailsField.focus();
+                }
+            });
+
+            // Initialize readonly state and checkbox value
+            useDefaultContactCheckbox.value = '1'; // Set initial value to 1 (checked)
+            defaultContactDetailsField.readOnly = true;
+            defaultContactDetailsField.classList.add('bg-light');
+        }
 
         // Function to update contact details field based on selected contact method
         function updateContactDetailsField(selectedMethod) {
@@ -1025,7 +984,7 @@
         `;
 
             // Build API URL with filters
-            let apiUrl = `/api/block-issues?block_id=${blockId}&block_unit_id=${blockUnitId}`;
+            let apiUrl = `/block-issues?block_id=${blockId}&block_unit_id=${blockUnitId}`;
             if (issueType) {
                 apiUrl += `&issue_type=${encodeURIComponent(issueType)}`;
             }
@@ -1202,45 +1161,21 @@
         const searchResults = document.getElementById('searchResults');
         const searchResultsBody = document.getElementById('searchResultsBody');
 
-        // Toggle search panel visibility function
-        function toggleSearchDiv() {
-            if (searchIssuesPanel && toggleSearchBtn) {
-                if (searchIssuesPanel.style.display === 'none' || searchIssuesPanel.style.display === '') {
-                    // Show the panel
-                    searchIssuesPanel.style.display = 'block';
-                    toggleSearchBtn.classList.add('active');
-                    
-                    // Add fade-in animation
-                    searchIssuesPanel.classList.add('fade-in');
-                    
-                    // Remove animation class after animation completes
-                    setTimeout(() => {
-                        searchIssuesPanel.classList.remove('fade-in');
-                    }, 300);
-                } else {
-                    // Hide the panel
-                    searchIssuesPanel.style.display = 'none';
-                    toggleSearchBtn.classList.remove('active');
-                    searchIssuesPanel.classList.remove('fade-in');
-                }
-            }
-        }
-
-        // Make toggleSearchDiv available globally for potential inline calls
-        window.toggleSearchDiv = toggleSearchDiv;
-
-        // Attach event listener to toggle button
+        // Toggle search panel visibility
         if (toggleSearchBtn) {
-            toggleSearchBtn.addEventListener('click', toggleSearchDiv);
+            toggleSearchBtn.addEventListener('click', function() {
+                if (searchIssuesPanel.style.display === 'none') {
+                    searchIssuesPanel.style.display = 'block';
+                } else {
+                    searchIssuesPanel.style.display = 'none';
+                }
+            });
         }
-
-        
 
         // Close search panel
         if (closeSearchBtn) {
             closeSearchBtn.addEventListener('click', function() {
                 searchIssuesPanel.style.display = 'none';
-                toggleSearchBtn.classList.remove('active');
             });
         }
 
@@ -1248,7 +1183,6 @@
         if (closeSearchHeaderBtn) {
             closeSearchHeaderBtn.addEventListener('click', function() {
                 searchIssuesPanel.style.display = 'none';
-                toggleSearchBtn.classList.remove('active');
             });
         }
 
@@ -1258,20 +1192,20 @@
             });
         }
 
-         if (clearSearchBtn) {
-             clearSearchBtn.addEventListener('click', function() {
-                 clearSearch();
-             });
-         }
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function() {
+                clearSearch();
+            });
+        }
 
-         // Show All button functionality
-         const showAllBtn = document.getElementById('showAllBtn');
-         if (showAllBtn) {
-             showAllBtn.addEventListener('click', function() {
-                 // DataTable will refresh automatically
-                 console.log('Show all issues clicked');
-             });
-         }
+        // Show All button functionality
+        const showAllBtn = document.getElementById('showAllBtn');
+        if (showAllBtn) {
+            showAllBtn.addEventListener('click', function() {
+                // DataTable will refresh automatically
+                console.log('Show all issues clicked');
+            });
+        }
 
         // Allow Enter key to trigger search
         if (searchIssuesForm) {
@@ -1281,52 +1215,54 @@
             });
         }
 
-         function performSearch() {
-             const formData = new FormData(searchIssuesForm);
-             const searchParams = new URLSearchParams();
+        function performSearch() {
+            const formData = new FormData(searchIssuesForm);
+            const searchParams = new URLSearchParams();
 
-             // Add search parameters
-             for (let [key, value] of formData.entries()) {
-                 if (value.trim() !== '') {
-                     searchParams.append(key, value);
-                 }
-             }
+            // Add search parameters
+            for (let [key, value] of formData.entries()) {
+                if (value.trim() !== '') {
+                    searchParams.append(key, value);
+                }
+            }
 
-             // Block ID is now included in the form as a hidden field
+            // Block ID is now included in the form as a hidden field
 
-             // Show loading state on main table
-             const mainTableBody = document.querySelector('#issuesTable tbody');
-             if (mainTableBody) {
-                 mainTableBody.innerHTML = `
+            // Show loading state on main table
+            const mainTableBody = document.querySelector('#issuesTable tbody');
+            if (mainTableBody) {
+                mainTableBody.innerHTML = `
                      <tr>
                          <td colspan="5" class="text-center text-muted py-3">
                              <i class="ph-spinner ph-spin"></i> Filtering issues...
                          </td>
                      </tr>
                  `;
-             }
+            }
 
-             // Perform AJAX search
-             fetch(`/api/block-issues?${searchParams.toString()}`, {
-                     method: 'GET',
-                     headers: {
-                         'X-Requested-With': 'XMLHttpRequest',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                             'content')
-                     }
-                 })
-                 .then(response => {
-                     if (!response.ok) {
-                         throw new Error(`HTTP error! status: ${response.status}`);
-                     }
-                     return response.json();
-                 })
-                 .then(data => {
-                     if (mainTableBody) {
-                         if (data.success && data.data && data.data&& data.data.length > 0) {
-                             // Display filtered results in main table (handle paginated response)
-                             const issues = data.data; // Access the actual issues from paginated response
-                             mainTableBody.innerHTML = issues.map(issue => `
+            // Perform AJAX search
+            fetch(`/block-issues?${searchParams.toString()}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                            'content')
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        alert('response not ok');
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (mainTableBody) {
+                        if (data.success && data.data && data.data.total > 0) {
+                            // Display filtered results in main table (handle paginated response)
+                            const issues = data.data
+                            .data; // Access the actual issues from paginated response
+                            mainTableBody.innerHTML = issues.map(issue => `
                                  <tr>
                                      <td>
                                          <a href="/block-issues/${issue.id}" class="text-decoration-none">
@@ -1339,37 +1275,37 @@
                                      <td>${formatDate(issue.created_at)}</td>
                                  </tr>
                              `).join('');
-                         } else {
-                             // No results found
-                             mainTableBody.innerHTML = `
+                        } else {
+                            // No results found
+                            mainTableBody.innerHTML = `
                                  <tr>
                                      <td colspan="5" class="text-center text-muted py-3">
                                          <i class="ph-magnifying-glass"></i> No issues found matching your search criteria
                                      </td>
                                  </tr>
                              `;
-                         }
-                     }
-                 })
-                 .catch(error => {
-                     console.error('Search error:', error);
-                     if (mainTableBody) {
-                         mainTableBody.innerHTML = `
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    if (mainTableBody) {
+                        mainTableBody.innerHTML = `
                              <tr>
                                  <td colspan="5" class="text-center text-danger py-3">
                                      <i class="ph-warning"></i> Error occurred while filtering. Please try again.
                                  </td>
                              </tr>
                          `;
-                     }
-                 });
-         }
+                    }
+                });
+        }
 
         function clearSearch() {
             searchIssuesForm.reset();
             searchResults.style.display = 'none';
             searchResultsBody.innerHTML = '';
-            
+
             // Restore original issue list
             const mainTableBody = document.querySelector('#issuesTable tbody');
             if (mainTableBody) {
