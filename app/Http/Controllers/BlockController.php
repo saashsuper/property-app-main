@@ -425,6 +425,7 @@ class BlockController extends Controller
             'jobReasons',
             'jobStatuses',
             'issueStatuses',
+            'issueTypes',
             'priorities'
         ));
     }
