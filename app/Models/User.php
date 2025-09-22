@@ -109,6 +109,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get the inspection teams for this user.
+     */
+    public function inspectionTeams()
+    {
+        return $this->hasMany(BlockInspectionTeam::class);
+    }
+
+    /**
      * Check if user is an admin
      */
     public function isAdmin()

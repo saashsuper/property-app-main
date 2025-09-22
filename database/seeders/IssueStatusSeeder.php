@@ -9,12 +9,13 @@ class IssueStatusSeeder extends Seeder
 {
     public function run(): void
     {
+        // Based on saashmagna.sql data - mapping original 'name' to 'label' and 'class' to 'btn_class'
         $rows = [
-            ['label' => 'Open', 'value' => 1, 'btn_class' => 'warning', 'description' => 'Issue has been reported and is awaiting attention'],
-            ['label' => 'In Progress', 'value' => 2, 'btn_class' => 'info', 'description' => 'Issue is currently being worked on'],
-            ['label' => 'Resolved', 'value' => 3, 'btn_class' => 'success', 'description' => 'Issue has been resolved successfully'],
-            ['label' => 'Closed', 'value' => 4, 'btn_class' => 'secondary', 'description' => 'Issue has been closed and documented'],
-            ['label' => 'On Hold', 'value' => 5, 'btn_class' => 'danger', 'description' => 'Issue is temporarily on hold'],
+            ['label' => 'Created', 'value' => 1, 'btn_class' => 'bg-warning', 'description' => 'Issue has been created and is awaiting attention'],
+            ['label' => 'In Progress', 'value' => 2, 'btn_class' => 'bg-primary', 'description' => 'Issue is currently being worked on'],
+            ['label' => 'Work Order', 'value' => 3, 'btn_class' => 'bg-secondary', 'description' => 'Issue has been converted to a work order'],
+            ['label' => 'Completed', 'value' => 4, 'btn_class' => 'bg-success', 'description' => 'Issue has been completed successfully'],
+            ['label' => 'Invoiced', 'value' => 5, 'btn_class' => 'bg-light text-dark', 'description' => 'Issue has been invoiced and closed'],
         ];
 
         foreach ($rows as $row) {

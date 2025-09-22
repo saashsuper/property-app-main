@@ -93,7 +93,7 @@ class IssueStatus extends Model
      */
     public function isOpen()
     {
-        return in_array($this->value, [1, 2]); // Open, In Progress
+        return in_array($this->value, [1, 2]); // Created, In Progress
     }
 
     /**
@@ -101,15 +101,15 @@ class IssueStatus extends Model
      */
     public function isClosed()
     {
-        return in_array($this->value, [3, 4]); // Resolved, Closed
+        return in_array($this->value, [4, 5]); // Completed, Invoiced
     }
 
     /**
-     * Check if this status indicates the issue is on hold.
+     * Check if this status indicates the issue is in work order phase.
      */
-    public function isOnHold()
+    public function isWorkOrder()
     {
-        return $this->value === 5; // On Hold
+        return $this->value === 3; // Work Order
     }
 }
 

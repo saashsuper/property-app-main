@@ -53,7 +53,9 @@ class BlockInspectionController extends Controller
     public function create()
     {
         $blocks = Block::orderBy('name')->get();
-        $users = User::orderBy('name')->get();
+        $users = User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->with('userType')->orderBy('name')->get();
         
         return view('block-inspections.create', compact('blocks', 'users'));
     }
@@ -114,6 +116,8 @@ class BlockInspectionController extends Controller
                 'notes' => $blockInspection->notes,
                 'job_status_id' => $blockInspection->job_status_id,
                 'created_by' => $blockInspection->created_by,
+                'created_at' => $blockInspection->created_at,
+                'updated_at' => $blockInspection->updated_at,
                 // Relations in camelCase to match frontend expectations
                 'creator' => $blockInspection->creator,
                 'block' => $blockInspection->block,
@@ -123,7 +127,11 @@ class BlockInspectionController extends Controller
                         'user_id' => $member->user_id,
                         'is_lead' => (bool) $member->is_lead,
                         'role' => $member->role,
-                        'user' => $member->user,
+                        'user' => $member->user ? [
+                            'id' => $member->user->id,
+                            'name' => $member->user->name,
+                            'email' => $member->user->email
+                        ] : null,
                     ];
                 })->values(),
                 // Also provide with snake_case for backward compatibility
@@ -133,7 +141,11 @@ class BlockInspectionController extends Controller
                         'user_id' => $member->user_id,
                         'is_lead' => (bool) $member->is_lead,
                         'role' => $member->role,
-                        'user' => $member->user,
+                        'user' => $member->user ? [
+                            'id' => $member->user->id,
+                            'name' => $member->user->name,
+                            'email' => $member->user->email
+                        ] : null,
                     ];
                 })->values(),
             ];
@@ -153,7 +165,9 @@ class BlockInspectionController extends Controller
     public function edit(BlockInspection $blockInspection)
     {
         $blocks = Block::orderBy('name')->get();
-        $users = User::orderBy('name')->get();
+        $users = User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->with('userType')->orderBy('name')->get();
         $blockInspection->load('inspectionTeams');
         
         return view('block-inspections.edit', compact('blockInspection', 'blocks', 'users'));
@@ -167,29 +181,70 @@ class BlockInspectionController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
-            'notes' => 'nullable|string|max:255',
+            'notes' => 'nullable|string|max:500',
+            'job_status_id' => 'nullable|integer|exists:issue_statuses,value',
         ]);
 
-        $blockInspection->update([
+        // Validate that the user is a Property Manager
+        $user = User::with('userType')->find($request->user_id);
+        if (!$user || $user->userType->name !== 'Property manager') {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Property Manager users can be assigned as Lead Inspector.'
+                ], 422);
+            }
+            return redirect()->back()->withErrors(['user_id' => 'Only Property Manager users can be assigned as Lead Inspector.']);
+        }
+
+
+        // Get the issue status for validation
+        $issueStatus = null;
+        if ($request->filled('job_status_id')) {
+            $issueStatus = \App\Models\IssueStatus::where('value', $request->job_status_id)->first();
+            if (!$issueStatus) {
+                if (request()->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Invalid status selected.'
+                    ], 422);
+                }
+                return redirect()->back()->withErrors(['job_status_id' => 'Invalid status selected.']);
+            }
+        }
+
+        $updateData = [
             'scheduled_date_time' => $request->scheduled_date_time,
             'notes' => $request->notes,
             'updated_by' => Auth::id(),
-        ]);
+        ];
+
+        // Only update status if provided and valid
+        if ($issueStatus) {
+            $updateData['job_status_id'] = $issueStatus->value;
+        }
+
+        $blockInspection->update($updateData);
 
         // Update team member (single user for modal)
         $blockInspection->inspectionTeams()->delete();
         $blockInspection->inspectionTeams()->create([
             'user_id' => $request->user_id,
-            'role' => 'Inspector',
+            'role' => 'Lead Inspector',
             'is_lead' => true,
         ]);
+
+        // Load the updated inspection with relationships
+        $blockInspection->load(['block', 'creator', 'inspectionTeams.user']);
 
         // Check if request expects JSON (AJAX request)
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Inspection updated successfully!',
-                'inspection' => $blockInspection
+                'inspection' => $blockInspection,
+                'status_text' => $blockInspection->status_text,
+                'status_color' => $blockInspection->status_color
             ]);
         }
 
@@ -257,7 +312,18 @@ class BlockInspectionController extends Controller
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date|after:now',
             'notes' => 'required|string|max:500',
+            'job_status_id' => 'nullable|integer|exists:issue_statuses,value',
         ]);
+
+        // Validate that the user is a Property Manager
+        $user = User::with('userType')->find($request->user_id);
+        if (!$user || $user->userType->name !== 'Property manager') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only Property Manager users can be assigned as Lead Inspector.'
+            ], 422);
+        }
+
 
         try {
             $inspection = BlockInspection::create([
@@ -265,7 +331,7 @@ class BlockInspectionController extends Controller
                 'ref_no' => BlockInspection::generateRefNo(),
                 'scheduled_date_time' => $request->scheduled_date_time,
                 'notes' => $request->notes,
-                'job_status_id' => 1, // Scheduled
+                'job_status_id' => $request->job_status_id ?? 1, // Use provided status or default to Created
                 'created_by' => Auth::id(),
             ]);
 
@@ -287,5 +353,53 @@ class BlockInspectionController extends Controller
                 'message' => 'Failed to schedule inspection: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get inspections for a specific block.
+     */
+    public function getBlockInspections(Block $block)
+    {
+        $inspections = BlockInspection::where('block_id', $block->id)
+            ->with(['creator', 'inspectionTeams.user'])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($inspection) {
+                return [
+                    'id' => $inspection->id,
+                    'ref_no' => $inspection->ref_no,
+                    'scheduled_date_time' => $inspection->scheduled_date_time,
+                    'start_date_time' => $inspection->start_date_time,
+                    'end_date_time' => $inspection->end_date_time,
+                    'notes' => $inspection->notes,
+                    'job_status_id' => $inspection->job_status_id,
+                    'created_at' => $inspection->created_at,
+                    'updated_at' => $inspection->updated_at,
+                    'creator' => $inspection->creator,
+                    'inspection_teams' => $inspection->inspectionTeams->map(function($member) {
+                        return [
+                            'id' => $member->id,
+                            'user_id' => $member->user_id,
+                            'is_lead' => (bool) $member->is_lead,
+                            'role' => $member->role,
+                            'user' => $member->user,
+                        ];
+                    })->values(),
+                    'inspectionTeams' => $inspection->inspectionTeams->map(function($member) {
+                        return [
+                            'id' => $member->id,
+                            'user_id' => $member->user_id,
+                            'is_lead' => (bool) $member->is_lead,
+                            'role' => $member->role,
+                            'user' => $member->user,
+                        ];
+                    })->values(),
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $inspections
+        ]);
     }
 }

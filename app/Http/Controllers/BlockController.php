@@ -322,6 +322,7 @@ class BlockController extends Controller
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+        // Get only Property Manager users for the dropdown
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
@@ -332,6 +333,7 @@ class BlockController extends Controller
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+        $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         
         return view('blocks.show', compact(
@@ -350,6 +352,7 @@ class BlockController extends Controller
             'contactMethods',
             'jobReasons',
             'jobStatuses',
+            'issueStatuses',
             'priorities'
         ));
     }
@@ -388,6 +391,7 @@ class BlockController extends Controller
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();
+        // Get only Property Manager users for the dropdown
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
@@ -398,6 +402,7 @@ class BlockController extends Controller
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
+        $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         $issueTypes = IssueType::where('is_active', true)->orderBy('name')->get();
         return view('blocks.edit', compact(
@@ -419,8 +424,8 @@ class BlockController extends Controller
             'contactMethods',
             'jobReasons',
             'jobStatuses',
-            'priorities',
-            'issueTypes'
+            'issueStatuses',
+            'priorities'
         ));
     }
 
@@ -556,5 +561,26 @@ class BlockController extends Controller
             });
 
         return response()->json($units);
+    }
+
+    /**
+     * Get buildings for a specific block (API endpoint)
+     */
+    public function getBlockBuildings(Block $block)
+    {
+        $buildings = $block->buildings()
+                          ->select('id', 'name', 'building_type_id')
+                          ->with('buildingType:id,name')
+                          ->orderBy('name')
+                          ->get()
+                          ->map(function($building) {
+                              return [
+                                  'id' => $building->id,
+                                  'name' => $building->name,
+                                  'type' => $building->buildingType->name ?? 'N/A'
+                              ];
+                          });
+
+        return response()->json($buildings);
     }
 }

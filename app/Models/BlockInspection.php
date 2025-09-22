@@ -92,10 +92,11 @@ class BlockInspection extends Model
     {
         $statuses = [
             1 => 'Scheduled',
-            2 => 'In Progress',
+            2 => 'In Progress', 
             3 => 'Completed',
             4 => 'Cancelled',
-            5 => 'On Hold'
+            5 => 'On Hold',
+            6 => 'Rescheduled'
         ];
 
         return $statuses[$this->job_status_id] ?? 'Unknown';
@@ -111,7 +112,8 @@ class BlockInspection extends Model
             2 => 'warning',
             3 => 'success',
             4 => 'danger',
-            5 => 'secondary'
+            5 => 'secondary',
+            6 => 'primary'
         ];
 
         return $colors[$this->job_status_id] ?? 'secondary';

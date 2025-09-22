@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
     Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
     Route::get('api/blocks/{block}/units-autocomplete', [App\Http\Controllers\BlockController::class, 'getUnitsAutocomplete'])->name('api.blocks.units-autocomplete');
+    Route::get('api/blocks/{block}/buildings', [App\Http\Controllers\BlockController::class, 'getBlockBuildings'])->name('api.blocks.buildings');
     
     // Block Images Routes
     Route::get('blocks/{block}/images', [App\Http\Controllers\BlockController::class, 'showImages'])->name('blocks.images');
@@ -96,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('block-inspections/{blockInspection}/start', [App\Http\Controllers\BlockInspectionController::class, 'start'])->name('block-inspections.start');
     Route::post('block-inspections/{blockInspection}/complete', [App\Http\Controllers\BlockInspectionController::class, 'complete'])->name('block-inspections.complete');
     Route::post('block-inspections/store-from-modal', [App\Http\Controllers\BlockInspectionController::class, 'storeFromModal'])->name('block-inspections.store-from-modal');
+    Route::get('api/blocks/{block}/inspections', [App\Http\Controllers\BlockInspectionController::class, 'getBlockInspections'])->name('api.blocks.inspections');
 
     // Block Issues
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);

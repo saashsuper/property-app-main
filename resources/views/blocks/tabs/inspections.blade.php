@@ -3,6 +3,17 @@
     <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">Block Inspections</h6>
 </div>
 
+<style>
+/* Status badge colors for inspections */
+.badge.bg-warning { background-color: #ffc107 !important; color: #000 !important; }
+.badge.bg-primary { background-color: #0d6efd !important; color: #fff !important; }
+.badge.bg-secondary { background-color: #6c757d !important; color: #fff !important; }
+.badge.bg-success { background-color: #198754 !important; color: #fff !important; }
+.badge.bg-light { background-color: #f8f9fa !important; color: #000 !important; }
+.badge.bg-info { background-color: #0dcaf0 !important; color: #000 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; color: #fff !important; }
+</style>
+
 @if(isset($blockInspections) && $blockInspections->count() > 0)
             <div class="table-responsive">
                 <table class="table table-bordered table-hover">
@@ -21,18 +32,13 @@
                                 <td>{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}</td>
                                 <td>{{ $inspection->creator->name ?? 'N/A' }}</td>
                                 <td>
-                                    @if($inspection->job_status_id == 1)
-                                        <span class="badge bg-info">Scheduled</span>
-                                    @elseif($inspection->job_status_id == 2)
-                                        <span class="badge bg-warning">In Progress</span>
-                                    @elseif($inspection->job_status_id == 3)
-                                        <span class="badge bg-success">Completed</span>
-                                    @elseif($inspection->job_status_id == 4)
-                                        <span class="badge bg-danger">Cancelled</span>
-                                    @elseif($inspection->job_status_id == 5)
-                                        <span class="badge bg-secondary">On Hold</span>
+                                    @php
+                                        $status = $issueStatuses->where('value', $inspection->job_status_id)->first();
+                                    @endphp
+                                    @if($status)
+                                        <span class="badge {{ $status->btn_class ?: 'bg-secondary' }}">{{ $status->label }}</span>
                                     @else
-                                        <span class="badge bg-secondary">Unknown</span>
+                                        <span class="badge bg-secondary">Unknown (ID: {{ $inspection->job_status_id }})</span>
                                     @endif
                                 </td>
                             </tr>
@@ -62,12 +68,24 @@
                 <div class="modal-body">
                     <div class="row">
                         <!-- User Selection -->
-                        <div class="col-12 mb-3">
-                            <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
+                        <div class="col-md-6 mb-3">
+                            <label for="user_id" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
                             <select class="form-select" id="user_id" name="user_id" required>
-                                <option value="">Select User</option>
+                                <option value="">Select Lead Inspector</option>
                                 @foreach($users ?? [] as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Only Property Manager users can be assigned as Lead Inspector</div>
+                        </div>
+                        
+                        <!-- Status Selection -->
+                        <div class="col-md-6 mb-3">
+                            <label for="job_status_id" class="form-label">Status</label>
+                            <select class="form-select" id="job_status_id" name="job_status_id">
+                                <option value="">Select Status</option>
+                                @foreach($issueStatuses as $status)
+                                    <option value="{{ $status->value }}">{{ $status->label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -124,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 user_id: formData.get('user_id'),
                 scheduled_date_time: scheduledDateTime,
                 notes: formData.get('notes'),
+                job_status_id: formData.get('job_status_id'),
                 _token: formData.get('_token')
             };
             
