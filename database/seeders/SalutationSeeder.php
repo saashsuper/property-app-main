@@ -23,7 +23,6 @@ class SalutationSeeder extends Seeder
             ['name' => 'Dear Sirs', 'common_status_id' => 1],
             ['name' => 'Dear Madam', 'common_status_id' => 1],
             ['name' => 'Dear Sir', 'common_status_id' => 1],
-            ['name' => 'To Whom It May Concern', 'common_status_id' => 1],
         ];
 
         foreach ($salutations as $salutation) {
