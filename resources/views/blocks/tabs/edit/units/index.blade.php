@@ -48,7 +48,6 @@
                         <th>Email</th>
                         <th>Resident</th>
                         <th>Mobile</th>
-                        <th>Phone</th>
                         <th>Letting Agent</th>
                         <th>Actions</th>
                     </tr>
@@ -64,15 +63,19 @@
                                 <td>{{ $unit->email ?? 'N/A' }}</td>
                                 <td>{{ $unit->resident ? 'Yes' : 'No' }}</td>
                                 <td>{{ $unit->mobile_no ?? 'N/A' }}</td>
-                                <td>{{ $unit->phone_number ?? 'N/A' }}</td>
                                 <td>{{ $unit->letting_agent ?? 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})">Edit</button>
-                                    <form action="{{ route('block-units.destroy', $unit->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this unit?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                    </form>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})" title="Edit Unit">
+                                        <i class="ph-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $unit->id }}, {
+                                        unit_code: '{{ $unit->unit_code }}',
+                                        unit_name: '{{ $unit->unit_name }}',
+                                        owners_name: '{{ $unit->owners_name }}',
+                                        unit_type: { name: '{{ $unit->unitType->name ?? 'N/A' }}' }
+                                    })" title="Delete Unit">
+                                        <i class="ph-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -119,6 +122,33 @@
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
+/* Custom search input styling */
+.custom-search-input {
+    background-color: #f8f9fa;
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.custom-search-input:focus {
+    background-color: #fff;
+    border-left-color: #0056b3;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+/* Custom page length dropdown styling */
+.custom-page-length-select {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-left: 4px solid #28a745;
+    transition: all 0.3s ease;
+}
+
+.custom-page-length-select:focus {
+    background-color: #fff;
+    border-left-color: #1e7e34;
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+}
+
 /* Ensure proper spacing for DataTable wrapper */
 .dataTables_wrapper {
     margin-top: 1rem;
@@ -152,6 +182,20 @@
             store: '{{ route("block-units.store") }}',
             upload: '{{ route("block-units.upload") }}'
         }
+    };
+    
+    // Define editUnit function early so it's available for initial HTML buttons
+    window.editUnit = function(id) {
+        // This will be overridden by the full function definition in scripts.blade.php
+        if (typeof openUnitModal === 'function') {
+            openUnitModal('edit', id);
+        }
+    };
+    
+    // Define showDeleteConfirmation function early so it's available for initial HTML buttons
+    window.showDeleteConfirmation = function(unitId, unitData) {
+        // This will be overridden by the full function definition in scripts.blade.php
+        // Placeholder function to prevent errors before full implementation loads
     };
 </script>
 

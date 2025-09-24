@@ -142,7 +142,7 @@ $(document).ready(function() {
                     dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
                     order: [[0, 'asc']],       // Default sort by first column (Unit Code) ascending
                     columnDefs: [
-                        { targets: [9], orderable: false } // Actions column (last column) not sortable
+                        { targets: [8], orderable: false } // Actions column (last column) not sortable
                     ],
                     pageLength: 10,            // Default page size
                     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
@@ -157,11 +157,22 @@ $(document).ready(function() {
                     },
                     initComplete: function() {
                         // Style the search box to match contractors tab
-                        $('.dataTables_filter input').addClass('form-control').css({
-                            'width': '300px',
-                            'height': '38px',
-                            'font-size': '14px'
-                        });
+                        $('.dataTables_filter input')
+                            .addClass('form-control custom-search-input mb-3') // Add custom class here
+                            .css({
+                                'width': '300px',
+                                'height': '38px',
+                                'font-size': '14px'
+                            });
+                        
+                        // Style the page length dropdown
+                        $('.dataTables_length select')
+                            .addClass('form-select custom-page-length-select')
+                            .css({
+                                'width': 'auto',
+                                'height': '38px',
+                                'font-size': '14px'
+                            });
                     }
                 });
                 
@@ -189,13 +200,11 @@ $(document).ready(function() {
      */
     window.refreshBlockUnitsTable = function() {
         if (!blockUnitsDataTable) {
-            console.warn('DataTable not initialized, skipping refresh');
             return;
         }
         
         const blockId = window.blockId || $('input[name="block_id"]').val();
         if (!blockId) {
-            console.warn('Block ID not found, skipping refresh');
             return;
         }
         
@@ -217,34 +226,33 @@ $(document).ready(function() {
                             unit.email || 'N/A',
                             unit.resident ? 'Yes' : 'No',
                             unit.mobile_no || 'N/A',
-                            unit.phone_number || 'N/A',
                             unit.letting_agent || 'N/A',
-                            `<button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})">
-                                <i class="ph-pencil"></i> Edit
+                            `<button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})" title="Edit Unit">
+                                <i class="ph-pencil"></i>
                             </button> 
-                            <form action="/block-units/${unit.id}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to delete this unit?');">
-                                <input type="hidden" name="_token" value="${window.csrfToken || $('meta[name="csrf-token"]').attr('content')}">
-                                <input type="hidden" name="_method" value="DELETE">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="ph-trash"></i> Delete
-                                </button>
-                            </form>`
+                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${unit.id}, {
+                                unit_code: '${unit.unit_code || 'N/A'}',
+                                unit_name: '${unit.unit_name || 'N/A'}',
+                                owners_name: '${unit.owners_name || 'N/A'}',
+                                unit_type: { name: '${unit.unit_type?.name || 'N/A'}' }
+                            })" title="Delete Unit">
+                                <i class="ph-trash"></i>
+                            </button>`
                         ]);
                     });
                     
                     blockUnitsDataTable.draw();
-                    console.log(`Units table refreshed with ${data.data.length} units`);
                     
                     // Toggle export buttons based on data availability
                     toggleExportButtons(data.data.length > 0);
                 } else {
-                    console.error('Error refreshing units table:', data.message);
                     // Disable export buttons on error
                     toggleExportButtons(false);
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Error fetching units data:', error);
+                // Disable export buttons on error
+                toggleExportButtons(false);
             }
         });
     };
@@ -426,20 +434,34 @@ $(document).ready(function() {
         }, 50);
     }
 
-    // Listen for Bootstrap tab shown event (now working properly)
+    // ========================================
+    // EVENT LISTENERS AND INITIALIZATION
+    // ========================================
+    
+    // Listen for Bootstrap tab shown event to refresh data when units tab becomes active
     $(document).on('shown.bs.tab', '#units-tab', function(e) {
-        console.log('Units tab shown event fired');
         triggerUnitsRefresh();
     });
 
-    // If Units tab is already active on page load, refresh once
+    // If Units tab is already active on page load, refresh once to ensure data is loaded
     if ($('#units').hasClass('show') && $('#units').hasClass('active')) {
         triggerUnitsRefresh();
     }
     
-    // Clear messages when modals are opened
+    // ========================================
+    // MODAL EVENT HANDLERS
+    // ========================================
+    
+    // Clear messages when unit modal is opened and re-initialize toggle functionality
     $('#unitModal').on('show.bs.modal', function() {
-        clearMessage('unitMessage');
+        // Use setTimeout to ensure DOM is ready before clearing message
+        setTimeout(function() {
+            clearMessage('unitMessage');
+        }, 50);
+        // Re-initialize the resident toggle functionality
+        setTimeout(function() {
+            toggleAddressFields('resident');
+        }, 100);
     });
     
     $('#uploadUnitModal').on('show.bs.modal', function() {
@@ -478,10 +500,14 @@ function openUnitModal(mode, id = null) {
         $form.attr('action', window.routes?.blockUnits?.store || '/block-units');
         $form.find('input[name="_method"]').remove(); // Remove PUT method for add
         $form[0].reset(); // Reset form
-        // Clear any previous messages
-        clearMessage('unitMessage');
+        
         // Initialize modal before showing
         initializeModal('unitModal', 'resident');
+        
+        // Also ensure toggle is set up after modal is shown
+        $modal.on('shown.bs.modal', function() {
+            toggleAddressFields('resident');
+        });
         
         $modal.modal('show');
     } else if (mode === 'edit' && id) {
@@ -500,9 +526,6 @@ function loadUnitForEdit(id) {
     if (typeof $ === 'undefined') {
         return;
     }
-    
-    // Clear any previous messages
-    clearMessage('unitMessage');
     
     // Show loading state - try multiple selectors to find the edit button
     let $editBtn = $(`button[onclick="editUnit(${id})"]`);
@@ -585,18 +608,30 @@ function loadUnitForEdit(id) {
                                 $('#state_id').val(unit.state_id).trigger('change');
                             }
                             
-                            // Show the modal after states are loaded
-                            $modal.modal('show');
+                        // Show the modal after states are loaded
+                        $modal.on('shown.bs.modal', function() {
+                            toggleAddressFields('resident');
+                        });
+                        $modal.modal('show');
                         }).catch(function(error) {
                             // Show modal even if states fail to load
+                            $modal.on('shown.bs.modal', function() {
+                                toggleAddressFields('resident');
+                            });
                             $modal.modal('show');
                         });
                     } else {
+                        $modal.on('shown.bs.modal', function() {
+                            toggleAddressFields('resident');
+                        });
                         $modal.modal('show');
                     }
                 } else {
                     // If resident is true, address fields remain hidden (as set by initializeModal)
                     // Show the modal for resident units
+                    $modal.on('shown.bs.modal', function() {
+                        toggleAddressFields('resident');
+                    });
                     $modal.modal('show');
                 }
                 
@@ -624,6 +659,99 @@ function loadUnitForEdit(id) {
 function editUnit(id) {
     openUnitModal('edit', id);
 }
+
+// Expose editUnit to global scope for DataTable onclick handlers
+window.editUnit = editUnit;
+
+// ========================================
+// DELETE CONFIRMATION MODAL
+// ========================================
+
+/**
+ * Shows the delete confirmation modal with unit details
+ * 
+ * @param {number} unitId - The ID of the unit to delete
+ * @param {object} unitData - The unit data to display in confirmation
+ */
+function showDeleteConfirmation(unitId, unitData) {
+    
+    // Populate unit details in the modal
+    const detailsHtml = `
+        <div class="row">
+            <div class="col-6"><strong>Unit Code:</strong></div>
+            <div class="col-6">${unitData.unit_code || 'N/A'}</div>
+        </div>
+        <div class="row">
+            <div class="col-6"><strong>Unit Name:</strong></div>
+            <div class="col-6">${unitData.unit_name || 'N/A'}</div>
+        </div>
+        <div class="row">
+            <div class="col-6"><strong>Owner:</strong></div>
+            <div class="col-6">${unitData.owners_name || 'N/A'}</div>
+        </div>
+        <div class="row">
+            <div class="col-6"><strong>Type:</strong></div>
+            <div class="col-6">${unitData.unit_type?.name || 'N/A'}</div>
+        </div>
+    `;
+    
+    $('#deleteUnitDetails').html(detailsHtml);
+    
+    // Set up the confirm button to actually delete
+    $('#confirmDeleteBtn').off('click').on('click', function() {
+        deleteUnit(unitId);
+    });
+    
+    // Show the modal
+    $('#deleteUnitModal').modal('show');
+}
+
+/**
+ * Deletes a unit via AJAX
+ * 
+ * @param {number} unitId - The ID of the unit to delete
+ */
+function deleteUnit(unitId) {
+    
+    // Show loading state
+    const $confirmBtn = $('#confirmDeleteBtn');
+    const originalText = $confirmBtn.html();
+    $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
+    
+    $.ajax({
+        url: `/block-units/${unitId}`,
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            
+            // Hide the modal
+            $('#deleteUnitModal').modal('hide');
+            
+            // Show success message
+            showMessage('unitMessage', 'success', 'Unit deleted successfully');
+            
+            // Refresh the table
+            refreshBlockUnitsTable();
+            
+            // Reset button state
+            $confirmBtn.html(originalText).prop('disabled', false);
+        },
+        error: function(xhr, status, error) {
+            
+            // Show error message
+            showMessage('unitMessage', 'danger', 'Error deleting unit. Please try again.');
+            
+            // Reset button state
+            $confirmBtn.html(originalText).prop('disabled', false);
+        }
+    });
+}
+
+// Expose delete functions to global scope
+window.showDeleteConfirmation = showDeleteConfirmation;
+window.deleteUnit = deleteUnit;
 
 // ========================================
 // SIMPLE ONCHANGE HANDLERS
@@ -754,6 +882,27 @@ function toggleAddressFields(residentSelectId) {
                 });
             }
         });
+        
+        // Set initial state based on current value
+        const currentValue = $residentSelect.val();
+        if (currentValue === '0') {
+            // Show address fields if resident is currently "No"
+            addressFields.forEach(function(fieldId) {
+                const $field = $('#' + fieldId);
+                $field.show();
+            });
+            $('#address1').attr('required', 'required');
+            $('#country_id').attr('required', 'required');
+            $('#state_id').attr('required', 'required');
+        } else {
+            // Hide address fields if resident is "Yes" or not set
+            addressFields.forEach(function(fieldId) {
+                $('#' + fieldId).hide();
+            });
+            addressFields.forEach(function(fieldId) {
+                $('#' + fieldId).find('input, select').removeAttr('required');
+            });
+        }
     }
 }
 

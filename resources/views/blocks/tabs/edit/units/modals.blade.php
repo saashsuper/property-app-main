@@ -200,3 +200,42 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteUnitModal" tabindex="-1" aria-labelledby="deleteUnitModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUnitModalLabel">
+                    <i class="ph-warning me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ph-warning-circle text-danger" style="font-size: 2rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Are you sure you want to delete this unit?</h6>
+                        <p class="text-muted mb-0">This action cannot be undone. All unit data will be permanently removed.</p>
+                    </div>
+                </div>
+                <div class="alert alert-warning">
+                    <strong>Unit Details:</strong>
+                    <div id="deleteUnitDetails" class="mt-2">
+                        <!-- Unit details will be populated here -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ph-x me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="ph-trash me-1"></i> Delete Unit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
