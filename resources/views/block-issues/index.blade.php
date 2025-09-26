@@ -867,8 +867,19 @@
     
     // Initialize Dropzone when photo upload modal is shown
     document.getElementById('photoUploadModal').addEventListener('shown.bs.modal', function() {
-        if (!photoDropzone) {
-            initializePhotoDropzone();
+        // Destroy existing dropzone if it exists
+        if (photoDropzone) {
+            photoDropzone.destroy();
+            photoDropzone = null;
+        }
+        initializePhotoDropzone();
+    });
+    
+    // Cleanup when modal is hidden
+    document.getElementById('photoUploadModal').addEventListener('hidden.bs.modal', function() {
+        if (photoDropzone) {
+            photoDropzone.destroy();
+            photoDropzone = null;
         }
     });
     
@@ -876,6 +887,12 @@
     function initializePhotoDropzone() {
         // Disable auto discover to prevent conflicts
         Dropzone.autoDiscover = false;
+        
+        // Ensure element is clean
+        const dropzoneElement = document.getElementById('photoDropzone');
+        if (dropzoneElement.dropzone) {
+            dropzoneElement.dropzone.destroy();
+        }
         
         photoDropzone = new Dropzone("#photoDropzone", {
                 url: `/block-issues/${currentIssueId}/photos`,

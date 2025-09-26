@@ -1132,8 +1132,19 @@ $(document).ready(function() {
     
     // Initialize Dropzone when photo upload modal is shown
     $('#photoUploadModal').on('shown.bs.modal', function() {
-        if (!photoDropzone) {
-            initializePhotoDropzone();
+        // Destroy existing dropzone if it exists
+        if (photoDropzone) {
+            photoDropzone.destroy();
+            photoDropzone = null;
+        }
+        initializePhotoDropzone();
+    });
+    
+    // Cleanup when modal is hidden
+    $('#photoUploadModal').on('hidden.bs.modal', function() {
+        if (photoDropzone) {
+            photoDropzone.destroy();
+            photoDropzone = null;
         }
     });
     
@@ -1141,6 +1152,12 @@ $(document).ready(function() {
     function initializePhotoDropzone() {
         // Disable auto discover to prevent conflicts
         Dropzone.autoDiscover = false;
+        
+        // Ensure element is clean
+        const dropzoneElement = document.getElementById('photoDropzone');
+        if (dropzoneElement.dropzone) {
+            dropzoneElement.dropzone.destroy();
+        }
         
         photoDropzone = new Dropzone("#photoDropzone", {
             url: `/block-issues/${currentIssueId}/photos`,
