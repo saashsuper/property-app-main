@@ -1132,69 +1132,18 @@ $(document).ready(function() {
     
     // Initialize Dropzone when photo upload modal is shown
     $('#photoUploadModal').on('shown.bs.modal', function() {
-        // Destroy existing dropzone if it exists
-        if (photoDropzone) {
-            photoDropzone.destroy();
-            photoDropzone = null;
-        }
-        
-        // Initialize new dropzone after a small delay to ensure DOM is ready
-        setTimeout(function() {
-            // Wait for Dropzone to be available
-            if (typeof Dropzone !== 'undefined') {
-                initializePhotoDropzone();
-            } else {
-                console.error('Dropzone not available, retrying...');
-                setTimeout(function() {
-                    if (typeof Dropzone !== 'undefined') {
-                        initializePhotoDropzone();
-                    } else {
-                        showPhotoMessage('danger', 'Photo upload library failed to load. Please refresh the page.');
-                    }
-                }, 500);
-            }
-        }, 100);
-    });
-    
-    // Cleanup when modal is hidden
-    $('#photoUploadModal').on('hidden.bs.modal', function() {
-        if (photoDropzone) {
-            photoDropzone.destroy();
-            photoDropzone = null;
+        if (!photoDropzone) {
+            initializePhotoDropzone();
         }
     });
     
     // Initialize Photo Dropzone
     function initializePhotoDropzone() {
-        // Check if Dropzone is available
-        if (typeof Dropzone === 'undefined') {
-            console.error('Dropzone library not loaded');
-            showPhotoMessage('danger', 'Photo upload library not loaded. Please refresh the page.');
-            return;
-        }
-        
-        // Check if currentIssueId is set
-        if (!currentIssueId) {
-            console.error('Current issue ID not set');
-            showPhotoMessage('danger', 'Issue ID not found. Please try again.');
-            return;
-        }
-        
         // Disable auto discover to prevent conflicts
         Dropzone.autoDiscover = false;
         
-        // Ensure the dropzone element exists
-        if (!$('#photoDropzone').length) {
-            console.error('Dropzone element not found');
-            showPhotoMessage('danger', 'Upload area not found. Please refresh the page.');
-            return;
-        }
-        
-        console.log('Initializing dropzone for issue ID:', currentIssueId);
-        
-        try {
-            photoDropzone = new Dropzone("#photoDropzone", {
-                url: `/block-issues/${currentIssueId}/photos`,
+        photoDropzone = new Dropzone("#photoDropzone", {
+            url: `/block-issues/${currentIssueId}/photos`,
                 paramName: "images",
                 uploadMultiple: true,
                 parallelUploads: 10,
@@ -1219,18 +1168,8 @@ $(document).ready(function() {
             init: function() {
                 const dz = this;
                 
-                // Debug events
-                this.on("drop", function(e) {
-                    console.log('Files dropped:', e.dataTransfer.files.length);
-                });
-                
-                this.on("click", function(e) {
-                    console.log('Dropzone clicked');
-                });
-                
                 // Custom styling
                 this.on("addedfile", function(file) {
-                    console.log('File added:', file.name);
                     // Add custom styling to file preview
                     const preview = file.previewElement;
                     $(preview).addClass('dz-image-preview-custom');
@@ -1246,15 +1185,11 @@ $(document).ready(function() {
                 this.on("successmultiple", function(files, response) {
                     showPhotoMessage('success', 'Photos uploaded successfully!');
                     
-                    // Clear dropzone
-                    dz.removeAllFiles(true);
-                    
-                    // Reload existing photos
-                    loadExistingPhotos(currentIssueId);
-                    
                     // Close modal after successful upload
                     setTimeout(() => {
                         $('#photoUploadModal').modal('hide');
+                        // Reload the page to show new photos
+                        location.reload();
                     }, 1500);
                 });
                 
@@ -1292,19 +1227,12 @@ $(document).ready(function() {
                     if (totalSize > maxTotalSize) {
                         showPhotoMessage('warning', 'Total file size exceeds 10MB limit. Please reduce the number of files or their size.');
                         files.forEach(file => {
-                            dz.removeFile(file);
+                            this.removeFile(file);
                         });
                     }
                 });
             }
         });
-        
-        console.log('Dropzone initialized successfully');
-        
-        } catch (error) {
-            console.error('Error initializing dropzone:', error);
-            showPhotoMessage('danger', 'Error initializing photo upload. Please refresh and try again.');
-        }
     }
     
     // Clear all files
@@ -1316,15 +1244,10 @@ $(document).ready(function() {
     
     // Debug function to test dropzone
     window.testDropzone = function() {
-        console.log('Testing dropzone...');
-        console.log('Dropzone element exists:', $('#photoDropzone').length > 0);
-        console.log('Dropzone instance:', photoDropzone);
-        console.log('Current issue ID:', currentIssueId);
-        
         if (photoDropzone) {
-            console.log('Dropzone is active and ready');
+            showPhotoMessage('success', 'Dropzone is working correctly!');
         } else {
-            console.log('Dropzone is not initialized');
+            showPhotoMessage('warning', 'Dropzone not initialized. Try opening the upload modal first.');
         }
     };
     
