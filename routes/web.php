@@ -103,8 +103,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);
     Route::delete('block-issues/images/{image}', [App\Http\Controllers\BlockIssueController::class, 'deleteImage'])->name('block-issues.delete-image');
     Route::post('block-issues/{blockIssue}/actions', [App\Http\Controllers\BlockIssueController::class, 'storeAction'])->name('block-issues.store-action');
+    Route::post('block-issues/{blockIssue}/photos', [App\Http\Controllers\BlockIssueController::class, 'uploadPhotos'])->name('block-issues.upload-photos');
     Route::get('api/block-issues', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssues'])->name('api.block-issues');
     Route::get('api/block-issues/{blockIssue}', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssue'])->name('api.block-issues.show');
+    Route::get('api/block-issues/{blockIssue}/photos', [App\Http\Controllers\BlockIssueController::class, 'getPhotos'])->name('api.block-issues.photos');
+    Route::delete('api/block-issue-photos/{photo}', [App\Http\Controllers\BlockIssueController::class, 'deletePhoto'])->name('api.block-issue-photos.delete');
     Route::get('api/contact-methods-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getContactMethodsAutocomplete'])->name('api.contact-methods-autocomplete');
     Route::get('api/property-managers-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getPropertyManagersAutocomplete'])->name('api.property-managers-autocomplete');
     Route::get('api/block-unit-contact-details', [App\Http\Controllers\BlockIssueController::class, 'getBlockUnitContactDetails'])->name('api.block-unit-contact-details');

@@ -73,6 +73,11 @@ class BlockIssueController extends Controller
         $blockIssues = $query->orderBy('created_at', 'desc')->paginate(10);
         $blocks = Block::orderBy('name')->get();
         $users = User::orderBy('name')->get();
+        
+        // Add data needed for edit modal
+        $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
+        $issueTypes = \App\Models\IssueType::where('is_active', true)->orderBy('name')->get();
+        
         if($request->exists('type')&&$request->type=='api'){
             return response()->json([
                 'success' => true,
@@ -80,7 +85,7 @@ class BlockIssueController extends Controller
             ]);
         }
 
-        return view('block-issues.index', compact('blockIssues', 'blocks', 'users'));
+        return view('block-issues.index', compact('blockIssues', 'blocks', 'users', 'contactMethods', 'issueTypes'));
     }
 
     /**
@@ -197,6 +202,14 @@ class BlockIssueController extends Controller
     {
         $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater', 'priority', 'issueStatus']);
         
+        // Return JSON data for AJAX requests (edit modal)
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'data' => $blockIssue
+            ]);
+        }
+        
         return view('block-issues.show', compact('blockIssue'));
     }
 
@@ -246,18 +259,26 @@ class BlockIssueController extends Controller
     public function update(Request $request, BlockIssue $blockIssue)
     {
         $validator = Validator::make($request->all(), [
-            'block_id' => 'required|exists:blocks,id',
-            'ref_no' => 'required|string|max:100|unique:block_issues,ref_no,' . $blockIssue->id,
-            'issue' => 'required|string|max:255',
-            'issue_details' => 'required|string',
+            'contact_method_id' => 'required|exists:contact_methods,id',
+            'block_unit_id' => 'required|exists:block_units,id',
+            'assigned_to' => 'required|exists:users,id',
+            'issue_type' => 'required|string|max:255',
             'priority_id' => 'required|integer|min:1|max:5',
-            'issue_status_id' => 'required|integer|min:1|max:5',
-            'assigned_to' => 'nullable|exists:users,id',
-            'reported_by' => 'nullable|exists:users,id',
+            'issue' => 'required|string|max:255',
+            'contact_details' => 'required|string',
+            'fault_details' => 'nullable|string',
+            'default_contact_details' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         if ($validator->fails()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
@@ -284,6 +305,13 @@ class BlockIssueController extends Controller
                     's3_status' => false,
                 ]);
             }
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Block issue updated successfully!'
+            ]);
         }
 
         return redirect()->route('block-issues.index')
@@ -355,6 +383,114 @@ class BlockIssueController extends Controller
             'success' => true,
             'data' => $blockIssue
         ]);
+    }
+    
+    /**
+     * Upload photos for a block issue
+     */
+    public function uploadPhotos(Request $request, BlockIssue $blockIssue)
+    {
+        $validator = Validator::make($request->all(), [
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        try {
+            $uploadedImages = [];
+            
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $image) {
+                    $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                    $imagePath = 'block-issues/images';
+                    
+                    $image->storeAs('public/' . $imagePath, $imageName);
+                    
+                    $blockIssueImage = BlockIssueImage::create([
+                        'block_issue_id' => $blockIssue->id,
+                        'image_name' => $imageName,
+                        'image_path' => $imagePath,
+                        's3_status' => false,
+                    ]);
+                    
+                    $uploadedImages[] = $blockIssueImage;
+                }
+            }
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Photos uploaded successfully!',
+                    'data' => $uploadedImages
+                ]);
+            }
+
+            return redirect()->back()
+                ->with('success', 'Photos uploaded successfully!');
+                
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error uploading photos: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'Error uploading photos: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Get photos for a block issue
+     */
+    public function getPhotos(BlockIssue $blockIssue)
+    {
+        $photos = $blockIssue->images()->orderBy('created_at', 'desc')->get();
+        
+        return response()->json([
+            'success' => true,
+            'data' => $photos
+        ]);
+    }
+    
+    /**
+     * Delete a photo
+     */
+    public function deletePhoto(BlockIssueImage $photo)
+    {
+        try {
+            // Delete the file from storage
+            $filePath = storage_path('app/public/' . $photo->image_path . '/' . $photo->image_name);
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+            
+            // Delete the database record
+            $photo->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting photo: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

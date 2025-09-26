@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             JobReasonSeeder::class,
             JobStatusSeeder::class,
             IssueStatusSeeder::class,
+            IssueTypeSeeder::class,
         ]);
 
         // Seed main data
