@@ -365,11 +365,14 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="ph-x me-1"></i> Close
                     </button>
+                    <button type="button" class="btn btn-outline-danger" id="clearPhotosBtn">
+                        <i class="ph-x me-1"></i> Clear All
+                    </button>
                     <button type="button" class="btn btn-outline-info btn-sm" id="testDropzoneBtn" onclick="testDropzone()">
                         <i class="ph-bug me-1"></i> Test
                     </button>
-                    <button type="button" class="btn btn-secondary" id="clearPhotosBtn">
-                        <i class="ph-x me-1"></i> Clear All
+                    <button type="button" class="btn btn-primary" id="uploadPhotosBtn">
+                        <i class="ph-cloud-upload me-1"></i> Upload Photos
                     </button>
                 </div>
             </div>
@@ -895,7 +898,7 @@
         }
         
         photoDropzone = new Dropzone("#photoDropzone", {
-                url: `/block-issues/${currentIssueId}/photos`,
+            url: "#", // Disable auto-upload
                 paramName: "images",
                 uploadMultiple: true,
                 parallelUploads: 10,
@@ -904,6 +907,7 @@
                 acceptedFiles: "image/*",
                 addRemoveLinks: true,
                 clickable: true, // Enable click to upload
+                autoProcessQueue: false, // Don't auto-upload
                 dictDefaultMessage: "Drop images here or click to upload",
                 dictRemoveFile: "Remove",
                 dictCancelUpload: "Cancel",
@@ -937,6 +941,28 @@
                             details.appendChild(sizeDiv);
                         }
                     }
+                });
+                
+                // Handle file addition (preview mode)
+                this.on("addedfile", function(file) {
+                    // Add custom styling to file preview
+                    const preview = file.previewElement;
+                    preview.classList.add('dz-image-preview-custom');
+                    
+                    // Add file size info
+                    const sizeInfo = preview.querySelector('.dz-size');
+                    if (!sizeInfo) {
+                        const details = preview.querySelector('.dz-details');
+                        if (details) {
+                            const sizeDiv = document.createElement('div');
+                            sizeDiv.className = 'dz-size';
+                            sizeDiv.innerHTML = '<span data-dz-size></span>';
+                            details.appendChild(sizeDiv);
+                        }
+                    }
+                    
+                    // Show preview message
+                    showPhotoMessage('info', 'Photos added to preview. Click "Upload Photos" to save them.');
                 });
                 
                 // Handle successful upload
@@ -1002,6 +1028,19 @@
     document.getElementById('clearPhotosBtn').addEventListener('click', function() {
         if (photoDropzone) {
             photoDropzone.removeAllFiles(true);
+        }
+    });
+    
+    // Upload photos when submit button is clicked
+    document.getElementById('uploadPhotosBtn').addEventListener('click', function() {
+        if (photoDropzone && photoDropzone.files.length > 0) {
+            // Set the correct URL for upload
+            photoDropzone.options.url = `/block-issues/${currentIssueId}/photos`;
+            
+            // Process the queue
+            photoDropzone.processQueue();
+        } else {
+            showPhotoMessage('warning', 'Please select photos to upload.');
         }
     });
     

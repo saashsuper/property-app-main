@@ -217,11 +217,14 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="ph-x me-1"></i> Close
                     </button>
+                    <button type="button" class="btn btn-outline-danger" id="clearPhotosBtn">
+                        <i class="ph-x me-1"></i> Clear All
+                    </button>
                     <button type="button" class="btn btn-outline-info btn-sm" id="testDropzoneBtn" onclick="testDropzone()">
                         <i class="ph-bug me-1"></i> Test
                     </button>
-                    <button type="button" class="btn btn-secondary" id="clearPhotosBtn">
-                        <i class="ph-x me-1"></i> Clear All
+                    <button type="button" class="btn btn-primary" id="uploadPhotosBtn">
+                        <i class="ph-cloud-upload me-1"></i> Upload Photos
                     </button>
                 </div>
         </div>

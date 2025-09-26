@@ -1160,7 +1160,7 @@ $(document).ready(function() {
         }
         
         photoDropzone = new Dropzone("#photoDropzone", {
-            url: `/block-issues/${currentIssueId}/photos`,
+            url: "#", // Disable auto-upload
                 paramName: "images",
                 uploadMultiple: true,
                 parallelUploads: 10,
@@ -1169,6 +1169,7 @@ $(document).ready(function() {
                 acceptedFiles: "image/*",
                 addRemoveLinks: true,
                 clickable: true, // Enable click to upload
+                autoProcessQueue: false, // Don't auto-upload
                 dictDefaultMessage: "Drop images here or click to upload",
                 dictRemoveFile: "Remove",
                 dictCancelUpload: "Cancel",
@@ -1196,6 +1197,22 @@ $(document).ready(function() {
                     if (sizeInfo.length === 0) {
                         $(preview).find('.dz-details').append('<div class="dz-size"><span data-dz-size></span></div>');
                     }
+                });
+                
+                // Handle file addition (preview mode)
+                this.on("addedfile", function(file) {
+                    // Add custom styling to file preview
+                    const preview = file.previewElement;
+                    $(preview).addClass('dz-image-preview-custom');
+                    
+                    // Add file size info
+                    const sizeInfo = $(preview).find('.dz-size');
+                    if (sizeInfo.length === 0) {
+                        $(preview).find('.dz-details').append('<div class="dz-size"><span data-dz-size></span></div>');
+                    }
+                    
+                    // Show preview message
+                    showPhotoMessage('info', 'Photos added to preview. Click "Upload Photos" to save them.');
                 });
                 
                 // Handle successful upload
@@ -1260,6 +1277,19 @@ $(document).ready(function() {
     $('#clearPhotosBtn').on('click', function() {
         if (photoDropzone) {
             photoDropzone.removeAllFiles(true);
+        }
+    });
+    
+    // Upload photos when submit button is clicked
+    $('#uploadPhotosBtn').on('click', function() {
+        if (photoDropzone && photoDropzone.files.length > 0) {
+            // Set the correct URL for upload
+            photoDropzone.options.url = `/block-issues/${currentIssueId}/photos`;
+            
+            // Process the queue
+            photoDropzone.processQueue();
+        } else {
+            showPhotoMessage('warning', 'Please select photos to upload.');
         }
     });
     
