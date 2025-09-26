@@ -1202,11 +1202,15 @@ $(document).ready(function() {
                 this.on("successmultiple", function(files, response) {
                     showPhotoMessage('success', 'Photos uploaded successfully!');
                     
+                    // Clear dropzone
+                    dz.removeAllFiles(true);
+                    
+                    // Reload existing photos
+                    loadExistingPhotos(currentIssueId);
+                    
                     // Close modal after successful upload
                     setTimeout(() => {
                         $('#photoUploadModal').modal('hide');
-                        // Reload the page to show new photos
-                        location.reload();
                     }, 1500);
                 });
                 

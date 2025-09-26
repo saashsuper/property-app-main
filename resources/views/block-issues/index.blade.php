@@ -943,12 +943,16 @@
                 this.on("successmultiple", function(files, response) {
                     showPhotoMessage('success', 'Photos uploaded successfully!');
                     
+                    // Clear dropzone
+                    this.removeAllFiles(true);
+                    
+                    // Reload existing photos
+                    loadExistingPhotos(currentIssueId);
+                    
                     // Close modal after successful upload
                     setTimeout(() => {
                         const modal = bootstrap.Modal.getInstance(document.getElementById('photoUploadModal'));
                         if (modal) modal.hide();
-                        // Reload the page to show new photos
-                        location.reload();
                     }, 1500);
                 });
                 
