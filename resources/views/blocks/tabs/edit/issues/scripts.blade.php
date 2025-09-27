@@ -409,7 +409,7 @@ $(document).ready(function() {
                     $modal.on('shown.bs.modal', function() {
                         $('#contact_method_id').val(issue.contact_method_id);
                         $('#block_unit_id').val(issue.block_unit_id);
-                        $('#assigned_to').val(issue.assigned_to).trigger('change');
+                        $('#assigned_to').val(issue.assigned_to.id).trigger('change');
                         $('#issue_type').val(issue.issue_type);
                         $('#priority_id').val(issue.priority_id);
                         $('#issue').val(issue.issue);

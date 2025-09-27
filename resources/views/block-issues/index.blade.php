@@ -718,7 +718,7 @@
                 editModal.addEventListener('shown.bs.modal', function() {
                     document.getElementById('edit_contact_method_id').value = issue.contact_method_id || '';
                     document.getElementById('edit_block_unit_id').value = issue.block_unit_id || '';
-                    document.getElementById('edit_assigned_to').value = issue.assigned_to || '';
+                    document.getElementById('edit_assigned_to').value = issue.assigned_to?.id || issue.assigned_to || '';
                     document.getElementById('edit_issue_type').value = issue.issue_type || '';
                     document.getElementById('edit_priority_id').value = issue.priority_id || '';
                     document.getElementById('edit_issue').value = issue.issue || '';
