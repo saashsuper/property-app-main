@@ -713,15 +713,21 @@
                 document.getElementById('editIssueSubmitBtn').innerHTML = '<i class="ph-check me-1"></i> Update';
                 document.getElementById('editIssueForm').setAttribute('action', `/block-issues/${issueId}`);
                 
-                // Populate form fields
-                document.getElementById('edit_contact_method_id').value = issue.contact_method_id || '';
-                document.getElementById('edit_block_unit_id').value = issue.block_unit_id || '';
-                document.getElementById('edit_assigned_to').value = issue.assigned_to || '';
-                document.getElementById('edit_issue_type').value = issue.issue_type || '';
-                document.getElementById('edit_priority_id').value = issue.priority_id || '';
-                document.getElementById('edit_issue').value = issue.issue || '';
-                document.getElementById('edit_contact_details').value = issue.contact_details || '';
-                document.getElementById('edit_fault_details').value = issue.fault_details || '';
+                // Populate form fields after modal is shown
+                const editModal = document.getElementById('editIssueModal');
+                editModal.addEventListener('shown.bs.modal', function() {
+                    document.getElementById('edit_contact_method_id').value = issue.contact_method_id || '';
+                    document.getElementById('edit_block_unit_id').value = issue.block_unit_id || '';
+                    document.getElementById('edit_assigned_to').value = issue.assigned_to || '';
+                    document.getElementById('edit_issue_type').value = issue.issue_type || '';
+                    document.getElementById('edit_priority_id').value = issue.priority_id || '';
+                    document.getElementById('edit_issue').value = issue.issue || '';
+                    document.getElementById('edit_contact_details').value = issue.contact_details || '';
+                    document.getElementById('edit_fault_details').value = issue.fault_details || '';
+                    
+                    // Remove the event listener to prevent multiple triggers
+                    editModal.removeEventListener('shown.bs.modal', arguments.callee);
+                }, { once: true });
                 
                 // Show the modal
                 const modal = new bootstrap.Modal(document.getElementById('editIssueModal'));
