@@ -4,6 +4,44 @@
 @endsection
 @section('css')
     <!-- add your css here -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
+    <style>
+        /* Custom search input styling */
+        .custom-search-input {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .custom-search-input:focus {
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Custom page length select styling */
+        .custom-page-length-select {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .custom-page-length-select:focus {
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Disabled button styling */
+        .btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 @endsection
 @section('content')
 <div class="page-content">
@@ -28,218 +66,190 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="card-title mb-0">@lang('translation.block-issues-management')</h4>
-                            <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center mb-3 gap-3">
+                            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">
+                                @lang('translation.block-issues-management')
+                            </h6>
+                            <button class="btn btn-outline-primary btn-sm" id="toggleSearchBtn" title="Search & Filter Issues">
+                                <i class="ph-funnel"></i>
+                            </button>
+                            <div class="d-flex align-items-center gap-2">
                                 <!-- Export Buttons -->
                                 <div class="btn-group" role="group">
                                     <a href="{{ route('export.pdf', 'block-issues') }}?{{ http_build_query(request()->query()) }}" 
+                                       id="exportPdfBtn"
                                        class="btn btn-outline-danger btn-sm" title="Export to PDF">
                                         <i class="ph-file-pdf"></i>
                                     </a>
                                     <a href="{{ route('export.excel', 'block-issues') }}?{{ http_build_query(request()->query()) }}" 
+                                       id="exportExcelBtn"
                                        class="btn btn-outline-success btn-sm" title="Export to Excel">
                                         <i class="ph-file-xls"></i>
                                     </a>
                                     <a href="{{ route('export.print', 'block-issues') }}?{{ http_build_query(request()->query()) }}" 
+                                       id="exportPrintBtn"
                                        class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
                                         <i class="ph-printer"></i>
                                     </a>
                                 </div>
-
                                 <!-- Add Button -->
-                                <a href="{{ route('block-issues.create') }}" class="btn btn-primary">
-                                    <i class="ph-plus me-2"></i>@lang('translation.create-block-issue')
+                                <a href="{{ route('block-issues.create') }}" class="btn btn-primary btn-sm">
+                                    <i class="ph-plus me-1"></i>@lang('translation.create-block-issue')
                                 </a>
                             </div>
                         </div>
                     </div>
                     <div class="card-body">
-                        <!-- Search and Filters -->
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <form method="GET" action="{{ route('block-issues.index') }}" class="row g-3">
-                                    <div class="col-md-4">
-                                         <input type="text" class="form-control" name="search" 
-                                                placeholder="@lang('translation.search-issues')" value="{{ request('search') }}">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <select class="form-select" name="block_id">
-                                             <option value="">@lang('translation.all-blocks')</option>
+                        <!-- Search Issues Panel (Hidden by default) -->
+                        <div id="searchIssuesPanel" class="card mb-3" style="display: none;">
+                            <div class="p-2 bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="ph-magnifying-glass me-2"></i>
+                                    Search Issues
+                                </h6>
+                                <button type="button" class="btn btn-sm" id="closeSearchHeaderBtn" title="Close Search">
+                                    <i class="ph-x"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <form id="searchIssuesForm" class="row g-3">
+                                    <!-- Block Filter -->
+                                    <div class="col-6 mb-3">
+                                        <label for="search_block_id" class="form-label">Block</label>
+                                        <select class="form-select" id="search_block_id" name="block_id">
+                                            <option value="">All Blocks</option>
                                             @foreach($blocks as $block)
-                                                <option value="{{ $block->id }}" {{ request('block_id') == $block->id ? 'selected' : '' }}>
-                                                    {{ $block->name }}
-                                                </option>
+                                                <option value="{{ $block->id }}">{{ $block->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                        <select class="form-select" name="status">
-                                             <option value="">@lang('translation.all-status')</option>
-                                             <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>@lang('translation.open')</option>
-                                             <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>@lang('translation.in-progress')</option>
-                                             <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>@lang('translation.resolved')</option>
-                                             <option value="4" {{ request('status') == '4' ? 'selected' : '' }}>@lang('translation.closed')</option>
-                                             <option value="5" {{ request('status') == '5' ? 'selected' : '' }}>@lang('translation.on-hold')</option>
+
+                                    <!-- Status Filter -->
+                                    <div class="col-6 mb-3">
+                                        <label for="search_status" class="form-label">Status</label>
+                                        <select class="form-select" id="search_status" name="status">
+                                            <option value="">All Status</option>
+                                            <option value="1">Open</option>
+                                            <option value="2">In Progress</option>
+                                            <option value="3">Resolved</option>
+                                            <option value="4">Closed</option>
+                                            <option value="5">On Hold</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                        <select class="form-select" name="priority">
-                                             <option value="">@lang('translation.all-priority')</option>
-                                             <option value="1" {{ request('priority') == '1' ? 'selected' : '' }}>@lang('translation.low')</option>
-                                             <option value="2" {{ request('priority') == '2' ? 'selected' : '' }}>@lang('translation.normal')</option>
-                                             <option value="3" {{ request('priority') == '3' ? 'selected' : '' }}>@lang('translation.high')</option>
-                                             <option value="4" {{ request('priority') == '4' ? 'selected' : '' }}>@lang('translation.urgent')</option>
-                                             <option value="5" {{ request('priority') == '5' ? 'selected' : '' }}>@lang('translation.critical')</option>
+
+                                    <!-- Priority Filter -->
+                                    <div class="col-6 mb-3">
+                                        <label for="search_priority" class="form-label">Priority</label>
+                                        <select class="form-select" id="search_priority" name="priority">
+                                            <option value="">All Priority</option>
+                                            <option value="1">Low</option>
+                                            <option value="2">Normal</option>
+                                            <option value="3">High</option>
+                                            <option value="4">Urgent</option>
+                                            <option value="5">Critical</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                         <button type="submit" class="btn btn-primary w-100">
-                                             <i class="ph-magnifying-glass me-1"></i> @lang('translation.search')
-                                        </button>
+
+                                    <!-- Keyword Search -->
+                                    <div class="col-6 mb-3">
+                                        <label for="search_keyword" class="form-label">Keyword Search</label>
+                                        <input type="text" class="form-control" id="search_keyword" name="search"
+                                            placeholder="Search by issue title, description, or reference number...">
                                     </div>
                                 </form>
                             </div>
-                            <div class="col-md-4 text-end">
-                                 <a href="{{ route('block-issues.index') }}" class="btn btn-secondary">
-                                     <i class="ph-arrows-clockwise me-1"></i> @lang('translation.clear-filters')
-                                </a>
+                            <div class="card-footer">
+                                <button type="button" class="btn btn-primary" id="searchIssuesBtn">
+                                    <i class="ph-magnifying-glass me-1"></i> Search
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="clearSearchBtn">
+                                    <i class="ph-x me-1"></i> Clear
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="showAllBtn">
+                                    <i class="ph-list me-1"></i> Show All
+                                </button>
                             </div>
                         </div>
 
                         <!-- Issues Table -->
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover">
+                            <table id="blockIssuesTable" class="table table-bordered table-hover">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>@lang('translation.reference')</th>
-                                        <th>@lang('translation.title')</th>
-                                        <th>@lang('translation.block')</th>
-                                        <th>@lang('translation.priority-label')</th>
-                                        <th>@lang('translation.status-label')</th>
-                                        <th>@lang('translation.assigned-to')</th>
-                                        <th>@lang('translation.reported-by')</th>
-                                        <th>@lang('translation.created')</th>
-                                        <th>@lang('translation.actions')</th>
+                                        <th>Issue ID</th>
+                                        <th>Title</th>
+                                        <th>Block</th>
+                                        <th>Type</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Reported Date</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($blockIssues as $issue)
                                     <tr>
                                         <td>
-                                            <span class="fw-medium">{{ $issue->ref_no }}</span>
+                                            <a href="{{ route('block-issues.show', $issue) }}" class="text-decoration-none">
+                                                <b>#{{ $issue->ref_no }}</b>
+                                            </a>
                                         </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar-sm me-2">
-                                                    <span class="avatar-title bg-soft-primary rounded-3">
-                                                        <i class="ph-warning font-size-16 text-primary"></i>
-                                                    </span>
-                                                </div>
-                                                <div>
-                                                    <div class="fw-medium">{{ $issue->issue ?? 'N/A' }}</div>
-                                                    <small class="text-muted">{{ Str::limit($issue->issue_details ?? 'No description', 50) }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
+                                        <td>{{ $issue->issue ?? 'N/A' }}</td>
                                         <td>
                                             @if($issue->block)
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-2">
-                                                        <span class="avatar-title bg-soft-info rounded-3">
-                                                            <i class="ph-buildings font-size-16 text-info"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-medium">{{ $issue->block->name }}</div>
-                                                        <small class="text-muted">{{ $issue->block->blockType->name ?? 'N/A' }}</small>
-                                                    </div>
-                                                </div>
+                                                {{ $issue->block->name }}
                                             @else
                                                 <span class="text-muted">N/A</span>
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $issue->priority_color }}">{{ $issue->priority_text }}</span>
+                                            @if($issue->issue_type)
+                                                <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $issue->issue_type)) }}</span>
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($issue->priority)
+                                                <span class="badge bg-{{ $issue->priority->btn_class ?? 'secondary' }}">
+                                                    {{ $issue->priority->label ?? 'Unknown' }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-{{ $issue->priority_color }}">
+                                                    {{ $issue->priority_text }}
+                                                </span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge bg-{{ $issue->status_color }}">{{ $issue->status_text }}</span>
                                         </td>
+                                        <td>{{ $issue->created_at->format('M d, Y H:i') }}</td>
                                         <td>
-                                            @if($issue->assignedTo)
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-2">
-                                                        <span class="avatar-title bg-soft-success rounded-3">
-                                                            <i class="ph-user font-size-16 text-success"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-medium">{{ $issue->assignedTo->name }}</div>
-                                                        <small class="text-muted">{{ $issue->assignedTo->email }}</small>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">Unassigned</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($issue->reportedBy)
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-2">
-                                                        <span class="avatar-title bg-soft-warning rounded-3">
-                                                            <i class="ph-user font-size-16 text-warning"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <div class="fw-medium">{{ $issue->reportedBy->name }}</div>
-                                                        <small class="text-muted">{{ $issue->reportedBy->email }}</small>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <span class="text-muted">N/A</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <small class="text-muted">{{ $issue->created_at->format('M d, Y H:i') }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                    <i class="ph-gear-six"></i>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="{{ route('block-issues.show', $issue) }}" 
+                                                   class="btn btn-outline-primary" title="View">
+                                                    <i class="ph-eye"></i>
+                                                </a>
+                                                <button class="btn btn-outline-secondary" onclick="editIssue({{ $issue->id }})" title="Edit">
+                                                    <i class="ph-pencil"></i>
                                                 </button>
-                                                <ul class="dropdown-menu">
-                                                    <li>
-                                                        <a class="dropdown-item" href="{{ route('block-issues.show', $issue) }}">
-                                                             <i class="ph-eye me-2"></i> @lang('translation.view')
-                                                        </a>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button" class="dropdown-item" onclick="editIssue({{ $issue->id }})">
-                                                             <i class="ph-pencil me-2"></i> @lang('translation.edit')
-                                                        </button>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button" class="dropdown-item" onclick="openPhotoUploadModal({{ $issue->id }})">
-                                                             <i class="ph-camera me-2"></i> Upload Photos
-                                                        </button>
-                                                    </li>
-                                                    <li><hr class="dropdown-divider"></li>
-                                                    <li>
-                                                        <button type="button" class="dropdown-item text-danger"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#confirmDeleteModal"
-                                                                data-action="{{ route('block-issues.destroy', $issue) }}"
-                                                                data-ref="{{ $issue->ref_no }}">
-                                                            <i class="ph-trash me-2"></i> @lang('translation.delete')
-                                                        </button>
-                                                    </li>
-                                                </ul>
+                                                <button class="btn btn-outline-info" onclick="openPhotoUploadModal({{ $issue->id }})" title="Upload Photos">
+                                                    <i class="ph-camera"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" 
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#confirmDeleteModal"
+                                                        data-action="{{ route('block-issues.destroy', $issue) }}"
+                                                        data-ref="{{ $issue->ref_no }}" title="Delete">
+                                                    <i class="ph-trash"></i>
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="9" class="text-center py-4">
+                                        <td colspan="8" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="ph-warning font-size-24 mb-2"></i>
                                                  <p>@lang('translation.no-block-issues-found')</p>
@@ -1168,4 +1178,123 @@
         background: rgba(220, 53, 69, 1);
     }
     </style>
+@endsection
+
+@section('script')
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
+    
+    <!-- Dropzone JS -->
+    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            var table = $('#blockIssuesTable').DataTable({
+                responsive: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                order: [[6, 'desc']], // Sort by reported date descending
+                columnDefs: [
+                    { orderable: false, targets: [7] }, // Actions column
+                    { className: "text-center", targets: [0, 3, 4, 5, 7] }, // Center align specific columns
+                ],
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                language: {
+                    search: "",
+                    searchPlaceholder: "Search issues...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No entries found",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                },
+                initComplete: function() {
+                    // Customize search input
+                    $('.dataTables_filter input').addClass('custom-search-input');
+                    $('.dataTables_length select').addClass('custom-page-length-select');
+                }
+            });
+
+            // Toggle search panel
+            $('#toggleSearchBtn').on('click', function() {
+                $('#searchIssuesPanel').slideToggle();
+            });
+
+            // Close search panel
+            $('#closeSearchHeaderBtn').on('click', function() {
+                $('#searchIssuesPanel').slideUp();
+            });
+
+            // Search functionality
+            $('#searchIssuesBtn').on('click', function() {
+                var blockId = $('#search_block_id').val();
+                var status = $('#search_status').val();
+                var priority = $('#search_priority').val();
+                var keyword = $('#search_keyword').val();
+
+                // Build search query
+                var searchQuery = '';
+                if (blockId) searchQuery += 'block_id:' + blockId + ' ';
+                if (status) searchQuery += 'status:' + status + ' ';
+                if (priority) searchQuery += 'priority:' + priority + ' ';
+                if (keyword) searchQuery += keyword;
+
+                table.search(searchQuery).draw();
+                $('#searchIssuesPanel').slideUp();
+            });
+
+            // Clear search
+            $('#clearSearchBtn').on('click', function() {
+                $('#searchIssuesForm')[0].reset();
+                table.search('').draw();
+            });
+
+            // Show all
+            $('#showAllBtn').on('click', function() {
+                $('#searchIssuesForm')[0].reset();
+                table.search('').draw();
+                $('#searchIssuesPanel').slideUp();
+            });
+
+            // Update export button states based on table data
+            function updateExportButtons() {
+                var hasData = table.data().count() > 0;
+                $('#exportPdfBtn, #exportExcelBtn, #exportPrintBtn').toggleClass('disabled', !hasData);
+            }
+
+            // Update export buttons on table draw
+            table.on('draw', function() {
+                updateExportButtons();
+            });
+
+            // Initial update
+            updateExportButtons();
+        });
+
+        // Edit issue function
+        function editIssue(issueId) {
+            window.location.href = '/block-issues/' + issueId + '/edit';
+        }
+
+        // Photo upload modal function
+        function openPhotoUploadModal(issueId) {
+            // This would open a photo upload modal
+            // For now, redirect to the issue show page
+            window.location.href = '/block-issues/' + issueId;
+        }
+
+    </script>
 @endsection 

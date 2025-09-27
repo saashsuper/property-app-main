@@ -79,9 +79,9 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="editSiteVisit({{ $visit->id }})" title="Edit Site Visit">
                                         <i class="ph-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $visit->id }}, {
+                                    <button class="btn btn-sm btn-outline-danger" onclick="blockSiteVisitShowDeleteConfirmation({{ $visit->id }}, {
                                         ref_no: '{{ $visit->ref_no ?? 'N/A' }}',
-                                        scheduled_date: '{{ $visit->scheduled_date_time ? \Carbon\Carbon::parse($visit->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}',
+                                        visit_date: '{{ $visit->scheduled_date_time ? \Carbon\Carbon::parse($visit->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}',
                                         user: '{{ $visit->team && $visit->team->count() > 0 ? $visit->team->first()->user->name ?? 'N/A' : $visit->createdByUser->name ?? 'N/A' }}',
                                         reason: '{{ $visit->jobReason->name ?? 'N/A' }}',
                                         status: '{{ $visit->end_date_time ? 'Completed' : ($visit->start_date_time ? 'In Progress' : 'Scheduled') }}'
@@ -209,10 +209,11 @@
         console.log('Edit site visit called with ID:', id);
     };
     
-    // Define showDeleteConfirmation function early so it's available for initial HTML buttons
-    window.showDeleteConfirmation = function(visitId, visitData) {
-        // This will be overridden by the full function definition in scripts.blade.php
-        console.log('Placeholder showDeleteConfirmation called with ID:', visitId);
+    // Define delete confirmation function early so it's available for initial HTML buttons
+    window.blockSiteVisitShowDeleteConfirmation = function(visitId, visitData) {
+        if (typeof window.blockSiteVisitConfirmDeletion === 'function') {
+            window.blockSiteVisitConfirmDeletion(visitId, visitData);
+        }
     };
 </script>
 

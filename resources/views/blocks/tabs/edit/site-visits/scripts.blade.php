@@ -129,7 +129,7 @@ $(document).ready(function() {
             if (!$.fn.DataTable.isDataTable('#blockSiteVisitsTable')) {
                 blockSiteVisitsDataTable = $('#blockSiteVisitsTable').DataTable({
                     responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
                     order: [[1, 'desc']],      // Default sort by visit date descending
                     columnDefs: [
                         { targets: [6], orderable: false } // Actions column (last column) not sortable
@@ -146,23 +146,40 @@ $(document).ready(function() {
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
-                        // Style the search box to match other tabs
+                        // Style the search box
                         $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3')
+                            .addClass('form-control')
+                            .removeClass('mb-3')
                             .css({
                                 'width': '300px',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin-left': '10px',
+                                'margin-bottom': '0 !important'
                             });
                         
                         // Style the page length dropdown
                         $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
+                            .addClass('form-select')
                             .css({
                                 'width': 'auto',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin': '0 10px'
                             });
+                        
+                        // Ensure labels and inputs are on the same line
+                        $('.dataTables_length label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
+                        
+                        $('.dataTables_filter label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
                     }
                 });
                 
@@ -243,7 +260,7 @@ $(document).ready(function() {
                             `<button class="btn btn-sm btn-outline-primary" onclick="editSiteVisit(${visit.id})" title="Edit Site Visit">
                                 <i class="ph-pencil"></i>
                             </button> 
-                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${visit.id}, {
+                            <button class="btn btn-sm btn-outline-danger" onclick="blockSiteVisitShowDeleteConfirmation(${visit.id}, {
                                 ref_no: '${visit.ref_no || 'N/A'}',
                                 scheduled_date: '${scheduledDateTime}',
                                 user: '${visit.user_name || 'N/A'}',
@@ -519,25 +536,29 @@ $(document).ready(function() {
      * @param {number} visitId - The ID of the site visit to delete
      * @param {object} visitData - The site visit data to display in confirmation
      */
-    function showDeleteConfirmation(visitId, visitData) {
+    function blockSiteVisitShowDeleteConfirmation(visitId, visitData) {
         
         // Populate site visit details in the modal
         const detailsHtml = `
             <div class="row">
                 <div class="col-6"><strong>Reference:</strong></div>
-                <div class="col-6">${visitData.ref_no || 'N/A'}</div>
+                <div class="col-6">${visitData.ref_no || visitData.reference || 'N/A'}</div>
             </div>
             <div class="row">
                 <div class="col-6"><strong>Scheduled Date:</strong></div>
-                <div class="col-6">${visitData.scheduled_date || 'N/A'}</div>
+                <div class="col-6">${visitData.visit_date || visitData.scheduled_date || 'N/A'}</div>
+            </div>
+            <div class="row">
+                <div class="col-6"><strong>Visit Time:</strong></div>
+                <div class="col-6">${visitData.visit_time || visitData.scheduled_time || 'N/A'}</div>
+            </div>
+            <div class="row">
+                <div class="col-6"><strong>Visit Type:</strong></div>
+                <div class="col-6">${visitData.visit_type || visitData.reason || 'N/A'}</div>
             </div>
             <div class="row">
                 <div class="col-6"><strong>User:</strong></div>
-                <div class="col-6">${visitData.user || 'N/A'}</div>
-            </div>
-            <div class="row">
-                <div class="col-6"><strong>Reason:</strong></div>
-                <div class="col-6">${visitData.reason || 'N/A'}</div>
+                <div class="col-6">${visitData.user || visitData.assigned_user || 'N/A'}</div>
             </div>
             <div class="row">
                 <div class="col-6"><strong>Status:</strong></div>
@@ -548,8 +569,8 @@ $(document).ready(function() {
         $('#deleteSiteVisitDetails').html(detailsHtml);
         
         // Set up the confirm button to actually delete
-        $('#confirmDeleteBtn').off('click').on('click', function() {
-            deleteSiteVisit(visitId);
+        $('#confirmDeleteSiteVisitBtn').off('click').on('click', function() {
+            blockSiteVisitDeleteSiteVisit(visitId);
         });
         
         // Show the modal
@@ -561,10 +582,10 @@ $(document).ready(function() {
      * 
      * @param {number} visitId - The ID of the site visit to delete
      */
-    function deleteSiteVisit(visitId) {
+    function blockSiteVisitDeleteSiteVisit(visitId) {
         
         // Show loading state
-        const $confirmBtn = $('#confirmDeleteBtn');
+        const $confirmBtn = $('#confirmDeleteSiteVisitBtn');
         const originalText = $confirmBtn.html();
         $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
         
@@ -600,8 +621,9 @@ $(document).ready(function() {
     }
     
     // Expose delete functions to global scope
-    window.showDeleteConfirmation = showDeleteConfirmation;
-    window.deleteSiteVisit = deleteSiteVisit;
+    window.blockSiteVisitShowDeleteConfirmation = blockSiteVisitShowDeleteConfirmation;
+    window.blockSiteVisitConfirmDeletion = blockSiteVisitShowDeleteConfirmation;
+    window.blockSiteVisitDeleteSiteVisit = blockSiteVisitDeleteSiteVisit;
     
     // ========================================
     // SITE VISIT DETAILS MODAL

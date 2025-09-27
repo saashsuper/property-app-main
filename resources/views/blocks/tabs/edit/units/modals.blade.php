@@ -232,7 +232,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="ph-x me-1"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                <button type="button" class="btn btn-danger" id="confirmDeleteUnitBtn">
                     <i class="ph-trash me-1"></i> Delete Unit
                 </button>
             </div>

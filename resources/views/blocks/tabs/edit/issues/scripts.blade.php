@@ -130,7 +130,7 @@ $(document).ready(function() {
                 blockIssuesDataTable = $('#blockIssuesTable').DataTable({
                     responsive: true,           // Enable responsive design
                     autoWidth: false,           // Disable automatic column width calculation
-                    dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>', // Length/filter on same line, info/pagination on same line
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>', // Length/filter on same line, info/pagination on same line
                     order: [[0, 'desc']],      // Default sort by first column (Issue ID) descending
                     columnDefs: [
                         { targets: [6], orderable: false }, // Actions column (last column) not sortable
@@ -148,23 +148,40 @@ $(document).ready(function() {
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
-                        // Style the search box to match other tabs
+                        // Style the search box
                         $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3')
+                            .addClass('form-control')
+                            .removeClass('mb-3')
                             .css({
                                 'width': '300px',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin-left': '10px',
+                                'margin-bottom': '0 !important'
                             });
                         
                         // Style the page length dropdown
                         $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
+                            .addClass('form-select')
                             .css({
                                 'width': 'auto',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin': '0 10px'
                             });
+                        
+                        // Ensure labels and inputs are on the same line
+                        $('.dataTables_length label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
+                        
+                        $('.dataTables_filter label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
                     }
                 });
                 
@@ -220,7 +237,7 @@ $(document).ready(function() {
                             <button class="btn btn-sm btn-outline-info" onclick="openPhotoUploadModal(${issue.id})" title="Upload Photos">
                                 <i class="ph-camera"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${issue.id}, {
+                            <button class="btn btn-sm btn-outline-danger" onclick="issuesShowDeleteConfirmation(${issue.id}, {
                                 ref_no: '${issue.ref_no || 'N/A'}',
                                 issue: '${issue.issue || 'N/A'}',
                                 priority: '${issue.priority_id || 'N/A'}',
@@ -591,7 +608,7 @@ $(document).ready(function() {
      * @param {number} issueId - The ID of the issue to delete
      * @param {object} issueData - The issue data to display in confirmation
      */
-    function showDeleteConfirmation(issueId, issueData) {
+    function issuesShowDeleteConfirmation(issueId, issueData) {
         
         // Populate issue details in the modal
         const detailsHtml = `
@@ -616,8 +633,8 @@ $(document).ready(function() {
         $('#deleteIssueDetails').html(detailsHtml);
         
         // Set up the confirm button to actually delete
-        $('#confirmDeleteBtn').off('click').on('click', function() {
-            deleteIssue(issueId);
+        $('#confirmDeleteIssueBtn').off('click').on('click', function() {
+            issuesDeleteIssue(issueId);
         });
         
         // Show the modal
@@ -629,10 +646,10 @@ $(document).ready(function() {
      * 
      * @param {number} issueId - The ID of the issue to delete
      */
-    function deleteIssue(issueId) {
+    function issuesDeleteIssue(issueId) {
         
         // Show loading state
-        const $confirmBtn = $('#confirmDeleteBtn');
+        const $confirmBtn = $('#confirmDeleteIssueBtn');
         const originalText = $confirmBtn.html();
         $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
         
@@ -668,8 +685,9 @@ $(document).ready(function() {
     }
     
     // Expose delete functions to global scope
-    window.showDeleteConfirmation = showDeleteConfirmation;
-    window.deleteIssue = deleteIssue;
+    window.issuesShowDeleteConfirmation = issuesShowDeleteConfirmation;
+    window.issuesConfirmDeletion = issuesShowDeleteConfirmation;
+    window.issuesDeleteIssue = issuesDeleteIssue;
     
     // ========================================
     // PHOTO UPLOAD FUNCTIONALITY (DROPZONE)

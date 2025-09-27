@@ -25,7 +25,7 @@ class BlockIssueController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator']);
+        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus']);
 
         // Search functionality
         if ($request->filled('search')) {

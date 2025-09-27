@@ -129,40 +129,57 @@ $(document).ready(function() {
             if (!$.fn.DataTable.isDataTable('#blockInformationTable')) {
                 blockInformationDataTable = $('#blockInformationTable').DataTable({
                     responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
                     order: [[2, 'desc']],      // Default sort by added date descending
                     columnDefs: [
                         { targets: [4], orderable: false } // Actions column (last column) not sortable
                     ],
-                    pageLength: 10,            // Default page size
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
+                    pageLength: 25,            // Default page size
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], // Page size options
                     language: {
-                        lengthMenu: "Show _MENU_ information entries per page",
-                        info: "Showing _START_ to _END_ of _TOTAL_ information entries",
-                        infoEmpty: "Showing 0 to 0 of 0 information entries",
-                        infoFiltered: "(filtered from _MAX_ total information entries)",
-                        search: "Search information:",
-                        searchPlaceholder: "Search by type, description...",
+                        lengthMenu: "Show _MENU_ entries",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        infoEmpty: "No entries found",
+                        infoFiltered: "(filtered from _MAX_ total entries)",
+                        search: "",
+                        searchPlaceholder: "Search information...",
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
-                        // Style the search box to match other tabs
+                        // Style the search box
                         $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3')
+                            .addClass('form-control')
+                            .removeClass('mb-3')
                             .css({
                                 'width': '300px',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin-left': '10px',
+                                'margin-bottom': '0 !important'
                             });
                         
                         // Style the page length dropdown
                         $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
+                            .addClass('form-select')
                             .css({
                                 'width': 'auto',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin': '0 10px'
                             });
+                        
+                        // Ensure labels and inputs are on the same line
+                        $('.dataTables_length label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
+                        
+                        $('.dataTables_filter label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
                     }
                 });
                 
@@ -218,21 +235,21 @@ $(document).ready(function() {
                             : info.description || 'No description provided';
                         
                         blockInformationDataTable.row.add([
-                            `<span class="fw-semibold">${info.information_type_name || 'N/A'}</span>`,
+                            `<span class="fw-semibold">${info.information_type?.name || 'N/A'}</span>`,
                             description,
                             addedDate,
-                            info.creator_name || 'N/A',
+                            info.creator?.name || 'N/A',
                             `<button class="btn btn-sm btn-outline-primary" onclick="editBlockInformation(${info.id})" title="Edit Block Information">
                                 <i class="ph-pencil"></i>
                             </button> 
                             <button class="btn btn-sm btn-outline-info" onclick="viewBlockInformationDetails(${info.id})" title="View Details">
                                 <i class="ph-eye"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${info.id}, {
-                                type: '${info.information_type_name || 'N/A'}',
+                            <button class="btn btn-sm btn-outline-danger" onclick="blockInformationShowDeleteConfirmation(${info.id}, {
+                                type: '${info.information_type?.name || 'N/A'}',
                                 description: '${description}',
                                 added_date: '${addedDate}',
-                                added_by: '${info.creator_name || 'N/A'}'
+                                added_by: '${info.creator?.name || 'N/A'}'
                             })" title="Delete Block Information">
                                 <i class="ph-trash"></i>
                             </button>`
@@ -478,7 +495,7 @@ $(document).ready(function() {
      * @param {number} infoId - The ID of the block information to delete
      * @param {object} infoData - The block information data to display in confirmation
      */
-    function showDeleteConfirmation(infoId, infoData) {
+    function blockInformationShowDeleteConfirmation(infoId, infoData) {
         
         // Populate block information details in the modal
         const detailsHtml = `
@@ -503,7 +520,7 @@ $(document).ready(function() {
         $('#deleteBlockInformationDetails').html(detailsHtml);
         
         // Set up the confirm button to actually delete
-        $('#confirmDeleteBtn').off('click').on('click', function() {
+        $('#confirmDeleteBlockInformationBtn').off('click').on('click', function() {
             deleteBlockInformation(infoId);
         });
         
@@ -519,7 +536,7 @@ $(document).ready(function() {
     function deleteBlockInformation(infoId) {
         
         // Show loading state
-        const $confirmBtn = $('#confirmDeleteBtn');
+        const $confirmBtn = $('#confirmDeleteBlockInformationBtn');
         const originalText = $confirmBtn.html();
         $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
         
@@ -555,7 +572,8 @@ $(document).ready(function() {
     }
     
     // Expose delete functions to global scope
-    window.showDeleteConfirmation = showDeleteConfirmation;
+    window.blockInformationShowDeleteConfirmation = blockInformationShowDeleteConfirmation;
+    window.blockInformationConfirmDeletion = blockInformationShowDeleteConfirmation;
     window.deleteBlockInformation = deleteBlockInformation;
     
     // ========================================
@@ -577,7 +595,7 @@ $(document).ready(function() {
                     const info = data.data;
                     
                     // Populate modal with information details
-                    $('#detail_information_type').text(info.information_type_name || 'N/A');
+                    $('#detail_information_type').text(info.information_type?.name || 'N/A');
                     
                     // Format added date
                     const addedDate = info.created_at ? new Date(info.created_at).toLocaleDateString('en-US', {
@@ -588,7 +606,7 @@ $(document).ready(function() {
                     $('#detail_added_date').text(addedDate);
                     
                     // Added by
-                    $('#detail_added_by').text(info.creator_name || 'N/A');
+                    $('#detail_added_by').text(info.creator?.name || 'N/A');
                     
                     // Last updated
                     const updatedAt = info.updated_at ? new Date(info.updated_at).toLocaleDateString('en-US', {

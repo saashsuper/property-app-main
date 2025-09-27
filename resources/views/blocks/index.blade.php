@@ -305,11 +305,11 @@
                     </table>
                 </div>
 
-                @if($blocks->hasPages())
+                <!-- @if($blocks->hasPages())
                     <div class="d-flex justify-content-center mt-3">
                         {{ $blocks->appends(request()->query())->links('vendor.pagination.datatables') }}
                     </div>
-                @endif
+                @endif -->
             </div>
         </div>
     </div>
@@ -337,8 +337,8 @@
 $(document).ready(function() {
     $('#blocks-table').DataTable({
         responsive: true,
-        dom: 'Bfrtip',
-        buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
+        dom: 'lfrtip',
+        // buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
         order: [[0, 'asc']], // default sort by Name (0-based index)
         columnDefs: [
             { targets: [6], orderable: false }, // Actions (last column)

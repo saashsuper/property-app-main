@@ -68,7 +68,7 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})" title="Edit Unit">
                                         <i class="ph-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $unit->id }}, {
+                                    <button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation({{ $unit->id }}, {
                                         unit_code: '{{ $unit->unit_code }}',
                                         unit_name: '{{ $unit->unit_name }}',
                                         owners_name: '{{ $unit->owners_name }}',
@@ -192,10 +192,11 @@
         }
     };
     
-    // Define showDeleteConfirmation function early so it's available for initial HTML buttons
-    window.showDeleteConfirmation = function(unitId, unitData) {
-        // This will be overridden by the full function definition in scripts.blade.php
-        // Placeholder function to prevent errors before full implementation loads
+    // Proxy functions to ensure initial HTML buttons work
+    window.unitShowDeleteConfirmation = function(unitId, unitData) {
+        if (typeof window.unitConfirmDeletion === 'function') {
+            window.unitConfirmDeletion(unitId, unitData);
+        }
     };
 </script>
 

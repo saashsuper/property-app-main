@@ -51,7 +51,7 @@
                         @foreach($blockInformation as $info)
                             <tr>
                                 <td>
-                                    <span class="fw-semibold">{{ $info->informationType ? $info->informationType->name : 'N/A' }}</span>
+                                    <span class="fw-semibold">{{ $info->information_type ? $info->information_type->name : 'N/A' }}</span>
                                 </td>
                                 <td>{{ Str::limit($info->description ?? 'No description provided', 50) }}</td>
                                 <td>{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}</td>
@@ -65,8 +65,8 @@
                                     <button class="btn btn-sm btn-outline-info" onclick="viewBlockInformationDetails({{ $info->id }})" title="View Details">
                                         <i class="ph-eye"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $info->id }}, {
-                                        type: '{{ $info->informationType->name ?? 'N/A' }}',
+                                    <button class="btn btn-sm btn-outline-danger" onclick="blockInformationShowDeleteConfirmation({{ $info->id }}, {
+                                        type: '{{ $info->information_type->name ?? 'N/A' }}',
                                         description: '{{ Str::limit($info->description ?? 'No description', 30) }}',
                                         added_date: '{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}',
                                         added_by: '{{ $info->creator->name ?? 'N/A' }}'
@@ -125,29 +125,30 @@
 
 /* Custom search input styling */
 .custom-search-input {
-    background-color: #f8f9fa;
-    border-left: 4px solid #007bff;
-    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
 }
 
 .custom-search-input:focus {
-    background-color: #fff;
-    border-left-color: #0056b3;
-    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 /* Custom page length dropdown styling */
 .custom-page-length-select {
-    background-color: #f8f9fa;
-    border: 1px solid #ced4da;
-    border-left: 4px solid #28a745;
-    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
 }
 
 .custom-page-length-select:focus {
-    background-color: #fff;
-    border-left-color: #1e7e34;
-    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 /* Ensure proper spacing for DataTable wrapper */
@@ -182,7 +183,6 @@
 
 <!-- Global Configuration -->
 <script>
-    // Global configuration for the block information module
     window.blockId = {{ $block->id }};
     window.csrfToken = '{{ csrf_token() }}';
     window.routes = {
@@ -194,18 +194,11 @@
             getByBlock: '{{ route("block-information.get-by-block", $block->id) }}'
         }
     };
-    
-    // Define functions early so they're available for initial HTML buttons
-    window.editBlockInformation = function(id) {
-        console.log('Edit block information called with ID:', id);
-    };
-    
-    window.viewBlockInformationDetails = function(id) {
-        console.log('View block information details called with ID:', id);
-    };
-    
-    window.showDeleteConfirmation = function(infoId, infoData) {
-        console.log('Placeholder showDeleteConfirmation called with ID:', infoId);
+    // Define delete confirmation function early so it's available for initial HTML buttons
+    window.blockInformationShowDeleteConfirmation = function(infoId, infoData) {
+        if (typeof window.blockInformationConfirmDeletion === 'function') {
+            window.blockInformationConfirmDeletion(infoId, infoData);
+        }
     };
 </script>
 

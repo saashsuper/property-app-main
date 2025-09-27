@@ -128,7 +128,7 @@ $(document).ready(function() {
             if (!$.fn.DataTable.isDataTable('#blockContractorsTable')) {
                 blockContractorsDataTable = $('#blockContractorsTable').DataTable({
                     responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
                     order: [[0, 'asc']],       // Default sort by first column (Contractor Name) ascending
                     columnDefs: [
                         { targets: [4], orderable: false } // Actions column (last column) not sortable
@@ -145,23 +145,40 @@ $(document).ready(function() {
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
-                        // Style the search box to match other tabs
+                        // Style the search box
                         $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3')
+                            .addClass('form-control')
+                            .removeClass('mb-3')
                             .css({
                                 'width': '300px',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin-left': '10px',
+                                'margin-bottom': '0 !important'
                             });
                         
                         // Style the page length dropdown
                         $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
+                            .addClass('form-select')
                             .css({
                                 'width': 'auto',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin': '0 10px'
                             });
+                        
+                        // Ensure labels and inputs are on the same line
+                        $('.dataTables_length label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
+                        
+                        $('.dataTables_filter label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
                     }
                 });
                 
@@ -216,7 +233,7 @@ $(document).ready(function() {
                             `<button class="btn btn-sm btn-outline-primary" onclick="editContractor(${contractor.id})" title="Edit Contractor">
                                 <i class="ph-pencil"></i>
                             </button> 
-                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${contractor.id}, {
+                            <button class="btn btn-sm btn-outline-danger" onclick="contractorShowDeleteConfirmation(${contractor.id}, {
                                 name: '${contractor.contractor_name || 'N/A'}',
                                 email: '${contractor.contractor_email || 'N/A'}',
                                 type: '${contractor.contractor_type_name || 'N/A'}',
@@ -429,7 +446,7 @@ $(document).ready(function() {
      * @param {number} contractorId - The ID of the contractor to delete
      * @param {object} contractorData - The contractor data to display in confirmation
      */
-    function showDeleteConfirmation(contractorId, contractorData) {
+    function contractorShowDeleteConfirmation(contractorId, contractorData) {
         
         // Populate contractor details in the modal
         const detailsHtml = `
@@ -454,8 +471,8 @@ $(document).ready(function() {
         $('#deleteContractorDetails').html(detailsHtml);
         
         // Set up the confirm button to actually delete
-        $('#confirmDeleteBtn').off('click').on('click', function() {
-            deleteContractor(contractorId);
+        $('#confirmDeleteContractorBtn').off('click').on('click', function() {
+            contractorDeleteContractor(contractorId);
         });
         
         // Show the modal
@@ -467,10 +484,10 @@ $(document).ready(function() {
      * 
      * @param {number} contractorId - The ID of the contractor to delete
      */
-    function deleteContractor(contractorId) {
+    function contractorDeleteContractor(contractorId) {
         
         // Show loading state
-        const $confirmBtn = $('#confirmDeleteBtn');
+        const $confirmBtn = $('#confirmDeleteContractorBtn');
         const originalText = $confirmBtn.html();
         $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
         
@@ -506,8 +523,9 @@ $(document).ready(function() {
     }
     
     // Expose delete functions to global scope
-    window.showDeleteConfirmation = showDeleteConfirmation;
-    window.deleteContractor = deleteContractor;
+    window.contractorShowDeleteConfirmation = contractorShowDeleteConfirmation;
+    window.contractorConfirmDeletion = contractorShowDeleteConfirmation;
+    window.contractorDeleteContractor = contractorDeleteContractor;
     
     // ========================================
     // TRIGGER FUNCTIONS

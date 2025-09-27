@@ -61,11 +61,10 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="editBuilding({{ $building->id }})" title="Edit Building">
                                         <i class="ph-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $building->id }}, {
+                                    <button class="btn btn-sm btn-outline-danger" onclick="buildingShowDeleteConfirmation({{ $building->id }}, {
                                         name: '{{ $building->name }}',
-                                        type: '{{ $building->buildingType->name ?? 'N/A' }}',
-                                        floors: '{{ $building->floor_no ?? 'N/A' }}',
-                                        roof_type: '{{ $building->roof_type ?? 'N/A' }}'
+                                        description: '{{ Str::limit($building->description ?? 'No description provided', 30) }}',
+                                        status: '{{ $building->status ?? 'N/A' }}'
                                     })" title="Delete Building">
                                         <i class="ph-trash"></i>
                                     </button>
@@ -185,9 +184,10 @@
     };
     
     // Define showDeleteConfirmation function early so it's available for initial HTML buttons
-    window.showDeleteConfirmation = function(buildingId, buildingData) {
-        // This will be overridden by the full function definition in scripts.blade.php
-        // Placeholder function to prevent errors before full implementation loads
+    window.buildingShowDeleteConfirmation = function(buildingId, buildingData) {
+        if (typeof window.buildingConfirmDeletion === 'function') {
+            window.buildingConfirmDeletion(buildingId, buildingData);
+        }
     };
 </script>
 

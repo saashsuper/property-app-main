@@ -128,7 +128,7 @@ $(document).ready(function() {
             if (!$.fn.DataTable.isDataTable('#blockBuildingsTable')) {
                 blockBuildingsDataTable = $('#blockBuildingsTable').DataTable({
                     responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
                     order: [[0, 'asc']],       // Default sort by first column (Building Name) ascending
                     columnDefs: [
                         { targets: [6], orderable: false } // Actions column (last column) not sortable
@@ -145,23 +145,40 @@ $(document).ready(function() {
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
-                        // Style the search box to match other tabs
+                        // Style the search box
                         $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3')
+                            .addClass('form-control')
+                            .removeClass('mb-3')
                             .css({
                                 'width': '300px',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin-left': '10px',
+                                'margin-bottom': '0 !important'
                             });
                         
                         // Style the page length dropdown
                         $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
+                            .addClass('form-select')
                             .css({
                                 'width': 'auto',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin': '0 10px'
                             });
+                        
+                        // Ensure labels and inputs are on the same line
+                        $('.dataTables_length label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
+                        
+                        $('.dataTables_filter label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
                     }
                 });
                 
@@ -214,7 +231,7 @@ $(document).ready(function() {
                             `<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(${building.id})" title="Edit Building">
                                 <i class="ph-pencil"></i>
                             </button> 
-                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${building.id}, {
+                            <button class="btn btn-sm btn-outline-danger" onclick="buildingShowDeleteConfirmation(${building.id}, {
                                 name: '${building.name || 'N/A'}',
                                 type: '${building.building_type_name || 'N/A'}',
                                 floors: '${building.floor_no || 'N/A'}',
@@ -430,7 +447,7 @@ $(document).ready(function() {
      * @param {number} buildingId - The ID of the building to delete
      * @param {object} buildingData - The building data to display in confirmation
      */
-    function showDeleteConfirmation(buildingId, buildingData) {
+    function buildingShowDeleteConfirmation(buildingId, buildingData) {
         
         // Populate building details in the modal
         const detailsHtml = `
@@ -455,8 +472,8 @@ $(document).ready(function() {
         $('#deleteBuildingDetails').html(detailsHtml);
         
         // Set up the confirm button to actually delete
-        $('#confirmDeleteBtn').off('click').on('click', function() {
-            deleteBuilding(buildingId);
+        $('#confirmDeleteBuildingBtn').off('click').on('click', function() {
+            buildingDeleteBuilding(buildingId);
         });
         
         // Show the modal
@@ -468,10 +485,10 @@ $(document).ready(function() {
      * 
      * @param {number} buildingId - The ID of the building to delete
      */
-    function deleteBuilding(buildingId) {
+    function buildingDeleteBuilding(buildingId) {
         
         // Show loading state
-        const $confirmBtn = $('#confirmDeleteBtn');
+        const $confirmBtn = $('#confirmDeleteBuildingBtn');
         const originalText = $confirmBtn.html();
         $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
         
@@ -507,8 +524,9 @@ $(document).ready(function() {
     }
     
     // Expose delete functions to global scope
-    window.showDeleteConfirmation = showDeleteConfirmation;
-    window.deleteBuilding = deleteBuilding;
+    window.buildingShowDeleteConfirmation = buildingShowDeleteConfirmation;
+    window.buildingConfirmDeletion = buildingShowDeleteConfirmation;
+    window.buildingDeleteBuilding = buildingDeleteBuilding;
     
     // ========================================
     // SIMPLE ONCHANGE HANDLERS

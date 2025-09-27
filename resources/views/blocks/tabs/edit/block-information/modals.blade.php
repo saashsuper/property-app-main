@@ -136,7 +136,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="ph-x me-1"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                <button type="button" class="btn btn-danger" id="confirmDeleteBlockInformationBtn">
                     <i class="ph-trash me-1"></i> Delete Block Information
                 </button>
             </div>
