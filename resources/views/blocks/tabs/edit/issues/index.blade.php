@@ -213,7 +213,6 @@
 </div>
 
 @include('blocks.tabs.edit.issues.modals')
-@include('blocks.tabs.edit.issues.search')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
@@ -490,9 +489,10 @@ if (typeof Dropzone === 'undefined') {
     };
     
     // Define showDeleteConfirmation function early so it's available for initial HTML buttons
-    window.showDeleteConfirmation = function(issueId, issueData) {
-        // This will be overridden by the full function definition in scripts.blade.php
-        // Placeholder function to prevent errors before full implementation loads
+    window.issuesShowDeleteConfirmation = function(issueId, issueData) {
+        if (typeof window.issuesConfirmDeletion === 'function') {
+            window.issuesConfirmDeletion(issueId, issueData);
+        }
     };
     
     // Define openPhotoUploadModal function early so it's available for initial HTML buttons

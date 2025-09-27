@@ -330,6 +330,23 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
+     * Get work orders for a specific block for API/JSON response.
+     */
+    public function getWorkOrdersByBlock($blockId)
+    {
+        $workOrders = BlockWorkOrder::with(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy'])
+            ->where('block_id', $blockId)
+            ->active()
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $workOrders
+        ]);
+    }
+
+    /**
      * Generate a unique work order reference number
      */
     private function generateWorkOrderRefNo()

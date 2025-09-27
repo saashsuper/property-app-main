@@ -63,11 +63,11 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="editContractor({{ $contractor->id }})" title="Edit Contractor">
                                         <i class="ph-pencil"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $contractor->id }}, {
-                                        name: '{{ $contractor->contractor->name ?? 'N/A' }}',
-                                        email: '{{ $contractor->contractor->email ?? 'N/A' }}',
-                                        type: '{{ $contractor->contractorType->name ?? 'N/A' }}',
-                                        status: '{{ $contractor->status == 1 ? 'Default' : 'Active' }}'
+                                    <button class="btn btn-sm btn-outline-danger" onclick="contractorShowDeleteConfirmation({{ $contractor->id }}, {
+                                        name: '{{ $contractor->name }}',
+                                        company: '{{ $contractor->company_name }}',
+                                        phone: '{{ $contractor->phone }}',
+                                        email: '{{ $contractor->email }}'
                                     })" title="Delete Contractor">
                                         <i class="ph-trash"></i>
                                     </button>
@@ -187,9 +187,10 @@
     };
     
     // Define showDeleteConfirmation function early so it's available for initial HTML buttons
-    window.showDeleteConfirmation = function(contractorId, contractorData) {
-        // This will be overridden by the full function definition in scripts.blade.php
-        console.log('Placeholder showDeleteConfirmation called with ID:', contractorId);
+    window.contractorShowDeleteConfirmation = function(contractorId, contractorData) {
+        if (typeof window.contractorConfirmDeletion === 'function') {
+            window.contractorConfirmDeletion(contractorId, contractorData);
+        }
     };
 </script>
 

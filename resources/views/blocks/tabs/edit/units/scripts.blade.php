@@ -138,8 +138,9 @@ $(document).ready(function() {
             // Check if DataTable is already initialized to prevent conflicts
             if (!$.fn.DataTable.isDataTable('#blockUnitsTable')) {
                 blockUnitsDataTable = $('#blockUnitsTable').DataTable({
-                    responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    responsive: true, 
+                    autoWidth: false,   
+                    dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
                     order: [[0, 'asc']],       // Default sort by first column (Unit Code) ascending
                     columnDefs: [
                         { targets: [8], orderable: false } // Actions column (last column) not sortable
@@ -156,23 +157,40 @@ $(document).ready(function() {
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
-                        // Style the search box to match contractors tab
+                        // Style the search box
                         $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3') // Add custom class here
+                            .addClass('form-control')
+                            .removeClass('mb-3')
                             .css({
                                 'width': '300px',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin-left': '10px',
+                                'margin-bottom': '0 !important'
                             });
                         
                         // Style the page length dropdown
                         $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
+                            .addClass('form-select')
                             .css({
                                 'width': 'auto',
                                 'height': '38px',
-                                'font-size': '14px'
+                                'font-size': '14px',
+                                'margin': '0 10px'
                             });
+                        
+                        // Ensure labels and inputs are on the same line
+                        $('.dataTables_length label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
+                        
+                        $('.dataTables_filter label').css({
+                            'display': 'flex',
+                            'align-items': 'center',
+                            'margin-bottom': '0'
+                        });
                     }
                 });
                 
@@ -230,7 +248,7 @@ $(document).ready(function() {
                             `<button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})" title="Edit Unit">
                                 <i class="ph-pencil"></i>
                             </button> 
-                            <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${unit.id}, {
+                            <button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation(${unit.id}, {
                                 unit_code: '${unit.unit_code || 'N/A'}',
                                 unit_name: '${unit.unit_name || 'N/A'}',
                                 owners_name: '${unit.owners_name || 'N/A'}',
@@ -673,7 +691,7 @@ window.editUnit = editUnit;
  * @param {number} unitId - The ID of the unit to delete
  * @param {object} unitData - The unit data to display in confirmation
  */
-function showDeleteConfirmation(unitId, unitData) {
+function unitShowDeleteConfirmation(unitId, unitData) {
     
     // Populate unit details in the modal
     const detailsHtml = `
@@ -698,8 +716,8 @@ function showDeleteConfirmation(unitId, unitData) {
     $('#deleteUnitDetails').html(detailsHtml);
     
     // Set up the confirm button to actually delete
-    $('#confirmDeleteBtn').off('click').on('click', function() {
-        deleteUnit(unitId);
+    $('#confirmDeleteUnitBtn').off('click').on('click', function() {
+        unitDeleteUnit(unitId);
     });
     
     // Show the modal
@@ -711,10 +729,10 @@ function showDeleteConfirmation(unitId, unitData) {
  * 
  * @param {number} unitId - The ID of the unit to delete
  */
-function deleteUnit(unitId) {
+function unitDeleteUnit(unitId) {
     
     // Show loading state
-    const $confirmBtn = $('#confirmDeleteBtn');
+    const $confirmBtn = $('#confirmDeleteUnitBtn');
     const originalText = $confirmBtn.html();
     $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
     
@@ -750,8 +768,9 @@ function deleteUnit(unitId) {
 }
 
 // Expose delete functions to global scope
-window.showDeleteConfirmation = showDeleteConfirmation;
-window.deleteUnit = deleteUnit;
+window.unitShowDeleteConfirmation = unitShowDeleteConfirmation;
+window.unitConfirmDeletion = unitShowDeleteConfirmation;
+window.unitDeleteUnit = unitDeleteUnit;
 
 // ========================================
 // SIMPLE ONCHANGE HANDLERS

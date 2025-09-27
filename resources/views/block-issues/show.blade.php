@@ -356,56 +356,76 @@
                                     <div class="card-body position-sticky" style="top: 1rem;">
                                         @php
                                             $timelineItems = [];
+                                            
+                                            // Collect all timeline items with timestamps
+                                            $items = [];
+                                            
                                             // Created
-                                            $timelineItems[] = [
+                                            $items[] = [
                                                 'label' => 'Created',
                                                 'status' => $blockIssue->status_text,
                                                 'badge' => $blockIssue->status_color,
                                                 'time' => optional($blockIssue->created_at)->format('M d, Y H:i'),
+                                                'timestamp' => $blockIssue->created_at,
                                                 'actor' => optional($blockIssue->reportedBy ?? $blockIssue->creator)->name,
                                                 'actor_email' => optional($blockIssue->reportedBy ?? $blockIssue->creator)->email
                                             ];
+                                            
                                             // Issued (if available)
                                             if (!empty($blockIssue->issued_date_time)) {
-                                                $timelineItems[] = [
+                                                $items[] = [
                                                     'label' => 'Issued',
                                                     'status' => $blockIssue->status_text,
                                                     'badge' => $blockIssue->status_color,
                                                     'time' => optional($blockIssue->issued_date_time)->format('M d, Y H:i'),
+                                                    'timestamp' => $blockIssue->issued_date_time,
                                                     'actor' => optional($blockIssue->issuedBy)->name,
                                                     'actor_email' => optional($blockIssue->issuedBy)->email
                                                 ];
                                             }
+                                            
                                             // Preferred window (optional informational)
                                             if (!empty($blockIssue->preferred_start_date_time)) {
-                                                $timelineItems[] = [
+                                                $items[] = [
                                                     'label' => 'Preferred Start',
                                                     'status' => 'Scheduled',
                                                     'badge' => 'info',
                                                     'time' => optional($blockIssue->preferred_start_date_time)->format('M d, Y H:i'),
+                                                    'timestamp' => $blockIssue->preferred_start_date_time,
                                                     'actor' => optional($blockIssue->reportedBy)->name,
                                                     'actor_email' => optional($blockIssue->reportedBy)->email
                                                 ];
                                             }
+                                            
                                             if (!empty($blockIssue->preferred_end_date_time)) {
-                                                $timelineItems[] = [
+                                                $items[] = [
                                                     'label' => 'Preferred End',
                                                     'status' => 'Scheduled',
                                                     'badge' => 'secondary',
                                                     'time' => optional($blockIssue->preferred_end_date_time)->format('M d, Y H:i'),
+                                                    'timestamp' => $blockIssue->preferred_end_date_time,
                                                     'actor' => optional($blockIssue->reportedBy)->name,
                                                     'actor_email' => optional($blockIssue->reportedBy)->email
                                                 ];
                                             }
+                                            
                                             // Last update (current status)
-                                            $timelineItems[] = [
+                                            $items[] = [
                                                 'label' => 'Last Update',
                                                 'status' => $blockIssue->status_text,
                                                 'badge' => $blockIssue->status_color,
                                                 'time' => optional($blockIssue->updated_at)->format('M d, Y H:i'),
+                                                'timestamp' => $blockIssue->updated_at,
                                                 'actor' => optional($blockIssue->updater)->name,
                                                 'actor_email' => optional($blockIssue->updater)->email
                                             ];
+                                            
+                                            // Sort by timestamp in descending order (newest first)
+                                            usort($items, function($a, $b) {
+                                                return $b['timestamp'] <=> $a['timestamp'];
+                                            });
+                                            
+                                            $timelineItems = $items;
                                         @endphp
 
                                         <div class="timeline">
@@ -463,77 +483,91 @@
                             </div>
                             @endif
 
-                            <!-- Images Section -->
-                            @if($blockIssue->images && $blockIssue->images->count() > 0)
-                            <div class="col-12">
-                                <h5 class="mb-3">Issue Images</h5>
-                                
-                                <div class="row">
-                                    @foreach($blockIssue->images as $image)
-                                    <div class="col-md-4 col-lg-3 mb-3">
-                                        <div class="card border h-100">
-                                            <div class="card-img-top position-relative">
-                                                <img src="{{ $image->image_url }}" 
-                                                     alt="{{ $image->display_name }}" 
-                                                     class="img-fluid" 
-                                                     style="height: 200px; object-fit: cover; width: 100%;"
-                                                     data-bs-toggle="modal" 
-                                                     data-bs-target="#imageModal{{ $image->id }}"
-                                                     style="cursor: pointer;">
-                                                <div class="position-absolute top-0 end-0 m-2">
-                                                    <span class="badge bg-secondary">{{ $image->file_size }}</span>
-                                                </div>
-                                            </div>
-                                            <div class="card-body p-2">
-                                                <small class="text-muted d-block text-truncate" title="{{ $image->display_name }}">
-                                                    {{ $image->display_name }}
-                                                </small>
-                                                <small class="text-muted d-block">
-                                                    Uploaded: {{ $image->created_at->format('M d, Y') }}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Image Modal -->
-                                    <div class="modal fade" id="imageModal{{ $image->id }}" tabindex="-1" aria-labelledby="imageModalLabel{{ $image->id }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="imageModalLabel{{ $image->id }}">
-                                                        {{ $image->display_name }}
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body text-center">
-                                                    <img src="{{ $image->image_url }}" 
-                                                         alt="{{ $image->display_name }}" 
-                                                         class="img-fluid" 
-                                                         style="max-height: 70vh;">
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <div class="me-auto">
-                                                        <small class="text-muted">
-                                                            Size: {{ $image->file_size }} | 
-                                                            Uploaded: {{ $image->created_at->format('M d, Y H:i') }}
-                                                        </small>
-                                                    </div>
-                                                    <a href="{{ $image->image_url }}" 
-                                                       class="btn btn-primary btn-sm" 
-                                                       download="{{ $image->display_name }}">
-                                                        <i class="ph-download me-1"></i> Download
-                                                    </a>
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                            @endif
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Images Section -->
+        @if($blockIssue->images && $blockIssue->images->count() > 0)
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">Issue Photos</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($blockIssue->images as $image)
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <div class="card border h-100">
+                                    <div class="card-img-top position-relative">
+                                        <img src="{{ $image->image_url }}" 
+                                             alt="{{ $image->display_name }}" 
+                                             class="img-fluid issue-image" 
+                                             style="height: 200px; object-fit: cover; width: 100%; cursor: pointer;"
+                                             data-image-id="{{ $image->id }}"
+                                             data-image-url="{{ $image->image_url }}"
+                                             data-image-name="{{ $image->display_name }}"
+                                             data-bs-toggle="modal" 
+                                             data-bs-target="#imagePreviewModal">
+                                        <div class="position-absolute top-0 end-0 m-2">
+                                            <span class="badge bg-secondary">{{ $image->file_size }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <small class="text-muted d-block text-truncate" title="{{ $image->display_name }}">
+                                            {{ $image->display_name }}
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            Uploaded: {{ $image->created_at->format('M d, Y') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+</div>
+
+<!-- Image Preview Modal with Carousel -->
+<div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagePreviewModalLabel">
+                    <span id="currentImageInfo">Image Preview</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Image Carousel -->
+                <div id="imageCarousel" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-inner" id="carouselInner">
+                        <!-- Images will be dynamically added here -->
+                    </div>
+                    
+                    <!-- Navigation Arrows -->
+                    <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+                
+                <!-- Image Info -->
+                <div class="p-3 text-center bg-light">
+                    <h6 id="previewImageName" class="mb-1"></h6>
+                    <small class="text-muted" id="imageCounter"></small>
                 </div>
             </div>
         </div>
@@ -543,4 +577,120 @@
 
 @section('script')
     <!-- add your js here -->
+    <script>
+        $(document).ready(function() {
+            // Handle image click to open carousel
+            $('.issue-image').on('click', function() {
+                const clickedImageId = $(this).data('image-id');
+                const allImages = [];
+                
+                // Collect all images
+                $('.issue-image').each(function() {
+                    const img = $(this);
+                    allImages.push({
+                        id: img.data('image-id'),
+                        url: img.data('image-url'),
+                        name: img.data('image-name')
+                    });
+                });
+                
+                if (allImages.length === 0) return;
+                
+                // Build carousel items
+                const carouselInner = $('#carouselInner');
+                carouselInner.empty();
+                
+                allImages.forEach((image, index) => {
+                    const isActive = image.id == clickedImageId ? 'active' : '';
+                    const carouselItem = $(`
+                        <div class="carousel-item ${isActive}" data-image-id="${image.id}">
+                            <img src="${image.url}" class="d-block w-100" style="max-height: 70vh; object-fit: contain;" alt="${image.name}">
+                        </div>
+                    `);
+                    carouselInner.append(carouselItem);
+                });
+                
+                // Update image info
+                const currentImage = allImages.find(img => img.id == clickedImageId);
+                if (currentImage) {
+                    $('#previewImageName').text(currentImage.name);
+                    const currentIndex = allImages.findIndex(img => img.id == clickedImageId) + 1;
+                    $('#imageCounter').text(`${currentIndex} of ${allImages.length}`);
+                }
+                
+                // Initialize carousel
+                const carousel = new bootstrap.Carousel('#imageCarousel', {
+                    interval: false, // Disable auto-slide
+                    wrap: true // Enable infinite loop
+                });
+                
+                // Update info when slide changes
+                $('#imageCarousel').on('slid.bs.carousel', function (event) {
+                    const activeItem = $(event.target).find('.carousel-item.active');
+                    const imageId = activeItem.data('image-id');
+                    const currentImage = allImages.find(img => img.id == imageId);
+                    
+                    if (currentImage) {
+                        $('#previewImageName').text(currentImage.name);
+                        const currentIndex = allImages.findIndex(img => img.id == imageId) + 1;
+                        $('#imageCounter').text(`${currentIndex} of ${allImages.length}`);
+                    }
+                });
+                
+                // Add keyboard navigation
+                $(document).on('keydown', function(e) {
+                    if ($('#imagePreviewModal').hasClass('show')) {
+                        if (e.key === 'ArrowLeft') {
+                            $('#imageCarousel').carousel('prev');
+                        } else if (e.key === 'ArrowRight') {
+                            $('#imageCarousel').carousel('next');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        /* Image Carousel Styling */
+        #imageCarousel {
+            position: relative;
+        }
+
+        #imageCarousel .carousel-item img {
+            background: #f8f9fa;
+            border-radius: 0.375rem;
+        }
+
+        #imageCarousel .carousel-control-prev,
+        #imageCarousel .carousel-control-next {
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        #imageCarousel .carousel-control-prev:hover,
+        #imageCarousel .carousel-control-next:hover {
+            opacity: 1;
+        }
+
+        #imageCarousel .carousel-control-prev {
+            left: 20px;
+        }
+
+        #imageCarousel .carousel-control-next {
+            right: 20px;
+        }
+
+        #imageCarousel .carousel-control-prev-icon,
+        #imageCarousel .carousel-control-next-icon {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
 @endsection 

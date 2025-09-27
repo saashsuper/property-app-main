@@ -102,42 +102,42 @@
 
                             <!-- Block Information Tab -->
                             <div class="tab-pane fade" id="block-info" role="tabpanel" aria-labelledby="block-info-tab">
-                                @include('blocks.tabs.edit.block-info')
+                                @include('blocks.tabs.edit.block-information.index')
                             </div>
 
                             <!-- Building/Core Tab -->
                             <div class="tab-pane fade" id="building-core" role="tabpanel" aria-labelledby="building-core-tab">
-                                @include('blocks.tabs.edit.building-core')
+                                @include('blocks.tabs.edit.buildings.index')
                             </div>
 
                             <!-- Units Tab -->
                             <div class="tab-pane fade" id="units" role="tabpanel" aria-labelledby="units-tab">
-                                @include('blocks.tabs.edit.units')
+                                @include('blocks.tabs.edit.units.index')
                             </div>
 
                             <!-- Contractors Tab -->
                             <div class="tab-pane fade" id="contractors" role="tabpanel" aria-labelledby="contractors-tab">
-                                @include('blocks.tabs.edit.contractors')
+                                @include('blocks.tabs.edit.contractors.index')
                             </div>
 
                             <!-- Site Visit Tab -->
                             <div class="tab-pane fade" id="site-visit" role="tabpanel" aria-labelledby="site-visit-tab">
-                                @include('blocks.tabs.edit.site-visit')
+                                @include('blocks.tabs.edit.site-visits.index')
                             </div>
 
                             <!-- Inspections Tab -->
                             <div class="tab-pane fade" id="inspections" role="tabpanel" aria-labelledby="inspections-tab">
-                                @include('blocks.tabs.edit.inspections')
+                                @include('blocks.tabs.edit.inspections.index')
                             </div>
 
                             <!-- Issues Tab -->
                             <div class="tab-pane fade" id="issues" role="tabpanel" aria-labelledby="issues-tab">
-                                @include('blocks.tabs.edit.issues')
+                                @include('blocks.tabs.edit.issues.index')
                             </div>
 
                             <!-- Work Orders Tab -->
                             <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab">
-                                @include('blocks.tabs.edit.work-orders')
+                                @include('blocks.tabs.edit.work-orders.index')
                             </div>
                         </div>
                     </div>

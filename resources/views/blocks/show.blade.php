@@ -332,7 +332,7 @@
                             <!-- Issues Tab -->
                             <div class="tab-pane fade" id="issues" role="tabpanel" aria-labelledby="issues-tab">
                                 <div class="p-4">
-                                    @include('blocks.tabs.edit.issues')
+                                    @include('blocks.tabs.edit.issues.index')
                                 </div>
                             </div>
 
