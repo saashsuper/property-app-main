@@ -117,6 +117,22 @@
     pointer-events: none;
 }
 
+/* Table column width management */
+#users-table th:nth-child(1) { width: 20%; } /* Name */
+#users-table th:nth-child(2) { width: 25%; } /* Email */
+#users-table th:nth-child(3) { width: 15%; } /* User Type */
+#users-table th:nth-child(4) { width: 15%; } /* Email Verified */
+#users-table th:nth-child(5) { width: 15%; } /* Created At */
+#users-table th:nth-child(6) { width: 10%; } /* Actions */
+
+/* Text truncation for long content */
+.table-cell-truncate {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Responsive pagination */
 @media (max-width: 768px) {
     .pagination {
@@ -172,7 +188,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body mb-3">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="ph-check-circle me-2"></i>
@@ -189,57 +205,22 @@
                     </div>
                 @endif
 
-                <!-- Search and Filters -->
-                <div class="row mb-3">
-                    <div class="col-md-8">
-                        <form method="GET" action="{{ route('users.index') }}" class="row g-3">
-                            <div class="col-md-4">
-                                <input type="text" class="form-control" name="search" 
-                                       placeholder="@lang('translation.search-users')" value="{{ request('search') }}">
-                            </div>
-                            @if(!($isContractorAdmin ?? false))
-                            <div class="col-md-3">
-                                <select class="form-select" name="user_type_id">
-                                    <option value="">@lang('translation.all-user-types')</option>
-                                    @foreach($userTypes as $userType)
-                                        <option value="{{ $userType->id }}" {{ request('user_type_id') == $userType->id ? 'selected' : '' }}>
-                                            {{ $userType->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @endif
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="ph-magnifying-glass me-1"></i> @lang('translation.search')
-                                </button>
-                            </div>
-                            <div class="col-md-2">
-                                <a href="{{ route('users.index') }}" class="btn btn-outline-secondary w-100">
-                                    <i class="ph-arrow-clockwise me-1"></i> @lang('translation.reset')
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered dt-responsive nowrap table-striped align-middle" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
-                        <thead>
+                    <table id="users-table" class="table table-bordered table-striped table-hover">
+                        <thead class="table-light">
                             <tr>
-                                <th scope="col">@lang('translation.id')</th>
-                                <th scope="col">@lang('translation.name')</th>
-                                <th scope="col">@lang('translation.email')</th>
-                                <th scope="col">@lang('translation.user-type')</th>
-                                <th scope="col">@lang('translation.email-verified')</th>
-                                <th scope="col">@lang('translation.created-at')</th>
-                                <th scope="col">@lang('translation.actions')</th>
+                                <th>@lang('translation.name')</th>
+                                <th>@lang('translation.email')</th>
+                                <th>@lang('translation.user-type')</th>
+                                <th>@lang('translation.email-verified')</th>
+                                <th>@lang('translation.created-at')</th>
+                                <th>@lang('translation.actions')</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($users as $user)
                                 <tr>
-                                    <td>{{ $user->id }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
@@ -247,7 +228,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{{ $user->email }}</td>
+                                    <td class="table-cell-truncate" title="{{ $user->email }}">{{ $user->email }}</td>
                                     <td>
                                         @if($user->userType)
                                             <span class="badge bg-info">{{ $user->userType->name }}</span>
@@ -264,33 +245,26 @@
                                     </td>
                                     <td>{{ $user->created_at->format('M d, Y H:i') }}</td>
                                     <td>
-                                        <div class="dropdown d-inline-block">
-                                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ph-dots-three-outline"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item" href="{{ route('users.show', $user->id) }}"><i class="ph-eye align-bottom me-2"></i> @lang('translation.view')</a></li>
-                                                @if(!($isContractorAdmin ?? false) || $user->created_by == auth()->id())
-                                                <li><a class="dropdown-item" href="{{ route('users.edit', $user->id) }}"><i class="ph-pencil align-bottom me-2"></i> @lang('translation.edit')</a></li>
-                                                @endif
-                                                @if($user->id !== auth()->id() && (!($isContractorAdmin ?? false) || $user->created_by == auth()->id()))
-                                                    <li>
-                                                        <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="button" class="dropdown-item delete-btn" data-id="{{ $user->id }}">
-                                                                <i class="ph-trash align-bottom me-2"></i> @lang('translation.delete')
-                                                            </button>
-                                                        </form>
-                                                    </li>
-                                                @endif
-                                            </ul>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-outline-primary" title="View User">
+                                                <i class="ph-eye"></i>
+                                            </a>
+                                            @if(!($isContractorAdmin ?? false) || $user->created_by == auth()->id())
+                                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-outline-warning" title="Edit User">
+                                                <i class="ph-pencil"></i>
+                                            </a>
+                                            @endif
+                                            @if($user->id !== auth()->id() && (!($isContractorAdmin ?? false) || $user->created_by == auth()->id()))
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-btn" title="Delete User" data-id="{{ $user->id }}">
+                                                    <i class="ph-trash"></i>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">
+                                    <td colspan="6" class="text-center">
                                         <div class="py-4">
                                             <i class="ph-users ph-3x text-muted mb-3"></i>
                                             <h5>@lang('translation.no-users-found')</h5>
@@ -306,11 +280,6 @@
                     </table>
                 </div>
 
-                @if($users->hasPages())
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $users->appends(request()->query())->links('vendor.pagination.custom') }}
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -341,24 +310,87 @@
 @endsection
 
 @section('script')
-<!-- Required datatable js -->
-<script src="{{ URL::asset('build/libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-<!-- Buttons examples -->
-<script src="{{ URL::asset('build/libs/datatables.net-buttons/js/dataTables.buttons.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/datatables.net-buttons-bs4/js/buttons.bootstrap4.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/jszip/jszip.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/pdfmake/build/pdfmake.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/pdfmake/build/vfs_fonts.js') }}"></script>
-<script src="{{ URL::asset('build/libs/datatables.net-buttons/js/buttons.html5.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/datatables.net-buttons/js/buttons.print.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/datatables.net-buttons/js/buttons.colVis.min.js') }}"></script>
-<!-- Responsive examples -->
-<script src="{{ URL::asset('build/libs/datatables.net-responsive/js/dataTables.responsive.min.js') }}"></script>
-<script src="{{ URL::asset('build/libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js') }}"></script>
+<!-- DataTables JavaScript -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<!-- DataTables Responsive JavaScript -->
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
+<!-- DataTables Buttons JavaScript -->
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(function() {
+    $('#users-table').DataTable({
+        responsive: true,
+        scrollX: false,
+        autoWidth: false,
+        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+        order: [[0, 'asc']], // default sort by Name
+        columnDefs: [
+            { targets: [5], orderable: false }, // Actions (last column)
+            { targets: [0], width: '20%' }, // Name
+            { targets: [1], width: '25%' }, // Email
+            { targets: [2], width: '15%' }, // User Type
+            { targets: [3], width: '15%' }, // Email Verified
+            { targets: [4], width: '15%' }, // Created At
+            { targets: [5], width: '10%' }  // Actions
+        ],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        language: {
+            search: "Search users:",
+            lengthMenu: "Show _MENU_ users per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ users",
+            infoEmpty: "Showing 0 to 0 of 0 users",
+            infoFiltered: "(filtered from _MAX_ total users)",
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        },
+        initComplete: function() {
+            // Style the search box
+            $('.dataTables_filter input')
+                .addClass('form-control')
+                .removeClass('mb-3')
+                .css({
+                    'width': '300px',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin-left': '10px',
+                    'margin-bottom': '0 !important'
+                });
+            
+            // Style the page length dropdown
+            $('.dataTables_length select')
+                .addClass('form-select')
+                .css({
+                    'width': 'auto',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin': '0 10px'
+                });
+            
+            // Ensure labels and inputs are on the same line
+            $('.dataTables_length label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
+            });
+            
+            $('.dataTables_filter label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
+            });
+        }
+    });
+
     // Delete confirmation
     const deleteButtons = document.querySelectorAll('.delete-btn');
     const deleteModal = document.getElementById('deleteModal');
@@ -367,8 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-id');
-            const form = this.closest('form');
-            deleteForm.action = form.action;
+            deleteForm.action = `{{ url('users') }}/${userId}`;
             deleteModal.classList.add('show');
             deleteModal.style.display = 'block';
         });

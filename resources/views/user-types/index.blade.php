@@ -133,6 +133,21 @@
         font-size: 0.8rem;
     }
 }
+
+/* Column width management for user types table */
+#user-types-table th:nth-child(1) { width: 25%; } /* Name */
+#user-types-table th:nth-child(2) { width: 35%; } /* Description */
+#user-types-table th:nth-child(3) { width: 15%; } /* Users Count */
+#user-types-table th:nth-child(4) { width: 15%; } /* Created At */
+#user-types-table th:nth-child(5) { width: 10%; } /* Actions */
+
+/* Text truncation for long content */
+.table-cell-truncate {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 </style>
 @endsection
 
@@ -165,22 +180,6 @@
                             </a>
                         </div>
 
-                        <!-- Search Form -->
-                        <form action="{{ route('user-types.index') }}" method="GET" class="d-flex">
-                            <div class="input-group" style="min-width: 250px;">
-                                <input type="text" class="form-control" name="search" 
-                                       placeholder="@lang('translation.search-user-types')" 
-                                       value="{{ request('search') }}">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="ph-magnifying-glass"></i>
-                                </button>
-                                @if(request('search'))
-                                    <a href="{{ route('user-types.index') }}" class="btn btn-outline-secondary">
-                                        <i class="ph-x"></i>
-                                    </a>
-                                @endif
-                            </div>
-                        </form>
 
                         <!-- Add Button -->
                         <a href="{{ route('user-types.create') }}" class="btn btn-primary">
@@ -189,7 +188,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body mb-3">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="ph-check-circle me-2"></i>
@@ -207,7 +206,7 @@
                 @endif
 
                 <div class="table-responsive">
-                    <table class="table table-bordered dt-responsive nowrap table-striped align-middle" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
+                    <table id="user-types-table" class="table table-bordered dt-responsive nowrap table-striped align-middle" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                         <thead>
                             <tr>
                                 <th scope="col">@lang('translation.name')</th>
@@ -227,7 +226,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{{ $userType->description ?? '-' }}</td>
+                                    <td class="table-cell-truncate" title="{{ $userType->description ?? '-' }}">{{ $userType->description ?? '-' }}</td>
                                     <td>
                                         <span class="badge bg-primary">{{ $userType->users_count }}</span>
                                     </td>
@@ -264,11 +263,6 @@
                     </table>
                 </div>
 
-                @if($userTypes->hasPages())
-                    <div class="d-flex justify-content-center mt-3">
-                        {{ $userTypes->appends(request()->query())->links() }}
-                    </div>
-                @endif
             </div>
         </div>
     </div>
@@ -317,6 +311,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable for user types
+    $("#user-types-table").DataTable({
+        responsive: true,
+        scrollX: false,
+        autoWidth: false,
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        columnDefs: [
+            { width: "25%", targets: 0 }, // Name
+            { width: "35%", targets: 1 }, // Description  
+            { width: "15%", targets: 2 }, // Users Count
+            { width: "15%", targets: 3 }, // Created At
+            { width: "10%", targets: 4 }  // Actions
+        ],
+        language: {
+            search: "",
+            searchPlaceholder: "Search user types...",
+            lengthMenu: "Show _MENU_ entries per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            infoEmpty: "No entries found",
+            infoFiltered: "(filtered from _MAX_ total entries)",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        },
+        dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        initComplete: function() {
+            // Style the search box
+            $('.dataTables_filter input').addClass('form-control form-control-sm');
+            $('.dataTables_filter input').attr('placeholder', 'Search user types...');
+            $('.dataTables_filter label').contents().filter(function() {
+                return this.nodeType === 3;
+            }).remove();
+        }
+    });
+
     // Delete confirmation
     const deleteButtons = document.querySelectorAll('.delete-btn');
     const deleteModal = document.getElementById('deleteModal');
