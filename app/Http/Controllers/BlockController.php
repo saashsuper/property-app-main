@@ -32,23 +32,6 @@ class BlockController extends Controller
     {
         $query = Block::with(['blockType', 'user', 'creator', 'units', 'blockManager', 'issues', 'workOrders'])->active();
 
-        // Search functionality
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('management_company', 'like', "%{$search}%")
-                  ->orWhere('address1', 'like', "%{$search}%")
-                  ->orWhere('address2', 'like', "%{$search}%")
-                  ->orWhere('address3', 'like', "%{$search}%")
-                  ->orWhereHas('blockType', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('creator', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-            });
-        }
 
         $blocks = $query->orderBy('created_at', 'desc')->paginate(10);
 

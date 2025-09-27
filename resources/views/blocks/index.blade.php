@@ -117,6 +117,24 @@
     pointer-events: none;
 }
 
+/* Table column width management */
+#blocks-table th:nth-child(1) { width: 25%; } /* Name */
+#blocks-table th:nth-child(2) { width: 20%; } /* Management Company */
+#blocks-table th:nth-child(3) { width: 15%; } /* Block Manager */
+#blocks-table th:nth-child(4) { width: 25%; } /* Address */
+#blocks-table th:nth-child(5) { width: 8%; }  /* Units */
+#blocks-table th:nth-child(6) { width: 8%; }  /* Issues */
+#blocks-table th:nth-child(7) { width: 10%; } /* Work Orders */
+#blocks-table th:nth-child(8) { width: 9%; }  /* Actions */
+
+/* Text truncation for long content */
+.table-cell-truncate {
+    max-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Responsive pagination */
 @media (max-width: 768px) {
     .pagination {
@@ -165,22 +183,6 @@
                             </a>
                         </div>
 
-                        <!-- Search Form -->
-                        <form action="{{ route('blocks.index') }}" method="GET" class="d-flex">
-                            <div class="input-group" style="min-width: 250px;">
-                                <input type="text" class="form-control" name="search" 
-                                       placeholder="Search blocks..." 
-                                       value="{{ request('search') }}">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                @if(request('search'))
-                                    <a href="{{ route('blocks.index') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                @endif
-                            </div>
-                        </form>
 
                         <!-- Add Button -->
                         @admin
@@ -191,7 +193,7 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body mb-3">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle me-2"></i>
@@ -208,20 +210,12 @@
                     </div>
                 @endif
 
-                @if(request('search'))
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <i class="fas fa-search me-2"></i>
-                        Search results for "{{ request('search') }}": {{ $blocks->total() }} block(s) found
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
 
                 <div class="table-responsive">
                     <table id="blocks-table" class="table table-bordered table-striped table-hover">
                         <thead class="table-light">
                             <tr>
                                 <th>Name</th>
-                                <th>Type</th>
                                 <th>Management Company</th>
                                 <th>Block Manager</th>
                                 <th>Address</th>
@@ -234,11 +228,25 @@
                         <tbody>
                             @forelse($blocks as $block)
                             <tr>
-                                <td><strong><a href="{{ route('blocks.show', $block->id) }}" class="text-decoration-none">{{ $block->name }}</a></strong></td>
-                                <td><span class="badge bg-primary">{{ $block->blockType->name ?? 'N/A' }}</span></td>
-                                <td>{{ $block->management_company }}</td>
-                                <td>{{ $block->blockManager->name ?? 'N/A' }}</td>
-                                <td>{{ $block->block_address }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <strong><a href="{{ route('blocks.show', $block->id) }}" class="text-decoration-none">{{ $block->name }}</a></strong>
+                                        @if($block->blockType)
+                                            @if($block->blockType->name === 'Residential')
+                                                <span class="badge bg-primary" title="Residential">R</span>
+                                            @elseif($block->blockType->name === 'Commercial')
+                                                <span class="badge bg-primary" title="Commercial">C</span>
+                                            @elseif($block->blockType->name === 'Residential + Commercial')
+                                                <span class="badge bg-primary" title="Residential + Commercial">R+C</span>
+                                            @else
+                                                <span class="badge bg-primary" title="{{ $block->blockType->name }}">{{ substr($block->blockType->name, 0, 1) }}</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="table-cell-truncate" title="{{ $block->management_company }}">{{ $block->management_company }}</td>
+                                <td class="table-cell-truncate" title="{{ $block->blockManager->name ?? 'N/A' }}">{{ $block->blockManager->name ?? 'N/A' }}</td>
+                                <td class="table-cell-truncate" title="{{ $block->block_address }}">{{ $block->block_address }}</td>
                                 <td><span class="badge bg-info">{{ $block->units->count() }}</span></td>
                                 <td>
                                     @php
@@ -254,40 +262,28 @@
                                 </td>
                                 <td><span class="badge bg-success">{{ $block->workOrders->where('status', 1)->count() }}</span></td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item" href="{{ route('blocks.show', $block->id) }}">
-                                                    <i class="fas fa-eye me-2"></i>View
-                                                </a>
-                                            </li>
-                                            @admin
-                                            <li>
-                                                <a class="dropdown-item" href="{{ route('blocks.edit', $block->id) }}">
-                                                    <i class="fas fa-edit me-2"></i>Edit
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <form action="{{ route('blocks.destroy', $block->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this block?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="dropdown-item text-danger">
-                                                        <i class="fas fa-trash me-2"></i>Delete
-                                                    </button>
-                                                </form>
-                                            </li>
-                                            @endadmin
-                                        </ul>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('blocks.show', $block->id) }}" class="btn btn-sm btn-outline-primary" title="View Block">
+                                            <i class="ph-eye"></i>
+                                        </a>
+                                        @admin
+                                        <a href="{{ route('blocks.edit', $block->id) }}" class="btn btn-sm btn-outline-warning" title="Edit Block">
+                                            <i class="ph-pencil"></i>
+                                        </a>
+                                        <form action="{{ route('blocks.destroy', $block->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this block?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Block">
+                                                <i class="ph-trash"></i>
+                                            </button>
+                                        </form>
+                                        @endadmin
                                     </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4">
+                                <td colspan="8" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
                                         <p>No blocks found. 
@@ -337,12 +333,22 @@
 $(document).ready(function() {
     $('#blocks-table').DataTable({
         responsive: true,
-        dom: 'lfrtip',
+        scrollX: false,
+        autoWidth: false,
+        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
         // buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
         order: [[0, 'asc']], // default sort by Name (0-based index)
         columnDefs: [
-            { targets: [6], orderable: false }, // Actions (last column)
-            { targets: [5], type: 'num' } // Units
+            { targets: [7], orderable: false }, // Actions (last column)
+            { targets: [4, 5, 6], type: 'num' }, // Units, Issues, Work Orders
+            { targets: [0], width: '25%' }, // Name
+            { targets: [1], width: '20%' }, // Management Company
+            { targets: [2], width: '15%' }, // Block Manager
+            { targets: [3], width: '25%' }, // Address
+            { targets: [4], width: '8%' },  // Units
+            { targets: [5], width: '8%' },  // Issues
+            { targets: [6], width: '10%' }, // Work Orders
+            { targets: [7], width: '9%' }   // Actions
         ],
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
@@ -353,6 +359,42 @@ $(document).ready(function() {
             infoEmpty: "Showing 0 to 0 of 0 blocks",
             infoFiltered: "(filtered from _MAX_ total blocks)",
             paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        },
+        initComplete: function() {
+            // Style the search box
+            $('.dataTables_filter input')
+                .addClass('form-control')
+                .removeClass('mb-3')
+                .css({
+                    'width': '300px',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin-left': '10px',
+                    'margin-bottom': '0 !important'
+                });
+            
+            // Style the page length dropdown
+            $('.dataTables_length select')
+                .addClass('form-select')
+                .css({
+                    'width': 'auto',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin': '0 10px'
+                });
+            
+            // Ensure labels and inputs are on the same line
+            $('.dataTables_length label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
+            });
+            
+            $('.dataTables_filter label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
+            });
         }
     });
 });

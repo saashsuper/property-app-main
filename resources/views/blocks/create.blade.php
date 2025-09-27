@@ -144,7 +144,7 @@
                                                 id="country_id" name="country_id" required>
                                             <option value="">Select Country</option>
                                             @foreach($countries as $country)
-                                                <option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : '' }}>
+                                                <option value="{{ $country->id }}" {{ old('country_id') == $country->id ? 'selected' : ($country->country_code == 'IE' ? 'selected' : '') }}>
                                                     {{ $country->country_name }}
                                                 </option>
                                             @endforeach
@@ -294,6 +294,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial update
     updateStates();
+    
+    // If Ireland is selected by default, trigger the state update
+    if (countrySelect.value && countrySelect.options[countrySelect.selectedIndex].text.includes('Ireland')) {
+        updateStates();
+    }
 
     // Update states when country changes
     countrySelect.addEventListener('change', updateStates);

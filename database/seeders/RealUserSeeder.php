@@ -67,7 +67,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 6,
-                'user_type_id' => 6, // Assistant Property Manager
+                'user_type_id' => 4, // Property manager
                 'name' => 'David Taylor',
                 'email' => 'david.taylor@proman.com',
                 'email_verified_at' => now(),
@@ -107,7 +107,7 @@ class RealUserSeeder extends Seeder
             ],
             [
                 'id' => 10,
-                'user_type_id' => 6, // Assistant Property Manager
+                'user_type_id' => 4, // Property manager
                 'name' => 'Christopher Robinson',
                 'email' => 'christopher.robinson@proman.com',
                 'email_verified_at' => now(),

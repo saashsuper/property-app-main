@@ -210,7 +210,6 @@
                     <table class="table table-bordered dt-responsive nowrap table-striped align-middle" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
                         <thead>
                             <tr>
-                                <th scope="col">@lang('translation.id')</th>
                                 <th scope="col">@lang('translation.name')</th>
                                 <th scope="col">@lang('translation.description')</th>
                                 <th scope="col">@lang('translation.users-count')</th>
@@ -221,7 +220,6 @@
                         <tbody>
                             @forelse($userTypes as $userType)
                                 <tr>
-                                    <td>{{ $userType->id }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="flex-grow-1">
@@ -235,29 +233,22 @@
                                     </td>
                                     <td>{{ $userType->created_at->format('M d, Y H:i') }}</td>
                                     <td>
-                                        <div class="dropdown d-inline-block">
-                                            <button class="btn btn-soft-secondary btn-sm dropdown" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="ph-dots-three-outline"></i>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('user-types.show', $userType->id) }}" class="btn btn-sm btn-outline-primary" title="View User Type">
+                                                <i class="ph-eye"></i>
+                                            </a>
+                                            <a href="{{ route('user-types.edit', $userType->id) }}" class="btn btn-sm btn-outline-warning" title="Edit User Type">
+                                                <i class="ph-pencil"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger delete-btn" title="Delete User Type" data-id="{{ $userType->id }}">
+                                                <i class="ph-trash"></i>
                                             </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item" href="{{ route('user-types.show', $userType->id) }}"><i class="ph-eye align-bottom me-2"></i> @lang('translation.view')</a></li>
-                                                <li><a class="dropdown-item" href="{{ route('user-types.edit', $userType->id) }}"><i class="ph-pencil align-bottom me-2"></i> @lang('translation.edit')</a></li>
-                                                <li>
-                                                    <form action="{{ route('user-types.destroy', $userType->id) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="button" class="dropdown-item delete-btn" data-id="{{ $userType->id }}">
-                                                            <i class="ph-trash align-bottom me-2"></i> @lang('translation.delete')
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            </ul>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="5" class="text-center">
                                         <div class="py-4">
                                             <i class="ph-users ph-3x text-muted mb-3"></i>
                                             <h5>@lang('translation.no-user-types-found')</h5>
@@ -334,8 +325,7 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-id');
-            const form = this.closest('form');
-            deleteForm.action = form.action;
+            deleteForm.action = `{{ url('user-types') }}/${userId}`;
             deleteModal.classList.add('show');
             deleteModal.style.display = 'block';
         });
