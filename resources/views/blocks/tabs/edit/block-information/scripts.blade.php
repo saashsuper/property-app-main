@@ -8,7 +8,6 @@
  * - Form validation and AJAX submissions
  * - Delete confirmation with Bootstrap modal
  * - Export functionality with conditional button states
- * - Block information details viewing
  */
 
 $(document).ready(function() {
@@ -50,132 +49,90 @@ $(document).ready(function() {
     /**
      * Shows success/error messages in modals
      * 
-     * @param {string} containerId - The ID of the message container
-     * @param {string} type - The type of message (success, danger, warning, info)
-     * @param {string} message - The message to display
+     * @param {string} message - Message to display
+     * @param {string} type - Message type ('success' or 'error')
      */
-    function showMessage(containerId, type, message) {
-        let $messageDiv = $('#' + containerId);
-        
-        // Create message structure if it doesn't exist
-        if ($messageDiv.length === 0) {
-            $messageDiv = $(`<div id="${containerId}" class="alert d-none" role="alert">
-                <i class="ph-check-circle me-2"></i>
-                <span class="message-text"></span>
-            </div>`);
-            $('.modal-body').prepend($messageDiv);
-        }
-        
-        // Remove all alert classes and add the new one
-        $messageDiv.removeClass('alert-success alert-danger alert-info alert-warning')
+    function showMessage(message, type = 'success') {
+        const $messageDiv = $('#blockInformationMessage');
+        $messageDiv.removeClass('d-none alert-success alert-danger')
                   .addClass(`alert-${type}`)
-                  .removeClass('d-none');
+                  .find('.message-text')
+                  .text(message);
         
-        // Set appropriate icon
-        const $icon = $messageDiv.find('i');
-        $icon.removeClass('ph-check-circle ph-warning ph-info-circle ph-x-circle');
-        
-        switch(type) {
-            case 'success':
-                $icon.addClass('ph-check-circle');
-                break;
-            case 'danger':
-                $icon.addClass('ph-x-circle');
-                break;
-            case 'warning':
-                $icon.addClass('ph-warning');
-                break;
-            case 'info':
-                $icon.addClass('ph-info-circle');
-                break;
-        }
-        
-        // Set message text
-        $messageDiv.find('.message-text').text(message);
-        
-        // Auto-hide success messages after 5 seconds
-        if (type === 'success') {
-            setTimeout(function() {
-                $messageDiv.addClass('d-none');
-            }, 5000);
-        }
-    }
-    
-    /**
-     * Clears/hides message in the modal
-     * 
-     * @param {string} containerId - The ID of the message container
-     */
-    function clearMessage(containerId) {
-        const $messageDiv = $('#' + containerId);
-        if ($messageDiv.length) {
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
             $messageDiv.addClass('d-none');
-        }
+        }, 3000);
     }
     
-    // ========================================
-    // DATATABLE INITIALIZATION
-    // ========================================
+    /**
+     * Clears form and resets modal state
+     */
+    function clearForm() {
+        $('#blockInformationForm')[0].reset();
+        $('#blockInformationMessage').addClass('d-none');
+        $('#blockInformationForm input[name="id"]').remove();
+        $('#blockInformationModalLabel').text('Add Block Information');
+    }
     
     /**
-     * Initializes the DataTable for the block information table
-     * 
-     * Sets up DataTable with responsive design, pagination, and custom language settings.
-     * Prevents re-initialization if the table is already initialized.
+     * Initializes DataTable with proper configuration
      */
     function initializeDataTable() {
         if ($('#blockInformationTable').length) {
-            // Check if DataTable is already initialized to prevent conflicts
-            if (!$.fn.DataTable.isDataTable('#blockInformationTable')) {
-                blockInformationDataTable = $('#blockInformationTable').DataTable({
-                    responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
-                    order: [[2, 'desc']],      // Default sort by added date descending
-                    columnDefs: [
-                        { targets: [4], orderable: false } // Actions column (last column) not sortable
-                    ],
-                    pageLength: 10,            // Default page size
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
-                    language: {
-                        lengthMenu: "Show _MENU_ information entries per page",
-                        info: "Showing _START_ to _END_ of _TOTAL_ information entries",
-                        infoEmpty: "Showing 0 to 0 of 0 information entries",
-                        infoFiltered: "(filtered from _MAX_ total information entries)",
-                        search: "Search information:",
-                        searchPlaceholder: "Search by type, description...",
-                        paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
-                    },
-                    initComplete: function() {
-                        // Style the search box to match other tabs
-                        $('.dataTables_filter input')
-                            .addClass('form-control custom-search-input mb-3')
-                            .css({
-                                'width': '300px',
-                                'height': '38px',
-                                'font-size': '14px'
-                            });
-                        
-                        // Style the page length dropdown
-                        $('.dataTables_length select')
-                            .addClass('form-select custom-page-length-select')
-                            .css({
-                                'width': 'auto',
-                                'height': '38px',
-                                'font-size': '14px'
-                            });
-                    }
-                });
-                
-                // Check initial data and toggle export buttons
-                const initialRowCount = blockInformationDataTable.rows().count();
-                toggleExportButtons(initialRowCount > 0);
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable('#blockInformationTable')) {
+                $('#blockInformationTable').DataTable().destroy();
+                blockInformationDataTable = null;
             }
+
+            // Verify table structure before initialization
+            const $table = $('#blockInformationTable');
+            const headerCols = $table.find('thead tr th').length;
+            const bodyRows = $table.find('tbody tr');
+
+            console.log('Initializing DataTable - Headers:', headerCols, 'Body rows:', bodyRows.length);
+
+            // Initialize DataTable regardless of data - it will handle empty tables
+            if (headerCols === 5) { // Ensure we have exactly 5 columns
+                    blockInformationDataTable = $table.DataTable({
+                        responsive: true,
+                        dom: 'lfrtip',
+                        order: [[2, 'desc']],
+                        columnDefs: [
+                            { targets: [4], orderable: false }
+                        ],
+                        pageLength: 10,
+                        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                        language: {
+                            lengthMenu: "Show _MENU_ information entries per page",
+                            info: "Showing _START_ to _END_ of _TOTAL_ information entries",
+                            infoEmpty: "Showing 0 to 0 of 0 information entries",
+                            infoFiltered: "(filtered from _MAX_ total information entries)",
+                            search: "Search information:",
+                            searchPlaceholder: "Search by type, description...",
+                            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+                            emptyTable: "No block information available. Click 'Add Block Information' to get started."
+                        },
+                        initComplete: function() {
+                            $('.dataTables_filter input')
+                                .addClass('form-control custom-search-input mb-3')
+                                .css({'width': '300px', 'height': '38px', 'font-size': '14px'});
+                            $('.dataTables_length select')
+                                .addClass('form-select custom-page-length-select')
+                                .css({'width': 'auto', 'height': '38px', 'font-size': '14px'});
+                        }
+                    });
+                    
+                    const initialRowCount = blockInformationDataTable.rows().count();
+                    toggleExportButtons(initialRowCount > 0);
+                    console.log('DataTable initialized successfully with', initialRowCount, 'rows');
+                } else {
+                    console.warn('Block Information Table: Expected 5 columns but found', headerCols);
+                    console.warn('Skipping DataTable initialization to prevent errors');
+                }
         }
     }
-    
-    // ========================================
-    // DATA REFRESH FUNCTIONALITY
-    // ========================================
     
     /**
      * Refreshes the block information DataTable with fresh data from the server
@@ -186,25 +143,44 @@ $(document).ready(function() {
      * @global
      */
     window.refreshBlockInformationTable = function() {
-        if (!blockInformationDataTable) {
+        const blockId = window.blockId || $('input[name="block_id"]').val() || {{ $block->id }};
+        if (!blockId) {
+            console.warn('No block ID found for refresh');
             return;
         }
         
-        const blockId = window.blockId || $('input[name="block_id"]').val();
-        if (!blockId) {
-            return;
-        }
+        console.log('Refreshing block information table for block ID:', blockId);
         
         $.ajax({
-            url: window.routes?.blockInformation?.getByBlock || `/block-information/block/${blockId}`,
+            url: `/block-information/get-by-block/${blockId}`,
             method: 'GET',
             dataType: 'json',
             success: function(data) {
                 if (data.success) {
+                    console.log('Received data for refresh:', data.data.length, 'items');
+                    
+                    // If DataTable is not initialized, initialize it first
+                    if (!blockInformationDataTable || !$.fn.DataTable.isDataTable('#blockInformationTable')) {
+                        console.log('DataTable not initialized, initializing now...');
+                        initializeDataTable();
+                    }
+                    
+                    // If still no DataTable, fallback to page reload
+                    if (!blockInformationDataTable) {
+                        console.warn('DataTable initialization failed, reloading page');
+                        location.reload();
+                        return;
+                    }
+                    
                     // Clear and repopulate DataTable
                     blockInformationDataTable.clear();
                     
                     data.data.forEach(function(info) {
+                        const informationType = info.information_type_name || 'N/A';
+                        const description = info.description && info.description.length > 50 
+                            ? info.description.substring(0, 50) + '...' 
+                            : info.description || 'No description provided';
+                        
                         const addedDate = info.created_at 
                             ? new Date(info.created_at).toLocaleDateString('en-US', {
                                 year: 'numeric',
@@ -213,12 +189,8 @@ $(document).ready(function() {
                             })
                             : 'N/A';
                         
-                        const description = info.description && info.description.length > 50 
-                            ? info.description.substring(0, 50) + '...' 
-                            : info.description || 'No description provided';
-                        
                         blockInformationDataTable.row.add([
-                            `<span class="fw-semibold">${info.information_type_name || 'N/A'}</span>`,
+                            `<span class="fw-semibold">${informationType}</span>`,
                             description,
                             addedDate,
                             info.creator_name || 'N/A',
@@ -229,10 +201,10 @@ $(document).ready(function() {
                                 <i class="ph-eye"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation(${info.id}, {
-                                type: '${info.information_type_name || 'N/A'}',
-                                description: '${description}',
+                                type: '${informationType}',
+                                description: '${description.replace(/'/g, "\\'")}',
                                 added_date: '${addedDate}',
-                                added_by: '${info.creator_name || 'N/A'}'
+                                added_by: '${(info.creator_name || 'N/A').replace(/'/g, "\\'")}'
                             })" title="Delete Block Information">
                                 <i class="ph-trash"></i>
                             </button>`
@@ -243,16 +215,131 @@ $(document).ready(function() {
                     
                     // Toggle export buttons based on data availability
                     toggleExportButtons(data.data.length > 0);
+                    console.log('Block information table refreshed successfully');
                 } else {
+                    console.error('Failed to refresh data:', data.message);
                     // Disable export buttons on error
                     toggleExportButtons(false);
                 }
             },
             error: function(xhr, status, error) {
+                console.error('Error refreshing block information data:', xhr);
                 // Disable export buttons on error
                 toggleExportButtons(false);
             }
         });
+    };
+    
+    /**
+     * Refreshes the block information data via AJAX (legacy function for backward compatibility)
+     */
+    function refreshBlockInformationData() {
+        if (!$.fn.DataTable.isDataTable('#blockInformationTable')) {
+            initializeDataTable();
+        }
+        if (typeof window.refreshBlockInformationTable === 'function') {
+            window.refreshBlockInformationTable();
+        } else {
+            // If refresh function is not available, reload the page
+            location.reload();
+        }
+    }
+    
+    // ========================================
+    // MODAL FUNCTIONS
+    // ========================================
+    
+    /**
+     * Opens the block information modal for add/edit
+     * 
+     * @param {string} mode - 'add' or 'edit'
+     * @param {number} id - Block information ID (for edit mode)
+     */
+    window.openBlockInformationModal = function(mode, id = null) {
+        // Only clear form for add mode
+        if (mode === 'add') {
+            clearForm();
+        }
+        
+        if (mode === 'edit' && id) {
+            $('#blockInformationModalLabel').text('Edit Block Information');
+            
+            // Clear any existing hidden ID field first
+            $('#blockInformationForm input[name="id"]').remove();
+            
+            // Load existing data for editing
+            $.ajax({
+                url: `/block-information/${id}`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const data = response.data;
+                        
+                        // Store data globally for use when modal is shown
+                        window.editBlockInformationData = data;
+                    } else {
+                        showMessage('Error loading block information data', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error loading block information:', xhr.responseText);
+                    showMessage('Error loading block information data', 'error');
+                }
+            });
+        }
+        
+        $('#blockInformationModal').modal('show');
+    };
+    
+    /**
+     * Edits a block information entry
+     * 
+     * @param {number} id - Block information ID
+     */
+    window.editBlockInformation = function(id) {
+        openBlockInformationModal('edit', id);
+    };
+    
+    /**
+     * Views block information details
+     * 
+     * @param {number} id - Block information ID
+     */
+    window.viewBlockInformationDetails = function(id) {
+        $.ajax({
+            url: `/block-information/${id}`,
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    $('#viewInformationType').text(data.information_type_name || 'N/A');
+                    $('#viewDescription').text(data.description || 'No description provided');
+                    $('#viewAddedDate').text(data.created_at ? new Date(data.created_at).toLocaleDateString() : 'N/A');
+                    $('#viewAddedBy').text(data.creator_name || 'N/A');
+                    
+                    $('#viewBlockInformationModal').modal('show');
+                }
+            },
+            error: function(xhr) {
+                showMessage('Error loading block information details', 'error');
+            }
+        });
+    };
+    
+    /**
+     * Shows delete confirmation modal
+     * 
+     * @param {number} id - Block information ID
+     * @param {Object} data - Block information data for display
+     */
+    window.showDeleteConfirmation = function(id, data) {
+        $('#deleteInformationType').text(data.type || 'N/A');
+        $('#deleteDescription').text(data.description || 'No description');
+        $('#deleteAddedDate').text(data.added_date || 'N/A');
+        $('#deleteAddedBy').text(data.added_by || 'N/A');
+        $('#deleteBlockInformationId').val(id);
+        
+        $('#deleteBlockInformationModal').modal('show');
     };
     
     // ========================================
@@ -260,366 +347,110 @@ $(document).ready(function() {
     // ========================================
     
     /**
-     * Handles block information form submission with AJAX
-     * 
-     * @param {string} modalId - The ID of the modal to close
-     * @param {string} messageId - The ID of the message container
-     * @param {string} successMessage - Success message to display
-     * @param {string} errorMessage - Error message to display
+     * Handles form submission for add/edit
      */
-    function handleBlockInformationFormSubmission(modalId, messageId, successMessage, errorMessage) {
-        const $form = $('#blockInformationForm');
+    $('#blockInformationForm').on('submit', function(e) {
+        e.preventDefault();
         
-        $form.off('submit').on('submit', function(e) {
-            e.preventDefault();
-            
-            const $submitBtn = $('#blockInformationSubmitBtn');
-            const originalText = $submitBtn.html();
-            $submitBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Saving...').prop('disabled', true);
-            
-            // Determine if this is an edit operation
-            const isEdit = $form.find('input[name="_method"]').length > 0;
-            const method = isEdit ? 'PUT' : 'POST';
-            
-            const formData = {
-                block_id: window.blockId,
-                information_type_id: $('#information_type_id').val(),
-                description: $('#description').val(),
-                _token: window.csrfToken
-            };
-            
-            // Add _method field for PUT requests
-            if (isEdit) {
-                formData._method = 'PUT';
-            }
-            
-            console.log('Form data being sent:', formData);
-            console.log('Form action URL:', $form.attr('action'));
-            console.log('Is edit mode:', isEdit);
-            
-            $.ajax({
-                url: $form.attr('action'),
-                method: 'POST', // Always use POST for Laravel form spoofing
-                data: formData,
-                headers: {
-                    'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(data) {
-                    console.log('Success response:', data);
-                    if (data.success) {
-                        showMessage(messageId, 'success', successMessage);
-                        $form[0].reset();
-                        
-                        setTimeout(function() {
-                            $('#' + modalId).modal('hide');
-                            refreshBlockInformationTable();
-                        }, 800);
-                    } else {
-                        console.error('Success but data.success is false:', data);
-                        showMessage(messageId, 'danger', (data && data.message) || errorMessage);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('AJAX Error:', xhr.responseText);
-                    console.error('Status:', status);
-                    console.error('Error:', error);
-                    
-                    let errorMessage = 'Error saving block information. Please try again.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    } else if (xhr.responseText) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            if (response.message) {
-                                errorMessage = response.message;
-                            }
-                        } catch (e) {
-                            console.error('Could not parse error response:', e);
-                        }
-                    }
-                    
-                    showMessage(messageId, 'danger', errorMessage);
-                },
-                complete: function() {
-                    $submitBtn.html(originalText).prop('disabled', false);
-                }
-            });
-        });
-    }
-    
-    // ========================================
-    // MODAL MANAGEMENT
-    // ========================================
-    
-    /**
-     * Opens the block information modal for add or edit mode
-     * 
-     * @param {string} mode - The mode ('add' or 'edit')
-     * @param {number} id - The block information ID (for edit mode)
-     */
-    window.openBlockInformationModal = function(mode, id = null) {
-        // Ensure jQuery is available
-        if (typeof $ === 'undefined') {
-            return;
+        const formData = new FormData(this);
+        const url = formData.get('id') ? 
+            `/block-information/${formData.get('id')}` : 
+            '{{ route("block-information.store") }}';
+        const method = formData.get('id') ? 'PUT' : 'POST';
+        
+        // Add method override for PUT request
+        if (method === 'PUT') {
+            formData.append('_method', 'PUT');
         }
         
-        const $modal = $('#blockInformationModal');
-        const $modalLabel = $('#blockInformationModalLabel');
-        const $form = $('#blockInformationForm');
-        const $submitBtn = $('#blockInformationSubmitBtn');
-        
-        if (mode === 'add') {
-            // Add mode
-            $modalLabel.text('Add Block Information');
-            $submitBtn.html('<i class="ph-check me-1"></i> Save');
-            $form.attr('action', window.routes?.blockInformation?.store || '/block-information');
-            $form.find('input[name="_method"]').remove(); // Remove PUT method for add
-            $form[0].reset(); // Reset form
-            
-            // Initialize modal before showing
-            initializeModal('blockInformationModal');
-            
-            // Modal is ready to show
-            $modal.modal('show');
-        } else if (mode === 'edit' && id) {
-            // Edit mode - load block information data
-            loadBlockInformationForEdit(id);
-        }
-    };
-    
-    /**
-     * Loads block information data and populates the modal for editing
-     * 
-     * @param {number} id - The ID of the block information to edit
-     */
-    function loadBlockInformationForEdit(id) {
-        // Ensure jQuery is available
-        if (typeof $ === 'undefined') {
-            return;
-        }
-        
-        // Show loading state
-        let $editBtn = $(`button[onclick="editBlockInformation(${id})"]`);
-        if ($editBtn.length === 0) {
-            $editBtn = $(`button:contains("Edit")`).filter(function() {
-                return $(this).attr('onclick') && $(this).attr('onclick').includes(`editBlockInformation(${id})`);
-            });
-        }
-        
-        const originalText = $editBtn.length > 0 ? $editBtn.html() : 'Edit';
-        if ($editBtn.length > 0) {
-            $editBtn.html('<i class="ph-spinner ph-spin me-1"></i>Loading...').prop('disabled', true);
-        }
+        // Add CSRF token to form data
+        formData.append('_token', '{{ csrf_token() }}');
         
         $.ajax({
-            url: window.routes?.blockInformation?.show?.replace(':id', id) || `/block-information/${id}`,
-            method: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                if (data.success) {
-                    const info = data.data;
-                    const $modal = $('#blockInformationModal');
-                    const $form = $('#blockInformationForm');
-                    const $modalLabel = $('#blockInformationModalLabel');
-                    const $submitBtn = $('#blockInformationSubmitBtn');
-                    
-                    // Update modal for edit mode
-                    $modalLabel.text('Edit Block Information');
-                    $submitBtn.html('<i class="ph-check me-1"></i> Update');
-                    $form.attr('action', window.routes?.blockInformation?.update?.replace(':id', id) || `/block-information/${id}`);
-                    
-                    // Add PUT method for edit
-                    if ($form.find('input[name="_method"]').length === 0) {
-                        $form.append('<input type="hidden" name="_method" value="PUT">');
-                    }
-                    
-                    // Initialize modal first
-                    initializeModal('blockInformationModal');
-                    
-                    // Populate form fields
-                    $('#information_type_id').val(info.information_type_id || '');
-                    $('#description').val(info.description || '');
-                    
-                    // Show the modal
-                    $modal.modal('show');
-                } else {
-                    showMessage('blockInformationMessage', 'danger', 'Error loading block information data');
-                }
-            },
-            error: function(xhr, status, error) {
-                showMessage('blockInformationMessage', 'danger', 'Error loading block information data');
-            },
-            complete: function() {
-                // Reset button state
-                if ($editBtn.length > 0) {
-                    $editBtn.html(originalText).prop('disabled', false);
-                }
-            }
-        });
-    }
-    
-    /**
-     * Initialize modal with default state
-     * 
-     * @param {string} modalId - The ID of the modal
-     */
-    function initializeModal(modalId) {
-        // Clear any previous messages
-        clearMessage('blockInformationMessage');
-    }
-    
-    // ========================================
-    // DELETE CONFIRMATION MODAL
-    // ========================================
-    
-    /**
-     * Shows the delete confirmation modal with block information details
-     * 
-     * @param {number} infoId - The ID of the block information to delete
-     * @param {object} infoData - The block information data to display in confirmation
-     */
-    function showDeleteConfirmation(infoId, infoData) {
-        
-        // Populate block information details in the modal
-        const detailsHtml = `
-            <div class="row">
-                <div class="col-6"><strong>Type:</strong></div>
-                <div class="col-6">${infoData.type || 'N/A'}</div>
-            </div>
-            <div class="row">
-                <div class="col-6"><strong>Description:</strong></div>
-                <div class="col-6">${infoData.description || 'N/A'}</div>
-            </div>
-            <div class="row">
-                <div class="col-6"><strong>Added Date:</strong></div>
-                <div class="col-6">${infoData.added_date || 'N/A'}</div>
-            </div>
-            <div class="row">
-                <div class="col-6"><strong>Added By:</strong></div>
-                <div class="col-6">${infoData.added_by || 'N/A'}</div>
-            </div>
-        `;
-        
-        $('#deleteBlockInformationDetails').html(detailsHtml);
-        
-        // Set up the confirm button to actually delete
-        $('#confirmDeleteBtn').off('click').on('click', function() {
-            deleteBlockInformation(infoId);
-        });
-        
-        // Show the modal
-        $('#deleteBlockInformationModal').modal('show');
-    }
-    
-    /**
-     * Deletes a block information via AJAX
-     * 
-     * @param {number} infoId - The ID of the block information to delete
-     */
-    function deleteBlockInformation(infoId) {
-        
-        // Show loading state
-        const $confirmBtn = $('#confirmDeleteBtn');
-        const originalText = $confirmBtn.html();
-        $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
-        
-        $.ajax({
-            url: window.routes?.blockInformation?.destroy?.replace(':id', infoId) || `/block-information/${infoId}`,
-            method: 'DELETE',
+            url: url,
+            method: method,
+            data: formData,
+            processData: false,
+            contentType: false,
             headers: {
                 'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
-                
-                // Hide the modal
-                $('#deleteBlockInformationModal').modal('hide');
-                
-                // Show success message
-                showMessage('blockInformationMessage', 'success', 'Block information deleted successfully');
-                
-                // Refresh the table
-                refreshBlockInformationTable();
-                
-                // Reset button state
-                $confirmBtn.html(originalText).prop('disabled', false);
-            },
-            error: function(xhr, status, error) {
-                
-                // Show error message
-                showMessage('blockInformationMessage', 'danger', 'Error deleting block information. Please try again.');
-                
-                // Reset button state
-                $confirmBtn.html(originalText).prop('disabled', false);
-            }
-        });
-    }
-    
-    // Expose delete functions to global scope
-    window.showDeleteConfirmation = showDeleteConfirmation;
-    window.deleteBlockInformation = deleteBlockInformation;
-    
-    // ========================================
-    // BLOCK INFORMATION DETAILS MODAL
-    // ========================================
-    
-    /**
-     * Shows block information details in a modal
-     * 
-     * @param {number} infoId - The ID of the block information to show details for
-     */
-    function viewBlockInformationDetails(infoId) {
-        $.ajax({
-            url: window.routes?.blockInformation?.show?.replace(':id', infoId) || `/block-information/${infoId}`,
-            method: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                if (data.success) {
-                    const info = data.data;
-                    
-                    // Populate modal with information details
-                    $('#detail_information_type').text(info.information_type_name || 'N/A');
-                    
-                    // Format added date
-                    const addedDate = info.created_at ? new Date(info.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: '2-digit'
-                    }) : 'N/A';
-                    $('#detail_added_date').text(addedDate);
-                    
-                    // Added by
-                    $('#detail_added_by').text(info.creator_name || 'N/A');
-                    
-                    // Last updated
-                    const updatedAt = info.updated_at ? new Date(info.updated_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }) : 'N/A';
-                    $('#detail_updated_at').text(updatedAt);
-                    
-                    // Description
-                    $('#detail_description').text(info.description || 'N/A');
-                    
-                    // Show modal
-                    $('#blockInformationDetailsModal').modal('show');
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    setTimeout(() => {
+                        $('#blockInformationModal').modal('hide');
+                        window.refreshBlockInformationTable();
+                    }, 800);
                 } else {
-                    showMessage('blockInformationMessage', 'danger', 'Error loading block information details');
+                    showMessage(response.message || 'An error occurred', 'error');
                 }
             },
-            error: function(xhr, status, error) {
-                showMessage('blockInformationMessage', 'danger', 'Error loading block information details');
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while saving block information';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    const errors = Object.values(xhr.responseJSON.errors).flat();
+                    errorMessage = errors.join(', ');
+                } else if (xhr.status === 422) {
+                    errorMessage = 'Validation failed. Please check your input.';
+                } else if (xhr.status === 419) {
+                    errorMessage = 'CSRF token mismatch. Please refresh the page and try again.';
+                }
+                
+                showMessage(errorMessage, 'error');
+                console.error('Block Information Save Error:', xhr.responseJSON || xhr);
             }
         });
-    }
+    });
     
-    // Expose view details function to global scope
-    window.viewBlockInformationDetails = viewBlockInformationDetails;
+    /**
+     * Handles delete confirmation
+     */
+    $('#confirmDeleteBlockInformation').on('click', function() {
+        const id = $('#deleteBlockInformationId').val();
+        
+        if (!id) {
+            showMessage('Invalid block information ID', 'error');
+            return;
+        }
+        
+        $.ajax({
+            url: `/block-information/${id}`,
+            method: 'DELETE',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    $('#deleteBlockInformationModal').modal('hide');
+                    showMessage(response.message || 'Block information deleted successfully', 'success');
+                    setTimeout(() => {
+                        window.refreshBlockInformationTable();
+                    }, 800);
+                } else {
+                    showMessage(response.message || 'Error deleting block information', 'error');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error deleting block information';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                
+                showMessage(errorMessage, 'error');
+            }
+        });
+    });
     
     // ========================================
-    // TRIGGER FUNCTIONS
+    // REFRESH TRIGGER FUNCTIONS
     // ========================================
     
     /**
@@ -644,7 +475,7 @@ $(document).ready(function() {
     
     // Debounced trigger to avoid duplicate refreshes
     let blockInformationRefreshTimer = null;
-    function triggerBlockInformationRefresh() {
+    function triggerBlockInformationRefreshDebounced() {
         clearTimeout(blockInformationRefreshTimer);
         blockInformationRefreshTimer = setTimeout(function() {
             if (!$.fn.DataTable.isDataTable('#blockInformationTable')) {
@@ -659,65 +490,48 @@ $(document).ready(function() {
                     toggleExportButtons(currentRowCount > 0);
                 }
             }
-        }, 50);
+        }, 300);
     }
     
     // ========================================
-    // EVENT LISTENERS AND INITIALIZATION
+    // EVENT LISTENERS
     // ========================================
     
     // Listen for Bootstrap tab shown event to refresh data when block information tab becomes active
     $(document).on('shown.bs.tab', '#block-info-tab', function(e) {
-        triggerBlockInformationRefresh();
+        triggerBlockInformationRefreshDebounced();
     });
 
     // If Block Information tab is already active on page load, refresh once to ensure data is loaded
     if ($('#block-info').hasClass('show') && $('#block-info').hasClass('active')) {
-        triggerBlockInformationRefresh();
+        triggerBlockInformationRefreshDebounced();
     }
     
-    // ========================================
-    // MODAL EVENT HANDLERS
-    // ========================================
-    
-    // Clear messages when block information modal is opened
-    $('#blockInformationModal').on('show.bs.modal', function() {
-        // Use setTimeout to ensure DOM is ready before clearing message
-        setTimeout(function() {
-            clearMessage('blockInformationMessage');
-        }, 50);
+    // Handle modal events
+    $('#blockInformationModal').on('hidden.bs.modal', function() {
+        clearForm();
+        // Clear global edit data
+        window.editBlockInformationData = null;
     });
     
-    // ========================================
-    // FORM SUBMISSION HANDLERS
-    // ========================================
-    
-    // Handle block information form submission
-    handleBlockInformationFormSubmission('blockInformationModal', 'blockInformationMessage', 'Block information saved successfully!', 'Error saving block information. Please try again.');
-    
-    // ========================================
-    // INITIALIZATION
-    // ========================================
+    // Handle modal shown event for edit mode
+    $('#blockInformationModal').on('shown.bs.modal', function() {
+        if (window.editBlockInformationData) {
+            const data = window.editBlockInformationData;
+            
+            // Populate form fields
+            $('#information_type_id').val(data.information_type_id);
+            $('#description').val(data.description);
+            
+            // Add hidden ID field for update
+            $('#blockInformationForm').append(`<input type="hidden" name="id" value="${data.id}">`);
+            
+            // Clear the global data
+            window.editBlockInformationData = null;
+        }
+    });
     
     // Initialize DataTable on page load
     initializeDataTable();
 });
-
-// ========================================
-// GLOBAL FUNCTIONS
-// ========================================
-
-/**
- * Edit block information function (for backward compatibility)
- * 
- * @param {number} id - The ID of the block information to edit
- */
-function editBlockInformation(id) {
-    window.openBlockInformationModal('edit', id);
-}
-
-// Expose editBlockInformation to global scope for DataTable onclick handlers
-window.editBlockInformation = editBlockInformation;
-
 </script>
-

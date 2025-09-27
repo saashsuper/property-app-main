@@ -66,10 +66,10 @@
                                         <i class="ph-eye"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="showDeleteConfirmation({{ $info->id }}, {
-                                        type: '{{ $info->informationType->name ?? 'N/A' }}',
+                                        type: '{{ $info->informationType ? $info->informationType->name : 'N/A' }}',
                                         description: '{{ Str::limit($info->description ?? 'No description', 30) }}',
                                         added_date: '{{ $info->created_at ? $info->created_at->format('M d, Y') : 'N/A' }}',
-                                        added_by: '{{ $info->creator->name ?? 'N/A' }}'
+                                        added_by: '{{ $info->creator ? $info->creator->name : 'N/A' }}'
                                     })" title="Delete Block Information">
                                         <i class="ph-trash"></i>
                                     </button>
@@ -77,9 +77,7 @@
                             </tr>
                         @endforeach
                     @else
-                        <tr>
-                            <td colspan="5" class="text-center">No block information available.</td>
-                        </tr>
+                        <!-- Empty table - DataTable will handle the "no data" message -->
                     @endif
                 </tbody>
             </table>
@@ -195,20 +193,10 @@
         }
     };
     
-    // Define functions early so they're available for initial HTML buttons
-    window.editBlockInformation = function(id) {
-        console.log('Edit block information called with ID:', id);
-    };
-    
-    window.viewBlockInformationDetails = function(id) {
-        console.log('View block information details called with ID:', id);
-    };
-    
-    window.showDeleteConfirmation = function(infoId, infoData) {
-        console.log('Placeholder showDeleteConfirmation called with ID:', infoId);
-    };
 </script>
 
 <!-- Block Information JavaScript -->
+
+@include('blocks.tabs.edit.block-information.modals')
 @include('blocks.tabs.edit.block-information.scripts')
 @endpush

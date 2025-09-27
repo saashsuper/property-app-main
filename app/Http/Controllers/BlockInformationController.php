@@ -39,20 +39,24 @@ class BlockInformationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
-            'information_type_id' => [
-                'required',
-                'exists:block_information_types,id',
-                // Prevent duplicate for the same block
-                function ($attribute, $value, $fail) use ($request) {
-                    if (\App\Models\BlockInformation::where('block_id', $request->block_id)
-                        ->where('information_type_id', $value)
-                        ->exists()) {
-                        $fail('This information type has already been added for this block.');
-                    }
-                }
-            ],
+            'information_type_id' => 'required|exists:block_information_types,id',
             'description' => 'required|string|max:1000',
         ]);
+
+        // Check for duplicates separately after basic validation
+        if (!$validator->fails()) {
+            $duplicateCheck = \App\Models\BlockInformation::where('block_id', $request->block_id)
+                ->where('information_type_id', $request->information_type_id)
+                ->exists();
+                
+            if ($duplicateCheck) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This information type has already been added for this block.',
+                    'errors' => ['information_type_id' => ['This information type has already been added for this block.']]
+                ], 422);
+            }
+        }
 
         if ($validator->fails()) {
             return response()->json([
@@ -94,15 +98,7 @@ class BlockInformationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'id' => $blockInformation->id,
-                    'information_type_id' => $blockInformation->information_type_id,
-                    'information_type_name' => $blockInformation->informationType->name ?? 'N/A',
-                    'description' => $blockInformation->description,
-                    'created_at' => $blockInformation->created_at,
-                    'updated_at' => $blockInformation->updated_at,
-                    'creator_name' => $blockInformation->creator->name ?? 'N/A',
-                ]
+                'data' => $blockInformation
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -138,7 +134,19 @@ class BlockInformationController extends Controller
     public function update(Request $request, BlockInformation $blockInformation): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'information_type_id' => 'required|exists:block_information_types,id',
+            'information_type_id' => [
+                'required',
+                'exists:block_information_types,id',
+                // Prevent duplicate for the same block (exclude current record)
+                function ($attribute, $value, $fail) use ($request, $blockInformation) {
+                    if (\App\Models\BlockInformation::where('block_id', $blockInformation->block_id)
+                        ->where('information_type_id', $value)
+                        ->where('id', '!=', $blockInformation->id)
+                        ->exists()) {
+                        $fail('This information type has already been added for this block.');
+                    }
+                }
+            ],
             'description' => 'required|string|max:1000',
         ]);
 
@@ -176,6 +184,7 @@ class BlockInformationController extends Controller
     public function destroy(BlockInformation $blockInformation): JsonResponse
     {
         try {
+            $blockInformation->update(['deleted_by' => Auth::id()]);
             $blockInformation->delete();
 
             return response()->json([

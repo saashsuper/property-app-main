@@ -312,7 +312,7 @@ class BlockController extends Controller
         $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues', 'images.uploader']);
         
         // Load additional data needed for the view
-        $blockInformation = $block->blockInformation()->with(['informationType', 'creator'])->get();
+        $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
@@ -387,7 +387,7 @@ class BlockController extends Controller
             'blockVisits.team.user',
             'blockVisits.createdByUser',
         ]);
-        $blockInformation = $block->blockInformation()->with(['informationType', 'creator'])->get();
+        $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
@@ -541,7 +541,7 @@ class BlockController extends Controller
 
     public function blockInformationTable(Block $block)
     {
-        $blockInformation = $block->blockInformation()->with(['informationType', 'creator'])->get();
+        $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
         // Return only the table body partial (no layout, no full view)
         return response()->view('blocks.tabs.partials.block-info-table', compact('blockInformation'));
     }
