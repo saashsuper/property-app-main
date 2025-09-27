@@ -55,7 +55,7 @@ Route::get('/block-issues', [BlockIssueController::class, 'index'])->name('api.b
 //         $keyword = $request->keyword;
 //         $query->where(function($q) use ($keyword) {
 //             $q->where('issue', 'LIKE', "%{$keyword}%")
-//               ->orWhere('fault_details', 'LIKE', "%{$keyword}%")
+//               ->orWhere('issue_details', 'LIKE', "%{$keyword}%")
 //               ->orWhere('ref_no', 'LIKE', "%{$keyword}%");
 //         });
 //     }

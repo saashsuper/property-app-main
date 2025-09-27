@@ -129,10 +129,12 @@ $(document).ready(function() {
             if (!$.fn.DataTable.isDataTable('#blockIssuesTable')) {
                 blockIssuesDataTable = $('#blockIssuesTable').DataTable({
                     responsive: true,           // Enable responsive design
-                    dom: 'lfrtip',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
+                    autoWidth: false,           // Disable automatic column width calculation
+                    dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>rt<"row"<"col-sm-6"i><"col-sm-6"p>>', // Length/filter on same line, info/pagination on same line
                     order: [[0, 'desc']],      // Default sort by first column (Issue ID) descending
                     columnDefs: [
-                        { targets: [5], orderable: false } // Actions column (last column) not sortable
+                        { targets: [6], orderable: false }, // Actions column (last column) not sortable
+                        { targets: '_all', className: 'text-nowrap' } // Prevent text wrapping for better layout
                     ],
                     pageLength: 10,            // Default page size
                     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
@@ -208,6 +210,7 @@ $(document).ready(function() {
                         blockIssuesDataTable.row.add([
                             `<a href="/block-issues/${issue.id}" class="text-decoration-none"><b>#${issue.ref_no}</b></a>`,
                             issue.issue || 'N/A',
+                            getIssueTypeBadge(issue.issue_type),
                             getPriorityBadge(issue.priority_id),
                             getStatusBadge(issue.issue_status_id),
                             formatDate(issue.created_at),
@@ -245,6 +248,132 @@ $(document).ready(function() {
     };
     
     // ========================================
+    // UNIT SELECTION HANDLER
+    // ========================================
+    
+    /**
+     * Load active issues for selected unit
+     * 
+     * @param {number} unitId - The ID of the selected unit
+     */
+    function loadActiveIssuesForUnit(unitId) {
+        if (!unitId) {
+            // Clear table if no unit selected
+            $('#openIssuesTableBody').html(`
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                        <i class="ph-info-circle"></i> Select a unit to view open issues
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+        
+        // Show loading state
+        $('#openIssuesTableBody').html(`
+            <tr>
+                <td colspan="6" class="text-center text-muted py-3">
+                    <i class="ph-spinner ph-spin"></i> Loading issues...
+                </td>
+            </tr>
+        `);
+        
+        $.ajax({
+            url: '/api/block-unit-active-issues',
+            method: 'GET',
+            data: { unit_id: unitId },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    displayActiveIssues(response.data);
+                } else {
+                    showActiveIssuesError('Error loading issues');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading active issues:', error);
+                showActiveIssuesError('Error loading issues');
+            }
+        });
+    }
+    
+    /**
+     * Display active issues in the table
+     * 
+     * @param {Array} issues - Array of issue objects
+     */
+    function displayActiveIssues(issues) {
+        const tbody = $('#openIssuesTableBody');
+        
+        if (issues.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                        <i class="ph-check-circle"></i> No open issues for this unit
+                    </td>
+                </tr>
+            `);
+            return;
+        }
+        
+        let html = '';
+        issues.forEach(function(issue) {
+            const priorityBadge = getPriorityBadge(issue.priority_id);
+            const statusBadge = getStatusBadge(issue.issue_status_id);
+            const issueType = issue.issue_type ? issue.issue_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A';
+            const reportedDate = formatDate(issue.created_at);
+            
+            html += `
+                <tr>
+                    <td>
+                        <a href="/block-issues/${issue.id}" class="text-decoration-none" target="_blank">
+                            <b>#${issue.ref_no}</b>
+                        </a>
+                    </td>
+                    <td>${issue.issue || 'N/A'}</td>
+                    <td>
+                        <span class="badge bg-secondary">${issueType}</span>
+                    </td>
+                    <td>${priorityBadge}</td>
+                    <td>${reportedDate}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary" onclick="editActiveIssue(${JSON.stringify(issue).replace(/"/g, '&quot;')})" title="Edit Issue">
+                                <i class="ph-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="showDeleteConfirmation(${issue.id}, {
+                                ref_no: '${issue.ref_no || 'N/A'}',
+                                issue: '${issue.issue || 'N/A'}',
+                                priority: '${issue.priority_id || 'N/A'}',
+                                status: '${issue.issue_status_id || 'N/A'}'
+                            })" title="Delete Issue">
+                                <i class="ph-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.html(html);
+    }
+    
+    /**
+     * Show error message in the table
+     * 
+     * @param {string} message - Error message to display
+     */
+    function showActiveIssuesError(message) {
+        $('#openIssuesTableBody').html(`
+            <tr>
+                <td colspan="6" class="text-center text-danger py-3">
+                    <i class="ph-warning"></i> ${message}
+                </td>
+            </tr>
+        `);
+    }
+    
+    // ========================================
     // FORM HANDLERS
     // ========================================
     
@@ -264,7 +393,12 @@ $(document).ready(function() {
             
             const $submitBtn = $('#issueSubmitBtn');
             const originalText = $submitBtn.html();
-            $submitBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Creating...').prop('disabled', true);
+            
+            // Detect if this is an edit operation
+            const isEdit = $form.find('input[name="_method"]').val() === 'PUT';
+            const loadingText = isEdit ? 'Updating...' : 'Creating...';
+            
+            $submitBtn.html(`<i class="ph-spinner-gap ph-spin me-1"></i> ${loadingText}`).prop('disabled', true);
             
             const formData = new FormData(this);
             
@@ -279,7 +413,9 @@ $(document).ready(function() {
                 },
                 success: function(data) {
                     if (data.success) {
-                        showMessage(messageId, 'success', successMessage);
+                        // Use appropriate success message based on operation
+                        const finalSuccessMessage = isEdit ? 'Issue updated successfully!' : successMessage;
+                        showMessage(messageId, 'success', finalSuccessMessage);
                         $form[0].reset();
                         
                         setTimeout(function() {
@@ -414,7 +550,7 @@ $(document).ready(function() {
                         $('#priority_id').val(issue.priority_id);
                         $('#issue').val(issue.issue);
                         $('#contact_details').val(issue.contact_details);
-                        $('#fault_details').val(issue.fault_details);
+                        $('#issue_details').val(issue.issue_details);
                         
                         // Remove the event listener to prevent multiple triggers
                         $modal.off('shown.bs.modal');
@@ -935,6 +1071,17 @@ $(document).ready(function() {
     }
     
     /**
+     * Get issue type badge HTML
+     */
+    function getIssueTypeBadge(issueType) {
+        if (issueType) {
+            const formattedType = issueType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            return `<span class="badge bg-secondary">${formattedType}</span>`;
+        }
+        return '<span class="text-muted">N/A</span>';
+    }
+    
+    /**
      * Get status badge HTML
      */
     function getStatusBadge(statusId) {
@@ -1306,6 +1453,78 @@ $(document).ready(function() {
             showPhotoMessage('warning', 'Dropzone not initialized. Try opening the upload modal first.');
         }
     };
+    
+    // ========================================
+    // ACTIVE ISSUES EDIT FUNCTIONALITY
+    // ========================================
+    
+    /**
+     * Edit an active issue from the table using existing data
+     * 
+     * @param {object} issue - The issue object with all data
+     */
+    window.editActiveIssue = function(issue) {
+        // Parse issue if it's a string (from onclick attribute)
+        if (typeof issue === 'string') {
+            try {
+                issue = JSON.parse(issue.replace(/&quot;/g, '"'));
+            } catch (e) {
+                console.error('Error parsing issue data:', e);
+                showMessage('issueMessage', 'danger', 'Error loading issue data');
+                return;
+            }
+        }
+        
+        // Set up modal for edit mode
+        const $modal = $('#issueModal');
+        const $modalLabel = $('#issueModalLabel');
+        const $form = $('#issueForm');
+        const $submitBtn = $('#issueSubmitBtn');
+        
+        // Configure modal for edit mode
+        $modalLabel.text('Edit Issue');
+        $submitBtn.html('<i class="ph-check me-1"></i> Update');
+        $form.attr('action', window.routes?.blockIssues?.update?.replace(':id', issue.id) || `/block-issues/${issue.id}`);
+        
+        // Add PUT method for edit
+        if ($form.find('input[name="_method"]').length === 0) {
+            $form.append('<input type="hidden" name="_method" value="PUT">');
+        }
+        
+        // Clear any previous messages
+        clearMessage('issueMessage');
+        
+        // Populate all form fields with existing data
+        $('#block_unit_id').val(issue.block_unit_id || '').trigger('change');
+        $('#contact_method_id').val(issue.contact_method_id || '');
+        $('#assigned_to').val(issue.assigned_to?.id || issue.assigned_to || '').trigger('change');
+        $('#issue_type').val(issue.issue_type || '');
+        $('#priority_id').val(issue.priority_id || '');
+        $('#issue').val(issue.issue || '');
+        $('#contact_details').val(issue.contact_details || '');
+        $('#issue_details').val(issue.issue_details || '');
+        $('#default_contact_details').val(issue.default_contact_details || '');
+        
+        // Handle use_default_contact checkbox
+        if (issue.default_contact_details && issue.default_contact_details.trim() !== '') {
+            $('#use_default_contact').prop('checked', true);
+        } else {
+            $('#use_default_contact').prop('checked', false);
+        }
+        
+        // Trigger change event to update dependent fields
+        $('#use_default_contact').trigger('change');
+    };
+    
+    // ========================================
+    // EVENT HANDLERS
+    // ========================================
+    
+    // Handle unit selection change to load active issues
+    $('#block_unit_id').on('change', function() {
+        const unitId = $(this).val();
+        loadActiveIssuesForUnit(unitId);
+    });
     
     // ========================================
     // INITIALIZATION

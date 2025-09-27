@@ -133,10 +133,10 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label for="fault_details" class="form-label">Issue Details</label>
-                                    <textarea class="form-control @error('fault_details') is-invalid @enderror" 
-                                              id="fault_details" name="fault_details" rows="2" placeholder="Describe the issue in detail...">{{ old('fault_details') }}</textarea>
-                                    @error('fault_details')
+                                    <label for="issue_details" class="form-label">Issue Details</label>
+                                    <textarea class="form-control @error('issue_details') is-invalid @enderror" 
+                                              id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail...">{{ old('issue_details') }}</textarea>
+                                    @error('issue_details')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>

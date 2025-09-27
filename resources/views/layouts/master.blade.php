@@ -98,8 +98,11 @@
         });
         
         function showInstallPrompt() {
-            // You can show a custom install button here
-            console.log('PWA install prompt available');
+            // Install prompt disabled - button hidden
+            console.log('PWA install prompt available but hidden');
+            
+            // Install button is hidden - no longer showing
+            return;
             
             // Example: Show a custom install button
             if (deferredPrompt) {

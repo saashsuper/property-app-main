@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/contact-methods-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getContactMethodsAutocomplete'])->name('api.contact-methods-autocomplete');
     Route::get('api/property-managers-autocomplete', [App\Http\Controllers\BlockIssueController::class, 'getPropertyManagersAutocomplete'])->name('api.property-managers-autocomplete');
     Route::get('api/block-unit-contact-details', [App\Http\Controllers\BlockIssueController::class, 'getBlockUnitContactDetails'])->name('api.block-unit-contact-details');
+Route::get('api/block-unit-active-issues', [App\Http\Controllers\BlockIssueController::class, 'getActiveIssuesForUnit'])->name('api.block-unit-active-issues');
     
     // General Issues
     Route::resource('issues', App\Http\Controllers\IssueController::class);

@@ -464,8 +464,8 @@
                                         <div class="form-text">Please provide relevant contact information</div>
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label for="edit_fault_details" class="form-label">Issue Details</label>
-                                        <textarea class="form-control" id="edit_fault_details" name="fault_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
+                                        <label for="edit_issue_details" class="form-label">Issue Details</label>
+                                        <textarea class="form-control" id="edit_issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
                                     </div>
 
                                     <!-- Row 4: Default Contact Details -->
@@ -723,7 +723,7 @@
                     document.getElementById('edit_priority_id').value = issue.priority_id || '';
                     document.getElementById('edit_issue').value = issue.issue || '';
                     document.getElementById('edit_contact_details').value = issue.contact_details || '';
-                    document.getElementById('edit_fault_details').value = issue.fault_details || '';
+                    document.getElementById('edit_issue_details').value = issue.issue_details || '';
                     
                     // Remove the event listener to prevent multiple triggers
                     editModal.removeEventListener('shown.bs.modal', arguments.callee);

@@ -20,22 +20,22 @@
                         <!-- Full Width Form Fields -->
                         <div class="col-12">
                             <div class="row">
-                                <!-- Row 1: Contact Method, Unit Selection, Assigned To -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="contact_method_id" name="contact_method_id" required>
-                                        <option value="">Select Contact Method</option>
-                                        @foreach ($contactMethods as $contactMethod)
-                                            <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                <!-- Row 1: Unit Selection, Contact Method, Assigned To -->
                                 <div class="col-md-4 mb-3">
                                     <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
                                     <select class="form-select" id="block_unit_id" name="block_unit_id" required>
                                         <option value="">Select Unit</option>
                                         @foreach ($block->units as $unit)
                                             <option value="{{ $unit->id }}">{{ $unit->unit_code }} - {{ $unit->unit_name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="contact_method_id" name="contact_method_id" required>
+                                        <option value="">Select Contact Method</option>
+                                        @foreach ($contactMethods as $contactMethod)
+                                            <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -85,8 +85,8 @@
                                     <div class="form-text">Please provide relevant contact information</div>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="fault_details" class="form-label">Issue Details</label>
-                                    <textarea class="form-control" id="fault_details" name="fault_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
+                                    <label for="issue_details" class="form-label">Issue Details</label>
+                                    <textarea class="form-control" id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
                                 </div>
 
                                 <!-- Row 4: Default Contact Details -->
@@ -102,36 +102,6 @@
                                 </div>
 
 
-                                <!-- Row 6: Open Issues in Same Unit -->
-                                <div class="col-12 mb-3">
-                                    <div class="card">
-                                        <div class="card-header d-flex justify-content-between align-items-center py-2">
-                                            <h6 class="mb-0">Open Issues in Same Unit</h6>
-                                        </div>
-                                        <div class="card-body p-0">
-                                            <div class="table-responsive" style="max-height: 200px;">
-                                                <table class="table table-sm table-hover mb-0" id="openIssuesTable">
-                                                    <thead class="table-light sticky-top">
-                                                        <tr>
-                                                            <th>Ref #</th>
-                                                            <th>Issue</th>
-                                                            <th>Type</th>
-                                                            <th>Priority</th>
-                                                            <th>Reported</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="openIssuesTableBody">
-                                                        <tr>
-                                                            <td colspan="5" class="text-center text-muted py-3">
-                                                                <i class="ph-info-circle"></i> Select a unit to view open issues
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -145,6 +115,38 @@
                     </button>
                 </div>
             </form>
+            
+            <!-- Open Issues in Same Unit Table -->
+            <div class="modal-body border-top">
+                <div class="card border">
+                    <div class="card-header d-flex justify-content-between align-items-center py-2 bg-light">
+                        <h6 class="mb-0">Open Issues in Same Unit</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 200px;">
+                            <table class="table table-sm table-hover mb-0" id="openIssuesTable">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Ref #</th>
+                                        <th>Issue</th>
+                                        <th>Type</th>
+                                        <th>Priority</th>
+                                        <th>Reported</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="openIssuesTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">
+                                            <i class="ph-info-circle"></i> Select a unit to view open issues
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

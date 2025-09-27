@@ -1,13 +1,13 @@
 <div class="row">
     <div class="col-12">
         <div class="d-flex align-items-center mb-3 gap-3">
-            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1 d-flex align-items-center justify-content-between"
+            <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1"
                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">
-                <span>Block Issues</span>
-                <button class="btn btn-sm custom-toggle" id="toggleSearchBtn" title="Search Issues">
-                    <i class="ph-magnifying-glass align-bottom"></i>
-                </button>
+                Block Issues
             </h6>
+            <button class="btn btn-outline-primary btn-sm" id="toggleSearchBtn" title="Search & Filter Issues">
+                <i class="ph-funnel"></i>
+            </button>
             <div class="d-flex align-items-center gap-2">
                 <!-- Export Buttons -->
                 <div class="btn-group" role="group">
@@ -127,11 +127,12 @@
         </div>
         
         <div class="table-responsive">
-            <table id="blockIssuesTable" class="table table-bordered table-hover w-100">
+            <table id="blockIssuesTable" class="table table-bordered table-hover">
                 <thead class="table-light">
                     <tr>
                         <th>Issue ID</th>
                         <th>Title</th>
+                        <th>Type</th>
                         <th>Priority</th>
                         <th>Status</th>
                         <th>Reported Date</th>
@@ -148,6 +149,13 @@
                                     </a>
                                 </td>
                                 <td>{{ $issue->issue ?? 'N/A' }}</td>
+                                <td>
+                                    @if ($issue->issue_type)
+                                        <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $issue->issue_type)) }}</span>
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if ($issue->priority_id == 1)
                                         <span class="badge bg-success">Low</span>

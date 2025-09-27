@@ -112,7 +112,7 @@ class BlockIssueController extends Controller
             'priority_id' => 'required|integer|min:1|max:5',
             'contact_details' => 'required|string|max:500',
             'contact_method_id' => 'required|exists:contact_methods,id',
-            'fault_details' => 'nullable|string',
+            'issue_details' => 'nullable|string',
             'default_contact_details' => 'nullable|string',
             'block_unit_id' => 'required|exists:block_units,id',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -142,7 +142,7 @@ class BlockIssueController extends Controller
                 'issue_status_id' => 1, // Default to 'Open' status
                 'contact_details' => $request->contact_details,
                 'contact_method_id' => $request->contact_method_id_hidden ?: $request->contact_method_id,
-                'fault_details' => $request->fault_details,
+                'issue_details' => $request->issue_details,
                 'default_contact_details' => $request->default_contact_details,
                 'block_unit_id' => $request->block_unit_id_hidden ?: $request->block_unit_id,
                 'reported_by' => Auth::id(),
@@ -266,7 +266,7 @@ class BlockIssueController extends Controller
             'priority_id' => 'required|integer|min:1|max:5',
             'issue' => 'required|string|max:255',
             'contact_details' => 'required|string',
-            'fault_details' => 'nullable|string',
+            'issue_details' => 'nullable|string',
             'default_contact_details' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -286,6 +286,8 @@ class BlockIssueController extends Controller
 
         $data = $request->except('images');
         $data['updated_by'] = Auth::id();
+        
+        // No field mapping needed - using consistent field names
 
         $blockIssue->update($data);
 
@@ -463,6 +465,46 @@ class BlockIssueController extends Controller
             'success' => true,
             'data' => $photos
         ]);
+    }
+    
+    /**
+     * Get active issues for a specific unit
+     */
+    public function getActiveIssuesForUnit(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'unit_id' => 'required|exists:block_units,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid unit ID',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $unitId = $request->unit_id;
+            
+            // Get active issues for the unit (status 1 = Open, 2 = In Progress)
+            $issues = BlockIssue::where('block_unit_id', $unitId)
+                ->whereIn('issue_status_id', [1, 2]) // Open and In Progress
+                ->with(['priority', 'issueStatus'])
+                ->orderBy('created_at', 'desc') // Most recent first
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $issues
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching issues: ' . $e->getMessage()
+            ], 500);
+        }
     }
     
     /**
