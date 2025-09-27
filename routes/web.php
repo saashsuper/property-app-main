@@ -145,6 +145,9 @@ Route::resource('block-information', App\Http\Controllers\BlockInformationContro
 
 // API Routes for DataTable refresh (no auth required for AJAX calls)
 Route::get('block-information/block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getBlockInformation'])->name('block-information.by-block');
+Route::get('block-information/get-by-block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getByBlock'])->name('block-information.get-by-block');
+
+
 Route::get('block-units/block/{blockId}', [App\Http\Controllers\BlockUnitController::class, 'getBlockUnits'])->name('block-units.by-block');
 Route::get('block-contractors/block/{blockId}', [App\Http\Controllers\BlockContractorController::class, 'getBlockContractors'])->name('block-contractors.by-block');
 Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');

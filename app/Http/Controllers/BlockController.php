@@ -312,7 +312,7 @@ class BlockController extends Controller
         $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues', 'images.uploader']);
         
         // Load additional data needed for the view
-        $blockInformation = $block->blockInformation()->with('informationType')->get();
+        $blockInformation = $block->blockInformation()->with(['informationType', 'creator'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
@@ -364,6 +364,7 @@ class BlockController extends Controller
      */
     public function edit(Block $block)
     {
+        \Log::info('EDIT METHOD CALLED for Block ID: ' . $block->id);
         $blockTypes = BlockType::orderBy('name')->get();
         $countries = Country::orderBy('country_name')->get();
         $states = State::orderBy('name')->get();
@@ -386,7 +387,7 @@ class BlockController extends Controller
             'blockVisits.team.user',
             'blockVisits.createdByUser',
         ]);
-        $blockInformation = $block->blockInformation()->with('informationType')->get();
+        $blockInformation = $block->blockInformation()->with(['informationType', 'creator'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
@@ -407,6 +408,17 @@ class BlockController extends Controller
         $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         $issueTypes = IssueType::where('is_active', true)->orderBy('name')->get();
+        // Debug: Log what we're passing to the view
+        \Log::info('PASSING TO VIEW:', [
+            'blockInformation_count' => $blockInformation->count(),
+            'first_record_relationships' => $blockInformation->count() > 0 ? [
+                'has_informationType' => $blockInformation->first()->relationLoaded('informationType'),
+                'has_creator' => $blockInformation->first()->relationLoaded('creator'),
+                'informationType_name' => $blockInformation->first()->informationType ? $blockInformation->first()->informationType->name : 'NULL',
+                'creator_name' => $blockInformation->first()->creator ? $blockInformation->first()->creator->name : 'NULL'
+            ] : 'No records'
+        ]);
+        
         return view('blocks.edit', compact(
             'block', 
             'blockTypes', 
@@ -529,7 +541,7 @@ class BlockController extends Controller
 
     public function blockInformationTable(Block $block)
     {
-        $blockInformation = $block->blockInformation()->with('informationType')->get();
+        $blockInformation = $block->blockInformation()->with(['informationType', 'creator'])->get();
         // Return only the table body partial (no layout, no full view)
         return response()->view('blocks.tabs.partials.block-info-table', compact('blockInformation'));
     }

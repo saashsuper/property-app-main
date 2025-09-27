@@ -87,10 +87,29 @@ class BlockInformationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BlockInformation $blockInformation)
+    public function show(BlockInformation $blockInformation): JsonResponse
     {
-        $blockInformation->load(['block', 'informationType', 'creator', 'updater']);
-        return view('block-information.show', compact('blockInformation'));
+        try {
+            $blockInformation->load(['informationType', 'creator']);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $blockInformation->id,
+                    'information_type_id' => $blockInformation->information_type_id,
+                    'information_type_name' => $blockInformation->informationType->name ?? 'N/A',
+                    'description' => $blockInformation->description,
+                    'created_at' => $blockInformation->created_at,
+                    'updated_at' => $blockInformation->updated_at,
+                    'creator_name' => $blockInformation->creator->name ?? 'N/A',
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching block information: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -193,4 +212,39 @@ class BlockInformationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get block information by block ID (for AJAX requests)
+     */
+    public function getByBlock($blockId): JsonResponse
+    {
+        try {
+            $blockInformation = BlockInformation::where('block_id', $blockId)
+                ->with(['informationType', 'creator'])
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($info) {
+                    return [
+                        'id' => $info->id,
+                        'information_type_id' => $info->information_type_id,
+                        'information_type_name' => $info->informationType->name ?? 'N/A',
+                        'description' => $info->description,
+                        'created_at' => $info->created_at,
+                        'updated_at' => $info->updated_at,
+                        'creator_name' => $info->creator->name ?? 'N/A',
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $blockInformation
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching block information: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
