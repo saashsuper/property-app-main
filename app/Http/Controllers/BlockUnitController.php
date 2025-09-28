@@ -128,7 +128,11 @@ class BlockUnitController extends Controller
                 'Mobile Number',
                 'Phone Number',
                 'Letting Agent',
-                'Miscellaneous Info'
+                'Miscellaneous Info',
+                'Address Line 1',
+                'Address Line 2',
+                'Address Line 3',
+                'Zip/EirCode'
             ];
             
             // Add headers to first row
@@ -154,7 +158,11 @@ class BlockUnitController extends Controller
                     '+1234567890',
                     '+1234567891',
                     'ABC Properties',
-                    'Sample information for unit A101'
+                    'Sample information for unit A101',
+                    '', // Address Line 1 - empty for residents
+                    '', // Address Line 2 - empty for residents
+                    '', // Address Line 3 - empty for residents
+                    ''  // Zip/EirCode - empty for residents
                 ],
                 [
                     'A102',
@@ -166,7 +174,11 @@ class BlockUnitController extends Controller
                     '+1234567892',
                     '+1234567893',
                     'XYZ Properties',
-                    'Sample information for unit A102'
+                    'Sample information for unit A102',
+                    '123 Main Street',
+                    'Apt 102',
+                    'Dublin 2',
+                    'D02 XY12'
                 ],
                 [
                     'B201',
@@ -178,7 +190,11 @@ class BlockUnitController extends Controller
                     '+1234567894',
                     '+1234567895',
                     'DEF Properties',
-                    'Sample information for unit B201'
+                    'Sample information for unit B201',
+                    '', // Address Line 1 - empty for residents
+                    '', // Address Line 2 - empty for residents
+                    '', // Address Line 3 - empty for residents
+                    ''  // Zip/EirCode - empty for residents
                 ],
                 [
                     'B202',
@@ -190,7 +206,11 @@ class BlockUnitController extends Controller
                     '+1234567896',
                     '+1234567897',
                     'GHI Properties',
-                    'Sample information for unit B202'
+                    'Sample information for unit B202',
+                    '456 Oak Avenue',
+                    'Unit 202',
+                    'Cork City',
+                    'T12 AB34'
                 ],
                 [
                     'C301',
@@ -202,7 +222,11 @@ class BlockUnitController extends Controller
                     '+1234567898',
                     '+1234567899',
                     'JKL Properties',
-                    'Sample information for unit C301'
+                    'Sample information for unit C301',
+                    '', // Address Line 1 - empty for residents
+                    '', // Address Line 2 - empty for residents
+                    '', // Address Line 3 - empty for residents
+                    ''  // Zip/EirCode - empty for residents
                 ]
             ];
             
@@ -216,7 +240,7 @@ class BlockUnitController extends Controller
             }
             
             // Auto-size columns
-            foreach (range('A', 'J') as $column) {
+            foreach (range('A', 'N') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
             
@@ -449,9 +473,7 @@ class BlockUnitController extends Controller
                         'address1' => $rowData[10] ?? '',
                         'address2' => $rowData[11] ?? '',
                         'address3' => $rowData[12] ?? '',
-                        'country_name' => $rowData[13] ?? '',
-                        'state_name' => $rowData[14] ?? '',
-                        'zip' => $rowData[15] ?? '',
+                        'zip' => $rowData[13] ?? '',
                         'building_name' => '', // No longer in template
                         'unit_type_name' => '' // No longer in template
                     ];
@@ -489,7 +511,7 @@ class BlockUnitController extends Controller
         $headers = fgetcsv($handle);
         
         while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) >= 16) {
+            if (count($row) >= 14) {
                 $data[] = [
                     'unit_code' => trim($row[0]),
                     'unit_name' => trim($row[1]),
@@ -504,9 +526,7 @@ class BlockUnitController extends Controller
                     'address1' => trim($row[10]),
                     'address2' => trim($row[11]),
                     'address3' => trim($row[12]),
-                    'country_name' => trim($row[13]),
-                    'state_name' => trim($row[14]),
-                    'zip' => trim($row[15]),
+                    'zip' => trim($row[13]),
                     'building_name' => '', // No longer in template
                     'unit_type_name' => '' // No longer in template
                 ];

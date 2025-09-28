@@ -159,7 +159,7 @@
                             <div class="form-text">
                                 <strong>Supported formats:</strong> Excel (.xlsx, .xls) or CSV (.csv)<br>
                                 <strong>Maximum file size:</strong> 5MB<br>
-                                <strong>Required columns:</strong> Unit Code, Unit Name, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info, Address Line 1, Address Line 2, Address Line 3, Country, County/State, Zip/EirCode
+                                <strong>Required columns:</strong> Unit Code, Unit Name, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info, Address Line 1, Address Line 2, Address Line 3, Zip/EirCode
                             </div>
                         </div>
                         <div class="col-12 mb-3">
