@@ -172,6 +172,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin');
 });
 
+// Specific routes that must come before catch-all
+Route::get('/blocks/{block}/information-table', [App\Http\Controllers\BlockController::class, 'blockInformationTable'])->name('blocks.information-table');
+
 // Catch-all route for SPA - must be last
 Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->where('any', '.*')->name('index');
-Route::get('/blocks/{block}/information-table', [App\Http\Controllers\BlockController::class, 'blockInformationTable'])->name('blocks.information-table');
