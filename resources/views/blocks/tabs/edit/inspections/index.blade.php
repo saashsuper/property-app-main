@@ -31,9 +31,6 @@
                 <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addInspectionModal">
                     <i class="ph-plus align-bottom me-1"></i> Add Inspection
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="refreshInspectionsTable()" title="Test Refresh">
-                    <i class="ph-arrow-clockwise"></i> Test Refresh
-                </button>
             </div>
         </div>
         
@@ -56,7 +53,6 @@
                                         $leadInspector = $inspection->inspectionTeams->where('is_lead', true)->first();
                                         $displayInspector = $leadInspector ? ($leadInspector->user->name ?? 'N/A') : ($inspection->creator->name ?? 'N/A');
                                         $userForEdit = $leadInspector ? $leadInspector->user_id : $inspection->created_by;
-                                        $status = $issueStatuses->firstWhere('value', $inspection->job_status_id);
                                     @endphp
                                     <tr>
                                         <td class="align-middle">{{ $inspection->ref_no ?? 'N/A' }}</td>
@@ -65,11 +61,9 @@
                                         </td>
                                         <td class="align-middle">{{ $displayInspector }}</td>
                                         <td class="align-middle text-nowrap">
-                                            @if($status)
-                                                <span class="badge {{ $status->btn_class ?: 'badge-inspection-default' }}">{{ $status->label }}</span>
-                                            @else
-                                                <span class="badge badge-inspection-default">Unknown</span>
-                                            @endif
+                                            <span class="badge bg-{{ $inspection->status_color }}-subtle text-{{ $inspection->status_color }}">
+                                                {{ $inspection->status_text }}
+                                            </span>
                                         </td>
                                         <td class="align-middle text-wrap">{{ Str::limit($inspection->notes, 80) ?? 'N/A' }}</td>
                                         <td class="align-middle text-center">

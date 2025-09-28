@@ -374,6 +374,20 @@ class BlockController extends Controller
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
+        
+        // Debug: Check if status attributes are working
+        \Log::info('INSPECTION STATUS DEBUG:', [
+            'block_id' => $block->id,
+            'inspection_count' => $blockInspections->count(),
+            'sample_inspection' => $blockInspections->first() ? [
+                'id' => $blockInspections->first()->id,
+                'ref_no' => $blockInspections->first()->ref_no,
+                'job_status_id' => $blockInspections->first()->job_status_id,
+                'status_text' => $blockInspections->first()->status_text,
+                'status_color' => $blockInspections->first()->status_color,
+            ] : null,
+        ]);
+        
         $blockBuildingTypes = \App\Models\BlockBuildingType::orderBy('name')->get();
         $buildingTypes = \App\Models\BuildingType::orderBy('name')->get();
         $blockUnitTypes = \App\Models\BlockUnitType::orderBy('name')->get();

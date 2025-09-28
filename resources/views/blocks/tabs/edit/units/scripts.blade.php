@@ -370,10 +370,21 @@ $(document).ready(function() {
         const originalText = $submitBtn.html();
         $submitBtn.html('<i class="ph-spinner ph-spin me-1"></i> Uploading...').prop('disabled', true);
         
+        // Debug: Log form data before sending
+        const formData = new FormData(this);
+        console.log('Form data being sent:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+        
+        // Check if block_id is present
+        const blockId = $form.find('input[name="block_id"]').val();
+        console.log('Block ID from form:', blockId);
+        
         $.ajax({
             url: $form.attr('action'),
             method: 'POST',
-            data: new FormData(this),
+            data: formData,
             processData: false,        // Don't process data (for file uploads)
             contentType: false,       // Don't set content type (let browser set it)
             headers: {
@@ -488,6 +499,14 @@ $(document).ready(function() {
     
     $('#uploadUnitModal').on('show.bs.modal', function() {
         $('#uploadMessageContainer, #uploadSuccess, #uploadErrors').hide();
+        
+        // Debug: Check if block_id is present when modal opens
+        const blockId = $('#uploadUnitForm input[name="block_id"]').val();
+        console.log('Modal opened - Block ID:', blockId);
+        
+        if (!blockId) {
+            console.error('Block ID is missing from the upload form!');
+        }
     });
 });
 

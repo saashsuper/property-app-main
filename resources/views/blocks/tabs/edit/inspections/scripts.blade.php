@@ -3,12 +3,13 @@
     let inspectionsDT = null;
 
     const STATUS_BADGES = {
-        1: '<span class="badge badge-inspection-created">Created</span>',
-        2: '<span class="badge badge-inspection-progress">In Progress</span>',
-        3: '<span class="badge badge-inspection-workorder">Work Order</span>',
-        4: '<span class="badge badge-inspection-completed">Completed</span>',
-        5: '<span class="badge badge-inspection-invoiced">Invoiced</span>',
-        default: '<span class="badge badge-inspection-default">Unknown</span>'
+        1: '<span class="badge bg-info-subtle text-info">Scheduled</span>',
+        2: '<span class="badge bg-warning-subtle text-warning">In Progress</span>',
+        3: '<span class="badge bg-success-subtle text-success">Completed</span>',
+        4: '<span class="badge bg-danger-subtle text-danger">Cancelled</span>',
+        5: '<span class="badge bg-secondary-subtle text-secondary">On Hold</span>',
+        6: '<span class="badge bg-primary-subtle text-primary">Rescheduled</span>',
+        default: '<span class="badge bg-secondary-subtle text-secondary">Unknown</span>'
     };
 
     /**
@@ -511,7 +512,7 @@
                             inspection.ref_no || 'N/A',
                             scheduleDisplay,
                             inspectorName,
-                            STATUS_BADGES[inspection.job_status_id] || STATUS_BADGES.default,
+                            inspection.status_text ? `<span class="badge bg-${inspection.status_color}-subtle text-${inspection.status_color}">${inspection.status_text}</span>` : (STATUS_BADGES[inspection.job_status_id] || STATUS_BADGES.default),
                             notesDisplay,
                             renderActions({
                                 id: inspection.id,

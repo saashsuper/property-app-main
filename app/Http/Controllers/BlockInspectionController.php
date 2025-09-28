@@ -373,6 +373,8 @@ class BlockInspectionController extends Controller
                     'end_date_time' => $inspection->end_date_time,
                     'notes' => $inspection->notes,
                     'job_status_id' => $inspection->job_status_id,
+                    'status_text' => $inspection->status_text,
+                    'status_color' => $inspection->status_color,
                     'created_at' => $inspection->created_at,
                     'updated_at' => $inspection->updated_at,
                     'creator' => $inspection->creator,

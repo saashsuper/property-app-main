@@ -257,6 +257,7 @@ class BlockUnitController extends Controller
             // Log the request for debugging
             \Log::info('Upload request received', [
                 'block_id' => $request->input('block_id'),
+                'all_input' => $request->all(),
                 'file' => $request->hasFile('unit_file') ? $request->file('unit_file')->getClientOriginalName() : 'No file',
                 'file_size' => $request->hasFile('unit_file') ? $request->file('unit_file')->getSize() : 0
             ]);

@@ -32,9 +32,12 @@
                             <label for="job_status_id" class="form-label">Status</label>
                             <select class="form-select" id="job_status_id" name="job_status_id">
                                 <option value="">Select Status</option>
-                                @foreach($issueStatuses as $status)
-                                    <option value="{{ $status->value }}">{{ $status->label }}</option>
-                                @endforeach
+                                <option value="1">Scheduled</option>
+                                <option value="2">In Progress</option>
+                                <option value="3">Completed</option>
+                                <option value="4">Cancelled</option>
+                                <option value="5">On Hold</option>
+                                <option value="6">Rescheduled</option>
                             </select>
                         </div>
 
@@ -97,9 +100,12 @@
                             <label for="edit_job_status_id" class="form-label">Status</label>
                             <select class="form-select" id="edit_job_status_id" name="job_status_id">
                                 <option value="">Select Status</option>
-                                @foreach($issueStatuses as $status)
-                                    <option value="{{ $status->value }}">{{ $status->label }}</option>
-                                @endforeach
+                                <option value="1">Scheduled</option>
+                                <option value="2">In Progress</option>
+                                <option value="3">Completed</option>
+                                <option value="4">Cancelled</option>
+                                <option value="5">On Hold</option>
+                                <option value="6">Rescheduled</option>
                             </select>
                         </div>
 
