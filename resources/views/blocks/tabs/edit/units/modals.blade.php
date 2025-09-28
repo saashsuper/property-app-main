@@ -177,12 +177,10 @@
                             </div>
                         </div>
                         <div class="col-12 mb-3">
-                            <button type="button" 
-                                    class="btn btn-outline-primary" 
-                                    id="downloadTemplateBtn"
-                                    data-block-id="{{ $block->id }}">
+                            <a href="{{ route('block-units.template', ['block_id' => $block->id]) }}" 
+                               class="btn btn-outline-primary">
                                 <i class="ph-download me-1"></i> Download Template
-                            </button>
+                            </a>
                         </div>
                         <div class="col-12 mb-3" id="uploadErrors" style="display: none;">
                             <div class="alert alert-danger">
@@ -244,35 +242,3 @@
     </div>
 </div>
 
-<script>
-$(document).ready(function() {
-    // Handle template download
-    $('#downloadTemplateBtn').on('click', function(e) {
-        e.preventDefault();
-        
-        const blockId = $(this).data('block-id');
-        const $btn = $(this);
-        const originalText = $btn.html();
-        
-        // Show loading state
-        $btn.html('<i class="ph-spinner-gap me-1"></i> Downloading...').prop('disabled', true);
-        
-        // Create download URL
-        const downloadUrl = '{{ route("block-units.template") }}?block_id=' + blockId;
-        
-        // Create temporary link and click it for download
-        const tempLink = document.createElement('a');
-        tempLink.href = downloadUrl;
-        tempLink.download = ''; // This tells browser to download instead of navigate
-        tempLink.style.display = 'none';
-        document.body.appendChild(tempLink);
-        tempLink.click();
-        document.body.removeChild(tempLink);
-        
-        // Reset button state after a short delay
-        setTimeout(function() {
-            $btn.html(originalText).prop('disabled', false);
-        }, 2000);
-    });
-});
-</script>
