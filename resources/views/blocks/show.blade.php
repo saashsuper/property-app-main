@@ -663,9 +663,12 @@ $(document).ready(function() {
                     showAlert('error', errorMessage);
                 });
                 
-                // Handle individual file errors
+                // Handle individual file errors (only show if no multiple error was shown)
                 this.on("error", function(file, errorMessage) {
-                    showAlert('error', errorMessage);
+                    // Only show individual file error if we haven't already shown a multiple file error
+                    if (!this.getAcceptedFiles().some(f => f.status === 'error')) {
+                        showAlert('error', errorMessage);
+                    }
                 });
                 
                 // Custom validation for total file size
@@ -832,15 +835,20 @@ $(document).ready(function() {
     
     // Show alert function
     function showAlert(type, message) {
+        // Remove any existing alerts first
+        $('.page-title-box').siblings('.alert').remove();
+        
         const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
         const alert = $(`
             <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="ph-${type === 'success' ? 'check-circle' : 'warning'} me-2"></i>
                 ${message}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `);
         
-        $('.container-fluid').prepend(alert);
+        // Insert alert after the page title row
+        $('.page-title-box').parent().parent().after(alert);
         
         // Auto dismiss after 5 seconds
         setTimeout(() => {

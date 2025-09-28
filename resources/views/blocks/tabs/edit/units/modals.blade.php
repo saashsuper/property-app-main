@@ -177,8 +177,7 @@
                             </div>
                         </div>
                         <div class="col-12 mb-3">
-                            <a href="{{ asset('storage/templates/unit-upload-template.xlsx') }}" 
-                               download="unit_upload_template_{{ str_replace(' ', '_', $block->name) }}_{{ date('Y-m-d') }}.xlsx"
+                            <a href="{{ route('block-units.template', ['block_id' => $block->id]) }}" 
                                class="btn btn-outline-primary">
                                 <i class="ph-download me-1"></i> Download Template
                             </a>
