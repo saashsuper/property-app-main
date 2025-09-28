@@ -212,10 +212,16 @@ $(document).ready(function() {
             return;
         }
         
+        // Get CSRF token for consistency (even though GET requests don't require it)
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+        
         $.ajax({
             url: window.routes?.blockInformation?.getByBlock || `/block-information/block/${blockId}`,
             method: 'GET',
             dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(data) {
                 if (data.success) {
                     // Clear and repopulate DataTable
@@ -298,11 +304,14 @@ $(document).ready(function() {
             const isEdit = $form.find('input[name="_method"]').length > 0;
             const method = isEdit ? 'PUT' : 'POST';
             
+            // Get CSRF token from meta tag (most reliable method)
+            const csrfToken = $('meta[name="csrf-token"]').attr('content');
+            
             const formData = {
                 block_id: window.blockId,
                 information_type_id: $('#information_type_id').val(),
                 description: $('#description').val(),
-                _token: window.csrfToken
+                _token: csrfToken
             };
             
             // Add _method field for PUT requests
@@ -313,13 +322,15 @@ $(document).ready(function() {
             console.log('Form data being sent:', formData);
             console.log('Form action URL:', $form.attr('action'));
             console.log('Is edit mode:', isEdit);
+            console.log('CSRF Token:', csrfToken);
             
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST', // Always use POST for Laravel form spoofing
                 data: formData,
                 headers: {
-                    'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 success: function(data) {
                     console.log('Success response:', data);
@@ -432,6 +443,9 @@ $(document).ready(function() {
             url: window.routes?.blockInformation?.show?.replace(':id', id) || `/block-information/${id}`,
             method: 'GET',
             dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(data) {
                 if (data.success) {
                     const info = data.data;
@@ -540,11 +554,15 @@ $(document).ready(function() {
         const originalText = $confirmBtn.html();
         $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
         
+        // Get CSRF token from meta tag
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+        
         $.ajax({
             url: window.routes?.blockInformation?.destroy?.replace(':id', infoId) || `/block-information/${infoId}`,
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
             },
             success: function(response) {
                 
@@ -590,6 +608,9 @@ $(document).ready(function() {
             url: window.routes?.blockInformation?.show?.replace(':id', infoId) || `/block-information/${infoId}`,
             method: 'GET',
             dataType: 'json',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
             success: function(data) {
                 if (data.success) {
                     const info = data.data;
