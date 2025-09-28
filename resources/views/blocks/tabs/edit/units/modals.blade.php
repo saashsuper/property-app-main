@@ -257,36 +257,22 @@ $(document).ready(function() {
         // Show loading state
         $btn.html('<i class="ph-spinner-gap me-1"></i> Downloading...').prop('disabled', true);
         
-        // Create a hidden form to submit the download request
-        const form = $('<form>', {
-            method: 'GET',
-            action: '{{ route("block-units.template") }}',
-            target: '_blank'
-        });
+        // Create download URL
+        const downloadUrl = '{{ route("block-units.template") }}?block_id=' + blockId;
         
-        // Add block_id parameter
-        form.append($('<input>', {
-            type: 'hidden',
-            name: 'block_id',
-            value: blockId
-        }));
+        // Create temporary link and click it for download
+        const tempLink = document.createElement('a');
+        tempLink.href = downloadUrl;
+        tempLink.download = ''; // This tells browser to download instead of navigate
+        tempLink.style.display = 'none';
+        document.body.appendChild(tempLink);
+        tempLink.click();
+        document.body.removeChild(tempLink);
         
-        // Add CSRF token
-        form.append($('<input>', {
-            type: 'hidden',
-            name: '_token',
-            value: $('meta[name="csrf-token"]').attr('content')
-        }));
-        
-        // Append to body and submit
-        $('body').append(form);
-        form.submit();
-        
-        // Clean up
+        // Reset button state after a short delay
         setTimeout(function() {
-            form.remove();
             $btn.html(originalText).prop('disabled', false);
-        }, 1000);
+        }, 2000);
     });
 });
 </script>
