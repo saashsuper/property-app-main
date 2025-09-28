@@ -380,13 +380,10 @@ class BlockUnitController extends Controller
         }
     }
 
-    public function downloadTemplate(Request $request)
+    public function downloadTemplate($block_id)
     {
-        $request->validate([
-            'block_id' => 'required|exists:blocks,id',
-        ]);
-
-        $block = Block::findOrFail($request->block_id);
+        // Validate that block_id exists
+        $block = Block::findOrFail($block_id);
         
         // Path to the Excel template file in public storage
         $templatePath = public_path('storage/templates/unit-upload-template.xlsx');

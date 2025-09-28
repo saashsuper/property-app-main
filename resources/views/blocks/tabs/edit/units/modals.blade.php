@@ -177,7 +177,7 @@
                             </div>
                         </div>
                         <div class="col-12 mb-3">
-                            <a href="{{ route('block-units.template', ['block_id' => $block->id]) }}" 
+                            <a href="{{ route('block-units.template', $block->id) }}" 
                                class="btn btn-outline-primary">
                                 <i class="ph-download me-1"></i> Download Template
                             </a>
