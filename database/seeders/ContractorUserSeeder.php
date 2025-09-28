@@ -28,7 +28,7 @@ class ContractorUserSeeder extends Seeder
                     'name' => 'Contractor ' . ($index + 1),
                     'email' => $email,
                     'password' => Hash::make('password'),
-                    'user_type_id' => 8, // Contractor User type has ID 8
+                    'user_type_id' => 7, // Contractor User type has ID 7
                     'email_verified_at' => now(),
                     'created_at' => now(),
                     'updated_at' => now(),
