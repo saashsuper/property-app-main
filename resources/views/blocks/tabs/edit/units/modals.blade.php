@@ -1,6 +1,6 @@
 <!-- Unit Modal (Add/Edit) -->
 <div class="modal fade" id="unitModal" tabindex="-1" aria-labelledby="unitModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
                 <h5 class="modal-title" id="unitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Unit</h5>
@@ -17,7 +17,7 @@
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="block_building_id" class="form-label">Building/Core <span class="text-danger">*</span></label>
                             <select class="form-select" id="block_building_id" name="block_building_id" required>
                                 <option value="">Select Building/Core</option>
@@ -26,7 +26,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="block_unit_type_id" class="form-label">Unit Type <span class="text-danger">*</span></label>
                             <select class="form-select" id="block_unit_type_id" name="block_unit_type_id" required>
                                 <option value="">Select Unit Type</option>
@@ -35,19 +35,19 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="unit_code" class="form-label">Unit Code <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="unit_code" name="unit_code" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="unit_name" class="form-label">Unit Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="unit_name" name="unit_name" required>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="owners_name" class="form-label">Owner's Name</label>
                             <input type="text" class="form-control" id="owners_name" name="owners_name">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="salutation" class="form-label">Salutation</label>
                             <select class="form-select" id="salutation" name="salutation">
                                 <option value="">Select Salutation</option>
@@ -56,48 +56,48 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="resident" class="form-label">Resident</label>
                             <select class="form-select" id="resident" name="resident">
                                 <option value="1">Yes</option>
                                 <option value="0">No</option>
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="mobile_no" class="form-label">Mobile Number</label>
                             <input type="number" class="form-control" id="mobile_no" name="mobile_no" min="0" max="99999999999999999999">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="phone_number" class="form-label">Phone Number</label>
                             <input type="number" class="form-control" id="phone_number" name="phone_number" min="0" max="99999999999999999999">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="letting_agent" class="form-label">Letting Agent</label>
                             <input type="text" class="form-control" id="letting_agent" name="letting_agent">
                         </div>
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="misc_info" class="form-label">Miscellaneous Info</label>
                             <textarea class="form-control" id="misc_info" name="misc_info" rows="2"></textarea>
                         </div>
                         
                         <!-- Address Fields - Shown when Resident = No -->
-                        <div class="col-md-6 mb-3" id="address1_field" style="display: none;">
+                        <div class="col-md-4 mb-3" id="address1_field" style="display: none;">
                             <label for="address1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="address1" name="address1">
                         </div>
-                        <div class="col-md-6 mb-3" id="address2_field" style="display: none;">
+                        <div class="col-md-4 mb-3" id="address2_field" style="display: none;">
                             <label for="address2" class="form-label">Address Line 2</label>
                             <input type="text" class="form-control" id="address2" name="address2">
                         </div>
-                        <div class="col-md-6 mb-3" id="address3_field" style="display: none;">
+                        <div class="col-md-4 mb-3" id="address3_field" style="display: none;">
                             <label for="address3" class="form-label">Address Line 3</label>
                             <input type="text" class="form-control" id="address3" name="address3">
                         </div>
-                        <div class="col-md-6 mb-3" id="country_field" style="display: none;">
+                        <div class="col-md-4 mb-3" id="country_field" style="display: none;">
                             <label for="country_id" class="form-label">Country <span class="text-danger">*</span></label>
                             <select class="form-select" id="country_id" name="country_id" onchange="handleCountryChange(this.value)">
                                 <option value="">Select Country</option>
@@ -106,13 +106,13 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3" id="state_field" style="display: none;">
+                        <div class="col-md-4 mb-3" id="state_field" style="display: none;">
                             <label for="state_id" class="form-label">County / State <span class="text-danger">*</span></label>
                             <select class="form-select" id="state_id" name="state_id">
                                 <option value="">Select County / State</option>
                             </select>
                         </div>
-                        <div class="col-md-6 mb-3" id="zip_field" style="display: none;">
+                        <div class="col-md-4 mb-3" id="zip_field" style="display: none;">
                             <label for="zip" class="form-label">Zip / Eircode</label>
                             <input type="text" class="form-control" id="zip" name="zip">
                         </div>
@@ -133,7 +133,7 @@
 
 <!-- Upload Unit Modal -->
 <div class="modal fade" id="uploadUnitModal" tabindex="-1" aria-labelledby="uploadUnitModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
                 <h5 class="modal-title" id="uploadUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Upload Units</h5>
@@ -159,7 +159,7 @@
                             <div class="form-text">
                                 <strong>Supported formats:</strong> Excel (.xlsx, .xls) or CSV (.csv)<br>
                                 <strong>Maximum file size:</strong> 5MB<br>
-                                <strong>Required columns:</strong> Unit Code, Unit Name, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info
+                                <strong>Required columns:</strong> Unit Code, Unit Name, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info, Address Line 1, Address Line 2, Address Line 3, Country, County/State, Zip/EirCode
                             </div>
                         </div>
                         <div class="col-12 mb-3">
@@ -170,6 +170,9 @@
                                     <li>Ensure all required fields are filled</li>
                                     <li>Unit codes must be unique within the block</li>
                                     <li>Resident field should be "Yes" or "No"</li>
+                                    <li><strong>Address Logic:</strong> Address fields are only saved when Resident = "No"</li>
+                                    <li>For Resident = "Yes": Leave address fields empty (they won't be saved)</li>
+                                    <li>For Resident = "No": Fill address fields as needed</li>
                                 </ul>
                             </div>
                         </div>

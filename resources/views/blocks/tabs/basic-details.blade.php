@@ -194,3 +194,86 @@
         </div>
     </div>
 </form>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Country-State dependency logic
+    const countrySelect = document.getElementById('country_id');
+    const stateSelect = document.getElementById('state_id');
+    
+    if (!countrySelect || !stateSelect) {
+        console.warn('Country or State select elements not found in basic-details tab');
+        return;
+    }
+    
+    console.log('Country-State dependency initialized in basic-details tab');
+
+    function loadStatesByCountry(countryId, preserveSelectedValue = false) {
+        if (!countryId) {
+            // Clear states if no country selected
+            stateSelect.innerHTML = '<option value="">Select County/State</option>';
+            return;
+        }
+
+        console.log('Loading states for country ID:', countryId);
+        
+        // Store the currently selected value if we want to preserve it
+        const currentSelectedValue = preserveSelectedValue ? stateSelect.value : null;
+        
+        // Show loading state
+        stateSelect.innerHTML = '<option value="">Loading states...</option>';
+        stateSelect.disabled = true;
+
+        // Make AJAX request to get states
+        fetch(`/api/states/${countryId}`)
+            .then(response => response.json())
+            .then(states => {
+                console.log('Received states:', states);
+                
+                // Clear existing options
+                stateSelect.innerHTML = '<option value="">Select County/State</option>';
+                
+                // Add new state options
+                states.forEach(state => {
+                    const option = document.createElement('option');
+                    option.value = state.id;
+                    option.textContent = state.name;
+                    stateSelect.appendChild(option);
+                });
+                
+                // Restore the selected value if it exists in the new options
+                if (currentSelectedValue && preserveSelectedValue) {
+                    const optionExists = Array.from(stateSelect.options).some(option => option.value === currentSelectedValue);
+                    if (optionExists) {
+                        stateSelect.value = currentSelectedValue;
+                        console.log('Restored selected state value:', currentSelectedValue);
+                    }
+                }
+                
+                stateSelect.disabled = false;
+                console.log('States loaded successfully:', states.length, 'states');
+            })
+            .catch(error => {
+                console.error('Error loading states:', error);
+                stateSelect.innerHTML = '<option value="">Error loading states</option>';
+                stateSelect.disabled = false;
+            });
+    }
+
+    function updateStates(preserveSelected = false) {
+        const selectedCountryId = countrySelect.value;
+        console.log('Selected country ID:', selectedCountryId);
+        
+        // Load states for the selected country
+        loadStatesByCountry(selectedCountryId, preserveSelected);
+    }
+
+    // Initialize states on page load and preserve the selected state value
+    updateStates(true);
+
+    // Update states when country changes (don't preserve selected value when user changes country)
+    countrySelect.addEventListener('change', () => updateStates(false));
+});
+</script>
+@endpush

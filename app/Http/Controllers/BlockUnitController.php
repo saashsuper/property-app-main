@@ -445,6 +445,12 @@ class BlockUnitController extends Controller
                         'phone_number' => $rowData[7] ?? '',
                         'letting_agent' => $rowData[8] ?? '',
                         'misc_info' => $rowData[9] ?? '',
+                        'address1' => $rowData[10] ?? '',
+                        'address2' => $rowData[11] ?? '',
+                        'address3' => $rowData[12] ?? '',
+                        'country_name' => $rowData[13] ?? '',
+                        'state_name' => $rowData[14] ?? '',
+                        'zip' => $rowData[15] ?? '',
                         'building_name' => '', // No longer in template
                         'unit_type_name' => '' // No longer in template
                     ];
@@ -482,7 +488,7 @@ class BlockUnitController extends Controller
         $headers = fgetcsv($handle);
         
         while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) >= 10) {
+            if (count($row) >= 16) {
                 $data[] = [
                     'unit_code' => trim($row[0]),
                     'unit_name' => trim($row[1]),
@@ -494,6 +500,12 @@ class BlockUnitController extends Controller
                     'phone_number' => trim($row[7]),
                     'letting_agent' => trim($row[8]),
                     'misc_info' => trim($row[9]),
+                    'address1' => trim($row[10]),
+                    'address2' => trim($row[11]),
+                    'address3' => trim($row[12]),
+                    'country_name' => trim($row[13]),
+                    'state_name' => trim($row[14]),
+                    'zip' => trim($row[15]),
                     'building_name' => '', // No longer in template
                     'unit_type_name' => '' // No longer in template
                 ];
@@ -541,8 +553,34 @@ class BlockUnitController extends Controller
                     }
                 }
                 
-                // Create the unit
-                BlockUnit::create([
+                // Only process address data if Resident = "No" (0)
+                $country = null;
+                $state = null;
+                
+                if ($row['resident'] == 0) {
+                    // Find country by name (required when resident = No)
+                    if (!empty($row['country_name'])) {
+                        $country = \App\Models\Country::where('country_name', $row['country_name'])->first();
+                        if (!$country) {
+                            $errors[] = "Row " . ($index + 2) . ": Country '{$row['country_name']}' not found";
+                            continue; // Skip if country not found
+                        }
+                    }
+                    
+                    // Find state by name (optional, but requires country)
+                    if (!empty($row['state_name']) && $country) {
+                        $state = \App\Models\State::where('name', $row['state_name'])
+                            ->where('country_id', $country->id)
+                            ->first();
+                        if (!$state) {
+                            $errors[] = "Row " . ($index + 2) . ": State '{$row['state_name']}' not found for country '{$row['country_name']}'";
+                            continue; // Skip if state not found
+                        }
+                    }
+                }
+                
+                // Prepare unit data
+                $unitData = [
                     'block_id' => $block->id,
                     'block_building_id' => $building ? $building->id : null,
                     'block_unit_type_id' => $unitType ? $unitType->id : null,
@@ -558,7 +596,20 @@ class BlockUnitController extends Controller
                     'misc_info' => $row['misc_info'],
                     'created_by' => auth()->id(),
                     'updated_by' => auth()->id(),
-                ]);
+                ];
+                
+                // Only add address data if Resident = "No"
+                if ($row['resident'] == 0) {
+                    $unitData['address1'] = $row['address1'];
+                    $unitData['address2'] = $row['address2'];
+                    $unitData['address3'] = $row['address3'];
+                    $unitData['country_id'] = $country ? $country->id : null;
+                    $unitData['state_id'] = $state ? $state->id : null;
+                    $unitData['zip'] = $row['zip'];
+                }
+                
+                // Create the unit
+                BlockUnit::create($unitData);
                 
                 $importedCount++;
                 

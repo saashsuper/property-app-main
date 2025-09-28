@@ -59,7 +59,7 @@ $(document).ready(function() {
      * Creates or updates a message div in the specified form and shows it.
      * Automatically removes existing alert classes and applies the new type.
      */
-    function showMessage(containerId, type, message) {
+    window.showMessage = function(containerId, type, message) {
         let $messageDiv = $('#' + containerId);
         
         // If message div doesn't exist, create it
@@ -116,7 +116,7 @@ $(document).ready(function() {
      * 
      * @param {string} containerId - The ID of the message container
      */
-    function clearMessage(containerId) {
+    window.clearMessage = function(containerId) {
         const $messageDiv = $('#' + containerId);
         if ($messageDiv.length) {
             $messageDiv.addClass('d-none');
@@ -218,7 +218,11 @@ $(document).ready(function() {
      */
     window.refreshBlockUnitsTable = function() {
         if (!blockUnitsDataTable) {
-            return;
+            if ($.fn.DataTable.isDataTable('#blockUnitsTable')) {
+                blockUnitsDataTable = $('#blockUnitsTable').DataTable();
+            } else {
+                return;
+            }
         }
         
         const blockId = window.blockId || $('input[name="block_id"]').val();
@@ -750,8 +754,10 @@ function unitDeleteUnit(unitId) {
             // Show success message
             showMessage('unitMessage', 'success', 'Unit deleted successfully');
             
-            // Refresh the table
-            refreshBlockUnitsTable();
+            // Close modal and refresh table after delay (same as add/edit)
+            setTimeout(function() {
+                refreshBlockUnitsTable(); // Direct refresh since we're staying on Units tab
+            }, 800);
             
             // Reset button state
             $confirmBtn.html(originalText).prop('disabled', false);

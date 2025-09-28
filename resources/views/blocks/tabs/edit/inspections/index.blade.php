@@ -31,6 +31,9 @@
                 <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#addInspectionModal">
                     <i class="ph-plus align-bottom me-1"></i> Add Inspection
                 </button>
+                <button class="btn btn-secondary btn-sm" onclick="refreshInspectionsTable()" title="Test Refresh">
+                    <i class="ph-arrow-clockwise"></i> Test Refresh
+                </button>
             </div>
         </div>
         

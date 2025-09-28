@@ -10,6 +10,12 @@
                 @csrf
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
+                    <!-- Message container -->
+                    <div id="addInspectionMessage" class="alert d-none" role="alert">
+                        <i class="ph-check-circle me-2"></i>
+                        <span class="message-text"></span>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="user_id" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
@@ -74,7 +80,12 @@
                 <input type="hidden" name="inspection_id" id="edit_inspection_id">
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
-                    <div id="editInspectionMessage"></div>
+                    <!-- Message container -->
+                    <div id="editInspectionMessage" class="alert d-none" role="alert">
+                        <i class="ph-check-circle me-2"></i>
+                        <span class="message-text"></span>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="edit_ref_no" class="form-label">Reference Number</label>

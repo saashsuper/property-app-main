@@ -11,6 +11,72 @@
         default: '<span class="badge badge-inspection-default">Unknown</span>'
     };
 
+    /**
+     * Shows success/error messages in modals
+     * 
+     * @param {string} containerId - The ID of the message container
+     * @param {string} type - The type of message (success, danger, warning, info)
+     * @param {string} message - The message to display
+     */
+    function showMessage(containerId, type, message) {
+        let $messageDiv = $('#' + containerId);
+        
+        // Create message structure if it doesn't exist
+        if ($messageDiv.length === 0) {
+            $messageDiv = $(`<div id="${containerId}" class="alert d-none" role="alert">
+                <i class="ph-check-circle me-2"></i>
+                <span class="message-text"></span>
+            </div>`);
+            $('.modal-body').prepend($messageDiv);
+        }
+        
+        // Remove all alert classes and add the new one
+        $messageDiv.removeClass('alert-success alert-danger alert-info alert-warning')
+                  .addClass(`alert-${type}`)
+                  .removeClass('d-none');
+        
+        // Set appropriate icon
+        const $icon = $messageDiv.find('i');
+        $icon.removeClass('ph-check-circle ph-warning ph-info-circle ph-x-circle');
+        
+        switch(type) {
+            case 'success':
+                $icon.addClass('ph-check-circle');
+                break;
+            case 'danger':
+                $icon.addClass('ph-x-circle');
+                break;
+            case 'warning':
+                $icon.addClass('ph-warning');
+                break;
+            case 'info':
+                $icon.addClass('ph-info-circle');
+                break;
+        }
+        
+        // Set message text
+        $messageDiv.find('.message-text').text(message);
+        
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(function() {
+                $messageDiv.addClass('d-none');
+            }, 5000);
+        }
+    }
+    
+    /**
+     * Clears/hides message in the modal
+     * 
+     * @param {string} containerId - The ID of the message container
+     */
+    function clearMessage(containerId) {
+        const $messageDiv = $('#' + containerId);
+        if ($messageDiv.length) {
+            $messageDiv.addClass('d-none');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         initializeDataTable();
         bindFormHandlers();
@@ -74,6 +140,9 @@
                 paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
             },
             initComplete: function() {
+                console.log('DataTable initialization completed');
+                console.log('DataTable instance:', inspectionsDT);
+                
                 // Style the search box
                 $('.dataTables_filter input')
                     .addClass('form-control')
@@ -132,26 +201,32 @@
 
     function bindModalEvents() {
         const editModal = document.getElementById('editInspectionModal');
-        if (!editModal) {
-            return;
+        const addModal = document.getElementById('addInspectionModal');
+        
+        if (editModal) {
+            editModal.addEventListener('show.bs.modal', () => {
+                // Clear any previous messages
+                clearMessage('editInspectionMessage');
+            });
+
+            editModal.addEventListener('hidden.bs.modal', () => {
+                const form = document.getElementById('editInspectionForm');
+                if (form) {
+                    form.reset();
+                    form.classList.remove('was-validated');
+                }
+                clearMessage('editInspectionMessage');
+                document.getElementById('edit_end_date_group').style.display = 'none';
+                document.getElementById('edit_end_time_group').style.display = 'none';
+            });
         }
-
-        editModal.addEventListener('show.bs.modal', () => {
-            const msg = document.getElementById('editInspectionMessage');
-            if (msg) msg.innerHTML = '';
-        });
-
-        editModal.addEventListener('hidden.bs.modal', () => {
-            const form = document.getElementById('editInspectionForm');
-            if (form) {
-                form.reset();
-                form.classList.remove('was-validated');
-            }
-            const msg = document.getElementById('editInspectionMessage');
-            if (msg) msg.innerHTML = '';
-            document.getElementById('edit_end_date_group').style.display = 'none';
-            document.getElementById('edit_end_time_group').style.display = 'none';
-        });
+        
+        if (addModal) {
+            addModal.addEventListener('show.bs.modal', () => {
+                // Clear any previous messages
+                clearMessage('addInspectionMessage');
+            });
+        }
     }
 
     function attachEditHandlers() {
@@ -241,13 +316,13 @@
             return;
         }
 
-        const date = dayjs(value);
-        if (!date.isValid()) {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
             return;
         }
 
-        dateEl.value = date.format('YYYY-MM-DD');
-        timeEl.value = date.format('HH:mm');
+        dateEl.value = date.toISOString().split('T')[0];
+        timeEl.value = date.toTimeString().slice(0, 5);
 
         if (toggleVisibility) {
             if (groupDate) groupDate.style.display = 'block';
@@ -264,13 +339,19 @@
         });
 
         submitForm(form.action, 'POST', payload, {
-            onSuccess: () => {
+            onSuccess: (message) => {
+                showMessage('addInspectionMessage', 'success', message || 'Inspection scheduled successfully!');
                 form.reset();
-                bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-                showToast('success', 'Inspection scheduled successfully.');
-                refreshTable();
+                
+                setTimeout(function() {
+                    bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+                    // Add a small delay to ensure modal is fully closed
+                    setTimeout(function() {
+                        refreshInspectionsTable();
+                    }, 100);
+                }, 800);
             },
-            onError: msg => showToast('danger', msg)
+            onError: msg => showMessage('addInspectionMessage', 'danger', msg)
         });
     }
 
@@ -292,17 +373,18 @@
 
         submitForm(`/block-inspections/${id}`, 'PUT', payload, {
             onSuccess: msg => {
-                showToast('success', msg || 'Inspection updated successfully.');
-                bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-                refreshTable();
+                showMessage('editInspectionMessage', 'success', msg || 'Inspection updated successfully!');
+                
+                setTimeout(function() {
+                    bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+                    // Add a small delay to ensure modal is fully closed
+                    setTimeout(function() {
+                        refreshInspectionsTable();
+                    }, 100);
+                }, 800);
             },
             onError: msg => {
-                const container = document.getElementById('editInspectionMessage');
-                if (container) {
-                    container.innerHTML = `<div class="alert alert-danger mb-0">${msg}</div>`;
-                } else {
-                    showToast('danger', msg);
-                }
+                showMessage('editInspectionMessage', 'danger', msg);
             },
             onComplete: () => setLoading(form.querySelector('button[type="submit"]'), false)
         });
@@ -347,12 +429,22 @@
     }
 
     function refreshTable() {
+        console.log('refreshTable called, inspectionsDT:', inspectionsDT);
         if (inspectionsDT) {
+            console.log('Calling refreshInspectionsTable');
             refreshInspectionsTable();
         } else {
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+            console.log('DataTable not initialized, checking if table exists...');
+            if ($.fn.DataTable.isDataTable('#inspectionsTable')) {
+                inspectionsDT = $('#inspectionsTable').DataTable();
+                console.log('DataTable found and assigned, calling refreshInspectionsTable');
+                refreshInspectionsTable();
+            } else {
+                console.log('DataTable not found, reloading page in 1.5s');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }
         }
     }
 
@@ -365,21 +457,36 @@
      * @global
      */
     window.refreshInspectionsTable = function() {
+        console.log('refreshInspectionsTable called, inspectionsDT:', inspectionsDT);
+        
+        // Try to get the DataTable if it's not available
         if (!inspectionsDT) {
-            return;
+            console.log('DataTable not available, trying to get it...');
+            if ($.fn.DataTable.isDataTable('#inspectionsTable')) {
+                inspectionsDT = $('#inspectionsTable').DataTable();
+                console.log('DataTable found and assigned');
+            } else {
+                console.log('DataTable not found, returning');
+                return;
+            }
         }
         
         const blockId = window.blockId || $('input[name="block_id"]').val();
+        console.log('Block ID:', blockId);
         if (!blockId) {
+            console.log('No block ID found, returning');
             return;
         }
         
+        console.log('Making AJAX request to:', `/api/blocks/${blockId}/inspections`);
         $.ajax({
             url: `/api/blocks/${blockId}/inspections`,
             method: 'GET',
             dataType: 'json',
             success: function(data) {
+                console.log('AJAX success, data:', data);
                 if (data.success) {
+                    console.log('Clearing DataTable and adding', data.data.length, 'rows');
                     // Clear and repopulate DataTable
                     inspectionsDT.clear();
                     
@@ -388,9 +495,13 @@
                         const leadMember = teams.find(t => t.is_lead) || teams[0];
                         const inspectorName = leadMember?.user?.name || inspection.creator?.name || 'N/A';
 
-                        const scheduleDateAttr = inspection.scheduled_date_time ? dayjs(inspection.scheduled_date_time).format('YYYY-MM-DD') : '';
-                        const scheduleTimeAttr = inspection.scheduled_date_time ? dayjs(inspection.scheduled_date_time).format('HH:mm') : '';
-                        const scheduleDisplay = inspection.scheduled_date_time ? dayjs(inspection.scheduled_date_time).format('MMM DD, YYYY') : 'N/A';
+                        const scheduleDateAttr = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toISOString().split('T')[0] : '';
+                        const scheduleTimeAttr = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toTimeString().slice(0, 5) : '';
+                        const scheduleDisplay = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit'
+                        }) : 'N/A';
 
                         const notesDisplay = inspection.notes
                             ? (inspection.notes.length > 80 ? `${inspection.notes.slice(0, 77)}…` : inspection.notes)
@@ -412,11 +523,20 @@
                         ]);
                     });
                     
+                    console.log('Drawing DataTable');
                     inspectionsDT.draw();
+                    console.log('DataTable refresh completed');
+                } else {
+                    console.log('API returned success: false');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error fetching inspections:', error);
+                console.error('Response:', xhr.responseText);
+                console.log('Falling back to page reload');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
             }
         });
     };
@@ -438,7 +558,7 @@
                 <button class="btn btn-sm btn-outline-danger"
                         onclick="inspectionShowDeleteConfirmation(${inspection.id}, {
                             ref_no: '${inspection.ref_no || 'N/A'}',
-                            scheduled_date: '${inspection.scheduled_date_attr ? dayjs(inspection.scheduled_date_attr).format('MMM DD, YYYY') : 'N/A'}',
+                            scheduled_date: '${inspection.scheduled_date_attr ? new Date(inspection.scheduled_date_attr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A'}',
                             inspector: '${inspectorName}'
                         })"
                         title="Delete Inspection">
@@ -461,8 +581,18 @@
 
     function formatDateTime(value) {
         if (!value) return '-';
-        const date = dayjs(value);
-        return date.isValid() ? date.format('MMM DD, YYYY HH:mm') : '-';
+        try {
+            const date = new Date(value);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return '-';
+        }
     }
 
     function showToast(type, message) {
