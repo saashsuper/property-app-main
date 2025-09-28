@@ -132,10 +132,13 @@ $(document).ready(function() {
                     dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
                     order: [[2, 'desc']],      // Default sort by added date descending
                     columnDefs: [
-                        { targets: [4], orderable: false } // Actions column (last column) not sortable
+                        { targets: [4], orderable: false }, // Actions column (last column) not sortable
+                        { targets: '_all', className: 'text-center' } // Center align all columns
                     ],
                     pageLength: 25,            // Default page size
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], // Page size options
+                    autoWidth: false,          // Disable automatic column width calculation
+                    fixedColumns: false,       // Disable fixed columns
                     language: {
                         lengthMenu: "Show _MENU_ entries",
                         info: "Showing _START_ to _END_ of _TOTAL_ entries",
@@ -707,12 +710,16 @@ $(document).ready(function() {
     
     // Listen for Bootstrap tab shown event to refresh data when block information tab becomes active
     $(document).on('shown.bs.tab', '#block-info-tab', function(e) {
-        triggerBlockInformationRefresh();
+        setTimeout(function() {
+            triggerBlockInformationRefresh();
+        }, 100);
     });
 
     // If Block Information tab is already active on page load, refresh once to ensure data is loaded
     if ($('#block-info').hasClass('show') && $('#block-info').hasClass('active')) {
-        triggerBlockInformationRefresh();
+        setTimeout(function() {
+            triggerBlockInformationRefresh();
+        }, 100);
     }
     
     // ========================================
@@ -738,8 +745,10 @@ $(document).ready(function() {
     // INITIALIZATION
     // ========================================
     
-    // Initialize DataTable on page load
-    initializeDataTable();
+    // Initialize DataTable on page load with a small delay to ensure DOM is ready
+    setTimeout(function() {
+        initializeDataTable();
+    }, 100);
 });
 
 // ========================================

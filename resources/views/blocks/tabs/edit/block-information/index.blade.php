@@ -78,7 +78,11 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="5" class="text-center">No block information available.</td>
+                            <td class="text-center">No block information available.</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                         </tr>
                     @endif
                 </tbody>
