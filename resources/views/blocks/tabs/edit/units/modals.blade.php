@@ -177,10 +177,12 @@
                             </div>
                         </div>
                         <div class="col-12 mb-3">
-                            <a href="{{ route('block-units.template', ['block_id' => $block->id]) }}" 
-                               class="btn btn-outline-primary">
+                            <button type="button" 
+                                    class="btn btn-outline-primary" 
+                                    id="downloadTemplateBtn"
+                                    data-block-id="{{ $block->id }}">
                                 <i class="ph-download me-1"></i> Download Template
-                            </a>
+                            </button>
                         </div>
                         <div class="col-12 mb-3" id="uploadErrors" style="display: none;">
                             <div class="alert alert-danger">
@@ -241,3 +243,50 @@
         </div>
     </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    // Handle template download
+    $('#downloadTemplateBtn').on('click', function(e) {
+        e.preventDefault();
+        
+        const blockId = $(this).data('block-id');
+        const $btn = $(this);
+        const originalText = $btn.html();
+        
+        // Show loading state
+        $btn.html('<i class="ph-spinner-gap me-1"></i> Downloading...').prop('disabled', true);
+        
+        // Create a hidden form to submit the download request
+        const form = $('<form>', {
+            method: 'GET',
+            action: '{{ route("block-units.template") }}',
+            target: '_blank'
+        });
+        
+        // Add block_id parameter
+        form.append($('<input>', {
+            type: 'hidden',
+            name: 'block_id',
+            value: blockId
+        }));
+        
+        // Add CSRF token
+        form.append($('<input>', {
+            type: 'hidden',
+            name: '_token',
+            value: $('meta[name="csrf-token"]').attr('content')
+        }));
+        
+        // Append to body and submit
+        $('body').append(form);
+        form.submit();
+        
+        // Clean up
+        setTimeout(function() {
+            form.remove();
+            $btn.html(originalText).prop('disabled', false);
+        }, 1000);
+    });
+});
+</script>
