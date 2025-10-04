@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BlockIssue;
 use App\Models\BlockIssueImage;
 use App\Models\Block;
+use App\Models\BlockUnit;
 use App\Models\IssueStatus;
 use App\Models\Priority;
 use App\Models\User;
@@ -25,7 +26,7 @@ class BlockIssueController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus']);
+        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus', 'blockUnit']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -340,7 +341,7 @@ class BlockIssueController extends Controller
      */
     public function getBlockIssues(Request $request)
     {
-        $blockIssues = BlockIssue::with(['block'])
+        $blockIssues = BlockIssue::with(['block', 'blockUnit', 'priority', 'issueStatus', 'assignedTo'])
             ->orderBy('created_at', 'desc');
             
         if($request->has('block_id')){
@@ -490,7 +491,7 @@ class BlockIssueController extends Controller
             // Get active issues for the unit (status 1 = Open, 2 = In Progress)
             $issues = BlockIssue::where('block_unit_id', $unitId)
                 ->whereIn('issue_status_id', [1, 2]) // Open and In Progress
-                ->with(['priority', 'issueStatus'])
+                ->with(['priority', 'issueStatus', 'blockUnit', 'assignedTo'])
                 ->orderBy('created_at', 'desc') // Most recent first
                 ->get();
 
@@ -505,6 +506,138 @@ class BlockIssueController extends Controller
                 'message' => 'Error fetching issues: ' . $e->getMessage()
             ], 500);
         }
+    }
+    
+    /**
+     * Get all issues for a specific unit (for DataTable display)
+     */
+    public function getIssuesForUnit($unitId)
+    {
+        try {
+            // Validate unit exists
+            $unit = BlockUnit::find($unitId);
+            if (!$unit) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unit not found'
+                ], 404);
+            }
+            
+            // Get all issues for the unit with relationships
+            $issues = BlockIssue::where('block_unit_id', $unitId)
+                ->with([
+                    'priority',
+                    'issueStatus',
+                    'issueType',
+                    'assignedTo',
+                    'blockUnit'
+                ])
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Format data for DataTable (as array for direct row addition)
+            $formattedIssues = $issues->map(function ($issue) {
+                return [
+                    // Issue ID with link
+                    '<a href="/block-issues/' . $issue->id . '" class="text-decoration-none"><b>#' . ($issue->ref_no ?? $issue->id) . '</b></a>',
+                    // Issue title
+                    $issue->issue ?? 'N/A',
+                    // Unit name (new column)
+                    '<span class="badge bg-secondary">' . ($issue->blockUnit->unit_name ?? 'N/A') . '</span>',
+                    // Issue type badge
+                    $this->getIssueTypeBadge($issue->issueType->name ?? 'N/A'),
+                    // Priority badge
+                    $this->getPriorityBadge($issue->priority_id),
+                    // Status badge
+                    $this->getStatusBadge($issue->issue_status_id),
+                    // Created date
+                    $issue->created_at->format('Y-m-d H:i:s'),
+                    // Actions
+                    $this->getIssueActions($issue)
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $formattedIssues
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching issues for unit',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get action buttons HTML for an issue
+     */
+    private function getIssueActions($issue)
+    {
+        $actions = '<div class="d-flex gap-2">';
+        
+        // Edit button
+        $actions .= '<button type="button" class="btn btn-sm btn-outline-primary" onclick="editIssue(' . $issue->id . ')" title="Edit Issue">';
+        $actions .= '<i class="ph-pencil"></i>';
+        $actions .= '</button>';
+        
+        // View button
+        $actions .= '<button type="button" class="btn btn-sm btn-outline-info" onclick="viewIssue(' . $issue->id . ')" title="View Issue">';
+        $actions .= '<i class="ph-eye"></i>';
+        $actions .= '</button>';
+        
+        // Delete button
+        $actions .= '<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteIssue(' . $issue->id . ')" title="Delete Issue">';
+        $actions .= '<i class="ph-trash"></i>';
+        $actions .= '</button>';
+        
+        $actions .= '</div>';
+        
+        return $actions;
+    }
+    
+    /**
+     * Get priority badge HTML
+     */
+    private function getPriorityBadge($priorityId)
+    {
+        $priorities = [
+            1 => '<span class="badge bg-success">Low</span>',
+            2 => '<span class="badge bg-info">Normal</span>',
+            3 => '<span class="badge bg-warning">High</span>',
+            4 => '<span class="badge bg-danger">Urgent</span>',
+            5 => '<span class="badge bg-dark">Critical</span>'
+        ];
+        return $priorities[$priorityId] ?? '<span class="badge bg-secondary">Unknown</span>';
+    }
+    
+    /**
+     * Get issue type badge HTML
+     */
+    private function getIssueTypeBadge($issueType)
+    {
+        if ($issueType) {
+            $formattedType = ucwords(str_replace('_', ' ', $issueType));
+            return '<span class="badge bg-secondary">' . $formattedType . '</span>';
+        }
+        return '<span class="text-muted">N/A</span>';
+    }
+    
+    /**
+     * Get status badge HTML
+     */
+    private function getStatusBadge($statusId)
+    {
+        $statuses = [
+            1 => '<span class="badge bg-warning">Open</span>',
+            2 => '<span class="badge bg-info">In Progress</span>',
+            3 => '<span class="badge bg-success">Resolved</span>',
+            4 => '<span class="badge bg-secondary">Closed</span>',
+            5 => '<span class="badge bg-danger">On Hold</span>'
+        ];
+        return $statuses[$statusId] ?? '<span class="badge bg-secondary">Unknown</span>';
     }
     
     /**

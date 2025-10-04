@@ -13,8 +13,6 @@
 <!-- Flatpickr for date pickers -->
 <script src="{{ URL::asset('build/libs/flatpickr/flatpickr.min.js') }}"></script>
 
-<!-- Choices for select dropdowns -->
-<script src="{{ URL::asset('build/libs/choices.js/choices.min.js') }}"></script>
 
 <!-- AutoComplete for search suggestions -->
 <script src="{{ URL::asset('build/libs/@tarekraafat/autocomplete.js/autoComplete.min.js') }}"></script>

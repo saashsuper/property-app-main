@@ -84,6 +84,14 @@ class BlockIssue extends Model
     }
 
     /**
+     * Get the block unit that owns the issue (alias for unit).
+     */
+    public function blockUnit()
+    {
+        return $this->belongsTo(BlockUnit::class, 'block_unit_id');
+    }
+
+    /**
      * Get the user who issued the issue.
      */
     public function issuedBy()
@@ -186,6 +194,14 @@ class BlockIssue extends Model
     public function issueStatus()
     {
         return $this->belongsTo(IssueStatus::class, 'issue_status_id');
+    }
+
+    /**
+     * Get the issue type for the issue
+     */
+    public function issueType()
+    {
+        return $this->belongsTo(IssueType::class, 'issue_type', 'name');
     }
 
     /**

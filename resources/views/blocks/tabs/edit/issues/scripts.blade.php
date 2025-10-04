@@ -19,6 +19,9 @@ $(document).ready(function() {
     /** @var {DataTable} blockIssuesDataTable - Global DataTable instance for issues table */
     let blockIssuesDataTable;
     
+    /** @var {Object} unitAutoComplete - Global AutoComplete.js instance for units dropdown */
+    let unitAutoComplete = null;
+    
     // ========================================
     // UTILITY FUNCTIONS
     // ========================================
@@ -130,10 +133,11 @@ $(document).ready(function() {
                 blockIssuesDataTable = $('#blockIssuesTable').DataTable({
                     responsive: true,           // Enable responsive design
                     autoWidth: false,           // Disable automatic column width calculation
+                    processing: true,           // Enable processing indicator
                     dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>', // Length/filter on same line, info/pagination on same line
                     order: [[0, 'desc']],      // Default sort by first column (Issue ID) descending
                     columnDefs: [
-                        { targets: [6], orderable: false }, // Actions column (last column) not sortable
+                        { targets: [7], orderable: false }, // Actions column (last column) not sortable
                         { targets: '_all', className: 'text-nowrap' } // Prevent text wrapping for better layout
                     ],
                     pageLength: 10,            // Default page size
@@ -227,6 +231,7 @@ $(document).ready(function() {
                         blockIssuesDataTable.row.add([
                             `<a href="/block-issues/${issue.id}" class="text-decoration-none"><b>#${issue.ref_no}</b></a>`,
                             issue.issue || 'N/A',
+                            `<span class="badge bg-secondary">${issue.block_unit?.unit_name || 'N/A'}</span>`,
                             getIssueTypeBadge(issue.issue_type),
                             getPriorityBadge(issue.priority_id),
                             getStatusBadge(issue.issue_status_id),
@@ -505,6 +510,7 @@ $(document).ready(function() {
             // Initialize modal before showing
             initializeModal('issueModal');
             
+            // Show modal (units will be refreshed by the modal event handler)
             $modal.modal('show');
         } else if (mode === 'edit' && id) {
             // Edit mode - load issue data
@@ -560,8 +566,10 @@ $(document).ready(function() {
                     
                     // Populate form fields after modal is shown
                     $modal.on('shown.bs.modal', function() {
+                        // Refresh units dropdown with the current unit selected
+                        refreshUnitsDropdownForEdit(issue.block_unit_id);
+                        
                         $('#contact_method_id').val(issue.contact_method_id);
-                        $('#block_unit_id').val(issue.block_unit_id);
                         $('#assigned_to').val(issue.assigned_to.id).trigger('change');
                         $('#issue_type').val(issue.issue_type);
                         $('#priority_id').val(issue.priority_id);
@@ -1075,6 +1083,269 @@ $(document).ready(function() {
     // ========================================
     
     /**
+     * Refreshes units autocomplete with fresh data from database
+     * 
+     * Fetches the latest units for the current block and updates
+     * the autocomplete data before opening the modal
+     */
+    function refreshUnitsDropdown() {
+        const blockId = window.blockId || $('input[name="block_id"]').val();
+        
+        // Show loading state for units input
+        const $unitsInput = $('#block_unit_id');
+        const $unitsHidden = $('#block_unit_id_hidden');
+        
+        // Store current value to preserve selection if modal is in edit mode
+        const currentUnitValue = $unitsInput.val();
+        const currentUnitId = $unitsHidden.val();
+        
+        // Set loading state
+        $unitsInput.val('Loading units...').prop('disabled', true);
+        
+        // Fetch fresh units data
+        $.ajax({
+            url: `/block-units/block/${blockId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                let unitsData = [];
+                
+                if (response.success && response.data && response.data.length > 0) {
+                    unitsData = response.data.map(function(unit) {
+                        return {
+                            value: unit.id,
+                            label: unit.unit_name,
+                            unit_code: unit.unit_code,
+                            unit_name: unit.unit_name
+                        };
+                    });
+                }
+                
+                $unitsInput.prop('disabled', false);
+                
+                // Initialize or refresh AutoComplete.js
+                initializeUnitAutoComplete(unitsData);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching units:', error);
+                $unitsInput.val('Error loading units').prop('disabled', false);
+            }
+        });
+    }
+    
+    /**
+     * Refreshes units autocomplete with fresh data from database for edit mode
+     * 
+     * Fetches the latest units for the current block and updates
+     * the autocomplete data, preserving the selected unit
+     * 
+     * @param {number} selectedUnitId - The ID of the unit to select
+     */
+    function refreshUnitsDropdownForEdit(selectedUnitId) {
+        const blockId = window.blockId || $('input[name="block_id"]').val();
+        
+        // Show loading state for units input
+        const $unitsInput = $('#block_unit_id');
+        const $unitsHidden = $('#block_unit_id_hidden');
+        
+        // Set loading state
+        $unitsInput.val('Loading units...').prop('disabled', true);
+        
+        // Fetch fresh units data
+        $.ajax({
+            url: `/block-units/block/${blockId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                let unitsData = [];
+                let selectedUnit = null;
+                
+                if (response.success && response.data && response.data.length > 0) {
+                    unitsData = response.data.map(function(unit) {
+                        const unitObj = {
+                            value: unit.id,
+                            label: unit.unit_name,
+                            unit_code: unit.unit_code,
+                            unit_name: unit.unit_name
+                        };
+                        
+                        // Check if this is the selected unit
+                        if (unit.id == selectedUnitId) {
+                            selectedUnit = unitObj;
+                        }
+                        
+                        return unitObj;
+                    });
+                }
+                
+                $unitsInput.prop('disabled', false);
+                
+                // Initialize or refresh AutoComplete.js
+                initializeUnitAutoComplete(unitsData);
+                
+                // Set the selected unit if found
+                if (selectedUnit) {
+                    $unitsInput.val(selectedUnit.label);
+                    $unitsHidden.val(selectedUnit.value);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching units for edit:', error);
+                $unitsInput.val('Error loading units').prop('disabled', false);
+            }
+        });
+    }
+    
+    /**
+     * Initialize AutoComplete.js for the units dropdown
+     * 
+     * Creates a searchable autocomplete with keyboard navigation
+     * 
+     * @param {Array} unitsData - Array of unit objects for autocomplete
+     */
+    function initializeUnitAutoComplete(unitsData) {
+        const unitsInput = document.getElementById('block_unit_id');
+        const unitsHidden = document.getElementById('block_unit_id_hidden');
+        
+        if (!unitsInput) {
+            return;
+        }
+        
+        // Destroy existing AutoComplete instance if it exists
+        if (unitAutoComplete) {
+            unitAutoComplete.unInit();
+            unitAutoComplete = null;
+        }
+        
+        // Check if AutoComplete is available
+        if (typeof autoComplete === 'undefined') {
+            return;
+        }
+        
+        // Initialize new AutoComplete instance
+        try {
+            unitAutoComplete = new autoComplete({
+                selector: "#block_unit_id",
+                placeHolder: "Search for units...",
+                data: {
+                    src: unitsData,
+                    keys: ["label", "unit_name", "unit_code"]
+                },
+                resultItem: {
+                    highlight: {
+                        render: true
+                    }
+                },
+                events: {
+                    input: {
+                        selection: (event) => {
+                            console.log('AutoComplete selection event:', event.detail);
+                            const selection = event.detail.selection;
+                            console.log('Selection object:', selection);
+                            console.log('Selection value:', selection.value);
+                            
+                            // The selection.value contains the actual unit data
+                            const selectedUnit = selection.value;
+                            console.log('Selected unit:', selectedUnit);
+                            
+                            if (selectedUnit && selectedUnit.value) {
+                                // Update the visible input with the selected label
+                                unitsInput.value = selectedUnit.label;
+                                // Update the hidden input with the selected value (unit ID)
+                                unitsHidden.value = selectedUnit.value;
+                                
+                                console.log('Calling fetchUnitIssues with unit ID:', selectedUnit.value);
+                                // Fetch and display issues for the selected unit
+                                fetchUnitIssues(selectedUnit.value);
+                                
+                                console.log('Calling loadActiveIssuesForUnit with unit ID:', selectedUnit.value);
+                                // Load active issues for the modal table
+                                loadActiveIssuesForUnit(selectedUnit.value);
+                            } else {
+                                console.log('No unit found for selection:', selection);
+                            }
+                        }
+                    }
+                },
+                threshold: 1,
+                debounce: 300,
+                searchEngine: "loose",
+                maxResults: 10
+            });
+            
+        } catch (error) {
+            console.error('Error initializing AutoComplete.js:', error);
+        }
+    }
+    
+    /**
+     * Fetch and display issues for a specific unit
+     * 
+     * @param {number} unitId - The ID of the unit to fetch issues for
+     */
+    function fetchUnitIssues(unitId) {
+        console.log('fetchUnitIssues called with unitId:', unitId);
+        if (!unitId) {
+            console.log('No unitId provided, returning');
+            return;
+        }
+        
+        console.log('Fetching issues for unit ID:', unitId);
+        // Show loading state
+        if (blockIssuesDataTable && typeof blockIssuesDataTable.processing === 'function') {
+            blockIssuesDataTable.processing(true);
+        } else {
+            console.log('DataTable not ready or processing method not available');
+        }
+        
+        // Fetch issues for the specific unit
+        $.ajax({
+            url: `/block-issues/unit/${unitId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                console.log('API response:', response);
+                if (response.success && response.data) {
+                    // Clear existing data and add new data
+                    if (blockIssuesDataTable) {
+                        blockIssuesDataTable.clear();
+                        blockIssuesDataTable.rows.add(response.data);
+                        blockIssuesDataTable.draw();
+                    }
+                } else {
+                    // Clear table if no issues found
+                    if (blockIssuesDataTable) {
+                        blockIssuesDataTable.clear();
+                        blockIssuesDataTable.draw();
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching unit issues:', error);
+                console.error('XHR:', xhr);
+                console.error('Status:', status);
+                // Clear table on error
+                if (blockIssuesDataTable) {
+                    blockIssuesDataTable.clear();
+                    blockIssuesDataTable.draw();
+                }
+            },
+            complete: function() {
+                // Hide loading state
+                if (blockIssuesDataTable && typeof blockIssuesDataTable.processing === 'function') {
+                    blockIssuesDataTable.processing(false);
+                }
+            }
+        });
+    }
+    
+    /**
      * Get priority badge HTML
      */
     function getPriorityBadge(priorityId) {
@@ -1256,12 +1527,24 @@ $(document).ready(function() {
     // MODAL EVENT HANDLERS
     // ========================================
     
-    // Clear messages when issue modal is opened
+    // Clear messages and refresh units dropdown when issue modal is opened
     $('#issueModal').on('show.bs.modal', function() {
         // Use setTimeout to ensure DOM is ready before clearing message
         setTimeout(function() {
             clearMessage('issueMessage');
         }, 50);
+        
+        // Refresh units dropdown with latest data
+        refreshUnitsDropdown();
+    });
+    
+    
+    // Cleanup AutoComplete.js instance when modal is hidden
+    $('#issueModal').on('hidden.bs.modal', function() {
+        if (unitAutoComplete) {
+            unitAutoComplete.unInit();
+            unitAutoComplete = null;
+        }
     });
     
     // Handle assigned_to change to populate default contact details
@@ -1512,8 +1795,10 @@ $(document).ready(function() {
         // Clear any previous messages
         clearMessage('issueMessage');
         
+        // Refresh units dropdown with the current unit selected
+        refreshUnitsDropdownForEdit(issue.block_unit_id);
+        
         // Populate all form fields with existing data
-        $('#block_unit_id').val(issue.block_unit_id || '').trigger('change');
         $('#contact_method_id').val(issue.contact_method_id || '');
         $('#assigned_to').val(issue.assigned_to?.id || issue.assigned_to || '').trigger('change');
         $('#issue_type').val(issue.issue_type || '');
@@ -1539,9 +1824,11 @@ $(document).ready(function() {
     // ========================================
     
     // Handle unit selection change to load active issues
-    $('#block_unit_id').on('change', function() {
+    $('#block_unit_id_hidden').on('change', function() {
         const unitId = $(this).val();
-        loadActiveIssuesForUnit(unitId);
+        if (unitId) {
+            loadActiveIssuesForUnit(unitId);
+        }
     });
     
     // ========================================

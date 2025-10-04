@@ -132,6 +132,7 @@
                     <tr>
                         <th>Issue ID</th>
                         <th>Title</th>
+                        <th>Unit</th>
                         <th>Type</th>
                         <th>Priority</th>
                         <th>Status</th>
@@ -149,6 +150,13 @@
                                     </a>
                                 </td>
                                 <td>{{ $issue->issue ?? 'N/A' }}</td>
+                                <td>
+                                    @if ($issue->blockUnit)
+                                        <span class="badge bg-secondary">{{ $issue->blockUnit->unit_name ?? 'N/A' }}</span>
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if ($issue->issue_type)
                                         <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $issue->issue_type)) }}</span>
@@ -220,6 +228,8 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
 <!-- Dropzone CSS -->
 <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
+<!-- AutoComplete.js CSS (overridden globally in head-css.blade.php) -->
+
 <style>
 /* Export button disabled state styling */
 .btn.disabled {

@@ -23,12 +23,16 @@
                                 <!-- Row 1: Unit Selection, Contact Method, Assigned To -->
                                 <div class="col-md-4 mb-3">
                                     <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="block_unit_id" name="block_unit_id" required>
-                                        <option value="">Select Unit</option>
-                                        @foreach ($block->units as $unit)
-                                            <option value="{{ $unit->id }}">{{ $unit->unit_code }} - {{ $unit->unit_name }}</option>
-                                        @endforeach
-                                    </select>
+                                    <div class="autoComplete_wrapper" id="unitAutoCompleteWrapper">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="block_unit_id" 
+                                               name="block_unit_display" 
+                                               placeholder="Search for units..." 
+                                               autocomplete="off" 
+                                               required>
+                                        <input type="hidden" id="block_unit_id_hidden" name="block_unit_id" value="">
+                                    </div>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
