@@ -51,13 +51,53 @@
     <!-- END layout-wrapper -->
 
 
-    @include('layouts.customizer')
+    {{-- @include('layouts.customizer') --}}
 
 
     <!-- JAVASCRIPT -->
     @include('layouts.vendor-scripts')
     @stack('scripts')
     
+    <!-- Clear customizer cache and hide popup -->
+    <script>
+        // Clear any customizer-related session storage
+        if (typeof(Storage) !== "undefined") {
+            sessionStorage.removeItem("defaultAttribute");
+            sessionStorage.removeItem("data-theme");
+            sessionStorage.removeItem("data-layout");
+            sessionStorage.removeItem("data-sidebar-size");
+            sessionStorage.removeItem("data-bs-theme");
+            sessionStorage.removeItem("data-layout-width");
+            sessionStorage.removeItem("data-sidebar");
+            sessionStorage.removeItem("data-sidebar-image");
+            sessionStorage.removeItem("data-layout-position");
+            sessionStorage.removeItem("data-layout-style");
+            sessionStorage.removeItem("data-topbar");
+            sessionStorage.removeItem("data-preloader");
+        }
+        
+        // Force close any customizer popup that might appear
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide customizer elements
+            const customizerElements = document.querySelectorAll('.customizer-setting, #theme-settings-offcanvas, .offcanvas-end');
+            customizerElements.forEach(function(element) {
+                if (element) {
+                    element.style.display = 'none !important';
+                    element.classList.add('d-none');
+                }
+            });
+            
+            // Close any open offcanvas
+            const offcanvasElements = document.querySelectorAll('.offcanvas');
+            offcanvasElements.forEach(function(element) {
+                if (element && element.classList.contains('show')) {
+                    const offcanvas = new bootstrap.Offcanvas(element);
+                    offcanvas.hide();
+                }
+            });
+        });
+    </script>
+
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {

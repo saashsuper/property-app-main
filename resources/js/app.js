@@ -1627,11 +1627,11 @@ File: Main Js File
 						setTimeout(() => {
 							preloader.style.opacity = "0";
 							preloader.style.visibility = "hidden";
-							document.getElementById("customizerclose-btn").click();
+							// Customizer close removed
 						}, 1000);
 					} else if (x.value === "disable") {
 						document.documentElement.setAttribute("data-preloader", "disable");
-						document.getElementById("customizerclose-btn").click();
+						// Customizer close removed
 					}
 				}
 			});
@@ -1690,9 +1690,7 @@ File: Main Js File
 			sessionStorage.setItem("defaultAttribute", JSON.stringify(isLayoutAttributes));
 			layoutSwitch(isLayoutAttributes);
 
-			// open right sidebar on first time load
-			var offCanvas = document.querySelector('.btn[data-bs-target="#theme-settings-offcanvas"]');
-			offCanvas && offCanvas.click();
+			// Customizer auto-open completely removed
 		} else {
 			var isLayoutAttributes = {};
 			var attributesToRetrieve = [
