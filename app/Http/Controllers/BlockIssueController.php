@@ -201,7 +201,31 @@ class BlockIssueController extends Controller
      */
     public function show(BlockIssue $blockIssue)
     {
-        $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater', 'priority', 'issueStatus']);
+        $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater', 'priority', 'issueStatus', 'blockUnit', 'contactMethod', 'issuedBy', 'siteVisit']);
+        
+        // Load work orders for this issue
+        $workOrders = $blockIssue->workOrders()
+            ->with(['issuedBy', 'creator', 'priority'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Load site visits for this issue (both specific to this issue and general block visits)
+        $siteVisits = $blockIssue->block->blockVisits()
+            ->with(['jobReason', 'jobStatus', 'team.user', 'createdByUser', 'blockIssue'])
+            ->orderBy('scheduled_date_time', 'desc')
+            ->get();
+
+        // Also load site visits specifically created for this issue
+        $relatedSiteVisits = $blockIssue->relatedSiteVisits()
+            ->with(['jobReason', 'jobStatus', 'team.user', 'createdByUser'])
+            ->orderBy('scheduled_date_time', 'desc')
+            ->get();
+
+        // Load actions for this issue
+        $actions = $blockIssue->actions()
+            ->with(['performedBy', 'createdBy', 'updatedBy'])
+            ->orderBy('action_date', 'desc')
+            ->get();
         
         // Return JSON data for AJAX requests (edit modal)
         if (request()->ajax()) {
@@ -211,7 +235,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions'));
     }
 
     /**

@@ -84,7 +84,7 @@
 
                                 <!-- Row 3: Dynamic Contact Details based on Contact Method -->
                                 <div class="col-md-6 mb-3" id="contact_details_container">
-                                    <label for="contact_details" class="form-label">Reported from <span class="text-danger">*</span></label>
+                                    <label for="contact_details" class="form-label">Reported By <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="contact_details" name="contact_details" placeholder="Enter contact details..." required>
                                     <div class="form-text">Please provide relevant contact information</div>
                                 </div>
@@ -189,11 +189,11 @@
                     <label class="form-label">Upload Images <span class="text-danger">*</span></label>
                     <div id="photoDropzone" class="dropzone">
                         <div class="dz-message">
-                            <div class="mb-3">
+                            <div class="mb-2">
                                 <i class="ph-cloud-upload display-4 text-muted"></i>
                             </div>
-                            <h4>Drop images here or click to upload</h4>
-                            <p class="text-muted font-size-16">
+                            <h5>Drop images here or click to upload</h5>
+                            <p class="text-muted font-size-14 mb-0">
                                 <strong>Requirements:</strong><br>
                                 • Maximum 10 images<br>
                                 • Each image max 2MB<br>
@@ -203,6 +203,32 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Custom CSS to override Dropzone defaults -->
+                <style>
+                    #photoDropzone.dropzone {
+                        min-height: 100px !important;
+                        border: 2px dashed #ccc !important;
+                        border-radius: 6px !important;
+                    }
+                    
+                    #photoDropzone .dz-message {
+                        padding: 15px 10px !important;
+                        margin: 0 !important;
+                        text-align: center !important;
+                    }
+                    
+                    #photoDropzone .dz-message h5 {
+                        margin: 10px 0 5px 0 !important;
+                        font-size: 16px !important;
+                    }
+                    
+                    #photoDropzone .dz-message p {
+                        margin: 0 !important;
+                        font-size: 12px !important;
+                        line-height: 1.3 !important;
+                    }
+                </style>
                 
                 <!-- Upload Status -->
                 <div class="mb-3">
@@ -225,9 +251,6 @@
                     </button>
                     <button type="button" class="btn btn-outline-danger" id="clearPhotosBtn">
                         <i class="ph-x me-1"></i> Clear All
-                    </button>
-                    <button type="button" class="btn btn-outline-info btn-sm" id="testDropzoneBtn" onclick="testDropzone()">
-                        <i class="ph-bug me-1"></i> Test
                     </button>
                     <button type="button" class="btn btn-primary" id="uploadPhotosBtn">
                         <i class="ph-cloud-upload me-1"></i> Upload Photos

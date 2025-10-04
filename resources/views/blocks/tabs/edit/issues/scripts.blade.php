@@ -804,17 +804,18 @@ $(document).ready(function() {
         
         photos.forEach(function(photo, index) {
             const photoHtml = `
-                <div class="col-md-4 mb-2">
+                <div class="col-md-3 col-6 mb-2">
                     <div class="card">
                         <img src="/storage/${photo.image_path}/${photo.image_name}" 
                              class="card-img-top" 
-                             style="height: 120px; object-fit: cover; cursor: pointer;"
+                             style="height: 60px; object-fit: cover; cursor: pointer;"
                              alt="Photo ${index + 1}"
                              onclick="previewPhoto('${photo.image_path}/${photo.image_name}', '${photo.image_name}', ${index})">
-                        <div class="card-body p-2">
-                            <small class="text-muted">${photo.image_name}</small>
-                            <button type="button" class="btn btn-sm btn-outline-danger float-end" 
-                                    onclick="confirmDeletePhoto(${photo.id}, '${photo.image_name}')" title="Delete Photo">
+                        <div class="card-body p-1">
+                            <small class="text-muted d-block text-truncate" style="font-size: 10px;">${photo.image_name}</small>
+                            <button type="button" class="btn btn-xs btn-outline-danger float-end" 
+                                    onclick="confirmDeletePhoto(${photo.id}, '${photo.image_name}')" title="Delete Photo"
+                                    style="padding: 2px 6px; font-size: 10px;">
                                 <i class="ph-trash"></i>
                             </button>
                         </div>
@@ -1731,6 +1732,8 @@ $(document).ready(function() {
         if (photoDropzone) {
             photoDropzone.removeAllFiles(true);
         }
+        // Clear any photo upload messages
+        $('#photoUploadMessage').addClass('d-none');
     });
     
     // Upload photos when submit button is clicked

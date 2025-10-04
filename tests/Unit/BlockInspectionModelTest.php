@@ -168,12 +168,12 @@ class BlockInspectionModelTest extends TestCase
     {
         // Create an inspection with a specific ref_no to test sequence increment
         $inspection = BlockInspection::factory()->create([
-            'ref_no' => 'INSP2025090001'
+            'ref_no' => 'INSP2025100001'
         ]);
         
         $newRef = BlockInspection::generateRefNo();
         
-        $this->assertStringStartsWith('INSP202509', $newRef);
-        $this->assertEquals('INSP2025090002', $newRef);
+        $this->assertStringStartsWith('INSP202510', $newRef);
+        $this->assertEquals('INSP2025100002', $newRef);
     }
 }

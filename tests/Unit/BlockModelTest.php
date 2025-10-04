@@ -26,6 +26,7 @@ class BlockModelTest extends TestCase
         $this->user = User::factory()->create();
         $this->block = Block::factory()->create([
             'block_type_id' => $this->blockType->id,
+            'user_id' => $this->user->id,
             'created_by' => $this->user->id
         ]);
     }
@@ -62,12 +63,12 @@ class BlockModelTest extends TestCase
     {
         $casts = [
             'id' => 'int',
-            'car_spaces' => 'int',
-            'inspection_count' => 'int',
-            'no_of_units' => 'int',
-            'created_by' => 'int',
-            'updated_by' => 'int',
-            'deleted_by' => 'int',
+            'car_spaces' => 'integer',
+            'inspection_count' => 'integer',
+            'no_of_units' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
+            'deleted_by' => 'integer',
             'deleted_at' => 'datetime',
         ];
 

@@ -49,12 +49,12 @@ class SimpleBlockTest extends TestCase
         
         $expectedCasts = [
             'id' => 'int',
-            'car_spaces' => 'int',
-            'inspection_count' => 'int',
-            'no_of_units' => 'int',
-            'created_by' => 'int',
-            'updated_by' => 'int',
-            'deleted_by' => 'int',
+            'car_spaces' => 'integer',
+            'inspection_count' => 'integer',
+            'no_of_units' => 'integer',
+            'created_by' => 'integer',
+            'updated_by' => 'integer',
+            'deleted_by' => 'integer',
             'deleted_at' => 'datetime',
         ];
 
