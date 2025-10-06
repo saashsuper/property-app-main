@@ -176,9 +176,17 @@ class BlockWorkOrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BlockWorkOrder $blockWorkOrder)
+    public function show(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images']);
+        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images', 'contractor']);
+        
+        // Return JSON data for AJAX requests (edit modal)
+        if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'data' => $blockWorkOrder
+            ]);
+        }
         
         return view('block-work-orders.show', compact('blockWorkOrder'));
     }

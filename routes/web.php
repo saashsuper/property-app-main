@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('block-issues', App\Http\Controllers\BlockIssueController::class);
     Route::delete('block-issues/images/{image}', [App\Http\Controllers\BlockIssueController::class, 'deleteImage'])->name('block-issues.delete-image');
     Route::post('block-issues/{blockIssue}/actions', [App\Http\Controllers\BlockIssueController::class, 'storeAction'])->name('block-issues.store-action');
+    Route::delete('block-issue-actions/{actionId}', [App\Http\Controllers\BlockIssueController::class, 'destroyAction'])->name('block-issue-actions.destroy');
     Route::post('block-issues/{blockIssue}/photos', [App\Http\Controllers\BlockIssueController::class, 'uploadPhotos'])->name('block-issues.upload-photos');
     Route::get('api/block-issues', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssues'])->name('api.block-issues');
     Route::get('api/block-issues/{blockIssue}', [App\Http\Controllers\BlockIssueController::class, 'getBlockIssue'])->name('api.block-issues.show');

@@ -231,6 +231,11 @@ class BlockIssueController extends Controller
         $users = User::orderBy('name')->get();
         $jobReasons = JobReason::orderBy('name')->get();
         
+        // Load contractor admin users for work order modal
+        $contractors = User::whereHas('userType', function($q) { 
+            $q->where('name', 'Contractor Admin'); 
+        })->orderBy('name')->get();
+        
         // Return JSON data for AJAX requests (edit modal)
         if (request()->ajax()) {
             return response()->json([
@@ -239,7 +244,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'jobReasons'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'jobReasons', 'contractors'));
     }
 
     /**
@@ -913,6 +918,35 @@ class BlockIssueController extends Controller
             return redirect()->back()
                 ->with('error', 'Failed to create action: ' . $e->getMessage())
                 ->withInput();
+        }
+    }
+
+    /**
+     * Delete a block issue action.
+     */
+    public function destroyAction(Request $request, $actionId)
+    {
+        try {
+            $action = BlockIssueAction::findOrFail($actionId);
+            $action->delete();
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Action deleted successfully!'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Action deleted successfully!');
+        } catch (\Exception $e) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete action: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->with('error', 'Failed to delete action: ' . $e->getMessage());
         }
     }
 }

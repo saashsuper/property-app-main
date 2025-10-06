@@ -74,9 +74,9 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <h4 class="card-title mb-0">Block Issue: {{ $blockIssue->ref_no }}</h4>
                             <div class="d-flex gap-2">
-                                <a href="{{ route('block-work-orders.create', ['block_issue_id' => $blockIssue->id]) }}" class="btn btn-success btn-sm">
+                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createWorkOrderModal">
                                     <i class="ph-plus-circle me-1"></i> Create Work Order
-                                </a>
+                                </button>
                                 <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#createSiteVisitModal">
                                     <i class="ph-map-pin me-1"></i> Create Site Visit
                                 </button>
@@ -821,11 +821,17 @@
                                                             title="View Work Order">
                                                             <i class="ph-eye"></i>
                                                         </a>
-                                                        <a href="{{ route('block-work-orders.edit', $workOrder->id) }}"
-                                                            class="btn btn-sm btn-outline-secondary"
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary edit-work-order-btn"
+                                                            data-work-order-id="{{ $workOrder->id }}"
                                                             title="Edit Work Order">
                                                             <i class="ph-pencil"></i>
-                                                        </a>
+                                                        </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger delete-work-order-btn"
+                                                            data-work-order-id="{{ $workOrder->id }}"
+                                                            data-work-order-ref="{{ $workOrder->ref_no }}"
+                                                            title="Delete Work Order">
+                                                            <i class="ph-trash"></i>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -940,6 +946,12 @@
                                                             title="Edit Site Visit">
                                                             <i class="ph-pencil"></i>
                                                         </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger delete-site-visit-btn"
+                                                            data-site-visit-id="{{ $siteVisit->id }}"
+                                                            data-site-visit-ref="{{ $siteVisit->ref_no }}"
+                                                            title="Delete Site Visit">
+                                                            <i class="ph-trash"></i>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1011,6 +1023,12 @@
                                                             title="Edit Site Visit">
                                                             <i class="ph-pencil"></i>
                                                         </button>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger delete-site-visit-btn"
+                                                            data-site-visit-id="{{ $siteVisit->id }}"
+                                                            data-site-visit-ref="{{ $siteVisit->ref_no }}"
+                                                            title="Delete Site Visit">
+                                                            <i class="ph-trash"></i>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1055,6 +1073,7 @@
                                             <th>Status</th>
                                             <th>Priority</th>
                                             <th>Cost</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1101,6 +1120,14 @@
                                                     @else
                                                         <span class="text-muted">N/A</span>
                                                     @endif
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-action-btn"
+                                                        data-action-id="{{ $action->id }}"
+                                                        data-action-type="{{ $action->action_type }}"
+                                                        title="Delete Action">
+                                                        <i class="ph-trash"></i>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -1579,6 +1606,326 @@
                 hideModalAlert();
             });
 
+            // Hide work order alert when modal is shown
+            $('#createWorkOrderModal').on('show.bs.modal', function() {
+                hideWorkOrderAlert();
+            });
+
+            // Hide action alert when modal is shown
+            $('#createActionModal').on('show.bs.modal', function() {
+                hideActionAlert();
+            });
+
+            // Handle Create/Edit Work Order form submission
+            $('#createWorkOrderForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                const isEdit = form.attr('action').includes('/block-work-orders/') && 
+                              form.find('input[name="_method"]').length > 0;
+                
+                // Hide any existing alerts
+                hideWorkOrderAlert();
+                
+                // Disable submit button and show loading state
+                const loadingText = isEdit ? 
+                    '<i class="ph-spinner-gap ph-spin me-1"></i> Updating...' : 
+                    '<i class="ph-spinner-gap ph-spin me-1"></i> Creating...';
+                submitBtn.prop('disabled', true).html(loadingText);
+                
+                // Submit form via AJAX
+                $.ajax({
+                    url: form.attr('action'),
+                    method: 'POST',
+                    data: new FormData(form[0]),
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showWorkOrderAlert('success', response.message);
+                            
+                            // Close modal after successful operation
+                            setTimeout(() => {
+                                $('#createWorkOrderModal').modal('hide');
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showWorkOrderAlert('error', response.message || 'An error occurred while processing the work order.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while processing the work order.';
+                        
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.responseJSON.errors) {
+                                // Handle validation errors
+                                const errors = Object.values(xhr.responseJSON.errors).flat();
+                                errorMessage = errors.join('<br>');
+                            }
+                        }
+                        
+                        showWorkOrderAlert('error', errorMessage);
+                    },
+                    complete: function() {
+                        // Re-enable submit button
+                        submitBtn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Reset work order form when modal is hidden
+            $('#createWorkOrderModal').on('hidden.bs.modal', function() {
+                $('#createWorkOrderForm')[0].reset();
+                resetWorkOrderModalToCreateMode();
+            });
+
+            // Handle Create Action form submission
+            $('#createActionForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                
+                // Hide any existing alerts
+                hideActionAlert();
+                
+                // Disable submit button and show loading state
+                submitBtn.prop('disabled', true).html('<i class="ph-spinner-gap ph-spin me-1"></i> Creating...');
+                
+                // Submit form via AJAX
+                $.ajax({
+                    url: form.attr('action'),
+                    method: 'POST',
+                    data: form.serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showActionAlert('success', response.message);
+                            
+                            // Close modal after successful creation
+                            setTimeout(() => {
+                                $('#createActionModal').modal('hide');
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showActionAlert('error', response.message || 'An error occurred while creating the action.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while creating the action.';
+                        
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.responseJSON.errors) {
+                                // Handle validation errors
+                                const errors = Object.values(xhr.responseJSON.errors).flat();
+                                errorMessage = errors.join('<br>');
+                            }
+                        }
+                        
+                        showActionAlert('error', errorMessage);
+                    },
+                    complete: function() {
+                        // Re-enable submit button
+                        submitBtn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Reset action form when modal is hidden
+            $('#createActionModal').on('hidden.bs.modal', function() {
+                $('#createActionForm')[0].reset();
+                hideActionAlert();
+            });
+
+            // Hide action alert when clicked
+            $(document).on('click', '#actionAlert', function() {
+                hideActionAlert();
+            });
+
+            // Delete functionality variables
+            let deleteType = '';
+            let deleteId = '';
+            let deleteRef = '';
+
+            // Handle delete button clicks
+            $('.delete-site-visit-btn').on('click', function() {
+                deleteType = 'site-visit';
+                deleteId = $(this).data('site-visit-id');
+                deleteRef = $(this).data('site-visit-ref');
+                showDeleteConfirmation(`Site Visit ${deleteRef}`);
+            });
+
+            $('.delete-work-order-btn').on('click', function() {
+                deleteType = 'work-order';
+                deleteId = $(this).data('work-order-id');
+                deleteRef = $(this).data('work-order-ref');
+                showDeleteConfirmation(`Work Order ${deleteRef}`);
+            });
+
+            $('.delete-action-btn').on('click', function() {
+                deleteType = 'action';
+                deleteId = $(this).data('action-id');
+                const actionType = $(this).data('action-type');
+                showDeleteConfirmation(`${actionType} Action`);
+            });
+
+            // Show delete confirmation modal
+            function showDeleteConfirmation(itemName) {
+                $('#deleteConfirmationMessage').text(`Are you sure you want to delete ${itemName}?`);
+                $('#deleteConfirmationModal').modal('show');
+            }
+
+            // Handle delete confirmation
+            $('#confirmDeleteBtn').on('click', function() {
+                const btn = $(this);
+                const originalText = btn.html();
+                
+                // Show loading state
+                btn.prop('disabled', true).html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...');
+                
+                // Determine delete URL based on type
+                let deleteUrl = '';
+                if (deleteType === 'site-visit') {
+                    deleteUrl = `/block-visits/${deleteId}`;
+                } else if (deleteType === 'work-order') {
+                    deleteUrl = `/block-work-orders/${deleteId}`;
+                } else if (deleteType === 'action') {
+                    deleteUrl = `/block-issue-actions/${deleteId}`;
+                }
+                
+                // Perform delete via AJAX
+                $.ajax({
+                    url: deleteUrl,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        $('#deleteConfirmationModal').modal('hide');
+                        showAlert('success', response.message || 'Item deleted successfully!');
+                        
+                        // Reload page after successful deletion
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Failed to delete item.';
+                        
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        
+                        $('#deleteConfirmationModal').modal('hide');
+                        showAlert('error', errorMessage);
+                    },
+                    complete: function() {
+                        // Re-enable button
+                        btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Hide work order alert when clicked
+            $(document).on('click', '#workOrderAlert', function() {
+                hideWorkOrderAlert();
+            });
+
+            // Handle Edit Work Order button clicks
+            $('.edit-work-order-btn').on('click', function() {
+                const workOrderId = $(this).data('work-order-id');
+                loadWorkOrderForEdit(workOrderId);
+            });
+
+            // Function to reset work order modal to create mode
+            function resetWorkOrderModalToCreateMode() {
+                $('#workOrderModalTitle').text('Create Work Order for Issue: {{ $blockIssue->ref_no }}');
+                $('#workOrderSubmitBtnText').text('Create Work Order');
+                $('#createWorkOrderForm').attr('action', '{{ route("block-work-orders.store") }}');
+                $('#createWorkOrderForm').find('input[name="_method"]').remove();
+                $('#createWorkOrderForm input[name="block_id"]').val('{{ $blockIssue->block->id }}');
+                $('#createWorkOrderForm input[name="block_issue_id"]').val('{{ $blockIssue->id }}');
+                hideWorkOrderAlert();
+            }
+
+            // Function to load work order data for editing
+            function loadWorkOrderForEdit(workOrderId) {
+                // Show loading state
+                const originalTitle = $('#workOrderModalTitle').text();
+                $('#workOrderModalTitle').text('Loading...');
+                
+                // Fetch work order data
+                $.ajax({
+                    url: `/block-work-orders/${workOrderId}`,
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            const workOrder = response.data;
+                            
+                            // Update modal title and form action
+                            $('#workOrderModalTitle').text(`Edit Work Order #${workOrder.id}`);
+                            $('#workOrderSubmitBtnText').text('Update Work Order');
+                            $('#createWorkOrderForm').attr('action', `/block-work-orders/${workOrderId}`);
+                            
+                            // Add PUT method for update
+                            if ($('#createWorkOrderForm').find('input[name="_method"]').length === 0) {
+                                $('#createWorkOrderForm').append('<input type="hidden" name="_method" value="PUT">');
+                            }
+                            
+                            // Populate form fields
+                            $('#createWorkOrderForm select[name="contractor_id"]').val(workOrder.contractor_id || '');
+                            $('#createWorkOrderForm select[name="priority_id"]').val(workOrder.priority_id || '');
+                            $('#createWorkOrderForm select[name="status"]').val(workOrder.status || '');
+                            
+                            // Format datetime for inputs
+                            if (workOrder.preferred_start_date_time) {
+                                const startDateTime = new Date(workOrder.preferred_start_date_time);
+                                const formattedStartDateTime = startDateTime.toISOString().slice(0, 16);
+                                $('#createWorkOrderForm input[name="preferred_start_date_time"]').val(formattedStartDateTime);
+                            }
+                            
+                            if (workOrder.preferred_end_date_time) {
+                                const endDateTime = new Date(workOrder.preferred_end_date_time);
+                                const formattedEndDateTime = endDateTime.toISOString().slice(0, 16);
+                                $('#createWorkOrderForm input[name="preferred_end_date_time"]').val(formattedEndDateTime);
+                            }
+                            
+                            if (workOrder.deadline_date) {
+                                const deadlineDate = new Date(workOrder.deadline_date);
+                                const formattedDeadlineDate = deadlineDate.toISOString().slice(0, 10);
+                                $('#createWorkOrderForm input[name="deadline_date"]').val(formattedDeadlineDate);
+                            }
+                            
+                            $('#createWorkOrderForm textarea[name="comment"]').val(workOrder.comment || '');
+                            
+                            // Show modal
+                            $('#createWorkOrderModal').modal('show');
+                        } else {
+                            showWorkOrderAlert('error', 'Failed to load work order data.');
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#workOrderModalTitle').text(originalTitle);
+                        showWorkOrderAlert('error', 'Failed to load work order data.');
+                    }
+                });
+            }
+
             // Handle Edit Site Visit button clicks
             $('.edit-site-visit-btn').on('click', function() {
                 const siteVisitId = $(this).data('site-visit-id');
@@ -1626,6 +1973,80 @@
             // Function to hide modal alert
             function hideModalAlert() {
                 $('#siteVisitAlertContainer').hide();
+            }
+
+            // Function to show work order alert within the modal
+            function showWorkOrderAlert(type, message) {
+                const alertContainer = $('#workOrderAlertContainer');
+                const alert = $('#workOrderAlert');
+                const alertMessage = $('#workOrderAlertMessage');
+                
+                // Remove existing alert classes
+                alert.removeClass('alert-success alert-danger alert-warning alert-info');
+                
+                // Add appropriate class based on type
+                if (type === 'success') {
+                    alert.addClass('alert-success');
+                } else if (type === 'error') {
+                    alert.addClass('alert-danger');
+                } else if (type === 'warning') {
+                    alert.addClass('alert-warning');
+                } else {
+                    alert.addClass('alert-info');
+                }
+                
+                // Set message and show
+                alertMessage.html(message);
+                alertContainer.show();
+                
+                // Auto hide after 5 seconds for success messages
+                if (type === 'success') {
+                    setTimeout(() => {
+                        alertContainer.hide();
+                    }, 5000);
+                }
+            }
+
+            // Function to hide work order alert
+            function hideWorkOrderAlert() {
+                $('#workOrderAlertContainer').hide();
+            }
+
+            // Function to show action alert within the modal
+            function showActionAlert(type, message) {
+                const alertContainer = $('#actionAlertContainer');
+                const alert = $('#actionAlert');
+                const alertMessage = $('#actionAlertMessage');
+                
+                // Remove existing alert classes
+                alert.removeClass('alert-success alert-danger alert-warning alert-info');
+                
+                // Add appropriate class based on type
+                if (type === 'success') {
+                    alert.addClass('alert-success');
+                } else if (type === 'error') {
+                    alert.addClass('alert-danger');
+                } else if (type === 'warning') {
+                    alert.addClass('alert-warning');
+                } else {
+                    alert.addClass('alert-info');
+                }
+                
+                // Set message and show
+                alertMessage.html(message);
+                alertContainer.show();
+                
+                // Auto hide after 5 seconds for success messages
+                if (type === 'success') {
+                    setTimeout(() => {
+                        alertContainer.hide();
+                    }, 5000);
+                }
+            }
+
+            // Function to hide action alert
+            function hideActionAlert() {
+                $('#actionAlertContainer').hide();
             }
 
             // Function to reset modal to create mode
@@ -1849,6 +2270,12 @@
                 <form id="createActionForm" method="POST" action="{{ route('block-issues.store-action', $blockIssue->id) }}">
                     @csrf
                     <div class="modal-body">
+                        <!-- Alert Messages Container -->
+                        <div id="actionAlertContainer" style="display: none;">
+                            <div id="actionAlert" class="alert" role="alert">
+                                <span id="actionAlertMessage"></span>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="action_type" class="form-label">Action Type <span class="text-danger">*</span></label>
@@ -1990,6 +2417,141 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Work Order Modal -->
+    <div class="modal fade" id="createWorkOrderModal" tabindex="-1" aria-labelledby="createWorkOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createWorkOrderModalLabel">
+                        <i class="ph-plus-circle me-2"></i><span id="workOrderModalTitle">Create Work Order for Issue: {{ $blockIssue->ref_no }}</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createWorkOrderForm" method="POST" action="{{ route('block-work-orders.store') }}" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body">
+                        <!-- Alert Messages Container -->
+                        <div id="workOrderAlertContainer" style="display: none;">
+                            <div id="workOrderAlert" class="alert" role="alert">
+                                <span id="workOrderAlertMessage"></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden fields for block, unit, and building -->
+                        <input type="hidden" name="block_id" value="{{ $blockIssue->block->id }}">
+                        <input type="hidden" name="block_issue_id" value="{{ $blockIssue->id }}">
+                        <input type="hidden" name="block_unit_id" value="">
+                        <input type="hidden" name="block_building_id" value="">
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Assign to Contractor <span class="text-danger">*</span></label>
+                                <select class="form-select" name="contractor_id" required>
+                                    <option value="">Select Contractor</option>
+                                    @foreach($contractors as $contractor)
+                                        <option value="{{ $contractor->id }}">
+                                            {{ $contractor->name }} ({{ $contractor->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Priority <span class="text-danger">*</span></label>
+                                <select class="form-select" name="priority_id" required>
+                                    <option value="">Select Priority</option>
+                                    <option value="1">Low</option>
+                                    <option value="2" selected>Normal</option>
+                                    <option value="3">High</option>
+                                    <option value="4">Urgent</option>
+                                    <option value="5">Critical</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Status <span class="text-danger">*</span></label>
+                                <select class="form-select" name="status" required>
+                                    <option value="">Select Status</option>
+                                    <option value="1" selected>Pending</option>
+                                    <option value="2">In Progress</option>
+                                    <option value="3">Completed</option>
+                                    <option value="4">Cancelled</option>
+                                    <option value="5">On Hold</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Preferred Start Date & Time</label>
+                                <input type="datetime-local" class="form-control" name="preferred_start_date_time">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Preferred End Date & Time</label>
+                                <input type="datetime-local" class="form-control" name="preferred_end_date_time">
+                            </div>
+                        </div>
+                        
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Deadline Date</label>
+                                <input type="date" class="form-control" name="deadline_date">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Comments</label>
+                            <textarea class="form-control" name="comment" rows="3" placeholder="Additional comments or notes..."></textarea>
+                        </div>
+                        
+                        <!-- Hidden fields for obvious/default values -->
+                        <input type="hidden" name="issued_from" value="1">
+                        <input type="hidden" name="from_id" value="{{ auth()->id() }}">
+                        <input type="hidden" name="issued_date_time" value="{{ now()->format('Y-m-d\TH:i') }}">
+                        <input type="hidden" name="contact_name" value="">
+                        <input type="hidden" name="contact_mobile" value="">
+                        <input type="hidden" name="contact_email" value="">
+                        <input type="hidden" name="note_for_access" value="">
+                        <input type="hidden" name="repair_category_id" value="">
+                        <input type="hidden" name="issue" value="">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success" id="workOrderSubmitBtn">
+                            <i class="ph-plus-circle me-1"></i> <span id="workOrderSubmitBtnText">Create Work Order</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmationModalLabel">
+                        <i class="ph-warning text-warning me-2"></i>Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteConfirmationMessage">Are you sure you want to delete this item?</p>
+                    <p class="text-muted mb-0">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="ph-trash me-1"></i> Yes, Delete
+                    </button>
+                </div>
             </div>
         </div>
     </div>
