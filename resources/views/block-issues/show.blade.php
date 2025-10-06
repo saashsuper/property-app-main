@@ -77,9 +77,9 @@
                                 <a href="{{ route('block-work-orders.create', ['block_issue_id' => $blockIssue->id]) }}" class="btn btn-success btn-sm">
                                     <i class="ph-plus-circle me-1"></i> Create Work Order
                                 </a>
-                                <a href="{{ route('block-visits.create', ['block_issue_id' => $blockIssue->id]) }}" class="btn btn-info btn-sm">
+                                <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#createSiteVisitModal">
                                     <i class="ph-map-pin me-1"></i> Create Site Visit
-                                </a>
+                                </button>
                                 <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#createActionModal">
                                     <i class="ph-activity me-1"></i> Create Action
                                 </button>
@@ -935,11 +935,11 @@
                                                             title="View Site Visit">
                                                             <i class="ph-eye"></i>
                                                         </a>
-                                                        <a href="{{ route('block-visits.edit', $siteVisit->id) }}"
-                                                            class="btn btn-sm btn-outline-secondary"
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary edit-site-visit-btn"
+                                                            data-site-visit-id="{{ $siteVisit->id }}"
                                                             title="Edit Site Visit">
                                                             <i class="ph-pencil"></i>
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1006,11 +1006,11 @@
                                                             title="View Site Visit">
                                                             <i class="ph-eye"></i>
                                                         </a>
-                                                        <a href="{{ route('block-visits.edit', $siteVisit->id) }}"
-                                                            class="btn btn-sm btn-outline-secondary"
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary edit-site-visit-btn"
+                                                            data-site-visit-id="{{ $siteVisit->id }}"
                                                             title="Edit Site Visit">
                                                             <i class="ph-pencil"></i>
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -1505,6 +1505,192 @@
                     alert.alert('close');
                 }, 5000);
             }
+
+            // Handle Create Site Visit form submission
+            $('#createSiteVisitForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+                const originalText = submitBtn.html();
+                const isEdit = form.attr('action').includes('/block-visits/') && 
+                              form.find('input[name="_method"]').length > 0;
+                
+                // Hide any existing alerts
+                hideModalAlert();
+                
+                // Disable submit button and show loading state
+                const loadingText = isEdit ? 
+                    '<i class="ph-spinner-gap ph-spin me-1"></i> Updating...' : 
+                    '<i class="ph-spinner-gap ph-spin me-1"></i> Creating...';
+                submitBtn.prop('disabled', true).html(loadingText);
+                
+                // Submit form via AJAX
+                $.ajax({
+                    url: form.attr('action'),
+                    method: 'POST',
+                    data: form.serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showModalAlert('success', response.message);
+                            
+                            // Close modal after successful operation
+                            setTimeout(() => {
+                                $('#createSiteVisitModal').modal('hide');
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showModalAlert('error', response.message || 'An error occurred while processing the site visit.');
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'An error occurred while processing the site visit.';
+                        
+                        if (xhr.responseJSON) {
+                            if (xhr.responseJSON.message) {
+                                errorMessage = xhr.responseJSON.message;
+                            } else if (xhr.responseJSON.errors) {
+                                // Handle validation errors
+                                const errors = Object.values(xhr.responseJSON.errors).flat();
+                                errorMessage = errors.join('<br>');
+                            }
+                        }
+                        
+                        showModalAlert('error', errorMessage);
+                    },
+                    complete: function() {
+                        // Re-enable submit button
+                        submitBtn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Reset form when modal is hidden
+            $('#createSiteVisitModal').on('hidden.bs.modal', function() {
+                $('#createSiteVisitForm')[0].reset();
+                resetModalToCreateMode();
+            });
+
+            // Hide alert when modal is shown (for create mode)
+            $('#createSiteVisitModal').on('show.bs.modal', function() {
+                hideModalAlert();
+            });
+
+            // Handle Edit Site Visit button clicks
+            $('.edit-site-visit-btn').on('click', function() {
+                const siteVisitId = $(this).data('site-visit-id');
+                hideModalAlert(); // Hide any existing alerts
+                loadSiteVisitForEdit(siteVisitId);
+            });
+
+            // Hide modal alert when clicked
+            $(document).on('click', '#siteVisitAlert', function() {
+                hideModalAlert();
+            });
+
+            // Function to show alert within the modal
+            function showModalAlert(type, message) {
+                const alertContainer = $('#siteVisitAlertContainer');
+                const alert = $('#siteVisitAlert');
+                const alertMessage = $('#siteVisitAlertMessage');
+                
+                // Remove existing alert classes
+                alert.removeClass('alert-success alert-danger alert-warning alert-info');
+                
+                // Add appropriate class based on type
+                if (type === 'success') {
+                    alert.addClass('alert-success');
+                } else if (type === 'error') {
+                    alert.addClass('alert-danger');
+                } else if (type === 'warning') {
+                    alert.addClass('alert-warning');
+                } else {
+                    alert.addClass('alert-info');
+                }
+                
+                // Set message and show
+                alertMessage.html(message);
+                alertContainer.show();
+                
+                // Auto hide after 5 seconds for success messages
+                if (type === 'success') {
+                    setTimeout(() => {
+                        alertContainer.hide();
+                    }, 5000);
+                }
+            }
+
+            // Function to hide modal alert
+            function hideModalAlert() {
+                $('#siteVisitAlertContainer').hide();
+            }
+
+            // Function to reset modal to create mode
+            function resetModalToCreateMode() {
+                $('#modalTitle').text('Create Site Visit for Issue: {{ $blockIssue->ref_no }}');
+                $('#submitBtnText').text('Create Site Visit');
+                $('#createSiteVisitForm').attr('action', '{{ route("block-visits.store") }}');
+                $('#createSiteVisitForm').find('input[name="_method"]').remove();
+                $('#createSiteVisitForm input[name="block_id"]').val('{{ $blockIssue->block->id }}');
+                $('#createSiteVisitForm input[name="block_issue_id"]').val('{{ $blockIssue->id }}');
+                hideModalAlert();
+            }
+
+            // Function to load site visit data for editing
+            function loadSiteVisitForEdit(siteVisitId) {
+                // Show loading state
+                const originalTitle = $('#modalTitle').text();
+                $('#modalTitle').text('Loading...');
+                
+                // Fetch site visit data
+                $.ajax({
+                    url: `/block-visits/${siteVisitId}`,
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            const siteVisit = response.data;
+                            
+                            // Update modal title and form action
+                            $('#modalTitle').text(`Edit Site Visit #${siteVisit.id}`);
+                            $('#submitBtnText').text('Update Site Visit');
+                            $('#createSiteVisitForm').attr('action', `/block-visits/${siteVisitId}`);
+                            
+                            // Add PUT method for update
+                            if ($('#createSiteVisitForm').find('input[name="_method"]').length === 0) {
+                                $('#createSiteVisitForm').append('<input type="hidden" name="_method" value="PUT">');
+                            }
+                            
+                            // Populate form fields
+                            $('#createSiteVisitForm select[name="user_id"]').val(siteVisit.team && siteVisit.team[0] ? siteVisit.team[0].user_id : '');
+                            $('#createSiteVisitForm select[name="job_reason_id"]').val(siteVisit.job_reason_id || '');
+                            
+                            // Format datetime for input
+                            if (siteVisit.scheduled_date_time) {
+                                const dateTime = new Date(siteVisit.scheduled_date_time);
+                                const formattedDateTime = dateTime.toISOString().slice(0, 16);
+                                $('#createSiteVisitForm input[name="scheduled_date_time"]').val(formattedDateTime);
+                            }
+                            
+                            $('#createSiteVisitForm textarea[name="notes"]').val(siteVisit.notes || '');
+                            
+                            // Show modal
+                            $('#createSiteVisitModal').modal('show');
+                        } else {
+                            showModalAlert('error', 'Failed to load site visit data.');
+                        }
+                    },
+                    error: function(xhr) {
+                        $('#modalTitle').text(originalTitle);
+                        showModalAlert('error', 'Failed to load site visit data.');
+                    }
+                });
+            }
         });
     </script>
     
@@ -1725,6 +1911,82 @@
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">
                             <i class="ph-plus me-1"></i> Create Action
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Site Visit Modal -->
+    <div class="modal fade" id="createSiteVisitModal" tabindex="-1" aria-labelledby="createSiteVisitModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSiteVisitModalLabel">
+                        <i class="ph-map-pin me-2"></i><span id="modalTitle">Create Site Visit for Issue: {{ $blockIssue->ref_no }}</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="createSiteVisitForm" method="POST" action="{{ route('block-visits.store') }}">
+                    @csrf
+                    <div class="modal-body">
+                        <!-- Alert Messages Container -->
+                        <div id="siteVisitAlertContainer" style="display: none;">
+                            <div id="siteVisitAlert" class="alert" role="alert">
+                                <span id="siteVisitAlertMessage"></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Block</label>
+                                <div class="form-control-plaintext bg-light p-2 rounded">
+                                    <strong>{{ $blockIssue->block->name }}</strong> - {{ $blockIssue->block->management_company }}
+                                    @if($blockIssue->block->blockType)
+                                        ({{ $blockIssue->block->blockType->name }})
+                                    @endif
+                                </div>
+                                <input type="hidden" name="block_id" value="{{ $blockIssue->block->id }}">
+                                <input type="hidden" name="block_issue_id" value="{{ $blockIssue->id }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Assigned User <span class="text-danger">*</span></label>
+                                <select class="form-select" name="user_id" required>
+                                    <option value="">Select a user</option>
+                                    @foreach($users as $user)
+                                        <option value="{{ $user->id }}">
+                                            {{ $user->name }} ({{ $user->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Job Reason <span class="text-danger">*</span></label>
+                                <select class="form-select" name="job_reason_id" required>
+                                    <option value="">Select a reason</option>
+                                    @foreach($jobReasons as $jobReason)
+                                        <option value="{{ $jobReason->id }}">
+                                            {{ $jobReason->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Scheduled Date & Time <span class="text-danger">*</span></label>
+                                <input type="datetime-local" class="form-control" name="scheduled_date_time" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3" placeholder="Enter any additional notes for this site visit..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="ph-map-pin me-1"></i> <span id="submitBtnText">Create Site Visit</span>
                         </button>
                     </div>
                 </form>

@@ -226,6 +226,10 @@ class BlockIssueController extends Controller
             ->with(['performedBy', 'createdBy', 'updatedBy'])
             ->orderBy('action_date', 'desc')
             ->get();
+
+        // Load data needed for site visit modal
+        $users = User::orderBy('name')->get();
+        $jobReasons = JobReason::orderBy('name')->get();
         
         // Return JSON data for AJAX requests (edit modal)
         if (request()->ajax()) {
@@ -235,7 +239,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'jobReasons'));
     }
 
     /**
