@@ -7,13 +7,13 @@ use App\Models\User;
 use App\Models\UserType;
 use App\Models\WorkOrder;
 use App\Models\WorkOrderImage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class WorkOrderApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $adminType;
     protected $contractorAdminType;

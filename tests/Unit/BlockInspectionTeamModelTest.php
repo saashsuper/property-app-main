@@ -6,11 +6,11 @@ use Tests\TestCase;
 use App\Models\BlockInspectionTeam;
 use App\Models\BlockInspection;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class BlockInspectionTeamModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_block_inspection_team_has_correct_fillable_attributes()
     {

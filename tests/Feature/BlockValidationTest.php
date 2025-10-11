@@ -7,11 +7,11 @@ use App\Models\Block;
 use App\Models\BlockType;
 use App\Models\User;
 use App\Models\UserType;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class BlockValidationTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $admin;
     protected $blockType;

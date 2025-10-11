@@ -6,12 +6,12 @@ use Tests\TestCase;
 use App\Models\Block;
 use App\Models\BlockImage;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Storage;
 
 class BlockImageModelTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $block;
     protected $user;

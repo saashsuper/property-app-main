@@ -7,12 +7,12 @@ use App\Models\BlockInspection;
 use App\Models\Block;
 use App\Models\User;
 use App\Models\BlockInspectionTeam;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\Auth;
 
 class BlockInspectionControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $admin;
     protected $block;

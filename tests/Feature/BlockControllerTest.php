@@ -8,13 +8,13 @@ use App\Models\BlockType;
 use App\Models\BlockImage;
 use App\Models\User;
 use App\Models\UserType;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class BlockControllerTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $admin;
     protected $contractorAdmin;

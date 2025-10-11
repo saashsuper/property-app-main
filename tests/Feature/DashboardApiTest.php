@@ -12,11 +12,11 @@ use App\Models\BlockIssue;
 use App\Models\BlockWorkOrder;
 use App\Models\Priority;
 use App\Models\IssueStatus;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class DashboardApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     protected $adminType;
     protected $contractorAdminType;
