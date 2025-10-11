@@ -122,15 +122,48 @@
 
     <div class="card">
       <div class="card-header">
-        <h5 class="mb-0">Attachments</h5>
+        <h5 class="mb-0">Attachments ({{ $blockVisit->images->count() }})</h5>
       </div>
       <div class="card-body">
-        @forelse($blockVisit->images as $img)
-          <div class="mb-2">
-            <i class="ph-image me-2"></i>{{ $img->image_path }}
+        @forelse($blockVisit->images as $image)
+          <div class="mb-3">
+            @if($image->image_url)
+              @php
+                $extension = pathinfo($image->display_name, PATHINFO_EXTENSION);
+                $isImage = in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+              @endphp
+              
+              @if($isImage)
+                <!-- Image Preview -->
+                <a href="{{ $image->image_url }}" target="_blank" class="text-decoration-none">
+                  <img src="{{ $image->image_url }}" 
+                       class="img-thumbnail rounded" 
+                       style="max-width: 100%; height: auto; max-height: 200px; object-fit: cover;"
+                       alt="{{ $image->display_name }}">
+                </a>
+              @else
+                <!-- Document Icon -->
+                <a href="{{ $image->image_url }}" target="_blank" class="d-flex align-items-center text-decoration-none p-2 bg-light rounded">
+                  @if(strtolower($extension) == 'pdf')
+                    <i class="ph-file-pdf fs-2 text-danger me-2"></i>
+                  @elseif(in_array(strtolower($extension), ['doc', 'docx']))
+                    <i class="ph-file-doc fs-2 text-primary me-2"></i>
+                  @else
+                    <i class="ph-file fs-2 text-secondary me-2"></i>
+                  @endif
+                  <span class="text-dark">{{ $image->display_name }}</span>
+                </a>
+              @endif
+              <small class="d-block mt-1 text-muted">{{ $image->display_name }}</small>
+            @else
+              <div class="text-muted"><i class="ph-warning me-1"></i>File not found</div>
+            @endif
           </div>
         @empty
-          <div class="text-muted">No images attached</div>
+          <div class="text-center text-muted py-3">
+            <i class="ph-image fs-1 d-block mb-2"></i>
+            <p class="mb-0">No images attached</p>
+          </div>
         @endforelse
       </div>
     </div>

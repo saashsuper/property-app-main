@@ -83,10 +83,12 @@ class BlockVisitController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
+            'block_issue_id' => 'nullable|exists:block_issues,id',
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
             'job_reason_id' => 'required|exists:job_reasons,id',
             'notes' => 'nullable|string|max:255',
+            'files.*' => 'nullable|file|max:5120|mimes:jpeg,jpg,png,pdf,doc,docx', // 5MB max
         ]);
 
         if ($validator->fails()) {
@@ -98,8 +100,16 @@ class BlockVisitController extends Controller
         }
 
         try {
+            // Log incoming request data for debugging
+            \Log::info('BlockVisit Store Request', [
+                'has_files' => $request->hasFile('files'),
+                'files_count' => $request->file('files') ? count($request->file('files')) : 0,
+                'all_files' => $request->allFiles(),
+            ]);
+
             $blockVisit = BlockVisit::create([
                 'block_id' => $request->block_id,
+                'block_issue_id' => $request->block_issue_id,
                 'ref_no' => 'SV-' . strtoupper(Str::random(6)),
                 'scheduled_date_time' => $request->scheduled_date_time,
                 'job_reason_id' => $request->job_reason_id,
@@ -115,10 +125,37 @@ class BlockVisitController extends Controller
                 'created_by' => auth()->id(),
             ]);
 
+            // Handle file uploads
+            if ($request->hasFile('files')) {
+                $files = $request->file('files');
+                \Log::info('Processing files', ['count' => count($files)]);
+                
+                foreach ($files as $file) {
+                    $timestamp = now()->format('YmdHis');
+                    $randomString = Str::random(8);
+                    $originalName = $file->getClientOriginalName();
+                    $fileName = $timestamp . '_' . $randomString . '_' . $originalName;
+                    
+                    // Store file in storage/app/public/block-visits/{block_visit_id}
+                    $path = $file->storeAs('block-visits/' . $blockVisit->id, $fileName, 'public');
+                    
+                    \Log::info('File stored', ['path' => $path, 'fileName' => $fileName]);
+                    
+                    // Save to database
+                    $blockVisit->images()->create([
+                        'image_path' => 'block-visits/' . $blockVisit->id,
+                        'image_name' => $fileName,
+                        's3_status' => false,
+                    ]);
+                }
+            } else {
+                \Log::info('No files in request');
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Site visit scheduled successfully',
-                'data' => $blockVisit->load('jobReason', 'createdByUser', 'team')
+                'data' => $blockVisit->load('jobReason', 'createdByUser', 'team', 'images')
             ]);
         } catch (\Exception $e) {
             return response()->json([
