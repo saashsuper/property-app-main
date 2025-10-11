@@ -66,7 +66,7 @@ class BlockIssueController extends Controller
             $query->where('block_unit_id', $request->block_unit_id);
         }
 
-        // Filter by issue type
+        // Filter by category
         if ($request->filled('issue_type')) {
             $query->where('issue_type', $request->issue_type);
         }
@@ -227,8 +227,10 @@ class BlockIssueController extends Controller
             ->orderBy('action_date', 'desc')
             ->get();
 
-        // Load data needed for site visit modal
-        $users = User::orderBy('name')->get();
+        // Load data needed for site visit modal - only contractor admin users
+        $users = User::whereHas('userType', function($q) { 
+            $q->where('name', 'Contractor Admin'); 
+        })->orderBy('name')->get();
         $jobReasons = JobReason::orderBy('name')->get();
         
         // Load contractor admin users for work order modal
@@ -573,11 +575,11 @@ class BlockIssueController extends Controller
                 return [
                     // Issue ID with link
                     '<a href="/block-issues/' . $issue->id . '" class="text-decoration-none"><b>#' . ($issue->ref_no ?? $issue->id) . '</b></a>',
-                    // Issue title
+                    // Problem Overview
                     $issue->issue ?? 'N/A',
                     // Unit name (new column)
                     '<span class="badge bg-secondary">' . ($issue->blockUnit->unit_name ?? 'N/A') . '</span>',
-                    // Issue type badge
+                    // Category badge
                     $this->getIssueTypeBadge($issue->issueType->name ?? 'N/A'),
                     // Priority badge
                     $this->getPriorityBadge($issue->priority_id),
@@ -647,7 +649,7 @@ class BlockIssueController extends Controller
     }
     
     /**
-     * Get issue type badge HTML
+     * Get category badge HTML
      */
     private function getIssueTypeBadge($issueType)
     {

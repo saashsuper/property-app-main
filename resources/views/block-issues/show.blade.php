@@ -78,7 +78,7 @@
                                     <i class="ph-plus-circle me-1"></i> Create Work Order
                                 </button>
                                 <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#createSiteVisitModal">
-                                    <i class="ph-map-pin me-1"></i> Create Site Visit
+                                    <i class="ph-map-pin me-1"></i> Assign Site Visit
                                 </button>
                                 <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#createActionModal">
                                     <i class="ph-activity me-1"></i> Create Action
@@ -155,7 +155,7 @@
                                                 <td><span class="badge bg-{{ $blockIssue->status_color }}">{{ $blockIssue->status_text }}</span></td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-medium">Issue Type:</td>
+                                                <td class="fw-medium">{{ __('translation.issue-category') }}:</td>
                                                 <td>
                                                     @if($blockIssue->issue_type)
                                                         <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $blockIssue->issue_type)) }}</span>
@@ -1533,7 +1533,97 @@
                 }, 5000);
             }
 
-            // Handle Create Site Visit form submission
+            // Site Visit Dropzone Handling
+            let siteVisitDropzone = null;
+            
+            // Initialize Dropzone when modal is shown
+            $('#createSiteVisitModal').on('shown.bs.modal', function() {
+                if (!siteVisitDropzone) {
+                    initializeSiteVisitDropzone();
+                }
+            });
+            
+            // Initialize Site Visit Dropzone
+            function initializeSiteVisitDropzone() {
+                // Disable auto discover to prevent conflicts
+                Dropzone.autoDiscover = false;
+                
+                // Ensure element is clean
+                const dropzoneElement = document.getElementById('siteVisitDropzone');
+                if (dropzoneElement && dropzoneElement.dropzone) {
+                    dropzoneElement.dropzone.destroy();
+                }
+                
+                siteVisitDropzone = new Dropzone("#siteVisitDropzone", {
+                    url: "#", // Placeholder, we'll handle upload manually
+                    paramName: "files",
+                    uploadMultiple: true,
+                    parallelUploads: 10,
+                    maxFiles: 10,
+                    maxFilesize: 5, // 5MB per file
+                    acceptedFiles: "image/*,.pdf,.doc,.docx",
+                    addRemoveLinks: true,
+                    clickable: true,
+                    autoProcessQueue: false, // Don't auto-upload
+                    dictDefaultMessage: "Drop files here or click to upload",
+                    dictRemoveFile: "Remove",
+                    dictCancelUpload: "Cancel",
+                    dictUploadCanceled: "Upload canceled",
+                    dictInvalidFileType: "You can't upload files of this type.",
+                    dictFileTooBig: "File is too big. Max filesize: 5MB.",
+                    dictMaxFilesExceeded: "You can not upload more than 10 files.",
+                    dictResponseError: "Server responded with an error.",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    init: function() {
+                        const dz = this;
+                        
+                        // Custom styling
+                        this.on("addedfile", function(file) {
+                            const preview = file.previewElement;
+                            $(preview).addClass('dz-image-preview-custom');
+                            
+                            // Add file size info
+                            const sizeInfo = $(preview).find('.dz-size');
+                            if (sizeInfo.length === 0) {
+                                $(preview).find('.dz-details').append('<div class="dz-size"><span data-dz-size></span></div>');
+                            }
+                        });
+                        
+                        // Handle individual file errors
+                        this.on("error", function(file, errorMessage) {
+                            showModalAlert('error', errorMessage);
+                        });
+                        
+                        // Custom validation for total file size
+                        this.on("addedfiles", function(files) {
+                            let totalSize = 0;
+                            const maxTotalSize = 50 * 1024 * 1024; // 50MB total
+                            
+                            files.forEach(file => {
+                                totalSize += file.size;
+                            });
+                            
+                            if (totalSize > maxTotalSize) {
+                                showModalAlert('error', `Total size exceeds 50MB (${(totalSize / 1024 / 1024).toFixed(1)}MB)`);
+                                files.forEach(file => {
+                                    dz.removeFile(file);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Clear dropzone when modal is closed
+            $('#createSiteVisitModal').on('hidden.bs.modal', function() {
+                if (siteVisitDropzone) {
+                    siteVisitDropzone.removeAllFiles(true);
+                }
+            });
+
+            // Handle Assign Site Visit form submission
             $('#createSiteVisitForm').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -1552,16 +1642,46 @@
                     '<i class="ph-spinner-gap ph-spin me-1"></i> Creating...';
                 submitBtn.prop('disabled', true).html(loadingText);
                 
+                // Create FormData to handle file uploads
+                const formData = new FormData(form[0]);
+                
+                // Append files from Dropzone to FormData
+                if (siteVisitDropzone && siteVisitDropzone.files.length > 0) {
+                    console.log('Dropzone files count:', siteVisitDropzone.files.length);
+                    
+                    // Get accepted files from Dropzone (this is the proper way)
+                    const acceptedFiles = siteVisitDropzone.getAcceptedFiles();
+                    console.log('Accepted files count:', acceptedFiles.length);
+                    
+                    acceptedFiles.forEach((file, index) => {
+                        console.log('Adding file:', file.name, file.size, file.type);
+                        formData.append('files[]', file);
+                    });
+                } else {
+                    console.log('No dropzone files to upload');
+                }
+                
+                // Debug: Log FormData contents
+                console.log('FormData contents:');
+                for (let pair of formData.entries()) {
+                    console.log(pair[0], ':', pair[1]);
+                }
+                
                 // Submit form via AJAX
                 $.ajax({
                     url: form.attr('action'),
                     method: 'POST',
-                    data: form.serialize(),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(response) {
+                        console.log('Site visit response:', response);
                         if (response.success) {
+                            const imagesCount = response.data && response.data.images ? response.data.images.length : 0;
+                            console.log('Site visit created with', imagesCount, 'images');
                             showModalAlert('success', response.message);
                             
                             // Close modal after successful operation
@@ -2051,12 +2171,16 @@
 
             // Function to reset modal to create mode
             function resetModalToCreateMode() {
-                $('#modalTitle').text('Create Site Visit for Issue: {{ $blockIssue->ref_no }}');
-                $('#submitBtnText').text('Create Site Visit');
+                $('#modalTitle').text('Assign Site Visit for Issue: {{ $blockIssue->ref_no }}');
+                $('#submitBtnText').text('Assign Site Visit');
                 $('#createSiteVisitForm').attr('action', '{{ route("block-visits.store") }}');
                 $('#createSiteVisitForm').find('input[name="_method"]').remove();
                 $('#createSiteVisitForm input[name="block_id"]').val('{{ $blockIssue->block->id }}');
                 $('#createSiteVisitForm input[name="block_issue_id"]').val('{{ $blockIssue->id }}');
+                // Clear dropzone files
+                if (siteVisitDropzone) {
+                    siteVisitDropzone.removeAllFiles(true);
+                }
                 hideModalAlert();
             }
 
@@ -2351,11 +2475,11 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="createSiteVisitModalLabel">
-                        <i class="ph-map-pin me-2"></i><span id="modalTitle">Create Site Visit for Issue: {{ $blockIssue->ref_no }}</span>
+                        <i class="ph-map-pin me-2"></i><span id="modalTitle">Assign Site Visit for Issue: {{ $blockIssue->ref_no }}</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="createSiteVisitForm" method="POST" action="{{ route('block-visits.store') }}">
+                <form id="createSiteVisitForm" method="POST" action="{{ route('block-visits.store') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <!-- Alert Messages Container -->
@@ -2409,11 +2533,59 @@
                             <label class="form-label">Notes</label>
                             <textarea class="form-control" name="notes" rows="3" placeholder="Enter any additional notes for this site visit..."></textarea>
                         </div>
+                        
+                        <!-- File Upload Section with Dropzone -->
+                        <div class="mb-3">
+                            <label class="form-label">Upload Photos or Documents</label>
+                            <small class="text-muted d-block mb-2">Optional - Upload multiple files</small>
+                            <div id="siteVisitDropzone" class="dropzone">
+                                <div class="dz-message">
+                                    <div class="mb-2">
+                                        <i class="ph-cloud-upload display-4 text-muted"></i>
+                                    </div>
+                                    <h5>Drop files here or click to upload</h5>
+                                    <p class="text-muted font-size-14 mb-0">
+                                        <strong>Requirements:</strong><br>
+                                        • Maximum 10 files<br>
+                                        • Each file max 5MB<br>
+                                        • Formats: Images, PDF, DOC, DOCX
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Dropzone Custom Styles -->
+                        <style>
+                            #siteVisitDropzone.dropzone {
+                                min-height: 120px !important;
+                                border: 2px dashed #ccc !important;
+                                border-radius: 6px !important;
+                                background: #fafafa;
+                            }
+                            
+                            #siteVisitDropzone .dz-message {
+                                padding: 20px !important;
+                                margin: 0 !important;
+                            }
+                            
+                            #siteVisitDropzone.dz-drag-hover {
+                                border-color: #0d6efd !important;
+                                background: #e7f3ff !important;
+                            }
+                            
+                            #siteVisitDropzone .dz-preview {
+                                margin: 10px !important;
+                            }
+                            
+                            #siteVisitDropzone .dz-preview .dz-image {
+                                border-radius: 4px !important;
+                            }
+                        </style>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn">
-                            <i class="ph-map-pin me-1"></i> <span id="submitBtnText">Create Site Visit</span>
+                            <i class="ph-map-pin me-1"></i> <span id="submitBtnText">Assign Site Visit</span>
                         </button>
                     </div>
                 </form>
