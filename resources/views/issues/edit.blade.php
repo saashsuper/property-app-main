@@ -51,7 +51,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="title" class="form-label">Issue Title <span class="text-danger">*</span></label>
+                                        <label for="title" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('title') is-invalid @enderror" 
                                                id="title" name="title" value="{{ old('title', $issue->title) }}" required>
                                         @error('title')

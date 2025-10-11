@@ -229,5 +229,12 @@ return [
     "Apex_Polar_area_Chart" => "مخطط المنطقة القطبية",
     "range-area" => "منطقة النطاق",
     "funnel" => "قمع",
+    
+    // Issue translations
+    "category" => "الفئة",
+    "issue-category" => "الفئة",
+    "select-issue-category" => "حدد الفئة",
+    "problem-overview" => "نظرة عامة على المشكلة",
+    "search-by-problem-overview" => "البحث حسب نظرة عامة على المشكلة أو الوصف أو رقم المرجع...",
 ];
 ?>

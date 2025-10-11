@@ -178,7 +178,7 @@
                                                         </span>
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-1">Issue Type</h6>
+                                                        <h6 class="mb-1">{{ __('translation.issue-category') }}</h6>
                                                         <p class="mb-0 text-muted">{{ $issue->category }}</p>
                                                     </div>
                                                 </div>

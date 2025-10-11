@@ -271,5 +271,12 @@ return [
     "hot" =>"Горячий",
     "range-area" => "Область диапазона",
     "funnel" => "Воронка",
+    
+    // Issue translations
+    "category" => "Категория",
+    "issue-category" => "Категория",
+    "select-issue-category" => "Выберите категорию",
+    "problem-overview" => "Обзор проблемы",
+    "search-by-problem-overview" => "Поиск по обзору проблемы, описанию или номеру ссылки...",
 ];
 ?>

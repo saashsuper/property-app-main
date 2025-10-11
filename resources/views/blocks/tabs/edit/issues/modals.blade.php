@@ -55,11 +55,11 @@
                                     </select>
                                 </div>
 
-                                <!-- Row 2: Issue Type, Priority, Issue Title -->
+                                <!-- Row 2: Category, Priority, Problem Overview -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="issue_type" class="form-label">Issue Type <span class="text-danger">*</span></label>
+                                    <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
                                     <select class="form-select" id="issue_type" name="issue_type" required>
-                                        <option value="">Select Issue Type</option>
+                                        <option value="">{{ __('translation.select-issue-category') }}</option>
                                         @foreach ($issueTypes as $issueType)
                                             <option value="{{ $issueType->name }}">
                                                 {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
@@ -78,7 +78,7 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label for="issue" class="form-label">Issue Title <span class="text-danger">*</span></label>
+                                    <label for="issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" id="issue" name="issue" required>
                                 </div>
 

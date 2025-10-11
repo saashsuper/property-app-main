@@ -267,5 +267,12 @@ return [
     "hot" => "Piccante",
     "range-area" => "Area di portata",
     "funnel" => "Imbuto",
+    
+    // Issue translations
+    "category" => "Categoria",
+    "issue-category" => "Categoria",
+    "select-issue-category" => "Seleziona categoria",
+    "problem-overview" => "Panoramica del problema",
+    "search-by-problem-overview" => "Cerca per panoramica del problema, descrizione o numero di riferimento...",
 ];
 ?>

@@ -220,5 +220,12 @@ return [
     "file-manager"=> "Dateimanager",
     "range-area" => "Reichweitenbereich",
     "funnel" => "Trichter",
+    
+    // Issue translations
+    "category" => "Κατηγορία",
+    "issue-category" => "Κατηγορία",
+    "select-issue-category" => "Επιλέξτε κατηγορία",
+    "problem-overview" => "Επισκόπηση προβλήματος",
+    "search-by-problem-overview" => "Αναζήτηση κατά επισκόπηση προβλήματος, περιγραφή ή αριθμό αναφοράς...",
 ];
 ?>

@@ -81,7 +81,7 @@
 
                         <!-- Type Selection -->
                         <div class="col-md-4 mb-3">
-                            <label for="search_type" class="form-label">Issue Type</label>
+                            <label for="search_type" class="form-label">{{ __('translation.issue-category') }}</label>
                             <select class="form-select" id="search_type" name="issue_type">
                                 <option value="">All Types</option>
                                 @foreach ($issueTypes as $issueType)
@@ -108,7 +108,7 @@
                         <div class="col-6 mb-3">
                             <label for="search_keyword" class="form-label">Keyword Search</label>
                             <input type="text" class="form-control" id="search_keyword" name="search"
-                                placeholder="Search by issue title, description, or reference number...">
+                                placeholder="{{ __('translation.search-by-problem-overview') }}">
                         </div>
                     </div>
                 </form>

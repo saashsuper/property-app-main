@@ -47,7 +47,7 @@ class BlockIssueFactory extends Factory
             'note_for_access' => $this->faker->paragraph(),
             'issued_by' => User::factory(),
             'block_visit_id' => null,
-            'block_inspection_id' => null,m
+            'block_inspection_id' => null,
             'issued_date_time' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'comment' => $this->faker->paragraph(),
             'is_mobile' => $this->faker->boolean(),

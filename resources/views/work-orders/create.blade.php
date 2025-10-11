@@ -106,7 +106,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label for="issue_type" class="form-label">Issue Type <span class="text-danger">*</span></label>
+                                        <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control @error('issue_type') is-invalid @enderror" 
                                                id="issue_type" name="issue_type" value="{{ old('issue_type') }}" required>
                                         @error('issue_type')

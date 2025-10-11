@@ -1361,7 +1361,7 @@ $(document).ready(function() {
     }
     
     /**
-     * Get issue type badge HTML
+     * Get category badge HTML
      */
     function getIssueTypeBadge(issueType) {
         if (issueType) {

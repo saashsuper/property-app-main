@@ -258,5 +258,12 @@ return [
     "hot"=> "Hot",
     "range-area" => "范围面积",
     "funnel" => "漏斗",
+    
+    // Issue translations
+    "category" => "类别",
+    "issue-category" => "类别",
+    "select-issue-category" => "选择类别",
+    "problem-overview" => "问题概述",
+    "search-by-problem-overview" => "按问题概述、描述或参考编号搜索...",
 ];
 ?>

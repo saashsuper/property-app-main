@@ -288,5 +288,12 @@ return [
 
     "range-area" => "Zone de portée",
     "funnel" => "Entonnoir",
+    
+    // Issue translations
+    "category" => "Catégorie",
+    "issue-category" => "Catégorie",
+    "select-issue-category" => "Sélectionner une catégorie",
+    "problem-overview" => "Aperçu du problème",
+    "search-by-problem-overview" => "Rechercher par aperçu du problème, description ou numéro de référence...",
 ];
 ?>

@@ -273,5 +273,12 @@ return [
     "range-area" => "Área de rango",
     "funnel" => "Embudo",
 
+    
+    // Issue translations
+    "category" => "Categoría",
+    "issue-category" => "Categoría",
+    "select-issue-category" => "Seleccionar categoría",
+    "problem-overview" => "Descripción del problema",
+    "search-by-problem-overview" => "Buscar por descripción del problema, descripción o número de referencia...",
 ];
 ?>

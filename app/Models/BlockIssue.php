@@ -126,12 +126,11 @@ class BlockIssue extends Model
      */
     protected static function generateRefNo()
     {
-        $prefix = 'ISSUE';
         $year = date('Y');
         $month = date('m');
         
         // Get the last issue number for this month
-        $lastIssue = self::where('ref_no', 'like', "{$prefix}-{$year}{$month}-%")
+        $lastIssue = self::where('ref_no', 'like', "{$year}-{$month}-%")
             ->orderBy('id', 'desc')
             ->first();
         
@@ -144,8 +143,8 @@ class BlockIssue extends Model
             $newNumber = 1;
         }
         
-        // Format: ISSUE-202508-001
-        return sprintf('%s-%s%s-%03d', $prefix, $year, $month, $newNumber);
+        // Format: 2025-10-001
+        return sprintf('%s-%s-%03d', $year, $month, $newNumber);
     }
 
     /**
