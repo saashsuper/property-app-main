@@ -395,6 +395,10 @@ class BlockController extends Controller
         $users = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
+        // Get Contractor Admin users for site visit assignments
+        $siteVisitUsers = \App\Models\User::whereHas('userType', function($query) {
+            $query->where('name', 'Contractor Admin');
+        })->with('userType')->orderBy('name')->get();
         $contractTypes = DB::table('block_contractor_types')->orderBy('name')->get();
         $contractors = \App\Models\User::whereHas('userType', function($q) { 
             $q->whereIn('name', ['Contractor Admin', 'Contractor User']); 
@@ -430,6 +434,7 @@ class BlockController extends Controller
             'buildingTypes',
             'blockUnitTypes',
             'users',
+            'siteVisitUsers',
             'contractTypes',
             'contractors',
             'contactMethods',

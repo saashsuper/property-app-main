@@ -29,7 +29,7 @@
                     </a>
                 </div>
                 <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#siteVisitModal" onclick="openSiteVisitModal('add')">
-                    <i class="ph-plus align-bottom me-1"></i> Add Site Visit
+                    <i class="ph-plus align-bottom me-1"></i> Assign Site Visit
                 </button>
             </div>
         </div>

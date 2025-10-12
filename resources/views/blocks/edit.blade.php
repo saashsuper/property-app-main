@@ -149,6 +149,8 @@
 @endsection
 
 @push('styles')
+<!-- Dropzone CSS -->
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
 <style>
 /* Modern Nav Pills Tabs Styling */
 .arrow-navtabs {
@@ -319,4 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Tabs initialized');
 });
 </script>
+
+<!-- Dropzone JS -->
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 @endpush 

@@ -319,21 +319,28 @@ $(document).ready(function() {
             const isEdit = $form.find('input[name="_method"]').length > 0;
             const method = isEdit ? 'PUT' : 'POST';
             
-            const formData = {
-                block_id: window.blockId,
-                user_id: $('#user_id').val(),
-                scheduled_date_time: scheduledDateTime,
-                job_reason_id: $('#job_reason_id').val(),
-                notes: $('#notes').val(),
-                _token: window.csrfToken
-            };
+            // Create FormData to handle file uploads
+            const formData = new FormData($form[0]);
             
-            // Add _method field for PUT requests
-            if (isEdit) {
-                formData._method = 'PUT';
+            // Update scheduled_date_time field
+            formData.set('scheduled_date_time', scheduledDateTime);
+            
+            // Append files from Dropzone to FormData
+            if (blockSiteVisitDropzone && blockSiteVisitDropzone.files.length > 0) {
+                console.log('Dropzone files count:', blockSiteVisitDropzone.files.length);
+                
+                // Get accepted files from Dropzone
+                const acceptedFiles = blockSiteVisitDropzone.getAcceptedFiles();
+                console.log('Accepted files count:', acceptedFiles.length);
+                
+                acceptedFiles.forEach((file, index) => {
+                    console.log('Adding file:', file.name, file.size, file.type);
+                    formData.append('files[]', file);
+                });
+            } else {
+                console.log('No dropzone files to upload');
             }
             
-            console.log('Form data being sent:', formData);
             console.log('Form action URL:', $form.attr('action'));
             console.log('Is edit mode:', isEdit);
             
@@ -341,6 +348,8 @@ $(document).ready(function() {
                 url: $form.attr('action'),
                 method: 'POST', // Always use POST for Laravel form spoofing
                 data: formData,
+                processData: false,
+                contentType: false,
                 headers: {
                     'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
                 },
@@ -349,6 +358,11 @@ $(document).ready(function() {
                     if (data.success) {
                         showMessage(messageId, 'success', successMessage);
                         $form[0].reset();
+                        
+                        // Clear dropzone files
+                        if (blockSiteVisitDropzone) {
+                            blockSiteVisitDropzone.removeAllFiles(true);
+                        }
                         
                         setTimeout(function() {
                             $('#' + modalId).modal('hide');
@@ -410,11 +424,16 @@ $(document).ready(function() {
         
         if (mode === 'add') {
             // Add mode
-            $modalLabel.text('Add Site Visit');
+            $modalLabel.text('Assign Site Visit');
             $submitBtn.html('<i class="ph-check me-1"></i> Save');
             $form.attr('action', window.routes?.blockSiteVisits?.store || '/block-visits');
             $form.find('input[name="_method"]').remove(); // Remove PUT method for add
             $form[0].reset(); // Reset form
+            
+            // Clear dropzone if it exists
+            if (blockSiteVisitDropzone) {
+                blockSiteVisitDropzone.removeAllFiles(true);
+            }
             
             // Initialize modal before showing
             initializeModal('siteVisitModal', 'user_id');
@@ -464,7 +483,7 @@ $(document).ready(function() {
                     const $submitBtn = $('#siteVisitSubmitBtn');
                     
                     // Update modal for edit mode
-                    $modalLabel.text('Edit Site Visit');
+                    $modalLabel.text('Assign Site Visit');
                     $submitBtn.html('<i class="ph-check me-1"></i> Update');
                     $form.attr('action', window.routes?.blockSiteVisits?.update?.replace(':id', id) || `/block-visits/${id}`);
                     
@@ -780,12 +799,101 @@ $(document).ready(function() {
     // MODAL EVENT HANDLERS
     // ========================================
     
-    // Clear messages when site visit modal is opened
-    $('#siteVisitModal').on('show.bs.modal', function() {
-        // Use setTimeout to ensure DOM is ready before clearing message
+    // ========================================
+    // DROPZONE INITIALIZATION
+    // ========================================
+    
+    let blockSiteVisitDropzone = null;
+    
+    // Initialize Dropzone when modal is shown
+    $('#siteVisitModal').on('shown.bs.modal', function() {
+        if (!blockSiteVisitDropzone) {
+            initializeBlockSiteVisitDropzone();
+        }
+        // Clear messages
         setTimeout(function() {
             clearMessage('siteVisitMessage');
         }, 50);
+    });
+    
+    // Initialize Block Site Visit Dropzone
+    function initializeBlockSiteVisitDropzone() {
+        // Disable auto discover to prevent conflicts
+        Dropzone.autoDiscover = false;
+        
+        // Ensure element is clean
+        const dropzoneElement = document.getElementById('blockSiteVisitDropzone');
+        if (dropzoneElement && dropzoneElement.dropzone) {
+            dropzoneElement.dropzone.destroy();
+        }
+        
+        blockSiteVisitDropzone = new Dropzone("#blockSiteVisitDropzone", {
+            url: "#", // Placeholder, we'll handle upload manually
+            paramName: "files",
+            uploadMultiple: true,
+            parallelUploads: 10,
+            maxFiles: 10,
+            maxFilesize: 5, // 5MB per file
+            acceptedFiles: "image/*,.pdf,.doc,.docx",
+            addRemoveLinks: true,
+            clickable: true,
+            autoProcessQueue: false, // Don't auto-upload
+            dictDefaultMessage: "Drop files here or click to upload",
+            dictRemoveFile: "Remove",
+            dictCancelUpload: "Cancel",
+            dictUploadCanceled: "Upload canceled",
+            dictInvalidFileType: "You can't upload files of this type.",
+            dictFileTooBig: "File is too big. Max filesize: 5MB.",
+            dictMaxFilesExceeded: "You can not upload more than 10 files.",
+            dictResponseError: "Server responded with an error.",
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+            },
+            init: function() {
+                const dz = this;
+                
+                // Custom styling
+                this.on("addedfile", function(file) {
+                    const preview = file.previewElement;
+                    $(preview).addClass('dz-image-preview-custom');
+                    
+                    // Add file size info
+                    const sizeInfo = $(preview).find('.dz-size');
+                    if (sizeInfo.length === 0) {
+                        $(preview).find('.dz-details').append('<div class="dz-size"><span data-dz-size></span></div>');
+                    }
+                });
+                
+                // Handle individual file errors
+                this.on("error", function(file, errorMessage) {
+                    showMessage('siteVisitMessage', 'danger', errorMessage);
+                });
+                
+                // Custom validation for total file size
+                this.on("addedfiles", function(files) {
+                    let totalSize = 0;
+                    const maxTotalSize = 50 * 1024 * 1024; // 50MB total
+                    
+                    files.forEach(file => {
+                        totalSize += file.size;
+                    });
+                    
+                    if (totalSize > maxTotalSize) {
+                        showMessage('siteVisitMessage', 'danger', `Total size exceeds 50MB (${(totalSize / 1024 / 1024).toFixed(1)}MB)`);
+                        files.forEach(file => {
+                            dz.removeFile(file);
+                        });
+                    }
+                });
+            }
+        });
+    }
+    
+    // Clear dropzone when modal is closed
+    $('#siteVisitModal').on('hidden.bs.modal', function() {
+        if (blockSiteVisitDropzone) {
+            blockSiteVisitDropzone.removeAllFiles(true);
+        }
     });
     
     // ========================================

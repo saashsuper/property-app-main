@@ -3,10 +3,10 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="siteVisitModalLabel" style="color: white !important; padding-bottom: 15px;">Add Site Visit</h5>
+                <h5 class="modal-title" id="siteVisitModalLabel" style="color: white !important; padding-bottom: 15px;">Assign Site Visit</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
-            <form id="siteVisitForm" method="POST" action="{{ route('block-visits.store') }}">
+            <form id="siteVisitForm" method="POST" action="{{ route('block-visits.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
@@ -18,11 +18,11 @@
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
+                            <label for="user_id" class="form-label">Assigned User <span class="text-danger">*</span></label>
                             <select class="form-select" id="user_id" name="user_id" required>
-                                <option value="">Select User</option>
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->userType->name ?? 'N/A' }})</option>
+                                <option value="">Select Contractor Admin</option>
+                                @foreach($siteVisitUsers as $user)
+                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -52,6 +52,54 @@
                         <label for="notes" class="form-label">Notes <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="notes" name="notes" rows="3" required placeholder="Enter visit notes and details..."></textarea>
                     </div>
+                    
+                    <!-- File Upload Section with Dropzone -->
+                    <div class="mb-3">
+                        <label class="form-label">Upload Photos or Documents</label>
+                        <small class="text-muted d-block mb-2">Optional - Upload multiple files</small>
+                        <div id="blockSiteVisitDropzone" class="dropzone">
+                            <div class="dz-message">
+                                <div class="mb-2">
+                                    <i class="ph-cloud-upload display-4 text-muted"></i>
+                                </div>
+                                <h5>Drop files here or click to upload</h5>
+                                <p class="text-muted font-size-14 mb-0">
+                                    <strong>Requirements:</strong><br>
+                                    • Maximum 10 files<br>
+                                    • Each file max 5MB<br>
+                                    • Formats: Images, PDF, DOC, DOCX
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dropzone Custom Styles -->
+                    <style>
+                        #blockSiteVisitDropzone.dropzone {
+                            min-height: 120px !important;
+                            border: 2px dashed #ccc !important;
+                            border-radius: 6px !important;
+                            background: #fafafa;
+                        }
+                        
+                        #blockSiteVisitDropzone .dz-message {
+                            padding: 20px !important;
+                            margin: 0 !important;
+                        }
+                        
+                        #blockSiteVisitDropzone.dz-drag-hover {
+                            border-color: #0d6efd !important;
+                            background: #e7f3ff !important;
+                        }
+                        
+                        #blockSiteVisitDropzone .dz-preview {
+                            margin: 10px !important;
+                        }
+                        
+                        #blockSiteVisitDropzone .dz-preview .dz-image {
+                            border-radius: 4px !important;
+                        }
+                    </style>
                 </div>
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-primary" id="siteVisitSubmitBtn">
