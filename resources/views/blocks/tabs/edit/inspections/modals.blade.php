@@ -129,13 +129,22 @@
                             <input type="time" class="form-control" id="edit_scheduled_time" name="scheduled_time" required>
                         </div>
 
-                        <div class="col-md-6 mb-3" id="edit_end_date_group" style="display: none;">
-                            <label for="edit_end_date" class="form-label">End Date</label>
-                            <input type="date" class="form-control" id="edit_end_date" name="end_date" readonly style="background-color: #f8f9fa;">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="edit_start_date" name="start_date">
                         </div>
-                        <div class="col-md-6 mb-3" id="edit_end_time_group" style="display: none;">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_start_time" class="form-label">Start Time</label>
+                            <input type="time" class="form-control" id="edit_start_time" name="start_time">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="edit_end_date" name="end_date">
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label for="edit_end_time" class="form-label">End Time</label>
-                            <input type="time" class="form-control" id="edit_end_time" name="end_time" readonly style="background-color: #f8f9fa;">
+                            <input type="time" class="form-control" id="edit_end_time" name="end_time">
                         </div>
 
                         <div class="col-12 mb-3">

@@ -29,7 +29,7 @@
                         @foreach($blockInspections as $inspection)
                             <tr>
                                 <td>{{ $inspection->ref_no ?? 'N/A' }}</td>
-                                <td>{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}</td>
+                                <td>{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}</td>
                                 <td>{{ $inspection->creator->name ?? 'N/A' }}</td>
                                 <td>
                                     @php

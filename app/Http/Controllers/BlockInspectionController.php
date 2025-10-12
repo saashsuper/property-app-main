@@ -181,6 +181,8 @@ class BlockInspectionController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
+            'start_date_time' => 'nullable|date',
+            'end_date_time' => 'nullable|date',
             'notes' => 'nullable|string|max:500',
             'job_status_id' => 'nullable|integer|exists:issue_statuses,value',
         ]);
@@ -215,6 +217,8 @@ class BlockInspectionController extends Controller
 
         $updateData = [
             'scheduled_date_time' => $request->scheduled_date_time,
+            'start_date_time' => $request->start_date_time,
+            'end_date_time' => $request->end_date_time,
             'notes' => $request->notes,
             'updated_by' => Auth::id(),
         ];

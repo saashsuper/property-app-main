@@ -44,6 +44,7 @@ class DatabaseSeeder extends Seeder
             BlockBuildingsSeeder::class,
             BlockUnitsSeeder::class,
             BlockVisitSeeder::class,
+            BlockVisitImageSeeder::class,
             BlockInspectionSeeder::class,
         ]);
     }

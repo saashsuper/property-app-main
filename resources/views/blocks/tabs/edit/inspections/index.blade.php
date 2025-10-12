@@ -57,7 +57,7 @@
                                     <tr>
                                         <td class="align-middle">{{ $inspection->ref_no ?? 'N/A' }}</td>
                                         <td class="align-middle text-nowrap">
-                                            {{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}
+                                            {{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}
                                         </td>
                                         <td class="align-middle">{{ $displayInspector }}</td>
                                         <td class="align-middle text-nowrap">
@@ -80,7 +80,7 @@
                                                 <button class="btn btn-sm btn-outline-danger"
                                                         onclick="inspectionShowDeleteConfirmation({{ $inspection->id }}, {
                                                             ref_no: '{{ $inspection->ref_no ?? 'N/A' }}',
-                                                            scheduled_date: '{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y') : 'N/A' }}',
+                                                            scheduled_date: '{{ $inspection->scheduled_date_time ? \Carbon\Carbon::parse($inspection->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}',
                                                             inspector: '{{ $displayInspector }}'
                                                         })"
                                                         title="Delete Inspection">

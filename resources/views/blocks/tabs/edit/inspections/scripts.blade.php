@@ -217,8 +217,6 @@
                     form.classList.remove('was-validated');
                 }
                 clearMessage('editInspectionMessage');
-                document.getElementById('edit_end_date_group').style.display = 'none';
-                document.getElementById('edit_end_time_group').style.display = 'none';
             });
         }
         
@@ -284,7 +282,8 @@
         setValue('edit_user_id', lead ? lead.user_id : '');
 
         applyDateTime(inspection.scheduled_date_time, 'edit_scheduled_date', 'edit_scheduled_time');
-        applyDateTime(inspection.end_date_time, 'edit_end_date', 'edit_end_time', true);
+        applyDateTime(inspection.start_date_time, 'edit_start_date', 'edit_start_time');
+        applyDateTime(inspection.end_date_time, 'edit_end_date', 'edit_end_time');
 
         setText('edit_created_info', formatDateTime(inspection.created_at));
         setText('edit_updated_info', formatDateTime(inspection.updated_at));
@@ -303,17 +302,13 @@
         if (el) el.textContent = value || '-';
     }
 
-    function applyDateTime(value, dateId, timeId, toggleVisibility = false) {
+    function applyDateTime(value, dateId, timeId) {
         const dateEl = document.getElementById(dateId);
         const timeEl = document.getElementById(timeId);
-        const groupDate = document.getElementById(`${dateId}_group`);
-        const groupTime = document.getElementById(`${timeId}_group`);
 
         if (!value || !dateEl || !timeEl) {
-            if (toggleVisibility) {
-                if (groupDate) groupDate.style.display = 'none';
-                if (groupTime) groupTime.style.display = 'none';
-            }
+            if (dateEl) dateEl.value = '';
+            if (timeEl) timeEl.value = '';
             return;
         }
 
@@ -324,11 +319,6 @@
 
         dateEl.value = date.toISOString().split('T')[0];
         timeEl.value = date.toTimeString().slice(0, 5);
-
-        if (toggleVisibility) {
-            if (groupDate) groupDate.style.display = 'block';
-            if (groupTime) groupTime.style.display = 'block';
-        }
     }
 
     function handleAddInspectionSubmit(evt) {
@@ -367,7 +357,9 @@
 
         const id = form.inspection_id.value;
         const payload = buildPayload(form, {
-            scheduled_date_time: combineDateTime(form.scheduled_date.value, form.scheduled_time.value)
+            scheduled_date_time: combineDateTime(form.scheduled_date.value, form.scheduled_time.value),
+            start_date_time: combineDateTime(form.start_date.value, form.start_time.value),
+            end_date_time: combineDateTime(form.end_date.value, form.end_time.value)
         });
 
         setLoading(form.querySelector('button[type="submit"]'), true, 'Updating…');
@@ -498,10 +490,13 @@
 
                         const scheduleDateAttr = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toISOString().split('T')[0] : '';
                         const scheduleTimeAttr = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toTimeString().slice(0, 5) : '';
-                        const scheduleDisplay = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toLocaleDateString('en-US', {
+                        const scheduleDisplay = inspection.scheduled_date_time ? new Date(inspection.scheduled_date_time).toLocaleString('en-US', {
                             year: 'numeric',
                             month: 'short',
-                            day: '2-digit'
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
                         }) : 'N/A';
 
                         const notesDisplay = inspection.notes
@@ -519,7 +514,8 @@
                                 ref_no: inspection.ref_no,
                                 notes: inspection.notes,
                                 scheduled_date_attr: scheduleDateAttr,
-                                scheduled_time_attr: scheduleTimeAttr
+                                scheduled_time_attr: scheduleTimeAttr,
+                                scheduled_display: scheduleDisplay
                             }, leadMember ? leadMember.user_id : inspection.created_by, inspectorName)
                         ]);
                     });
@@ -559,7 +555,7 @@
                 <button class="btn btn-sm btn-outline-danger"
                         onclick="inspectionShowDeleteConfirmation(${inspection.id}, {
                             ref_no: '${inspection.ref_no || 'N/A'}',
-                            scheduled_date: '${inspection.scheduled_date_attr ? new Date(inspection.scheduled_date_attr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : 'N/A'}',
+                            scheduled_date: '${inspection.scheduled_display || 'N/A'}',
                             inspector: '${inspectorName}'
                         })"
                         title="Delete Inspection">
