@@ -41,7 +41,6 @@
                         <th>Reference</th>
                         <th>Visit Date</th>
                         <th>User</th>
-                        <th>Job Reason</th>
                         <th>Status</th>
                         <th>Notes</th>
                         <th>Actions</th>
@@ -64,7 +63,6 @@
                                         {{ $visit->createdByUser->name ?? 'N/A' }}
                                     @endif
                                 </td>
-                                <td>{{ $visit->jobReason->name ?? 'N/A' }}</td>
                                 <td>
                                     @if($visit->end_date_time)
                                         <span class="badge bg-success">Completed</span>
@@ -83,7 +81,6 @@
                                         ref_no: '{{ $visit->ref_no ?? 'N/A' }}',
                                         visit_date: '{{ $visit->scheduled_date_time ? \Carbon\Carbon::parse($visit->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}',
                                         user: '{{ $visit->team && $visit->team->count() > 0 ? $visit->team->first()->user->name ?? 'N/A' : $visit->createdByUser->name ?? 'N/A' }}',
-                                        reason: '{{ $visit->jobReason->name ?? 'N/A' }}',
                                         status: '{{ $visit->end_date_time ? 'Completed' : ($visit->start_date_time ? 'In Progress' : 'Scheduled') }}'
                                     })" title="Delete Site Visit">
                                         <i class="ph-trash"></i>
@@ -167,8 +164,8 @@
 }
 
 /* Site visit specific styling */
-#blockSiteVisitsTable th:nth-child(6),
-#blockSiteVisitsTable td:nth-child(6) {
+#blockSiteVisitsTable th:nth-child(5),
+#blockSiteVisitsTable td:nth-child(5) {
     min-width: 200px;
     max-width: none;
 }

@@ -132,7 +132,7 @@ $(document).ready(function() {
                     dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
                     order: [[1, 'desc']],      // Default sort by visit date descending
                     columnDefs: [
-                        { targets: [6], orderable: false } // Actions column (last column) not sortable
+                        { targets: [5], orderable: false } // Actions column (last column) not sortable
                     ],
                     pageLength: 10,            // Default page size
                     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
@@ -142,7 +142,7 @@ $(document).ready(function() {
                         infoEmpty: "Showing 0 to 0 of 0 site visits",
                         infoFiltered: "(filtered from _MAX_ total site visits)",
                         search: "Search site visits:",
-                        searchPlaceholder: "Search by reference, user, reason...",
+                        searchPlaceholder: "Search by reference, user, notes...",
                         paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
                     },
                     initComplete: function() {
@@ -254,7 +254,6 @@ $(document).ready(function() {
                             `<a href="#" class="text-primary fw-bold view-site-visit-details" data-visit-id="${visit.id}" style="text-decoration: none;">${visit.ref_no || 'N/A'}</a>`,
                             scheduledDateTime,
                             visit.user_name || 'N/A',
-                            visit.job_reason_name || 'N/A',
                             statusBadge,
                             notes,
                             `<button class="btn btn-sm btn-outline-primary" onclick="editSiteVisit(${visit.id})" title="Edit Site Visit">
@@ -264,7 +263,6 @@ $(document).ready(function() {
                                 ref_no: '${visit.ref_no || 'N/A'}',
                                 scheduled_date: '${scheduledDateTime}',
                                 user: '${visit.user_name || 'N/A'}',
-                                reason: '${visit.job_reason_name || 'N/A'}',
                                 status: '${status}'
                             })" title="Delete Site Visit">
                                 <i class="ph-trash"></i>
@@ -513,7 +511,6 @@ $(document).ready(function() {
                         $('#scheduled_time').val(scheduledDateTime.toTimeString().slice(0, 5));
                     }
                     
-                    $('#job_reason_id').val(visit.job_reason_id);
                     $('#notes').val(visit.notes);
                     
                     // Show the modal
@@ -570,10 +567,6 @@ $(document).ready(function() {
             <div class="row">
                 <div class="col-6"><strong>Visit Time:</strong></div>
                 <div class="col-6">${visitData.visit_time || visitData.scheduled_time || 'N/A'}</div>
-            </div>
-            <div class="row">
-                <div class="col-6"><strong>Visit Type:</strong></div>
-                <div class="col-6">${visitData.visit_type || visitData.reason || 'N/A'}</div>
             </div>
             <div class="row">
                 <div class="col-6"><strong>User:</strong></div>
@@ -692,9 +685,6 @@ $(document).ready(function() {
                         assignedUser = visit.createdByUser.name;
                     }
                     $('#detail_user').text(assignedUser);
-                    
-                    // Job reason
-                    $('#detail_job_reason').text(visit.jobReason ? visit.jobReason.name : 'N/A');
                     
                     // Created by
                     $('#detail_created_by').text(visit.createdByUser ? visit.createdByUser.name : 'N/A');

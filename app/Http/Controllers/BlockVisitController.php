@@ -84,9 +84,10 @@ class BlockVisitController extends Controller
         $validator = Validator::make($request->all(), [
             'block_id' => 'required|exists:blocks,id',
             'block_issue_id' => 'nullable|exists:block_issues,id',
+            'block_unit_id' => 'nullable|exists:block_units,id',
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
-            'job_reason_id' => 'required|exists:job_reasons,id',
+            'job_reason_id' => 'nullable|exists:job_reasons,id',
             'notes' => 'nullable|string|max:255',
             'files.*' => 'nullable|file|max:5120|mimes:jpeg,jpg,png,pdf,doc,docx', // 5MB max
         ]);
@@ -110,6 +111,7 @@ class BlockVisitController extends Controller
             $blockVisit = BlockVisit::create([
                 'block_id' => $request->block_id,
                 'block_issue_id' => $request->block_issue_id,
+                'block_unit_id' => $request->block_unit_id,
                 'ref_no' => 'SV-' . strtoupper(Str::random(6)),
                 'scheduled_date_time' => $request->scheduled_date_time,
                 'job_reason_id' => $request->job_reason_id,
@@ -222,7 +224,7 @@ class BlockVisitController extends Controller
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
             'scheduled_date_time' => 'required|date',
-            'job_reason_id' => 'required|exists:job_reasons,id',
+            'job_reason_id' => 'nullable|exists:job_reasons,id',
             'notes' => 'nullable|string|max:255',
         ]);
 

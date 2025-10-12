@@ -307,7 +307,7 @@ class BlockVisitCreationTest extends TestCase
                      'success' => false,
                      'message' => 'Validation failed',
                  ])
-                 ->assertJsonValidationErrors(['block_id', 'user_id', 'scheduled_date_time', 'job_reason_id']);
+                 ->assertJsonValidationErrors(['block_id', 'user_id', 'scheduled_date_time']);
     }
 
     /**

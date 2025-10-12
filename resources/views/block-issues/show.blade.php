@@ -869,12 +869,11 @@
                                 <table class="table table-nowrap table-hover">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>Visit #</th>
-                                            <th>Job Reason</th>
+                                            <th>Reference</th>
+                                            <th>Visit Date</th>
+                                            <th>User</th>
                                             <th>Status</th>
-                                            <th>Scheduled Date</th>
-                                            <th>Team Members</th>
-                                            <th>Created By</th>
+                                            <th>Notes</th>
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -882,15 +881,9 @@
                                         @foreach ($relatedSiteVisits as $siteVisit)
                                             <tr>
                                                 <td>
-                                                    <span class="badge bg-info">{{ $siteVisit->id }}</span>
-                                                </td>
-                                                <td>
-                                                    <strong>{{ $siteVisit->jobReason->name ?? 'N/A' }}</strong>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-{{ $siteVisit->jobStatus->btn_class ?? 'secondary' }}">
-                                                        {{ $siteVisit->jobStatus->name ?? 'Unknown' }}
-                                                    </span>
+                                                    <a href="{{ route('block-visits.show', $siteVisit->id) }}" class="text-primary fw-bold" style="text-decoration: none;">
+                                                        {{ $siteVisit->ref_no ?? 'N/A' }}
+                                                    </a>
                                                 </td>
                                                 <td>
                                                     @if($siteVisit->scheduled_date_time)
@@ -901,38 +894,22 @@
                                                 </td>
                                                 <td>
                                                     @if($siteVisit->team && $siteVisit->team->count() > 0)
-                                                        <div class="d-flex">
-                                                            @foreach($siteVisit->team->take(3) as $member)
-                                                                <div class="avatar-xs me-1" title="{{ $member->user->name ?? 'N/A' }}">
-                                                                    <div class="avatar-title rounded-circle bg-primary">
-                                                                        {{ substr($member->user->name ?? 'N', 0, 1) }}
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                            @if($siteVisit->team->count() > 3)
-                                                                <div class="avatar-xs">
-                                                                    <div class="avatar-title rounded-circle bg-secondary">
-                                                                        +{{ $siteVisit->team->count() - 3 }}
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        </div>
+                                                        {{ $siteVisit->team->first()->user->name ?? 'N/A' }}
                                                     @else
-                                                        <span class="text-muted">No team assigned</span>
+                                                        {{ $siteVisit->createdByUser->name ?? 'N/A' }}
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-xs me-2">
-                                                            <div class="avatar-title rounded-circle bg-success">
-                                                                {{ substr($siteVisit->createdByUser->name ?? 'N/A', 0, 1) }}
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div class="fw-medium">{{ $siteVisit->createdByUser->name ?? 'N/A' }}</div>
-                                                            <small class="text-muted">{{ $siteVisit->createdByUser->email ?? '' }}</small>
-                                                        </div>
-                                                    </div>
+                                                    @if($siteVisit->end_date_time)
+                                                        <span class="badge bg-success">Completed</span>
+                                                    @elseif($siteVisit->start_date_time)
+                                                        <span class="badge bg-warning">In Progress</span>
+                                                    @else
+                                                        <span class="badge bg-info">Scheduled</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    {{ \Illuminate\Support\Str::limit($siteVisit->notes ?? 'N/A', 50) }}
                                                 </td>
                                                 <td>
                                                     <div class="btn-group" role="group">
@@ -959,15 +936,9 @@
                                         @foreach ($siteVisits as $siteVisit)
                                             <tr>
                                                 <td>
-                                                    <span class="badge bg-secondary">{{ $siteVisit->id }}</span>
-                                                </td>
-                                                <td>
-                                                    <strong>{{ $siteVisit->jobReason->name ?? 'N/A' }}</strong>
-                                                </td>
-                                                <td>
-                                                    <span class="badge bg-{{ $siteVisit->jobStatus->btn_class ?? 'secondary' }}">
-                                                        {{ $siteVisit->jobStatus->name ?? 'Unknown' }}
-                                                    </span>
+                                                    <a href="{{ route('block-visits.show', $siteVisit->id) }}" class="text-primary fw-bold" style="text-decoration: none;">
+                                                        {{ $siteVisit->ref_no ?? 'N/A' }}
+                                                    </a>
                                                 </td>
                                                 <td>
                                                     @if($siteVisit->scheduled_date_time)
@@ -978,38 +949,22 @@
                                                 </td>
                                                 <td>
                                                     @if($siteVisit->team && $siteVisit->team->count() > 0)
-                                                        <div class="d-flex">
-                                                            @foreach($siteVisit->team->take(3) as $member)
-                                                                <div class="avatar-xs me-1" title="{{ $member->user->name ?? 'N/A' }}">
-                                                                    <div class="avatar-title rounded-circle bg-primary">
-                                                                        {{ substr($member->user->name ?? 'N', 0, 1) }}
-                                                                    </div>
-                                                                </div>
-                                                            @endforeach
-                                                            @if($siteVisit->team->count() > 3)
-                                                                <div class="avatar-xs">
-                                                                    <div class="avatar-title rounded-circle bg-secondary">
-                                                                        +{{ $siteVisit->team->count() - 3 }}
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        </div>
+                                                        {{ $siteVisit->team->first()->user->name ?? 'N/A' }}
                                                     @else
-                                                        <span class="text-muted">No team assigned</span>
+                                                        {{ $siteVisit->createdByUser->name ?? 'N/A' }}
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="avatar-xs me-2">
-                                                            <div class="avatar-title rounded-circle bg-success">
-                                                                {{ substr($siteVisit->createdByUser->name ?? 'N/A', 0, 1) }}
-                                                            </div>
-                                                        </div>
-                                                        <div>
-                                                            <div class="fw-medium">{{ $siteVisit->createdByUser->name ?? 'N/A' }}</div>
-                                                            <small class="text-muted">{{ $siteVisit->createdByUser->email ?? '' }}</small>
-                                                        </div>
-                                                    </div>
+                                                    @if($siteVisit->end_date_time)
+                                                        <span class="badge bg-success">Completed</span>
+                                                    @elseif($siteVisit->start_date_time)
+                                                        <span class="badge bg-warning">In Progress</span>
+                                                    @else
+                                                        <span class="badge bg-info">Scheduled</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    {{ \Illuminate\Support\Str::limit($siteVisit->notes ?? 'N/A', 50) }}
                                                 </td>
                                                 <td>
                                                     <div class="btn-group" role="group">
@@ -2213,7 +2168,6 @@
                             
                             // Populate form fields
                             $('#createSiteVisitForm select[name="user_id"]').val(siteVisit.team && siteVisit.team[0] ? siteVisit.team[0].user_id : '');
-                            $('#createSiteVisitForm select[name="job_reason_id"]').val(siteVisit.job_reason_id || '');
                             
                             // Format datetime for input
                             if (siteVisit.scheduled_date_time) {
@@ -2488,6 +2442,8 @@
                                 <span id="siteVisitAlertMessage"></span>
                             </div>
                         </div>
+                        
+                        <!-- Block and Unit Row -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Block</label>
@@ -2501,25 +2457,32 @@
                                 <input type="hidden" name="block_issue_id" value="{{ $blockIssue->id }}">
                             </div>
                             <div class="col-md-6 mb-3">
+                                <label class="form-label">Unit</label>
+                                <div class="form-control-plaintext bg-light p-2 rounded">
+                                    @if($blockIssue->blockUnit)
+                                        <strong>{{ $blockIssue->blockUnit->unit_code }}</strong>
+                                        @if($blockIssue->blockUnit->unit_name)
+                                            - {{ $blockIssue->blockUnit->unit_name }}
+                                        @endif
+                                        @if($blockIssue->blockUnit->unitType)
+                                            ({{ $blockIssue->blockUnit->unitType->name }})
+                                        @endif
+                                    @else
+                                        <span class="text-muted">No unit specified</span>
+                                    @endif
+                                </div>
+                                <input type="hidden" name="block_unit_id" value="{{ $blockIssue->block_unit_id }}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Assigned User <span class="text-danger">*</span></label>
                                 <select class="form-select" name="user_id" required>
                                     <option value="">Select a user</option>
                                     @foreach($users as $user)
                                         <option value="{{ $user->id }}">
                                             {{ $user->name }} ({{ $user->email }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Job Reason <span class="text-danger">*</span></label>
-                                <select class="form-select" name="job_reason_id" required>
-                                    <option value="">Select a reason</option>
-                                    @foreach($jobReasons as $jobReason)
-                                        <option value="{{ $jobReason->id }}">
-                                            {{ $jobReason->name }}
                                         </option>
                                     @endforeach
                                 </select>

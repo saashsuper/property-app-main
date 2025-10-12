@@ -8,12 +8,42 @@
             </div>
             <form id="siteVisitForm" method="POST" action="{{ route('block-visits.store') }}" enctype="multipart/form-data">
                 @csrf
-                <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
                     <!-- Message container -->
                     <div id="siteVisitMessage" class="alert d-none" role="alert">
                         <i class="ph-check-circle me-2"></i>
                         <span class="message-text"></span>
+                    </div>
+                    
+                    <!-- Block and Unit Row -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Block</label>
+                            <div class="form-control-plaintext bg-light p-2 rounded">
+                                <strong>{{ $block->name }}</strong> - {{ $block->management_company }}
+                                @if($block->blockType)
+                                    ({{ $block->blockType->name }})
+                                @endif
+                            </div>
+                            <input type="hidden" name="block_id" value="{{ $block->id }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="block_unit_id" class="form-label">Unit</label>
+                            <select class="form-select" id="block_unit_id" name="block_unit_id">
+                                <option value="">Select Unit (Optional)</option>
+                                @foreach($block->units as $unit)
+                                    <option value="{{ $unit->id }}">
+                                        {{ $unit->unit_code }}
+                                        @if($unit->unit_name)
+                                            - {{ $unit->unit_name }}
+                                        @endif
+                                        @if($unit->unitType)
+                                            ({{ $unit->unitType->name }})
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="row">
@@ -27,24 +57,15 @@
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="scheduled_date" class="form-label">Scheduled Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="scheduled_date" name="scheduled_date" required>
+                            <label for="scheduled_time" class="form-label">Scheduled Time <span class="text-danger">*</span></label>
+                            <input type="time" class="form-control" id="scheduled_time" name="scheduled_time" required>
                         </div>
                     </div>
                     
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="scheduled_time" class="form-label">Scheduled Time <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control" id="scheduled_time" name="scheduled_time" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="job_reason_id" class="form-label">Job Reason <span class="text-danger">*</span></label>
-                            <select class="form-select" id="job_reason_id" name="job_reason_id" required>
-                                <option value="">Select Job Reason</option>
-                                @foreach($jobReasons as $reason)
-                                    <option value="{{ $reason->id }}">{{ $reason->name }}</option>
-                                @endforeach
-                            </select>
+                        <div class="col-md-12 mb-3">
+                            <label for="scheduled_date" class="form-label">Scheduled Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="scheduled_date" name="scheduled_date" required>
                         </div>
                     </div>
                     
@@ -156,13 +177,7 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Job Reason:</label>
-                            <p class="form-control-plaintext" id="detail_job_reason">-</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Created By:</label>
                             <p class="form-control-plaintext" id="detail_created_by">-</p>

@@ -201,7 +201,7 @@ class BlockIssueController extends Controller
      */
     public function show(BlockIssue $blockIssue)
     {
-        $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater', 'priority', 'issueStatus', 'blockUnit', 'contactMethod', 'issuedBy', 'siteVisit']);
+        $blockIssue->load(['block.units.unitType', 'reportedBy', 'assignedTo', 'creator', 'updater', 'priority', 'issueStatus', 'blockUnit.unitType', 'contactMethod', 'issuedBy', 'siteVisit']);
         
         // Load work orders for this issue
         $workOrders = $blockIssue->workOrders()
@@ -231,7 +231,6 @@ class BlockIssueController extends Controller
         $users = User::whereHas('userType', function($q) { 
             $q->where('name', 'Contractor Admin'); 
         })->orderBy('name')->get();
-        $jobReasons = JobReason::orderBy('name')->get();
         
         // Load contractor admin users for work order modal
         $contractors = User::whereHas('userType', function($q) { 
@@ -246,7 +245,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'jobReasons', 'contractors'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors'));
     }
 
     /**

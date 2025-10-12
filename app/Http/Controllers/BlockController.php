@@ -364,7 +364,7 @@ class BlockController extends Controller
             'country',
             'state',
             'buildings',
-            'units',
+            'units.unitType',
             'contractors',
             'issues',
             'blockVisits.team.user',
