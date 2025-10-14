@@ -170,7 +170,10 @@ class BlockInspectionController extends Controller
         })->with('userType')->orderBy('name')->get();
         $blockInspection->load('inspectionTeams');
         
-        return view('block-inspections.edit', compact('blockInspection', 'blocks', 'users'));
+        // Load general assets for the General Assets tab
+        $generalAssets = \App\Models\BlockGeneralAsset::orderBy('id')->get();
+        
+        return view('block-inspections.edit', compact('blockInspection', 'blocks', 'users', 'generalAssets'));
     }
 
     /**
@@ -179,16 +182,20 @@ class BlockInspectionController extends Controller
     public function update(Request $request, BlockInspection $blockInspection)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'scheduled_date_time' => 'required|date',
-            'start_date_time' => 'nullable|date',
-            'end_date_time' => 'nullable|date',
+            'block_id' => 'required|exists:blocks,id',
+            'scheduled_date' => 'required|date',
+            'scheduled_time' => 'required',
+            'start_date' => 'nullable|date',
+            'start_time' => 'nullable',
+            'end_date' => 'nullable|date',
+            'end_time' => 'nullable',
+            'lead_inspector' => 'required|exists:users,id',
             'notes' => 'nullable|string|max:500',
-            'job_status_id' => 'nullable|integer|exists:issue_statuses,value',
+            'job_status_id' => 'required|integer|in:1,2,3,4,5',
         ]);
 
         // Validate that the user is a Property Manager
-        $user = User::with('userType')->find($request->user_id);
+        $user = User::with('userType')->find($request->lead_inspector);
         if (!$user || $user->userType->name !== 'Property manager') {
             if (request()->expectsJson()) {
                 return response()->json([
@@ -196,44 +203,38 @@ class BlockInspectionController extends Controller
                     'message' => 'Only Property Manager users can be assigned as Lead Inspector.'
                 ], 422);
             }
-            return redirect()->back()->withErrors(['user_id' => 'Only Property Manager users can be assigned as Lead Inspector.']);
+            return redirect()->back()->withErrors(['lead_inspector' => 'Only Property Manager users can be assigned as Lead Inspector.']);
         }
 
-
-        // Get the issue status for validation
-        $issueStatus = null;
-        if ($request->filled('job_status_id')) {
-            $issueStatus = \App\Models\IssueStatus::where('value', $request->job_status_id)->first();
-            if (!$issueStatus) {
-                if (request()->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid status selected.'
-                    ], 422);
-                }
-                return redirect()->back()->withErrors(['job_status_id' => 'Invalid status selected.']);
-            }
+        // Combine date and time fields into datetime
+        $scheduledDateTime = $request->scheduled_date . ' ' . $request->scheduled_time;
+        
+        $startDateTime = null;
+        if ($request->start_date && $request->start_time) {
+            $startDateTime = $request->start_date . ' ' . $request->start_time;
+        }
+        
+        $endDateTime = null;
+        if ($request->end_date && $request->end_time) {
+            $endDateTime = $request->end_date . ' ' . $request->end_time;
         }
 
         $updateData = [
-            'scheduled_date_time' => $request->scheduled_date_time,
-            'start_date_time' => $request->start_date_time,
-            'end_date_time' => $request->end_date_time,
+            'block_id' => $request->block_id,
+            'scheduled_date_time' => $scheduledDateTime,
+            'start_date_time' => $startDateTime,
+            'end_date_time' => $endDateTime,
             'notes' => $request->notes,
+            'job_status_id' => $request->job_status_id,
             'updated_by' => Auth::id(),
         ];
-
-        // Only update status if provided and valid
-        if ($issueStatus) {
-            $updateData['job_status_id'] = $issueStatus->value;
-        }
 
         $blockInspection->update($updateData);
 
         // Update team member (single user for modal)
         $blockInspection->inspectionTeams()->delete();
         $blockInspection->inspectionTeams()->create([
-            'user_id' => $request->user_id,
+            'user_id' => $request->lead_inspector,
             'role' => 'Lead Inspector',
             'is_lead' => true,
         ]);

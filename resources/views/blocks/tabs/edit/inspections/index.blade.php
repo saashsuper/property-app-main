@@ -77,6 +77,11 @@
                                                         title="Edit Inspection">
                                                     <i class="ph-pencil"></i>
                                                 </button>
+                                                <button class="btn btn-sm btn-outline-warning" 
+                                                        onclick="window.location.href='{{ route('block-inspections.edit', $inspection->id) }}'"
+                                                        title="Update Inspection Details">
+                                                    <i class="ph-note-pencil"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-outline-danger"
                                                         onclick="inspectionShowDeleteConfirmation({{ $inspection->id }}, {
                                                             ref_no: '{{ $inspection->ref_no ?? 'N/A' }}',
