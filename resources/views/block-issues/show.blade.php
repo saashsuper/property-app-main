@@ -75,13 +75,13 @@
                             <h4 class="card-title mb-0">Block Issue: {{ $blockIssue->ref_no }}</h4>
                             <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#createWorkOrderModal">
-                                    <i class="ph-plus-circle me-1"></i> Create Work Order
+                                    <i class="ph-plus-circle me-1"></i> Raise Work Order
                                 </button>
                                 <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#createSiteVisitModal">
                                     <i class="ph-map-pin me-1"></i> Assign Site Visit
                                 </button>
                                 <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#createActionModal">
-                                    <i class="ph-activity me-1"></i> Create Action
+                                    <i class="ph-activity me-1"></i> Add Action
                                 </button>
                                 <a href="{{ route('block-issues.edit', $blockIssue) }}" class="btn btn-primary btn-sm">
                                     <i class="ph-pencil me-1"></i> Edit
@@ -768,7 +768,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Work Order #</th>
-                                            <th>Title</th>
+                                            <th>Assigned User</th>
                                             <th>Priority</th>
                                             <th>Status</th>
                                             <th>Issued By</th>
@@ -783,9 +783,11 @@
                                                     <span class="badge bg-primary">{{ $workOrder->ref_no }}</span>
                                                 </td>
                                                 <td>
-                                                    <strong>{{ $workOrder->title }}</strong>
-                                                    @if ($workOrder->description)
-                                                        <br><small class="text-muted">{{ Str::limit($workOrder->description, 100) }}</small>
+                                                    @if($workOrder->contractor)
+                                                        <strong>{{ $workOrder->contractor->name }}</strong>
+                                                        <br><small class="text-muted">{{ $workOrder->contractor->email }}</small>
+                                                    @else
+                                                        <span class="text-muted">Not assigned</span>
                                                     @endif
                                                 </td>
                                                 <td>
@@ -1761,7 +1763,7 @@
                 resetWorkOrderModalToCreateMode();
             });
 
-            // Handle Create Action form submission
+            // Handle Add Action form submission
             $('#createActionForm').on('submit', function(e) {
                 e.preventDefault();
                 
@@ -1926,8 +1928,8 @@
 
             // Function to reset work order modal to create mode
             function resetWorkOrderModalToCreateMode() {
-                $('#workOrderModalTitle').text('Create Work Order for Issue: {{ $blockIssue->ref_no }}');
-                $('#workOrderSubmitBtnText').text('Create Work Order');
+                $('#workOrderModalTitle').text('Raise Work Order for Issue: {{ $blockIssue->ref_no }}');
+                $('#workOrderSubmitBtnText').text('Raise Work Order');
                 $('#createWorkOrderForm').attr('action', '{{ route("block-work-orders.store") }}');
                 $('#createWorkOrderForm').find('input[name="_method"]').remove();
                 $('#createWorkOrderForm input[name="block_id"]').val('{{ $blockIssue->block->id }}');
@@ -1965,7 +1967,6 @@
                             // Populate form fields
                             $('#createWorkOrderForm select[name="contractor_id"]').val(workOrder.contractor_id || '');
                             $('#createWorkOrderForm select[name="priority_id"]').val(workOrder.priority_id || '');
-                            $('#createWorkOrderForm select[name="status"]').val(workOrder.status || '');
                             
                             // Format datetime for inputs
                             if (workOrder.preferred_start_date_time) {
@@ -2337,12 +2338,12 @@
         }
     </style>
 
-    <!-- Create Action Modal -->
+    <!-- Add Action Modal -->
     <div class="modal fade" id="createActionModal" tabindex="-1" aria-labelledby="createActionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="createActionModalLabel">Create Action for Issue: {{ $blockIssue->ref_no }}</h5>
+                    <h5 class="modal-title" id="createActionModalLabel">Add Action for Issue: {{ $blockIssue->ref_no }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="createActionForm" method="POST" action="{{ route('block-issues.store-action', $blockIssue->id) }}">
@@ -2355,7 +2356,7 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-12 mb-3">
                                 <label for="action_type" class="form-label">Action Type <span class="text-danger">*</span></label>
                                 <select class="form-select" id="action_type" name="action_type" required>
                                     <option value="">Select Action Type</option>
@@ -2367,15 +2368,12 @@
                                     <option value="other">Other</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="action_status" class="form-label">Status <span class="text-danger">*</span></label>
-                                <select class="form-select" id="action_status" name="status" required>
-                                    <option value="pending">Pending</option>
-                                    <option value="in_progress">In Progress</option>
-                                    <option value="completed" selected>Completed</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
-                            </div>
+                        </div>
+                        
+                        <!-- Hidden field for default Pending status -->
+                        <input type="hidden" name="status" value="pending">
+                        
+                        <div class="row">
                             <div class="col-12 mb-3">
                                 <label for="action_description" class="form-label">Description <span class="text-danger">*</span></label>
                                 <textarea class="form-control" id="action_description" name="description" rows="3" required placeholder="Describe the action taken..."></textarea>
@@ -2392,10 +2390,6 @@
                                     <option value="high">High</option>
                                     <option value="urgent">Urgent</option>
                                 </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="action_cost" class="form-label">Cost</label>
-                                <input type="number" class="form-control" id="action_cost" name="cost" step="0.01" min="0" placeholder="0.00">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="action_performed_by" class="form-label">Performed By</label>
@@ -2415,7 +2409,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">
-                            <i class="ph-plus me-1"></i> Create Action
+                            <i class="ph-plus me-1"></i> Add Action
                         </button>
                     </div>
                 </form>
@@ -2562,7 +2556,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="createWorkOrderModalLabel">
-                        <i class="ph-plus-circle me-2"></i><span id="workOrderModalTitle">Create Work Order for Issue: {{ $blockIssue->ref_no }}</span>
+                        <i class="ph-plus-circle me-2"></i><span id="workOrderModalTitle">Raise Work Order for Issue: {{ $blockIssue->ref_no }}</span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -2583,7 +2577,7 @@
                         <input type="hidden" name="block_building_id" value="">
                         
                         <div class="row">
-                            <div class="col-md-12 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label class="form-label">Assign to Contractor <span class="text-danger">*</span></label>
                                 <select class="form-select" name="contractor_id" required>
                                     <option value="">Select Contractor</option>
@@ -2594,9 +2588,6 @@
                                     @endforeach
                                 </select>
                             </div>
-                        </div>
-                        
-                        <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Priority <span class="text-danger">*</span></label>
                                 <select class="form-select" name="priority_id" required>
@@ -2608,18 +2599,10 @@
                                     <option value="5">Critical</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Status <span class="text-danger">*</span></label>
-                                <select class="form-select" name="status" required>
-                                    <option value="">Select Status</option>
-                                    <option value="1" selected>Pending</option>
-                                    <option value="2">In Progress</option>
-                                    <option value="3">Completed</option>
-                                    <option value="4">Cancelled</option>
-                                    <option value="5">On Hold</option>
-                                </select>
-                            </div>
                         </div>
+                        
+                        <!-- Hidden field for default Pending status -->
+                        <input type="hidden" name="status" value="1">
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -2659,7 +2642,7 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-success" id="workOrderSubmitBtn">
-                            <i class="ph-plus-circle me-1"></i> <span id="workOrderSubmitBtnText">Create Work Order</span>
+                            <i class="ph-plus-circle me-1"></i> <span id="workOrderSubmitBtnText">Raise Work Order</span>
                         </button>
                     </div>
                 </form>

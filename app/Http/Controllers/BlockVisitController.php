@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Block;
 use App\Models\BlockVisit;
+use App\Models\IssueLog;
 use App\Models\JobReason;
 use App\Models\JobStatus;
 use App\Models\User;
@@ -152,6 +153,21 @@ class BlockVisitController extends Controller
                 }
             } else {
                 \Log::info('No files in request');
+            }
+
+            // Create issue log entry if this site visit is related to an issue
+            if ($blockVisit->block_issue_id) {
+                $assignedUser = $blockVisit->team->first()->user ?? null;
+                $userName = $assignedUser ? $assignedUser->name : 'user';
+                IssueLog::createLog(
+                    $blockVisit->block_issue_id,
+                    'site_visit_assigned',
+                    "Site visit {$blockVisit->ref_no} assigned to {$userName}",
+                    [
+                        'related_id' => $blockVisit->id,
+                        'related_type' => 'BlockVisit',
+                    ]
+                );
             }
 
             return response()->json([

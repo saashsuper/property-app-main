@@ -205,7 +205,7 @@ class BlockIssueController extends Controller
         
         // Load work orders for this issue
         $workOrders = $blockIssue->workOrders()
-            ->with(['issuedBy', 'creator', 'priority'])
+            ->with(['issuedBy', 'creator', 'priority', 'contractor'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -263,7 +263,7 @@ class BlockIssueController extends Controller
         
         // Load work orders for this issue
         $workOrders = $blockIssue->workOrders()
-            ->with(['issuedBy', 'creator', 'priority'])
+            ->with(['issuedBy', 'creator', 'priority', 'contractor'])
             ->orderBy('created_at', 'desc')
             ->get();
 

@@ -243,6 +243,11 @@ class BlockIssue extends Model
         return $this->hasMany(BlockIssueAction::class, 'block_issue_id');
     }
 
+    public function logs()
+    {
+        return $this->hasMany(IssueLog::class, 'block_issue_id');
+    }
+
     /**
      * Scope for active issues
      */

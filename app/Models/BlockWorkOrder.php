@@ -100,11 +100,11 @@ class BlockWorkOrder extends Model
     }
 
     /**
-     * Get the block unit for the work order.
+     * Get the contractor (user) for the work order.
      */
     public function contractor()
     {
-        return $this->belongsTo(BlockContractor::class);
+        return $this->belongsTo(User::class, 'contractor_id');
     }
 
     /**

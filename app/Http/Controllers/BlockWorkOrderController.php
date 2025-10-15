@@ -8,6 +8,7 @@ use App\Models\Block;
 use App\Models\BlockIssue;
 use App\Models\BlockUnit;
 use App\Models\BlockBuilding;
+use App\Models\IssueLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -157,6 +158,20 @@ class BlockWorkOrderController extends Controller
                     's3_status' => 0,
                 ]);
             }
+        }
+
+        // Create issue log entry
+        if ($workOrder->block_issue_id) {
+            $contractor = $workOrder->contractor ? $workOrder->contractor->name : 'contractor';
+            IssueLog::createLog(
+                $workOrder->block_issue_id,
+                'work_order_created',
+                "Work order {$workOrder->ref_no} raised and assigned to {$contractor}",
+                [
+                    'related_id' => $workOrder->id,
+                    'related_type' => 'BlockWorkOrder',
+                ]
+            );
         }
 
         // Check if this is an AJAX request
