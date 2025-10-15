@@ -269,7 +269,7 @@ class BlockIssue extends Model
             5 => 'Critical'
         ];
 
-        return $priorities[$this->priority ?? $this->priority_id] ?? 'Unknown';
+        return $priorities[$this->priority_id] ?? 'Unknown';
     }
 
     /**
