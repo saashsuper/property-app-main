@@ -282,11 +282,12 @@
                     </table>
                 </div>
 
-                @if($blockTypes->hasPages())
+                {{-- Pagination handled by DataTables --}}
+                {{-- @if($blockTypes->hasPages())
                     <div class="d-flex justify-content-center mt-3">
                         {{ $blockTypes->appends(request()->query())->links('vendor.pagination.datatables') }}
                     </div>
-                @endif
+                @endif --}}
             </div>
         </div>
     </div>

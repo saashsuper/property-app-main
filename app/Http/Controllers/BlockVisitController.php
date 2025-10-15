@@ -58,7 +58,7 @@ class BlockVisitController extends Controller
             $query->whereDate('scheduled_date_time', '<=', $request->date_to);
         }
 
-        $visits = $query->orderBy('scheduled_date_time', 'desc')->paginate(10);
+        $visits = $query->orderBy('scheduled_date_time', 'desc')->get();
 
         // Get job reasons and statuses for filters
         $jobReasons = JobReason::all();

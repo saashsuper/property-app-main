@@ -71,7 +71,7 @@ class BlockIssueController extends Controller
             $query->where('issue_type', $request->issue_type);
         }
 
-        $blockIssues = $query->orderBy('created_at', 'desc')->paginate(10);
+        $blockIssues = $query->orderBy('created_at', 'desc')->get();
         $blocks = Block::orderBy('name')->get();
         $users = User::orderBy('name')->get();
         

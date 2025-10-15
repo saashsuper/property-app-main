@@ -25,7 +25,7 @@ class UserTypeController extends Controller
             });
         }
 
-        $userTypes = $query->orderBy('id', 'asc')->paginate(10);
+        $userTypes = $query->orderBy('id', 'asc')->get();
 
         return view('user-types.index', compact('userTypes'));
     }

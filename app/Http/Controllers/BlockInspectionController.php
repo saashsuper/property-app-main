@@ -42,7 +42,7 @@ class BlockInspectionController extends Controller
             $query->whereDate('scheduled_date_time', '<=', $request->date_to);
         }
 
-        $inspections = $query->orderBy('created_at', 'desc')->paginate(15);
+        $inspections = $query->orderBy('created_at', 'desc')->get();
 
         return view('block-inspections.index', compact('inspections'));
     }

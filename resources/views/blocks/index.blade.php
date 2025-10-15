@@ -301,11 +301,12 @@
                     </table>
                 </div>
 
-                <!-- @if($blocks->hasPages())
+                {{-- Pagination handled by DataTables --}}
+                {{-- @if($blocks->hasPages())
                     <div class="d-flex justify-content-center mt-3">
                         {{ $blocks->appends(request()->query())->links('vendor.pagination.datatables') }}
                     </div>
-                @endif -->
+                @endif --}}
             </div>
         </div>
     </div>

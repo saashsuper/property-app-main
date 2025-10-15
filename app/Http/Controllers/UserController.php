@@ -43,7 +43,7 @@ class UserController extends Controller
             $query->where('user_type_id', $request->user_type_id);
         }
 
-        $users = $query->orderBy('updated_at', 'desc')->paginate(10);
+        $users = $query->orderBy('updated_at', 'desc')->get();
         
         // For Contractor Admin, only show Contractor User type in filter
         if ($isContractorAdmin) {

@@ -33,7 +33,7 @@ class BlockController extends Controller
         $query = Block::with(['blockType', 'user', 'creator', 'units', 'blockManager', 'issues', 'workOrders'])->active();
 
 
-        $blocks = $query->orderBy('created_at', 'desc')->paginate(10);
+        $blocks = $query->orderBy('created_at', 'desc')->get();
 
         return view('blocks.index', compact('blocks'));
     }
