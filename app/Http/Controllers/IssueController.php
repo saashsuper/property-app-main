@@ -50,7 +50,7 @@ class IssueController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
-        $issues = $query->orderBy('created_at', 'desc')->paginate(10);
+        $issues = $query->orderBy('created_at', 'desc')->get();
         $users = User::orderBy('name')->get();
 
         return view('issues.index', compact('issues', 'users'));
