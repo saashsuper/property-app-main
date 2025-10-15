@@ -244,7 +244,7 @@
                                             <!-- Asset Details Row -->
                                             <div class="row mb-4 align-items-center">
                                                 <!-- Status/Condition Options -->
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
                                                     <div class="btn-group w-100" role="group" aria-label="Status options for {{ $asset->name }}">
                                                         <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="working_{{ $asset->id }}" value="working" autocomplete="off">
                                                         <label class="btn btn-outline-secondary btn-sm rounded-start" for="working_{{ $asset->id }}" style="border-radius: 0.375rem 0 0 0.375rem !important; color: black; border: 1px solid #dee2e6;">
@@ -288,7 +288,8 @@
                                                 </div>
                                                 
                                                 <!-- Photo Upload Area -->
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small mb-2 fw-bold text-black">Photos:</label>
                                                     <div class="upload-area border border-dashed rounded p-3 text-center" style="min-height: 100px; background-color: white;">
                                                         <i class="ph-cloud-arrow-up text-primary mb-2" style="font-size: 1.5rem;"></i>
                                                         <div class="text-muted small">DRAG & DROP HERE OR CLICK</div>
@@ -297,8 +298,8 @@
                                                 </div>
                                                 
                                                 <!-- Notes -->
-                                                <div class="col-md-6">
-                                                    <label for="notes_{{ $asset->id }}" class="form-label small">Note:</label>
+                                                <div class="col-md-4">
+                                                    <label for="notes_{{ $asset->id }}" class="form-label small fw-bold text-black">Note:</label>
                                                     <textarea class="form-control form-control-sm" 
                                                               id="notes_{{ $asset->id }}" 
                                                               name="notes_{{ $asset->id }}" 

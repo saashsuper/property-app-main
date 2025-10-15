@@ -17,11 +17,21 @@ class BlockWorkOrderSeeder extends Seeder
      */
     public function run(): void
     {
-        // Find the user jayadev@proman.com
+        // Find a contractor user or any user
         $user = User::where('email', 'jayadev@proman.com')->first();
         
+        // If specific user not found, use any contractor user
         if (!$user) {
-            $this->command->error('User jayadev@proman.com not found. Please create this user first.');
+            $user = User::where('user_type_id', 7)->first(); // Contractor User
+        }
+        
+        // If still no user, use any user
+        if (!$user) {
+            $user = User::first();
+        }
+        
+        if (!$user) {
+            $this->command->warn('No users found. Skipping BlockWorkOrderSeeder.');
             return;
         }
 
@@ -244,7 +254,7 @@ class BlockWorkOrderSeeder extends Seeder
             BlockWorkOrder::create($workOrderData);
         }
 
-        $this->command->info('Created ' . count($workOrders) . ' work orders for user jayadev@proman.com');
+        $this->command->info('Created ' . count($workOrders) . ' work orders for contractor: ' . $user->email);
         $this->command->info('Work orders created with different statuses:');
         $this->command->info('- Pending: 2 work orders');
         $this->command->info('- In Progress: 2 work orders');

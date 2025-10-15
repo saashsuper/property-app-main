@@ -81,6 +81,7 @@ class BlockIssuesSeeder extends Seeder
                 'preferred_end_date_time' => $createdAt->addDays(rand(8, 14)),
                 'note_for_access' => 'Access note for issue ' . $i,
                 'issued_by' => $user->id,
+                'reported_by' => $user->id,
                 'block_visit_id' => null,
                 'block_inspection_id' => null,
                 'issued_date_time' => $createdAt,

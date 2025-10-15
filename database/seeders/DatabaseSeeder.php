@@ -30,10 +30,12 @@ class DatabaseSeeder extends Seeder
             BlockInspectionValueTypeSeeder::class,
             BlockInspectionValueSeeder::class,
             BuildingAssetSeeder::class,
+            BlockGeneralAssetsSeeder::class,
             JobReasonSeeder::class,
             JobStatusSeeder::class,
             IssueStatusSeeder::class,
             IssueTypeSeeder::class,
+            PrioritySeeder::class,
         ]);
 
         // Seed main data
@@ -46,6 +48,8 @@ class DatabaseSeeder extends Seeder
             BlockVisitSeeder::class,
             BlockVisitImageSeeder::class,
             BlockInspectionSeeder::class,
+            BlockIssuesSeeder::class,
+            BlockWorkOrderSeeder::class,
         ]);
     }
 
@@ -56,6 +60,12 @@ class DatabaseSeeder extends Seeder
     {
         // Clear data in reverse dependency order
         $tablesToTruncate = [
+            'block_work_order_images',
+            'block_work_orders',
+            'block_issue_images',
+            'block_issue_actions',
+            'issue_logs',
+            'block_issues',
             'block_inspection_teams',
             'block_inspection_assets', 
             'block_inspection_results',
@@ -66,6 +76,7 @@ class DatabaseSeeder extends Seeder
             'block_visits',
             'block_units',
             'block_buildings',
+            'block_general_assets',
             'blocks',
             'building_type_assets',
             'building_assets',
@@ -74,7 +85,11 @@ class DatabaseSeeder extends Seeder
             'block_inspection_value_types',
             'block_unit_types',
             'block_types',
+            'priorities',
             'issue_statuses',
+            'issue_types',
+            'job_statuses',
+            'job_reasons',
             'user_types',
             'states',
             'countries',
