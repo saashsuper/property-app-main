@@ -115,6 +115,24 @@
                                         </div>
 
                                         <div class="mb-3">
+                                            <label for="block_unit_id" class="form-label">Unit <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select @error('block_unit_id') is-invalid @enderror"
+                                                id="block_unit_id" name="block_unit_id" required>
+                                                <option value="">Select Unit</option>
+                                                @foreach ($units as $unit)
+                                                    <option value="{{ $unit->id }}"
+                                                        {{ old('block_unit_id', $blockIssue->block_unit_id) == $unit->id ? 'selected' : '' }}>
+                                                        {{ $unit->unit_number }} @if($unit->blockUnitType) - {{ $unit->blockUnitType->name }} @endif
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            @error('block_unit_id')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="mb-3">
                                             <label for="issue" class="form-label">Issue <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control @error('issue') is-invalid @enderror"
@@ -1155,6 +1173,61 @@
 @section('script')
     <script>
         $(document).ready(function() {
+            // Handle block change to load units dynamically
+            $('#block_id').on('change', function() {
+                const blockId = $(this).val();
+                const $unitSelect = $('#block_unit_id');
+                
+                // Clear existing units
+                $unitSelect.html('<option value="">Select Unit</option>');
+                
+                if (blockId) {
+                    // Show loading state
+                    $unitSelect.prop('disabled', true);
+                    $unitSelect.html('<option value="">Loading units...</option>');
+                    
+                    // Fetch units for selected block
+                    $.ajax({
+                        url: `/blocks/${blockId}/units`,
+                        type: 'GET',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            $unitSelect.html('<option value="">Select Unit</option>');
+                            
+                            if (response.success && response.data && response.data.length > 0) {
+                                response.data.forEach(function(unit) {
+                                    const unitType = unit.block_unit_type ? ` - ${unit.block_unit_type.name}` : '';
+                                    $unitSelect.append(
+                                        `<option value="${unit.id}">${unit.unit_number}${unitType}</option>`
+                                    );
+                                });
+                            } else {
+                                $unitSelect.append('<option value="">No units available</option>');
+                            }
+                            $unitSelect.prop('disabled', false);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error loading units:', error);
+                            $unitSelect.html('<option value="">Error loading units</option>');
+                            $unitSelect.prop('disabled', false);
+                            
+                            Toastify({
+                                text: 'Failed to load units. Please try again.',
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "#dc3545",
+                                stopOnFocus: true
+                            }).showToast();
+                        }
+                    });
+                } else {
+                    $unitSelect.prop('disabled', false);
+                }
+            });
+            
             // Handle work order form submission using jQuery AJAX
             $('#createWorkOrderForm').on('submit', function(e) {
                 e.preventDefault();

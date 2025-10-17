@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('blocks/{block}', [App\Http\Controllers\BlockController::class, 'show'])->name('blocks.show');
     Route::get('api/blocks', [App\Http\Controllers\BlockController::class, 'getBlocks'])->name('api.blocks');
     Route::get('api/blocks/{block}', [App\Http\Controllers\BlockController::class, 'getBlock'])->name('api.blocks.show');
+    Route::get('blocks/{block}/units', [App\Http\Controllers\BlockController::class, 'getUnits'])->name('blocks.units');
     Route::get('api/blocks/{block}/units-autocomplete', [App\Http\Controllers\BlockController::class, 'getUnitsAutocomplete'])->name('api.blocks.units-autocomplete');
     Route::get('api/blocks/{block}/buildings', [App\Http\Controllers\BlockController::class, 'getBlockBuildings'])->name('api.blocks.buildings');
     

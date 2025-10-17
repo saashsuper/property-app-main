@@ -261,6 +261,11 @@ class BlockIssueController extends Controller
         $jobStatuses = JobStatus::orderBy('name')->get();
         $issueTypes = IssueType::where('is_active', true)->orderBy('name')->get();
         
+        // Load units for the current block
+        $units = BlockUnit::where('block_id', $blockIssue->block_id)
+            ->orderBy('unit_number')
+            ->get();
+        
         // Load work orders for this issue
         $workOrders = $blockIssue->workOrders()
             ->with(['issuedBy', 'creator', 'priority', 'contractor'])
@@ -285,7 +290,7 @@ class BlockIssueController extends Controller
             ->orderBy('action_date', 'desc')
             ->get();
 
-        return view('block-issues.edit', compact('blockIssue', 'blocks', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses', 'issueTypes', 'actions'));
+        return view('block-issues.edit', compact('blockIssue', 'blocks', 'units', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses', 'issueTypes', 'actions'));
     }
 
     /**

@@ -551,6 +551,19 @@ class BlockController extends Controller
     /**
      * Get units for autocomplete
      */
+    public function getUnits(Block $block)
+    {
+        $units = $block->units()
+            ->with('blockUnitType')
+            ->orderBy('unit_number')
+            ->get(['id', 'unit_number', 'block_unit_type_id']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $units
+        ]);
+    }
+
     public function getUnitsAutocomplete(Request $request, Block $block)
     {
         $query = $request->get('query', '');
