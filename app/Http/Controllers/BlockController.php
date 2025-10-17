@@ -555,8 +555,8 @@ class BlockController extends Controller
     {
         $units = $block->units()
             ->with('blockUnitType')
-            ->orderBy('unit_number')
-            ->get(['id', 'unit_number', 'block_unit_type_id']);
+            ->orderBy('unit_code')
+            ->get(['id', 'unit_code', 'unit_name', 'block_unit_type_id']);
 
         return response()->json([
             'success' => true,
