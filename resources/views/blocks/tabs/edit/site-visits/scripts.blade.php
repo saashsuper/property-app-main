@@ -130,7 +130,7 @@ $(document).ready(function() {
                 blockSiteVisitsDataTable = $('#blockSiteVisitsTable').DataTable({
                     responsive: true,           // Enable responsive design
                     dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',             // Define table layout (l=length, f=filter/search, r=processing, t=table, i=info, p=pagination)
-                    order: [[1, 'desc']],      // Default sort by visit date descending
+                    order: [[1, 'desc']],      // Default sort by visit date descending (data ordered by created_at from backend)
                     columnDefs: [
                         { targets: [5], orderable: false } // Actions column (last column) not sortable
                     ],

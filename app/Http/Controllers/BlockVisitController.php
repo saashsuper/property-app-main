@@ -309,7 +309,7 @@ class BlockVisitController extends Controller
         try {
             $visits = BlockVisit::where('block_id', $blockId)
                 ->with(['jobReason', 'jobStatus', 'team.user'])
-                ->orderBy('scheduled_date_time', 'desc')
+                ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($visit) {
                     return [

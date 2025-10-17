@@ -135,7 +135,7 @@ class Block extends Model
      */
     public function blockVisits()
     {
-        return $this->hasMany(BlockVisit::class);
+        return $this->hasMany(BlockVisit::class)->orderBy('created_at', 'desc');
     }
 
     /**
