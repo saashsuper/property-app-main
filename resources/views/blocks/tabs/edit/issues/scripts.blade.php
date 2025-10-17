@@ -1092,6 +1092,8 @@ $(document).ready(function() {
     function refreshUnitsDropdown() {
         const blockId = window.blockId || $('input[name="block_id"]').val();
         
+        console.log('refreshUnitsDropdown called for block ID:', blockId);
+        
         // Show loading state for units input
         const $unitsInput = $('#block_unit_id');
         const $unitsHidden = $('#block_unit_id_hidden');
@@ -1111,6 +1113,7 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function(response) {
+                console.log('Units API response:', response);
                 let unitsData = [];
                 
                 if (response.success && response.data && response.data.length > 0) {
@@ -1122,15 +1125,19 @@ $(document).ready(function() {
                             unit_name: unit.unit_name
                         };
                     });
+                    console.log('Mapped units data:', unitsData);
+                } else {
+                    console.warn('No units found in response');
                 }
                 
-                $unitsInput.prop('disabled', false);
+                $unitsInput.val('').prop('disabled', false);
                 
                 // Initialize or refresh AutoComplete.js
                 initializeUnitAutoComplete(unitsData);
             },
             error: function(xhr, status, error) {
                 console.error('Error fetching units:', error);
+                console.error('XHR:', xhr);
                 $unitsInput.val('Error loading units').prop('disabled', false);
             }
         });
@@ -1212,20 +1219,28 @@ $(document).ready(function() {
         const unitsInput = document.getElementById('block_unit_id');
         const unitsHidden = document.getElementById('block_unit_id_hidden');
         
+        console.log('initializeUnitAutoComplete called with data:', unitsData);
+        console.log('unitsInput element:', unitsInput);
+        
         if (!unitsInput) {
+            console.error('Unit input element not found!');
             return;
         }
         
         // Destroy existing AutoComplete instance if it exists
         if (unitAutoComplete) {
+            console.log('Destroying existing AutoComplete instance');
             unitAutoComplete.unInit();
             unitAutoComplete = null;
         }
         
         // Check if AutoComplete is available
         if (typeof autoComplete === 'undefined') {
+            console.error('AutoComplete library is not loaded!');
             return;
         }
+        
+        console.log('Initializing AutoComplete with', unitsData.length, 'units');
         
         // Initialize new AutoComplete instance
         try {
