@@ -123,7 +123,7 @@
                                                 @foreach ($units as $unit)
                                                     <option value="{{ $unit->id }}"
                                                         {{ old('block_unit_id', $blockIssue->block_unit_id) == $unit->id ? 'selected' : '' }}>
-                                                        {{ $unit->unit_code }}@if($unit->unit_name) - {{ $unit->unit_name }}@endif @if($unit->blockUnitType) - {{ $unit->blockUnitType->name }} @endif
+                                                        {{ $unit->unit_code }}@if($unit->unit_name) - {{ $unit->unit_name }}@endif @if($unit->unitType) - {{ $unit->unitType->name }} @endif
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -1198,7 +1198,7 @@
                             
                             if (response.success && response.data && response.data.length > 0) {
                                 response.data.forEach(function(unit) {
-                                    const unitType = unit.block_unit_type ? ` - ${unit.block_unit_type.name}` : '';
+                                    const unitType = unit.unit_type ? ` - ${unit.unit_type.name}` : '';
                                     const unitDisplay = unit.unit_code + (unit.unit_name ? ` - ${unit.unit_name}` : '');
                                     $unitSelect.append(
                                         `<option value="${unit.id}">${unitDisplay}${unitType}</option>`

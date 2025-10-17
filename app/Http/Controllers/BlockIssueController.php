@@ -263,6 +263,7 @@ class BlockIssueController extends Controller
         
         // Load units for the current block
         $units = BlockUnit::where('block_id', $blockIssue->block_id)
+            ->with('unitType')
             ->orderBy('unit_code')
             ->get();
         

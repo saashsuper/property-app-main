@@ -554,7 +554,7 @@ class BlockController extends Controller
     public function getUnits(Block $block)
     {
         $units = $block->units()
-            ->with('blockUnitType')
+            ->with('unitType')
             ->orderBy('unit_code')
             ->get(['id', 'unit_code', 'unit_name', 'block_unit_type_id']);
 
