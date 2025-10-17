@@ -22,16 +22,16 @@
                             <div class="row">
                                 <!-- Row 1: Unit Selection, Contact Method, Assigned To -->
                                 <div class="col-md-4 mb-3">
-                                    <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
+                                    <label for="issue_block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
                                     <div class="autoComplete_wrapper" id="unitAutoCompleteWrapper">
                                         <input type="text" 
                                                class="form-control" 
-                                               id="block_unit_id" 
+                                               id="issue_block_unit_id" 
                                                name="block_unit_display" 
                                                placeholder="Search for units..." 
                                                autocomplete="off" 
                                                required>
-                                        <input type="hidden" id="block_unit_id_hidden" name="block_unit_id" value="">
+                                        <input type="hidden" id="issue_block_unit_id_hidden" name="block_unit_id" value="">
                                     </div>
                                 </div>
                                 <div class="col-md-4 mb-3">

@@ -1095,8 +1095,8 @@ $(document).ready(function() {
         console.log('refreshUnitsDropdown called for block ID:', blockId);
         
         // Show loading state for units input
-        const $unitsInput = $('#block_unit_id');
-        const $unitsHidden = $('#block_unit_id_hidden');
+        const $unitsInput = $('#issue_block_unit_id');
+        const $unitsHidden = $('#issue_block_unit_id_hidden');
         
         // Store current value to preserve selection if modal is in edit mode
         const currentUnitValue = $unitsInput.val();
@@ -1155,8 +1155,8 @@ $(document).ready(function() {
         const blockId = window.blockId || $('input[name="block_id"]').val();
         
         // Show loading state for units input
-        const $unitsInput = $('#block_unit_id');
-        const $unitsHidden = $('#block_unit_id_hidden');
+        const $unitsInput = $('#issue_block_unit_id');
+        const $unitsHidden = $('#issue_block_unit_id_hidden');
         
         // Set loading state
         $unitsInput.val('Loading units...').prop('disabled', true);
@@ -1216,8 +1216,8 @@ $(document).ready(function() {
      * @param {Array} unitsData - Array of unit objects for autocomplete
      */
     function initializeUnitAutoComplete(unitsData) {
-        const unitsInput = document.getElementById('block_unit_id');
-        const unitsHidden = document.getElementById('block_unit_id_hidden');
+        const unitsInput = document.getElementById('issue_block_unit_id');
+        const unitsHidden = document.getElementById('issue_block_unit_id_hidden');
         
         console.log('initializeUnitAutoComplete called with data:', unitsData);
         console.log('unitsInput element:', unitsInput);
@@ -1245,7 +1245,7 @@ $(document).ready(function() {
         // Initialize new AutoComplete instance
         try {
             unitAutoComplete = new autoComplete({
-                selector: "#block_unit_id",
+                selector: "#issue_block_unit_id",
                 placeHolder: "Search for units...",
                 data: {
                     src: unitsData,
@@ -1842,7 +1842,7 @@ $(document).ready(function() {
     // ========================================
     
     // Handle unit selection change to load active issues
-    $('#block_unit_id_hidden').on('change', function() {
+    $('#issue_block_unit_id_hidden').on('change', function() {
         const unitId = $(this).val();
         if (unitId) {
             loadActiveIssuesForUnit(unitId);
