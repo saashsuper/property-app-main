@@ -57,10 +57,12 @@
                                 </td>
                                 <td>{{ $visit->scheduled_date_time ? \Carbon\Carbon::parse($visit->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}</td>
                                 <td>
-                                    @if($visit->team && $visit->team->count() > 0)
-                                        {{ $visit->team->first()->user->name ?? 'N/A' }}
+                                    @if($visit->team && $visit->team->count() > 0 && $visit->team->first()->user)
+                                        {{ $visit->team->first()->user->name }}
+                                    @elseif($visit->createdByUser)
+                                        {{ $visit->createdByUser->name }}
                                     @else
-                                        {{ $visit->createdByUser->name ?? 'N/A' }}
+                                        N/A
                                     @endif
                                 </td>
                                 <td>
@@ -80,7 +82,7 @@
                                     <button class="btn btn-sm btn-outline-danger" onclick="blockSiteVisitShowDeleteConfirmation({{ $visit->id }}, {
                                         ref_no: '{{ $visit->ref_no ?? 'N/A' }}',
                                         visit_date: '{{ $visit->scheduled_date_time ? \Carbon\Carbon::parse($visit->scheduled_date_time)->format('M d, Y H:i') : 'N/A' }}',
-                                        user: '{{ $visit->team && $visit->team->count() > 0 ? $visit->team->first()->user->name ?? 'N/A' : $visit->createdByUser->name ?? 'N/A' }}',
+                                        user: '{{ $visit->team && $visit->team->count() > 0 && $visit->team->first()->user ? $visit->team->first()->user->name : ($visit->createdByUser ? $visit->createdByUser->name : 'N/A') }}',
                                         status: '{{ $visit->end_date_time ? 'Completed' : ($visit->start_date_time ? 'In Progress' : 'Scheduled') }}'
                                     })" title="Delete Site Visit">
                                         <i class="ph-trash"></i>

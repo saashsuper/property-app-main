@@ -51,7 +51,7 @@
                                 @foreach($blockInspections as $inspection)
                                     @php
                                         $leadInspector = $inspection->inspectionTeams->where('is_lead', true)->first();
-                                        $displayInspector = $leadInspector ? ($leadInspector->user->name ?? 'N/A') : ($inspection->creator->name ?? 'N/A');
+                                        $displayInspector = ($leadInspector && $leadInspector->user) ? $leadInspector->user->name : ($inspection->creator->name ?? 'N/A');
                                         $userForEdit = $leadInspector ? $leadInspector->user_id : $inspection->created_by;
                                     @endphp
                                     <tr>

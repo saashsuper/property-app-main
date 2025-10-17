@@ -298,7 +298,14 @@ class BlockController extends Controller
         $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
-        $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
+        $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->with([
+            'creator' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }
+        ])->latest()->get();
         $blockVisits = \App\Models\BlockVisit::where('block_id', $block->id)->with(['team.user', 'createdByUser'])->latest()->get();
         
         // Load additional data for building core and other tabs
@@ -373,7 +380,14 @@ class BlockController extends Controller
         $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
         $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
-        $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->latest()->get();
+        $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->with([
+            'creator' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }
+        ])->latest()->get();
         
         // Debug: Check if status attributes are working
         \Log::info('INSPECTION STATUS DEBUG:', [

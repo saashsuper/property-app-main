@@ -15,7 +15,17 @@ class BlockInspectionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockInspection::with(['block', 'creator', 'inspectionTeams.user']);
+        $query = BlockInspection::with([
+            'block' => function($query) {
+                $query->withTrashed();
+            }, 
+            'creator' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }
+        ]);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -103,7 +113,19 @@ class BlockInspectionController extends Controller
      */
     public function show(Request $request, BlockInspection $blockInspection)
     {
-        $blockInspection->load(['block', 'creator', 'inspectionTeams.user', 'inspectionAssets.buildingAsset', 'inspectionAssets.inspectionValue']);
+        $blockInspection->load([
+            'block' => function($query) {
+                $query->withTrashed();
+            }, 
+            'creator' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionAssets.buildingAsset', 
+            'inspectionAssets.inspectionValue'
+        ]);
         
         // Return JSON when requested (AJAX/Accept headers)
         if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
@@ -168,7 +190,14 @@ class BlockInspectionController extends Controller
         $users = User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
         })->with('userType')->orderBy('name')->get();
-        $blockInspection->load('inspectionTeams');
+        $blockInspection->load([
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }, 
+            'block' => function($query) {
+                $query->withTrashed();
+            }
+        ]);
         
         // Load general assets for the General Assets tab
         $generalAssets = \App\Models\BlockGeneralAsset::orderBy('id')->get();
@@ -240,7 +269,17 @@ class BlockInspectionController extends Controller
         ]);
 
         // Load the updated inspection with relationships
-        $blockInspection->load(['block', 'creator', 'inspectionTeams.user']);
+        $blockInspection->load([
+            'block' => function($query) {
+                $query->withTrashed();
+            }, 
+            'creator' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }
+        ]);
 
         // Check if request expects JSON (AJAX request)
         if (request()->expectsJson()) {
@@ -366,7 +405,17 @@ class BlockInspectionController extends Controller
     public function getBlockInspections(Block $block)
     {
         $inspections = BlockInspection::where('block_id', $block->id)
-            ->with(['creator', 'inspectionTeams.user'])
+            ->with([
+                'creator' => function($query) {
+                    $query->withTrashed();
+                }, 
+                'inspectionTeams.user' => function($query) {
+                    $query->withTrashed();
+                }, 
+                'block' => function($query) {
+                    $query->withTrashed();
+                }
+            ])
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function($inspection) {

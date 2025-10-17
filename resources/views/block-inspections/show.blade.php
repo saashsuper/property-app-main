@@ -67,9 +67,13 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">Block</label>
                                 <p class="form-control-plaintext">
-                                    <a href="{{ route('blocks.show', $blockInspection->block->id) }}" class="text-decoration-none">
-                                        {{ $blockInspection->block->name }}
-                                    </a>
+                                    @if($blockInspection->block)
+                                        <a href="{{ route('blocks.show', $blockInspection->block->id) }}" class="text-decoration-none">
+                                            {{ $blockInspection->block->name }}
+                                        </a>
+                                    @else
+                                        <span class="text-muted">Block not found</span>
+                                    @endif
                                 </p>
                             </div>
                         </div>
@@ -147,8 +151,8 @@
                             <tbody>
                                 @forelse($blockInspection->inspectionTeams as $teamMember)
                                     <tr>
-                                        <td>{{ $teamMember->user->name }}</td>
-                                        <td>{{ $teamMember->user->email }}</td>
+                                        <td>{{ $teamMember->user ? $teamMember->user->name : 'N/A' }}</td>
+                                        <td>{{ $teamMember->user ? $teamMember->user->email : 'N/A' }}</td>
                                         <td>{{ $teamMember->role }}</td>
                                         <td>
                                             @if($teamMember->is_lead)
@@ -214,30 +218,34 @@
                     <h5 class="card-title mb-0">Block Information</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Block Name</label>
-                        <p class="form-control-plaintext">{{ $blockInspection->block->name }}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Address</label>
-                        <p class="form-control-plaintext">
-                            {{ $blockInspection->block->address1 }}<br>
-                            @if($blockInspection->block->address2){{ $blockInspection->block->address2 }}<br>@endif
-                            @if($blockInspection->block->address3){{ $blockInspection->block->address3 }}@endif
-                        </p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Management Company</label>
-                        <p class="form-control-plaintext">{{ $blockInspection->block->management_company }}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Block Type</label>
-                        <p class="form-control-plaintext">{{ $blockInspection->block->blockType->name ?? 'N/A' }}</p>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Number of Units</label>
-                        <p class="form-control-plaintext">{{ $blockInspection->block->no_of_units ?? 'N/A' }}</p>
-                    </div>
+                    @if($blockInspection->block)
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Block Name</label>
+                            <p class="form-control-plaintext">{{ $blockInspection->block->name }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Address</label>
+                            <p class="form-control-plaintext">
+                                {{ $blockInspection->block->address1 }}<br>
+                                @if($blockInspection->block->address2){{ $blockInspection->block->address2 }}<br>@endif
+                                @if($blockInspection->block->address3){{ $blockInspection->block->address3 }}@endif
+                            </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Management Company</label>
+                            <p class="form-control-plaintext">{{ $blockInspection->block->management_company }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Block Type</label>
+                            <p class="form-control-plaintext">{{ $blockInspection->block->blockType->name ?? 'N/A' }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Number of Units</label>
+                            <p class="form-control-plaintext">{{ $blockInspection->block->no_of_units ?? 'N/A' }}</p>
+                        </div>
+                    @else
+                        <p class="text-muted">Block information not available</p>
+                    @endif
                 </div>
             </div>
 
@@ -248,15 +256,17 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ route('blocks.show', $blockInspection->block->id) }}" class="btn btn-outline-primary">
-                            <i class="ph-buildings me-2"></i>View Block Details
-                        </a>
-                        <a href="{{ route('block-issues.index') }}?block_id={{ $blockInspection->block->id }}" class="btn btn-outline-warning">
-                            <i class="ph-warning me-2"></i>View Block Issues
-                        </a>
-                        <a href="{{ route('block-visits.index') }}?block_id={{ $blockInspection->block->id }}" class="btn btn-outline-info">
-                            <i class="ph-map-pin me-2"></i>View Site Visits
-                        </a>
+                        @if($blockInspection->block)
+                            <a href="{{ route('blocks.show', $blockInspection->block->id) }}" class="btn btn-outline-primary">
+                                <i class="ph-buildings me-2"></i>View Block Details
+                            </a>
+                            <a href="{{ route('block-issues.index') }}?block_id={{ $blockInspection->block->id }}" class="btn btn-outline-warning">
+                                <i class="ph-warning me-2"></i>View Block Issues
+                            </a>
+                            <a href="{{ route('block-visits.index') }}?block_id={{ $blockInspection->block->id }}" class="btn btn-outline-info">
+                                <i class="ph-map-pin me-2"></i>View Site Visits
+                            </a>
+                        @endif
                         @if($blockInspection->pdf_path)
                         <a href="{{ asset('storage/' . $blockInspection->pdf_path) }}" class="btn btn-outline-danger" target="_blank">
                             <i class="ph-file-pdf me-2"></i>Download Report

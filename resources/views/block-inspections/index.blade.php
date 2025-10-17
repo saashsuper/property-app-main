@@ -101,9 +101,13 @@
                                             </a>
                                         </td>
                                         <td>
-                                            <a href="{{ route('blocks.show', $inspection->block->id) }}" class="text-decoration-none">
-                                                {{ $inspection->block->name }}
-                                            </a>
+                                            @if($inspection->block)
+                                                <a href="{{ route('blocks.show', $inspection->block->id) }}" class="text-decoration-none">
+                                                    {{ $inspection->block->name }}
+                                                </a>
+                                            @else
+                                                <span class="text-muted">Block not found</span>
+                                            @endif
                                         </td>
                                         <td>
                                             {{ $inspection->scheduled_date_time->format('M d, Y H:i') }}
@@ -117,7 +121,7 @@
                                             @php
                                                 $leadInspector = $inspection->inspectionTeams->where('is_lead', true)->first();
                                             @endphp
-                                            {{ $leadInspector ? $leadInspector->user->name : 'N/A' }}
+                                            {{ $leadInspector && $leadInspector->user ? $leadInspector->user->name : 'N/A' }}
                                         </td>
                                         <td>
                                             <span class="badge bg-info-subtle text-info">
