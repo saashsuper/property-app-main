@@ -243,42 +243,42 @@
                         <div class="border-bottom">
                             <ul class="nav nav-pills arrow-navtabs nav-secondary gap-2 flex-grow-1 order-2 order-lg-1 px-3 pt-3" id="blockShowTabs" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link active" id="block-info-tab" data-bs-toggle="tab" href="#block-info" role="tab" aria-controls="block-info" aria-selected="true">
+                                    <a class="nav-link active" id="block-info-tab" data-bs-toggle="tab" href="#block-info" role="tab" aria-controls="block-info" aria-selected="true" dusk="tab-block-info">
                                         <i class="ph-info me-1"></i>Block Information
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="building-core-tab" data-bs-toggle="tab" href="#building-core" role="tab" aria-controls="building-core" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="building-core-tab" data-bs-toggle="tab" href="#building-core" role="tab" aria-controls="building-core" aria-selected="false" tabindex="-1" dusk="tab-building-core">
                                         <i class="ph-buildings me-1"></i>Building Core
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="contractors-tab" data-bs-toggle="tab" href="#contractors" role="tab" aria-controls="contractors" aria-selected="false" tabindex="-1" dusk="tab-contractors">
                                         <i class="ph-users me-1"></i>Contractors
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="units-tab" data-bs-toggle="tab" href="#units" role="tab" aria-controls="units" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="units-tab" data-bs-toggle="tab" href="#units" role="tab" aria-controls="units" aria-selected="false" tabindex="-1" dusk="tab-units">
                                         <i class="ph-house me-1"></i>Units
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="site-visit-tab" data-bs-toggle="tab" href="#site-visit" role="tab" aria-controls="site-visit" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="site-visit-tab" data-bs-toggle="tab" href="#site-visit" role="tab" aria-controls="site-visit" aria-selected="false" tabindex="-1" dusk="tab-site-visit">
                                         <i class="ph-map-pin me-1"></i>Site Visit
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="inspections-tab" data-bs-toggle="tab" href="#inspections" role="tab" aria-controls="inspections" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="inspections-tab" data-bs-toggle="tab" href="#inspections" role="tab" aria-controls="inspections" aria-selected="false" tabindex="-1" dusk="tab-inspections">
                                         <i class="ph-clipboard-text me-1"></i>Inspections
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="issues-tab" data-bs-toggle="tab" href="#issues" role="tab" aria-controls="issues" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="issues-tab" data-bs-toggle="tab" href="#issues" role="tab" aria-controls="issues" aria-selected="false" tabindex="-1" dusk="tab-issues">
                                         <i class="ph-warning me-1"></i>Issues
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false" tabindex="-1">
+                                    <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false" tabindex="-1" dusk="tab-work-orders">
                                         <i class="ph-wrench me-1"></i>Work Orders
                                     </a>
                                 </li>
@@ -288,56 +288,56 @@
                         <!-- Tab Content -->
                         <div class="tab-content" id="blockShowTabContent">
                             <!-- Block Information Tab -->
-                            <div class="tab-pane fade show active" id="block-info" role="tabpanel" aria-labelledby="block-info-tab">
+                            <div class="tab-pane fade show active" id="block-info" role="tabpanel" aria-labelledby="block-info-tab" dusk="block-info-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.block-info')
                                 </div>
                             </div>
 
                             <!-- Building/Core Tab -->
-                            <div class="tab-pane fade" id="building-core" role="tabpanel" aria-labelledby="building-core-tab">
+                            <div class="tab-pane fade" id="building-core" role="tabpanel" aria-labelledby="building-core-tab" dusk="building-core-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.building-core')
                                 </div>
                             </div>
 
                             <!-- Contractors Tab -->
-                            <div class="tab-pane fade" id="contractors" role="tabpanel" aria-labelledby="contractors-tab">
+                            <div class="tab-pane fade" id="contractors" role="tabpanel" aria-labelledby="contractors-tab" dusk="contractors-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.contractors')
                                 </div>
                             </div>
 
                             <!-- Units Tab -->
-                            <div class="tab-pane fade" id="units" role="tabpanel" aria-labelledby="units-tab">
+                            <div class="tab-pane fade" id="units" role="tabpanel" aria-labelledby="units-tab" dusk="units-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.units')
                                 </div>
                             </div>
 
                             <!-- Site Visit Tab -->
-                            <div class="tab-pane fade" id="site-visit" role="tabpanel" aria-labelledby="site-visit-tab">
+                            <div class="tab-pane fade" id="site-visit" role="tabpanel" aria-labelledby="site-visit-tab" dusk="site-visit-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.site-visit')
                                 </div>
                             </div>
 
                             <!-- Inspections Tab -->
-                            <div class="tab-pane fade" id="inspections" role="tabpanel" aria-labelledby="inspections-tab">
+                            <div class="tab-pane fade" id="inspections" role="tabpanel" aria-labelledby="inspections-tab" dusk="inspections-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.inspections')
                                 </div>
                             </div>
 
                             <!-- Issues Tab -->
-                            <div class="tab-pane fade" id="issues" role="tabpanel" aria-labelledby="issues-tab">
+                            <div class="tab-pane fade" id="issues" role="tabpanel" aria-labelledby="issues-tab" dusk="issues-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.edit.issues.index')
                                 </div>
                             </div>
 
                             <!-- Work Orders Tab -->
-                            <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab">
+                            <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab" dusk="work-orders-content">
                                 <div class="p-4">
                                     @include('blocks.tabs.work-orders')
                                 </div>

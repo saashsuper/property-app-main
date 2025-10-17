@@ -187,7 +187,7 @@
                 <a href="{{ route('blocks.index') }}" class="btn btn-secondary">
                     <i class="ph-arrow-left align-bottom me-1"></i> Cancel
                 </a>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" dusk="update-button">
                     <i class="ph-floppy-disk align-bottom me-1"></i> Update Block
                 </button>
             </div>

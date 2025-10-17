@@ -186,7 +186,7 @@
 
                         <!-- Add Button -->
                         @admin
-                        <a href="{{ route('blocks.create') }}" class="btn btn-primary">
+                        <a href="{{ route('blocks.create') }}" class="btn btn-primary" dusk="add-block-button">
                             <i class="fas fa-plus me-2"></i>Add New Block
                         </a>
                         @endadmin
@@ -212,7 +212,7 @@
 
 
                 <div class="table-responsive">
-                    <table id="blocks-table" class="table table-bordered table-striped table-hover">
+                    <table id="blocks-table" class="table table-bordered table-striped table-hover" dusk="blocks-table">
                         <thead class="table-light">
                             <tr>
                                 <th>Name</th>
@@ -273,7 +273,7 @@
                                         <form action="{{ route('blocks.destroy', $block->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this block?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Block">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Block" dusk="delete-block-{{ $block->id }}">
                                                 <i class="ph-trash"></i>
                                             </button>
                                         </form>

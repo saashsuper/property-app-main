@@ -8,7 +8,7 @@
 <script src="{{ URL::asset('build/libs/dropzone/dropzone-min.js') }}"></script>
 
 <!-- Toastify for notifications -->
-<script src="{{ URL::asset('build/libs/toastify-js/toastify.js') }}"></script>
+<script src="{{ URL::asset('build/libs/toastify-js/src/toastify.js') }}"></script>
 
 <!-- Flatpickr for date pickers -->
 <script src="{{ URL::asset('build/libs/flatpickr/flatpickr.min.js') }}"></script>

@@ -1194,6 +1194,11 @@
     
     <script>
         $(document).ready(function() {
+            console.log('Document ready, initializing DataTable...');
+            console.log('jQuery version:', $.fn.jquery);
+            console.log('DataTable exists:', typeof $.fn.DataTable);
+            console.log('Table element:', $('#blockIssuesTable').length);
+            
             // Initialize DataTable
             var table = $('#blockIssuesTable').DataTable({
                 responsive: true,

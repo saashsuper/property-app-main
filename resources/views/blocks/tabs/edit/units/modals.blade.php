@@ -48,8 +48,8 @@
                             <input type="text" class="form-control" id="owners_name" name="owners_name">
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="salutation" class="form-label">Salutation</label>
-                            <select class="form-select" id="salutation" name="salutation">
+                            <label for="salutation" class="form-label">Salutation <span class="text-danger">*</span></label>
+                            <select class="form-select" id="salutation" name="salutation" required>
                                 <option value="">Select Salutation</option>
                                 @foreach(\App\Models\Salutation::orderBy('name')->get() as $salutation)
                                     <option value="{{ $salutation->name }}">{{ $salutation->name }}</option>
@@ -57,12 +57,13 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="resident" class="form-label">Resident</label>
-                            <select class="form-select" id="resident" name="resident">
+                            <label for="resident" class="form-label">Resident <span class="text-danger">*</span></label>
+                            <select class="form-select" id="resident" name="resident" required>
+                                <option value="">Select Option</option>
                                 <option value="1">Yes</option>
                                 <option value="0">No</option>
                             </select>

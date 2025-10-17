@@ -8,6 +8,8 @@ use App\Models\Block;
 use App\Models\BlockType;
 use App\Models\User;
 use App\Models\UserType;
+use App\Models\Country;
+use App\Models\State;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 
 class BlockManagementTest extends DuskTestCase
@@ -16,6 +18,8 @@ class BlockManagementTest extends DuskTestCase
 
     protected $admin;
     protected $blockType;
+    protected $country;
+    protected $state;
 
     protected function setUp(): void
     {
@@ -25,6 +29,10 @@ class BlockManagementTest extends DuskTestCase
         $adminType = UserType::factory()->admin()->create();
         $this->admin = User::factory()->withUserType($adminType->id)->create();
         $this->blockType = BlockType::factory()->create();
+        
+        // Create country and state
+        $this->country = Country::factory()->create();
+        $this->state = State::factory()->create(['country_id' => $this->country->id]);
     }
 
     /** @test */
@@ -52,8 +60,8 @@ class BlockManagementTest extends DuskTestCase
                     ->select('block_type_id', $this->blockType->id)
                     ->type('block_address', '123 Test Street, Test City')
                     ->type('management_company_address', '456 Management Ave')
-                    ->select('country_id', '1')
-                    ->select('state_id', '1')
+                    ->select('country_id', $this->country->id)
+                    ->select('state_id', $this->state->id)
                     ->type('car_spaces', '50')
                     ->type('inspection_count', '12')
                     ->type('no_of_units', '100')
@@ -90,7 +98,9 @@ class BlockManagementTest extends DuskTestCase
         $block = Block::factory()->create([
             'name' => 'Original Block Name',
             'block_type_id' => $this->blockType->id,
-            'created_by' => $this->admin->id
+            'created_by' => $this->admin->id,
+            'country_id' => $this->country->id,
+            'state_id' => $this->state->id,
         ]);
 
         $this->browse(function (Browser $browser) use ($block) {
@@ -102,9 +112,13 @@ class BlockManagementTest extends DuskTestCase
                     ->clear('car_spaces')
                     ->type('car_spaces', '75')
                     ->click('@update-button')
-                    ->waitForLocation("/blocks/{$block->id}")
-                    ->assertSee('Block updated successfully')
-                    ->assertSee('Updated Block Name via Browser');
+                    ->waitForLocation("/blocks")
+                    ->pause(1000);
+                    
+            // Verify block was updated in database
+            $block->refresh();
+            $this->assertEquals('Updated Block Name via Browser', $block->name);
+            $this->assertEquals(75, $block->car_spaces);
         });
     }
 
@@ -114,20 +128,23 @@ class BlockManagementTest extends DuskTestCase
         $block = Block::factory()->create([
             'name' => 'Block to Delete',
             'block_type_id' => $this->blockType->id,
-            'created_by' => $this->admin->id
+            'created_by' => $this->admin->id,
+            'country_id' => $this->country->id,
+            'state_id' => $this->state->id,
         ]);
 
         $this->browse(function (Browser $browser) use ($block) {
             $browser->loginAs($this->admin)
                     ->visit('/blocks')
+                    ->pause(2000) // Wait for DataTable to load
                     ->assertSee($block->name)
                     ->click("@delete-block-{$block->id}")
-                    ->whenAvailable('.modal', function ($modal) {
-                        $modal->click('@confirm-delete');
-                    })
-                    ->waitUntilMissing('.modal')
-                    ->assertSee('Block deleted successfully')
-                    ->assertDontSee($block->name);
+                    ->acceptDialog()
+                    ->pause(3000) // Wait for deletion and page reload
+                    ->assertPathIs('/blocks');
+                    
+            // Verify block was deleted from database
+            $this->assertSoftDeleted('blocks', ['id' => $block->id]);
         });
     }
 
@@ -186,25 +203,64 @@ class BlockManagementTest extends DuskTestCase
     {
         $block = Block::factory()->create([
             'block_type_id' => $this->blockType->id,
-            'created_by' => $this->admin->id
+            'created_by' => $this->admin->id,
+            'country_id' => $this->country->id,
+            'state_id' => $this->state->id,
         ]);
 
         $this->browse(function (Browser $browser) use ($block) {
             $browser->loginAs($this->admin)
                     ->visit("/blocks/{$block->id}")
-                    ->assertSee('Basic Details')
-                    ->click('@tab-issues')
-                    ->waitFor('@issues-content')
-                    ->assertSee('Issues')
-                    ->click('@tab-work-orders')
-                    ->waitFor('@work-orders-content')
-                    ->assertSee('Work Orders')
-                    ->click('@tab-units')
-                    ->waitFor('@units-content')
-                    ->assertSee('Units')
+                    ->assertSee('Block Information')
+                    ->assertPresent('@block-info-content')
+                    
+                    // Test Building Core tab
+                    ->click('@tab-building-core')
+                    ->pause(500)
+                    ->waitFor('@building-core-content')
+                    ->assertVisible('@building-core-content')
+                    
+                    // Test Contractors tab
                     ->click('@tab-contractors')
+                    ->pause(500)
                     ->waitFor('@contractors-content')
-                    ->assertSee('Contractors');
+                    ->assertVisible('@contractors-content')
+                    
+                    // Test Units tab
+                    ->click('@tab-units')
+                    ->pause(500)
+                    ->waitFor('@units-content')
+                    ->assertVisible('@units-content')
+                    
+                    // Test Site Visit tab
+                    ->click('@tab-site-visit')
+                    ->pause(500)
+                    ->waitFor('@site-visit-content')
+                    ->assertVisible('@site-visit-content')
+                    
+                    // Test Inspections tab
+                    ->click('@tab-inspections')
+                    ->pause(500)
+                    ->waitFor('@inspections-content')
+                    ->assertVisible('@inspections-content')
+                    
+                    // Test Issues tab
+                    ->click('@tab-issues')
+                    ->pause(500)
+                    ->waitFor('@issues-content')
+                    ->assertVisible('@issues-content')
+                    
+                    // Test Work Orders tab
+                    ->click('@tab-work-orders')
+                    ->pause(500)
+                    ->waitFor('@work-orders-content')
+                    ->assertVisible('@work-orders-content')
+                    
+                    // Return to Block Information tab
+                    ->click('@tab-block-info')
+                    ->pause(500)
+                    ->waitFor('@block-info-content')
+                    ->assertVisible('@block-info-content');
         });
     }
 
