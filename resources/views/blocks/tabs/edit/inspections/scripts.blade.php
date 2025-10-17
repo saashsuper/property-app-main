@@ -279,7 +279,7 @@
         if (!lead && inspection.created_by) {
             lead = { user_id: inspection.created_by };
         }
-        setValue('edit_user_id', lead ? lead.user_id : '');
+        setValue('edit_lead_inspector', lead ? lead.user_id : '');
 
         applyDateTime(inspection.scheduled_date_time, 'edit_scheduled_date', 'edit_scheduled_time');
         applyDateTime(inspection.start_date_time, 'edit_start_date', 'edit_start_time');

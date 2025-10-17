@@ -110,8 +110,8 @@
                         </div>
 
                         <div class="col-12 mb-3">
-                            <label for="edit_user_id" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
-                            <select class="form-select" id="edit_user_id" name="user_id" required>
+                            <label for="edit_lead_inspector" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
+                            <select class="form-select" id="edit_lead_inspector" name="lead_inspector" required>
                                 <option value="">Select Lead Inspector</option>
                                 @foreach($users ?? [] as $user)
                                     <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->userType->name ?? 'N/A' }})</option>
