@@ -227,7 +227,7 @@ $(document).ready(function() {
                     // Clear and repopulate DataTable
                     blockIssuesDataTable.clear();
                     
-                    data.data.data.forEach(function(issue) {
+                    data.data.forEach(function(issue) {
                         blockIssuesDataTable.row.add([
                             `<a href="/block-issues/${issue.id}" class="text-decoration-none"><b>#${issue.ref_no}</b></a>`,
                             issue.issue || 'N/A',
