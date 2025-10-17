@@ -22,6 +22,9 @@ $(document).ready(function() {
     /** @var {Object} unitAutoComplete - Global AutoComplete.js instance for units dropdown */
     let unitAutoComplete = null;
     
+    /** @var {boolean} isInitializingAutoComplete - Flag to prevent multiple simultaneous initializations */
+    let isInitializingAutoComplete = false;
+    
     // ========================================
     // UTILITY FUNCTIONS
     // ========================================
@@ -1216,6 +1219,14 @@ $(document).ready(function() {
      * @param {Array} unitsData - Array of unit objects for autocomplete
      */
     function initializeUnitAutoComplete(unitsData) {
+        // Prevent multiple simultaneous initializations
+        if (isInitializingAutoComplete) {
+            console.warn('AutoComplete initialization already in progress, skipping...');
+            return;
+        }
+        
+        isInitializingAutoComplete = true;
+        
         const unitsInput = document.getElementById('issue_block_unit_id');
         const unitsHidden = document.getElementById('issue_block_unit_id_hidden');
         
@@ -1224,19 +1235,32 @@ $(document).ready(function() {
         
         if (!unitsInput) {
             console.error('Unit input element not found!');
+            isInitializingAutoComplete = false;
             return;
         }
         
         // Destroy existing AutoComplete instance if it exists
         if (unitAutoComplete) {
             console.log('Destroying existing AutoComplete instance');
-            unitAutoComplete.unInit();
+            try {
+                unitAutoComplete.unInit();
+            } catch (e) {
+                console.warn('Error destroying autocomplete:', e);
+            }
             unitAutoComplete = null;
         }
+        
+        // Remove any existing autocomplete list elements from DOM
+        const existingLists = document.querySelectorAll('[id^="autoComplete_list"]');
+        existingLists.forEach(list => {
+            console.log('Removing existing autocomplete list:', list.id);
+            list.remove();
+        });
         
         // Check if AutoComplete is available
         if (typeof autoComplete === 'undefined') {
             console.error('AutoComplete library is not loaded!');
+            isInitializingAutoComplete = false;
             return;
         }
         
@@ -1293,8 +1317,12 @@ $(document).ready(function() {
                 maxResults: 10
             });
             
+            console.log('AutoComplete successfully initialized');
+            isInitializingAutoComplete = false;
+            
         } catch (error) {
             console.error('Error initializing AutoComplete.js:', error);
+            isInitializingAutoComplete = false;
         }
     }
     
@@ -1557,10 +1585,25 @@ $(document).ready(function() {
     
     // Cleanup AutoComplete.js instance when modal is hidden
     $('#issueModal').on('hidden.bs.modal', function() {
+        console.log('Modal hidden - cleaning up autocomplete');
         if (unitAutoComplete) {
-            unitAutoComplete.unInit();
+            try {
+                unitAutoComplete.unInit();
+            } catch (e) {
+                console.warn('Error cleaning up autocomplete:', e);
+            }
             unitAutoComplete = null;
         }
+        
+        // Reset initialization flag
+        isInitializingAutoComplete = false;
+        
+        // Remove any remaining autocomplete list elements from DOM
+        const existingLists = document.querySelectorAll('[id^="autoComplete_list"]');
+        existingLists.forEach(list => {
+            console.log('Cleanup: Removing autocomplete list:', list.id);
+            list.remove();
+        });
     });
     
     // Handle assigned_to change to populate default contact details
