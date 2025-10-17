@@ -256,7 +256,7 @@ $(document).ready(function() {
                     blockIssuesDataTable.draw();
                     
                     // Toggle export buttons based on data availability
-                    toggleExportButtons(data.data.data.length > 0);
+                    toggleExportButtons(data.data.length > 0);
                 } else {
                     // Disable export buttons on error
                     toggleExportButtons(false);
