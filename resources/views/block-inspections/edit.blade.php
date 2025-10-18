@@ -22,7 +22,28 @@
                     <h4 class="card-title">Edit Block Inspection</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('block-inspections.update', $blockInspection->id) }}" method="POST">
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="ph-x-circle me-2"></i>
+                            <strong>Validation Error!</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="ph-check-circle me-2"></i>
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('block-inspections.update', $blockInspection->id) }}" method="POST" enctype="multipart/form-data" id="updateInspectionForm">
                         @csrf
                         @method('PUT')
                         
@@ -60,13 +81,15 @@
                                             <div class="col-md-4">
                                                 <div class="mb-3">
                                                     <label for="lead_inspector" class="form-label">Lead Inspector <span class="text-danger">*</span></label>
+                                                    @php
+                                                        // Find the current lead inspector
+                                                        $currentLead = $blockInspection->inspectionTeams->where('is_lead', true)->first();
+                                                        $currentLeadId = $currentLead ? $currentLead->user_id : null;
+                                                    @endphp
                                                     <select class="form-select @error('lead_inspector') is-invalid @enderror" name="lead_inspector" required>
                                                         <option value="">Select Lead Inspector</option>
                                                         @foreach($users as $user)
-                                                            @php
-                                                                $isLead = $blockInspection->inspectionTeams->where('user_id', $user->id)->where('is_lead', true)->first();
-                                                            @endphp
-                                                            <option value="{{ $user->id }}" {{ old('lead_inspector', $isLead ? $user->id : '') == $user->id ? 'selected' : '' }}>
+                                                            <option value="{{ $user->id }}" {{ old('lead_inspector', $currentLeadId) == $user->id ? 'selected' : '' }}>
                                                                 {{ $user->name }} ({{ $user->email }})
                                                             </option>
                                                         @endforeach
@@ -102,7 +125,7 @@
                                                     <div class="input-group">
                                                         <input type="text" class="form-control @error('scheduled_date') is-invalid @enderror" 
                                                                name="scheduled_date" id="scheduled_date" 
-                                                               value="{{ old('scheduled_date', $blockInspection->scheduled_date_time ? $blockInspection->scheduled_date_time->format('d/m/Y') : '') }}" 
+                                                               value="{{ old('scheduled_date', $blockInspection->scheduled_date_time ? $blockInspection->scheduled_date_time->format('Y-m-d') : '') }}" 
                                                                placeholder="dd/mm/yyyy" required>
                                                         <span class="input-group-text">
                                                             <i class="ph-calendar"></i>
@@ -138,7 +161,7 @@
                                                     <div class="input-group">
                                                         <input type="text" class="form-control @error('start_date') is-invalid @enderror" 
                                                                name="start_date" id="start_date" 
-                                                               value="{{ old('start_date', $blockInspection->start_date_time ? $blockInspection->start_date_time->format('d/m/Y') : '') }}" 
+                                                               value="{{ old('start_date', $blockInspection->start_date_time ? $blockInspection->start_date_time->format('Y-m-d') : '') }}" 
                                                                placeholder="dd/mm/yyyy">
                                                         <span class="input-group-text">
                                                             <i class="ph-calendar"></i>
@@ -177,7 +200,7 @@
                                                     <div class="input-group">
                                                         <input type="text" class="form-control @error('end_date') is-invalid @enderror" 
                                                                name="end_date" id="end_date" 
-                                                               value="{{ old('end_date', $blockInspection->end_date_time ? $blockInspection->end_date_time->format('d/m/Y') : '') }}" 
+                                                               value="{{ old('end_date', $blockInspection->end_date_time ? $blockInspection->end_date_time->format('Y-m-d') : '') }}" 
                                                                placeholder="dd/mm/yyyy">
                                                         <span class="input-group-text">
                                                             <i class="ph-calendar"></i>
@@ -234,6 +257,13 @@
                                 <div id="general-assets" class="accordion-collapse collapse" aria-labelledby="general-assets-header" data-bs-parent="#inspectionAccordion">
                                     <div class="accordion-body">
                                         @foreach($generalAssets as $asset)
+                                            @php
+                                                // Get existing data for this asset (if any)
+                                                $existingData = $existingInspectionAssets->get($asset->id);
+                                                $selectedStatus = $existingData ? \App\Http\Controllers\BlockInspectionController::getValueToStatusMap($existingData->block_inspection_value_id) : null;
+                                                $existingNotes = $existingData ? $existingData->comments : '';
+                                            @endphp
+                                            
                                             <!-- Asset Name Heading -->
                                             <div class="row mb-2">
                                                 <div class="col-12">
@@ -246,7 +276,7 @@
                                                 <!-- Status/Condition Options -->
                                                 <div class="col-md-4">
                                                     <div class="btn-group w-100" role="group" aria-label="Status options for {{ $asset->name }}">
-                                                        <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="working_{{ $asset->id }}" value="working" autocomplete="off">
+                                                        <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="working_{{ $asset->id }}" value="working" autocomplete="off" {{ $selectedStatus === 'working' ? 'checked' : '' }}>
                                                         <label class="btn btn-outline-secondary btn-sm rounded-start" for="working_{{ $asset->id }}" style="border-radius: 0.375rem 0 0 0.375rem !important; color: black; border: 1px solid #dee2e6;">
                                                             @if($asset->name == 'Gates' || $asset->name == 'Street Lights')
                                                                 Working
@@ -259,7 +289,7 @@
                                                             @endif
                                                         </label>
 
-                                                        <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="not_working_{{ $asset->id }}" value="not_working" autocomplete="off">
+                                                        <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="not_working_{{ $asset->id }}" value="not_working" autocomplete="off" {{ $selectedStatus === 'not_working' ? 'checked' : '' }}>
                                                         <label class="btn btn-outline-secondary btn-sm {{ $asset->name == 'Landscape' || $asset->name == 'Building Externals' ? 'average-option' : 'not-working-option' }}" for="not_working_{{ $asset->id }}" style="border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important; color: black; border: 1px solid #dee2e6;">
                                                             @if($asset->name == 'Gates' || $asset->name == 'Street Lights')
                                                                 Not Working
@@ -272,7 +302,7 @@
                                                             @endif
                                                         </label>
 
-                                                        <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="na_{{ $asset->id }}" value="na" autocomplete="off">
+                                                        <input type="radio" class="btn-check" name="asset_status_{{ $asset->id }}" id="na_{{ $asset->id }}" value="na" autocomplete="off" {{ $selectedStatus === 'na' ? 'checked' : '' }}>
                                                         <label class="btn btn-outline-secondary btn-sm rounded-end {{ strtolower(str_replace(' ', '_', $asset->name)) }}-na" for="na_{{ $asset->id }}" style="border-radius: 0 0.375rem 0.375rem 0 !important; border-left: 0 !important; color: black; border: 1px solid #dee2e6;">
                                                             @if($asset->name == 'Street Lights')
                                                                 Not checked
@@ -305,7 +335,7 @@
                                                               name="notes_{{ $asset->id }}" 
                                                               rows="3" 
                                                               placeholder="Maximum allowable characters are 500." 
-                                                              maxlength="500"></textarea>
+                                                              maxlength="500">{{ $existingNotes }}</textarea>
                                                     <div class="form-text small text-muted">Maximum allowable characters are 500.</div>
                                                 </div>
                                             </div>
@@ -437,28 +467,142 @@
             
             dateFields.forEach(function(fieldId) {
                 const dateInput = document.getElementById(fieldId);
-                if (dateInput) {
+                if (dateInput && dateInput.value) {
+                    console.log(`Initializing ${fieldId} with value: ${dateInput.value}`);
+                    
                     flatpickr(dateInput, {
-                        dateFormat: "d/m/Y",
+                        dateFormat: "Y-m-d",  // Internal format for Laravel compatibility
                         altInput: true,
-                        altFormat: "D, M j, Y",
+                        altFormat: "d/m/Y",   // Display format for user (dd/mm/yyyy)
                         allowInput: true,
-                        parseDate: function(datestr, format) {
-                            // Parse dd/mm/yyyy format
-                            if (format === "d/m/Y") {
-                                const parts = datestr.split('/');
-                                if (parts.length === 3) {
-                                    const day = parseInt(parts[0], 10);
-                                    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-                                    const year = parseInt(parts[2], 10);
-                                    return new Date(year, month, day);
-                                }
-                            }
-                            return null;
+                        defaultDate: dateInput.value, // Set the default date from the input value
+                        onReady: function(selectedDates, dateStr, instance) {
+                            console.log(`${fieldId} ready with date: ${dateStr}`);
                         }
+                    });
+                } else if (dateInput) {
+                    // Initialize empty date picker
+                    flatpickr(dateInput, {
+                        dateFormat: "Y-m-d",
+                        altInput: true,
+                        altFormat: "d/m/Y",
+                        allowInput: true
                     });
                 }
             });
+
+            // Handle form submission with loading state
+            const form = document.getElementById('updateInspectionForm');
+            const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+            
+            console.log('=== FORM DEBUG INFO ===');
+            console.log('Form element:', form);
+            console.log('Submit button:', submitBtn);
+            
+            if (form) {
+                console.log('Form action:', form.action);
+                console.log('Form method:', form.method);
+                console.log('Form enctype:', form.enctype);
+                
+                // Add click listener to submit button for debugging
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', function(e) {
+                        console.log('Submit button clicked!');
+                        console.log('Button type:', this.type);
+                        console.log('Form valid:', form.checkValidity());
+                        
+                        // Check for HTML5 validation errors
+                        if (!form.checkValidity()) {
+                            console.error('Form validation failed!');
+                            const invalidFields = form.querySelectorAll(':invalid');
+                            console.log('Invalid fields:', invalidFields);
+                            invalidFields.forEach(field => {
+                                console.log(`- ${field.name}: ${field.validationMessage}`);
+                            });
+                        }
+                    });
+                }
+                
+                form.addEventListener('submit', function(e) {
+                    console.log('=== FORM SUBMIT EVENT ===');
+                    
+                    // Check form validity
+                    if (!form.checkValidity()) {
+                        console.error('Form validation failed!');
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Find invalid fields and expand their accordions
+                        const invalidFields = form.querySelectorAll(':invalid');
+                        console.log('Invalid fields found:', invalidFields.length);
+                        
+                        invalidFields.forEach(field => {
+                            console.log(`Invalid: ${field.name} - ${field.validationMessage}`);
+                            
+                            // Find the accordion item containing this field
+                            const accordionItem = field.closest('.accordion-collapse');
+                            if (accordionItem) {
+                                console.log('Expanding accordion for:', field.name);
+                                // Show the accordion
+                                const bsCollapse = new bootstrap.Collapse(accordionItem, {
+                                    show: true
+                                });
+                                
+                                // Also expand the accordion button
+                                const accordionButton = accordionItem.previousElementSibling?.querySelector('.accordion-button');
+                                if (accordionButton && accordionButton.classList.contains('collapsed')) {
+                                    accordionButton.classList.remove('collapsed');
+                                    accordionButton.setAttribute('aria-expanded', 'true');
+                                }
+                            }
+                        });
+                        
+                        // Add Bootstrap validation classes
+                        form.classList.add('was-validated');
+                        
+                        // Focus on the first invalid field after a short delay
+                        setTimeout(function() {
+                            const firstInvalid = form.querySelector(':invalid');
+                            if (firstInvalid) {
+                                firstInvalid.focus();
+                                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                        }, 300);
+                        
+                        return false;
+                    }
+                    
+                    console.log('Form is valid, proceeding with submission');
+                    
+                    // Log all form fields
+                    const formData = new FormData(form);
+                    console.log('Form data entries:');
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`  ${key}: ${value}`);
+                    }
+                    
+                    // Show loading state
+                    if (submitBtn) {
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<i class="ph-spinner-gap me-2 ph-spin"></i>Updating...';
+                        submitBtn.disabled = true;
+                        
+                        // Re-enable button after 10 seconds as fallback
+                        setTimeout(function() {
+                            console.log('Re-enabling button after timeout');
+                            submitBtn.innerHTML = originalText;
+                            submitBtn.disabled = false;
+                        }, 10000);
+                    }
+                    
+                    // Let the form submit normally
+                    console.log('Allowing form to submit normally');
+                });
+                
+                console.log('Form submit listener attached successfully');
+            } else {
+                console.error('ERROR: Form not found! Check if ID is correct.');
+            }
 
 
             // Handle file upload areas
@@ -491,58 +635,68 @@
                 });
             });
 
-            // Handle status button color changes
+            // Function to apply color to a radio button label based on its status
+            function applyButtonColor(radio) {
+                const label = radio.nextElementSibling;
+                const assetName = label.className.match(/(gates|landscape|street_lights|building_externals)/);
+                const buttonText = label.textContent.trim();
+                
+                if (radio.checked) {
+                    // Apply specific color to selected button
+                    if (assetName && assetName[1] === 'gates' && label.classList.contains('gates-na')) {
+                        // Gates N/A - Green
+                        label.style.backgroundColor = '#198754';
+                        label.style.borderColor = '#198754';
+                        label.style.color = 'white';
+                    } else if (buttonText === 'Poor') {
+                        // Poor - Red (for Landscape and Building Externals)
+                        label.style.backgroundColor = '#dc3545';
+                        label.style.borderColor = '#dc3545';
+                        label.style.color = 'white';
+                    } else if (buttonText === 'Not checked') {
+                        // Not checked - Orange (for Street Lights)
+                        label.style.backgroundColor = '#e67e22';
+                        label.style.borderColor = '#e67e22';
+                        label.style.color = 'white';
+                    } else if (buttonText === 'Average') {
+                        // Average - Orange (for Landscape and Building Externals)
+                        label.style.backgroundColor = '#e67e22';
+                        label.style.borderColor = '#e67e22';
+                        label.style.color = 'white';
+                    } else if (buttonText === 'Not Working') {
+                        // Not Working - Red (for Gates and Street Lights)
+                        label.style.backgroundColor = '#dc3545';
+                        label.style.borderColor = '#dc3545';
+                        label.style.color = 'white';
+                    } else {
+                        // Default - Green for all other selections (Working, Clean, Good, N/A for Gates)
+                        label.style.backgroundColor = '#198754';
+                        label.style.borderColor = '#198754';
+                        label.style.color = 'white';
+                    }
+                } else {
+                    // Reset to default white
+                    label.style.backgroundColor = 'white';
+                    label.style.color = 'black';
+                    label.style.borderColor = '#dee2e6';
+                }
+            }
+
+            // Apply colors to pre-selected buttons on page load
+            document.querySelectorAll('.btn-check').forEach(function(radio) {
+                if (radio.checked) {
+                    applyButtonColor(radio);
+                }
+            });
+
+            // Handle status button color changes on click
             document.querySelectorAll('.btn-check').forEach(function(radio) {
                 radio.addEventListener('change', function() {
-                    const label = this.nextElementSibling;
-                    const assetName = label.className.match(/(gates|landscape|street_lights|building_externals)/);
-                    
                     // Reset all labels in the same group to white
                     const groupName = this.name;
                     document.querySelectorAll(`input[name="${groupName}"]`).forEach(function(input) {
-                        const inputLabel = input.nextElementSibling;
-                        inputLabel.style.backgroundColor = 'white';
-                        inputLabel.style.color = 'black';
-                        inputLabel.style.borderColor = '#dee2e6';
+                        applyButtonColor(input);
                     });
-
-                    // Apply specific color to selected button
-                    if (this.checked) {
-                        const buttonText = label.textContent.trim();
-                        
-                        // Check for specific asset and status combinations
-                        if (assetName && assetName[1] === 'gates' && label.classList.contains('gates-na')) {
-                            // Gates N/A - Green
-                            label.style.backgroundColor = '#198754';
-                            label.style.borderColor = '#198754';
-                            label.style.color = 'white';
-                        } else if (buttonText === 'Poor') {
-                            // Poor - Red (for Landscape and Building Externals)
-                            label.style.backgroundColor = '#dc3545';
-                            label.style.borderColor = '#dc3545';
-                            label.style.color = 'white';
-                        } else if (buttonText === 'Not checked') {
-                            // Not checked - Orange (for Street Lights)
-                            label.style.backgroundColor = '#e67e22';
-                            label.style.borderColor = '#e67e22';
-                            label.style.color = 'white';
-                        } else if (buttonText === 'Average') {
-                            // Average - Orange (for Landscape and Building Externals)
-                            label.style.backgroundColor = '#e67e22';
-                            label.style.borderColor = '#e67e22';
-                            label.style.color = 'white';
-                        } else if (buttonText === 'Not Working') {
-                            // Not Working - Red (for Gates and Street Lights)
-                            label.style.backgroundColor = '#dc3545';
-                            label.style.borderColor = '#dc3545';
-                            label.style.color = 'white';
-                        } else {
-                            // Default - Green for all other selections (Working, Clean, Good, N/A for Gates)
-                            label.style.backgroundColor = '#198754';
-                            label.style.borderColor = '#198754';
-                            label.style.color = 'white';
-                        }
-                    }
                 });
             });
         });

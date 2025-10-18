@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlockInspection;
+use App\Models\BlockInspectionAsset;
+use App\Models\BlockInspectionAssetImage;
+use App\Models\BlockInspectionValue;
+use App\Models\BlockGeneralAsset;
 use App\Models\Block;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class BlockInspectionController extends Controller
 {
@@ -202,7 +208,14 @@ class BlockInspectionController extends Controller
         // Load general assets for the General Assets tab
         $generalAssets = \App\Models\BlockGeneralAsset::orderBy('id')->get();
         
-        return view('block-inspections.edit', compact('blockInspection', 'blocks', 'users', 'generalAssets'));
+        // Load existing inspection assets data for general assets
+        $existingInspectionAssets = BlockInspectionAsset::where('block_inspection_id', $blockInspection->id)
+            ->whereNotNull('block_general_asset_id')
+            ->with(['generalAsset', 'inspectionValue', 'images'])
+            ->get()
+            ->keyBy('block_general_asset_id'); // Key by general asset ID for easy lookup
+        
+        return view('block-inspections.edit', compact('blockInspection', 'blocks', 'users', 'generalAssets', 'existingInspectionAssets'));
     }
 
     /**
@@ -210,7 +223,15 @@ class BlockInspectionController extends Controller
      */
     public function update(Request $request, BlockInspection $blockInspection)
     {
-        $request->validate([
+        // Log incoming request for debugging
+        \Log::info('BlockInspection Update Request', [
+            'inspection_id' => $blockInspection->id,
+            'request_data' => $request->all(),
+            'method' => $request->method(),
+        ]);
+
+        // Build dynamic validation rules for assets
+        $rules = [
             'block_id' => 'required|exists:blocks,id',
             'scheduled_date' => 'required|date',
             'scheduled_time' => 'required',
@@ -221,7 +242,27 @@ class BlockInspectionController extends Controller
             'lead_inspector' => 'required|exists:users,id',
             'notes' => 'nullable|string|max:500',
             'job_status_id' => 'required|integer|in:1,2,3,4,5',
-        ]);
+        ];
+
+        // Add validation for general assets fields (dynamic based on asset IDs)
+        $generalAssets = \App\Models\BlockGeneralAsset::all();
+        foreach ($generalAssets as $asset) {
+            $assetId = $asset->id;
+            $rules["asset_status_{$assetId}"] = 'nullable|in:working,not_working,na';
+            $rules["notes_{$assetId}"] = 'nullable|string|max:500';
+            $rules["photos_{$assetId}"] = 'nullable|array';
+            $rules["photos_{$assetId}.*"] = 'nullable|image|mimes:jpeg,jpg,png,gif|max:5120'; // Max 5MB per image
+        }
+
+        try {
+            $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('BlockInspection Validation Failed', [
+                'errors' => $e->errors(),
+                'request_data' => $request->all(),
+            ]);
+            throw $e;
+        }
 
         // Validate that the user is a Property Manager
         $user = User::with('userType')->find($request->lead_inspector);
@@ -268,6 +309,9 @@ class BlockInspectionController extends Controller
             'is_lead' => true,
         ]);
 
+        // Process General Assets data
+        $this->processGeneralAssets($request, $blockInspection);
+
         // Load the updated inspection with relationships
         $blockInspection->load([
             'block' => function($query) {
@@ -279,6 +323,11 @@ class BlockInspectionController extends Controller
             'inspectionTeams.user' => function($query) {
                 $query->withTrashed();
             }
+        ]);
+
+        \Log::info('BlockInspection Updated Successfully', [
+            'inspection_id' => $blockInspection->id,
+            'updated_data' => $updateData,
         ]);
 
         // Check if request expects JSON (AJAX request)
@@ -457,5 +506,191 @@ class BlockInspectionController extends Controller
             'success' => true,
             'data' => $inspections
         ]);
+    }
+
+    /**
+     * Process general assets data from the inspection edit form.
+     */
+    private function processGeneralAssets(Request $request, BlockInspection $blockInspection)
+    {
+        \Log::info('=== processGeneralAssets START ===', [
+            'inspection_id' => $blockInspection->id,
+            'block_id' => $blockInspection->block_id,
+        ]);
+
+        // Get all general assets
+        $generalAssets = BlockGeneralAsset::all();
+        \Log::info('General Assets Count', ['count' => $generalAssets->count()]);
+        
+        // Get the first building of the block for asset association (if available)
+        // Note: For general assets, building is optional
+        $firstBuilding = $blockInspection->block->buildings()->first();
+        
+        \Log::info('Building Check', [
+            'building_found' => $firstBuilding ? true : false,
+            'building_id' => $firstBuilding ? $firstBuilding->id : null,
+        ]);
+
+        // Map status values to inspection value IDs
+        $statusToValueMap = $this->getStatusToValueMap();
+        \Log::info('Status to Value Map', $statusToValueMap);
+
+        $processedCount = 0;
+        foreach ($generalAssets as $asset) {
+            $assetId = $asset->id;
+            
+            // Check if this asset has any data submitted
+            $statusKey = "asset_status_{$assetId}";
+            $notesKey = "notes_{$assetId}";
+            $photosKey = "photos_{$assetId}";
+            
+            \Log::info("Checking Asset {$asset->name}", [
+                'asset_id' => $assetId,
+                'status_key' => $statusKey,
+                'has_status' => $request->has($statusKey),
+                'status_value' => $request->input($statusKey),
+                'has_notes' => $request->has($notesKey),
+                'notes_value' => $request->input($notesKey),
+                'has_photos' => $request->hasFile($photosKey),
+            ]);
+            
+            // Skip if no status selected
+            if (!$request->has($statusKey)) {
+                \Log::info("Skipping asset {$assetId} - no status selected");
+                continue;
+            }
+
+            $status = $request->input($statusKey);
+            $notes = $request->input($notesKey);
+            
+            // Ensure notes is either a string or null (not empty string for database)
+            if (empty($notes)) {
+                $notes = null;
+            }
+            
+            // Get the appropriate inspection value ID based on status
+            $inspectionValueId = $statusToValueMap[$status] ?? $statusToValueMap['na'];
+
+            \Log::info("Creating/Updating Inspection Asset", [
+                'asset_id' => $assetId,
+                'status' => $status,
+                'inspection_value_id' => $inspectionValueId,
+                'notes' => $notes,
+            ]);
+
+            // Create or update the inspection asset record
+            // For general assets, we use block_general_asset_id instead of building_asset_id
+            $inspectionAsset = BlockInspectionAsset::updateOrCreate(
+                [
+                    'block_inspection_id' => $blockInspection->id,
+                    'block_general_asset_id' => $assetId,
+                ],
+                [
+                    'block_building_id' => $firstBuilding ? $firstBuilding->id : null,
+                    'building_asset_id' => null, // General assets don't use building_asset_id
+                    'block_inspection_value_id' => $inspectionValueId,
+                    'comments' => $notes,
+                ]
+            );
+
+            \Log::info("Inspection Asset saved", [
+                'id' => $inspectionAsset->id,
+                'was_recently_created' => $inspectionAsset->wasRecentlyCreated,
+            ]);
+
+            $processedCount++;
+
+            // Process uploaded photos
+            if ($request->hasFile($photosKey)) {
+                \Log::info("Processing photos for asset {$assetId}");
+                $this->processAssetImages($request, $inspectionAsset, $blockInspection, $firstBuilding, $assetId, $photosKey);
+            }
+        }
+
+        \Log::info('=== processGeneralAssets END ===', [
+            'total_assets' => $generalAssets->count(),
+            'processed_count' => $processedCount,
+        ]);
+    }
+
+    /**
+     * Process and store asset images.
+     */
+    private function processAssetImages(Request $request, BlockInspectionAsset $inspectionAsset, BlockInspection $blockInspection, $building, $assetId, $photosKey)
+    {
+        $photos = $request->file($photosKey);
+        
+        foreach ($photos as $photo) {
+            // Generate unique filename
+            $timestamp = now()->timestamp;
+            $randomString = substr(md5(uniqid()), 0, 8);
+            $extension = $photo->getClientOriginalExtension();
+            $filename = "{$timestamp}_{$randomString}_asset_{$assetId}.{$extension}";
+            
+            // Define storage path
+            $storagePath = "inspection-assets/{$blockInspection->id}/{$inspectionAsset->id}";
+            
+            // Store the file
+            $path = $photo->storeAs($storagePath, $filename, 'public');
+            
+            // Create database record
+            BlockInspectionAssetImage::create([
+                'block_inspection_asset_id' => $inspectionAsset->id,
+                'block_inspection_id' => $blockInspection->id,
+                'block_building_id' => $building ? $building->id : null,
+                'building_asset_id' => $assetId,
+                'image_path' => $storagePath,
+                'image_name' => $filename,
+                's3_status' => 0, // 0 = stored locally, not yet uploaded to S3
+            ]);
+        }
+    }
+
+    /**
+     * Map status values to inspection value IDs.
+     * Based on block_inspection_values table.
+     */
+    private function getStatusToValueMap()
+    {
+        // Map form status values to database inspection values
+        // working → Good (id: 2) or Operational (id: 6)
+        // not_working → Poor (id: 4) or Non-Operational (id: 8)
+        // na → Fair (id: 3) as neutral/not applicable status
+        
+        $workingValue = BlockInspectionValue::whereIn('name', ['Good', 'Operational'])->first();
+        $notWorkingValue = BlockInspectionValue::whereIn('name', ['Poor', 'Non-Operational'])->first();
+        $naValue = BlockInspectionValue::whereIn('name', ['Fair', 'Pending'])->first();
+
+        // Fallback to specific IDs if queries fail
+        return [
+            'working' => $workingValue->id ?? 2, // Good
+            'not_working' => $notWorkingValue->id ?? 4, // Poor
+            'na' => $naValue->id ?? 3, // Fair (neutral status)
+        ];
+    }
+
+    /**
+     * Map inspection value IDs back to form status values.
+     * This is the reverse of getStatusToValueMap.
+     */
+    public static function getValueToStatusMap($inspectionValueId)
+    {
+        // Get the inspection value
+        $inspectionValue = BlockInspectionValue::find($inspectionValueId);
+        
+        if (!$inspectionValue) {
+            return 'na'; // Default to N/A if value not found
+        }
+        
+        // Map based on the value name
+        $name = strtolower($inspectionValue->name);
+        
+        if (in_array($name, ['good', 'operational'])) {
+            return 'working';
+        } elseif (in_array($name, ['poor', 'non-operational'])) {
+            return 'not_working';
+        } else {
+            return 'na'; // Fair, Pending, or any other status
+        }
     }
 }

@@ -6,29 +6,48 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BlockInspectionAsset extends Model
+class BlockInspectionAssetImage extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
+        'block_inspection_asset_id',
         'block_inspection_id',
         'block_building_id',
         'building_asset_id',
-        'block_general_asset_id',
-        'block_inspection_value_id',
-        'comments',
-    ];
-
-    protected $casts = [
-        'block_inspection_id' => 'integer',
-        'block_building_id' => 'integer',
-        'building_asset_id' => 'integer',
-        'block_general_asset_id' => 'integer',
-        'block_inspection_value_id' => 'integer',
+        'image_path',
+        'image_name',
+        's3_status',
     ];
 
     /**
-     * Get the block inspection that owns the asset.
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'block_inspection_asset_id' => 'integer',
+        'block_inspection_id' => 'integer',
+        'block_building_id' => 'integer',
+        'building_asset_id' => 'integer',
+        's3_status' => 'integer',
+    ];
+
+    /**
+     * Get the block inspection asset that owns the image.
+     */
+    public function blockInspectionAsset()
+    {
+        return $this->belongsTo(BlockInspectionAsset::class);
+    }
+
+    /**
+     * Get the block inspection that owns the image.
      */
     public function blockInspection()
     {
@@ -50,28 +69,5 @@ class BlockInspectionAsset extends Model
     {
         return $this->belongsTo(BuildingAsset::class);
     }
-
-    /**
-     * Get the inspection value.
-     */
-    public function inspectionValue()
-    {
-        return $this->belongsTo(BlockInspectionValue::class, 'block_inspection_value_id');
-    }
-
-    /**
-     * Get the images for the inspection asset.
-     */
-    public function images()
-    {
-        return $this->hasMany(BlockInspectionAssetImage::class);
-    }
-
-    /**
-     * Get the general asset (if this is a general asset inspection).
-     */
-    public function generalAsset()
-    {
-        return $this->belongsTo(BlockGeneralAsset::class, 'block_general_asset_id');
-    }
 }
+
