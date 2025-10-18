@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
             BlockVisitSeeder::class,
             BlockVisitImageSeeder::class,
             BlockInspectionSeeder::class,
+            BlockInspectionAssetImageSeeder::class,
             BlockIssuesSeeder::class,
             BlockWorkOrderSeeder::class,
         ]);
@@ -67,6 +68,7 @@ class DatabaseSeeder extends Seeder
             'issue_logs',
             'block_issues',
             'block_inspection_teams',
+            'block_inspection_asset_images',
             'block_inspection_assets', 
             'block_inspection_results',
             'block_inspections',
