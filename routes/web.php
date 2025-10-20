@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('block-inspections/{blockInspection}/start', [App\Http\Controllers\BlockInspectionController::class, 'start'])->name('block-inspections.start');
     Route::post('block-inspections/{blockInspection}/complete', [App\Http\Controllers\BlockInspectionController::class, 'complete'])->name('block-inspections.complete');
     Route::post('block-inspections/store-from-modal', [App\Http\Controllers\BlockInspectionController::class, 'storeFromModal'])->name('block-inspections.store-from-modal');
+    Route::delete('block-inspection-images/{image}', [App\Http\Controllers\BlockInspectionController::class, 'deleteImage'])->name('block-inspection-images.delete');
     Route::get('api/blocks/{block}/inspections', [App\Http\Controllers\BlockInspectionController::class, 'getBlockInspections'])->name('api.blocks.inspections');
 
     // Block Issues

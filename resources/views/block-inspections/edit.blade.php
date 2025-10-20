@@ -320,11 +320,28 @@
                                                 <!-- Photo Upload Area -->
                                                 <div class="col-md-4">
                                                     <label class="form-label small mb-2 fw-bold text-black">Photos:</label>
-                                                    <div class="upload-area border border-dashed rounded p-3 text-center" style="min-height: 100px; background-color: white;">
-                                                        <i class="ph-cloud-arrow-up text-primary mb-2" style="font-size: 1.5rem;"></i>
-                                                        <div class="text-muted small">DRAG & DROP HERE OR CLICK</div>
-                                                        <input type="file" class="d-none" id="photos_{{ $asset->id }}" name="photos_{{ $asset->id }}[]" multiple accept="image/*">
+                                                    <div id="dropzone_{{ $asset->id }}" class="dropzone" style="min-height: 150px; border: 2px dashed #d1d5db; border-radius: 0.375rem; background-color: white;">
+                                                        <div class="dz-message" data-dz-message>
+                                                            <i class="ph-cloud-arrow-up text-primary mb-2" style="font-size: 1.5rem;"></i>
+                                                            <div class="text-muted small">Drag & drop images or click to browse</div>
+                                                            <div class="text-muted" style="font-size: 0.75rem;">Max 5MB per image</div>
+                                                        </div>
                                                     </div>
+                                                    <!-- Existing Images Preview -->
+                                                    @if($existingData && $existingData->images->count() > 0)
+                                                    <div class="existing-images-preview mt-2">
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($existingData->images as $image)
+                                                            <div class="position-relative" style="width: 80px; height: 80px;">
+                                                                <img src="{{ $image->image_url }}" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;" alt="Existing image">
+                                                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-existing-image" data-image-id="{{ $image->id }}" style="padding: 0.1rem 0.3rem; font-size: 0.7rem;">
+                                                                    <i class="ph-x"></i>
+                                                                </button>
+                                                            </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                    @endif
                                                 </div>
                                                 
                                                 <!-- Notes -->
@@ -367,6 +384,139 @@
 
 @section('css')
 <style>
+/* Dropzone Custom Styling */
+.dropzone {
+    border: 2px dashed #d1d5db !important;
+    border-radius: 0.375rem;
+    background-color: white;
+    padding: 10px;
+}
+
+.dropzone .dz-message {
+    margin: 2em 0;
+    text-align: center;
+}
+
+.dropzone .dz-preview {
+    display: inline-block;
+    width: 120px;
+    margin: 10px;
+    vertical-align: top;
+}
+
+.dropzone .dz-preview .dz-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    background: #f3f4f6;
+    position: relative;
+}
+
+.dropzone .dz-preview .dz-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dropzone .dz-preview .dz-details {
+    padding: 5px;
+    font-size: 0.75rem;
+}
+
+.dropzone .dz-preview .dz-filename {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dropzone .dz-preview .dz-size {
+    font-size: 0.65rem;
+    color: #6b7280;
+}
+
+.dropzone .dz-preview .dz-progress {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 5px 0;
+}
+
+.dropzone .dz-preview .dz-progress .dz-upload {
+    display: block;
+    height: 100%;
+    background: #3b82f6;
+    transition: width 0.3s ease;
+}
+
+.dropzone .dz-preview .dz-remove {
+    display: block;
+    text-align: center;
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.dropzone .dz-preview .dz-remove:hover {
+    text-decoration: underline;
+}
+
+.dropzone .dz-preview .dz-success-mark,
+.dropzone .dz-preview .dz-error-mark {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+}
+
+.dropzone .dz-preview.dz-success .dz-success-mark {
+    display: block;
+    color: #10b981;
+}
+
+.dropzone .dz-preview.dz-error .dz-error-mark {
+    display: block;
+    color: #ef4444;
+}
+
+.dropzone .dz-preview .dz-error-message {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ef4444;
+    color: white;
+    padding: 5px;
+    font-size: 0.7rem;
+    border-radius: 0.25rem;
+    margin-top: 5px;
+    z-index: 10;
+}
+
+.dropzone .dz-preview.dz-error .dz-error-message {
+    display: block;
+}
+
+/* Existing images preview styling */
+.existing-images-preview .position-relative {
+    position: relative;
+}
+
+.existing-images-preview .delete-existing-image {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.existing-images-preview .position-relative:hover .delete-existing-image {
+    opacity: 1;
+}
+
 /* Force override Bootstrap's button styles with maximum specificity */
 .btn-group .btn-outline-secondary {
     background-color: white !important;
@@ -523,114 +673,252 @@
                     });
                 }
                 
-                form.addEventListener('submit', function(e) {
-                    console.log('=== FORM SUBMIT EVENT ===');
-                    
-                    // Check form validity
-                    if (!form.checkValidity()) {
-                        console.error('Form validation failed!');
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        // Find invalid fields and expand their accordions
-                        const invalidFields = form.querySelectorAll(':invalid');
-                        console.log('Invalid fields found:', invalidFields.length);
-                        
-                        invalidFields.forEach(field => {
-                            console.log(`Invalid: ${field.name} - ${field.validationMessage}`);
-                            
-                            // Find the accordion item containing this field
-                            const accordionItem = field.closest('.accordion-collapse');
-                            if (accordionItem) {
-                                console.log('Expanding accordion for:', field.name);
-                                // Show the accordion
-                                const bsCollapse = new bootstrap.Collapse(accordionItem, {
-                                    show: true
-                                });
-                                
-                                // Also expand the accordion button
-                                const accordionButton = accordionItem.previousElementSibling?.querySelector('.accordion-button');
-                                if (accordionButton && accordionButton.classList.contains('collapsed')) {
-                                    accordionButton.classList.remove('collapsed');
-                                    accordionButton.setAttribute('aria-expanded', 'true');
-                                }
-                            }
-                        });
-                        
-                        // Add Bootstrap validation classes
-                        form.classList.add('was-validated');
-                        
-                        // Focus on the first invalid field after a short delay
-                        setTimeout(function() {
-                            const firstInvalid = form.querySelector(':invalid');
-                            if (firstInvalid) {
-                                firstInvalid.focus();
-                                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                        }, 300);
-                        
-                        return false;
-                    }
-                    
-                    console.log('Form is valid, proceeding with submission');
-                    
-                    // Log all form fields
-                    const formData = new FormData(form);
-                    console.log('Form data entries:');
-                    for (let [key, value] of formData.entries()) {
-                        console.log(`  ${key}: ${value}`);
-                    }
-                    
-                    // Show loading state
-                    if (submitBtn) {
-                        const originalText = submitBtn.innerHTML;
-                        submitBtn.innerHTML = '<i class="ph-spinner-gap me-2 ph-spin"></i>Updating...';
-                        submitBtn.disabled = true;
-                        
-                        // Re-enable button after 10 seconds as fallback
-                        setTimeout(function() {
-                            console.log('Re-enabling button after timeout');
-                            submitBtn.innerHTML = originalText;
-                            submitBtn.disabled = false;
-                        }, 10000);
-                    }
-                    
-                    // Let the form submit normally
-                    console.log('Allowing form to submit normally');
-                });
-                
-                console.log('Form submit listener attached successfully');
+                console.log('Form elements initialized successfully');
             } else {
                 console.error('ERROR: Form not found! Check if ID is correct.');
             }
 
 
-            // Handle file upload areas
-            document.querySelectorAll('.upload-area').forEach(function(uploadArea) {
-                uploadArea.addEventListener('click', function() {
-                    const fileInput = this.querySelector('input[type="file"]');
-                    if (fileInput) {
-                        fileInput.click();
+            // Initialize Dropzone for each general asset
+            Dropzone.autoDiscover = false;
+            
+            const dropzones = {};
+            const dropzoneFiles = {}; // Store files for each asset
+            
+            @foreach($generalAssets as $asset)
+            (function() {
+                const assetId = {{ $asset->id }};
+                const dropzoneElement = document.getElementById('dropzone_' + assetId);
+                
+                if (dropzoneElement) {
+                    dropzoneFiles[assetId] = [];
+                    
+                    const myDropzone = new Dropzone('#dropzone_' + assetId, {
+                        url: '#', // Dummy URL since we're handling submission manually
+                        paramName: 'photos_' + assetId,
+                        autoProcessQueue: false,
+                        uploadMultiple: true,
+                        parallelUploads: 10,
+                        maxFiles: 10,
+                        maxFilesize: 5, // 5MB per file
+                        acceptedFiles: 'image/*',
+                        addRemoveLinks: true,
+                        dictDefaultMessage: '',
+                        dictRemoveFile: 'Remove',
+                        dictCancelUpload: 'Cancel',
+                        dictMaxFilesExceeded: 'Maximum 10 files allowed',
+                        previewTemplate: `
+                            <div class="dz-preview dz-file-preview">
+                                <div class="dz-image">
+                                    <img data-dz-thumbnail />
+                                </div>
+                                <div class="dz-details">
+                                    <div class="dz-filename"><span data-dz-name></span></div>
+                                    <div class="dz-size" data-dz-size></div>
+                                </div>
+                                <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                                <div class="dz-success-mark"><i class="ph-check-circle"></i></div>
+                                <div class="dz-error-mark"><i class="ph-x-circle"></i></div>
+                                <div class="dz-error-message"><span data-dz-errormessage></span></div>
+                                <a class="dz-remove" href="javascript:undefined;" data-dz-remove>Remove</a>
+                            </div>
+                        `,
+                        init: function() {
+                            const dz = this;
+                            
+                            // Store reference to dropzone
+                            dropzones[assetId] = dz;
+                            
+                            // Track files when added
+                            dz.on('addedfile', function(file) {
+                                console.log('File added to dropzone_' + assetId + ':', file.name);
+                                dropzoneFiles[assetId].push(file);
+                            });
+                            
+                            // Remove from tracking when removed
+                            dz.on('removedfile', function(file) {
+                                console.log('File removed from dropzone_' + assetId + ':', file.name);
+                                const index = dropzoneFiles[assetId].indexOf(file);
+                                if (index > -1) {
+                                    dropzoneFiles[assetId].splice(index, 1);
+                                }
+                            });
+                        }
+                    });
+                }
+            })();
+            @endforeach
+            
+            // Modify form submission to include dropzone files
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('=== FORM SUBMIT EVENT ===');
+                
+                // Check form validity first
+                if (!form.checkValidity()) {
+                    console.error('Form validation failed!');
+                    
+                    // Find invalid fields and expand their accordions
+                    const invalidFields = form.querySelectorAll(':invalid');
+                    console.log('Invalid fields found:', invalidFields.length);
+                    
+                    invalidFields.forEach(field => {
+                        console.log(`Invalid: ${field.name} - ${field.validationMessage}`);
+                        
+                        // Find the accordion item containing this field
+                        const accordionItem = field.closest('.accordion-collapse');
+                        if (accordionItem) {
+                            console.log('Expanding accordion for:', field.name);
+                            // Show the accordion
+                            const bsCollapse = new bootstrap.Collapse(accordionItem, {
+                                show: true
+                            });
+                            
+                            // Also expand the accordion button
+                            const accordionButton = accordionItem.previousElementSibling?.querySelector('.accordion-button');
+                            if (accordionButton && accordionButton.classList.contains('collapsed')) {
+                                accordionButton.classList.remove('collapsed');
+                                accordionButton.setAttribute('aria-expanded', 'true');
+                            }
+                        }
+                    });
+                    
+                    // Add Bootstrap validation classes
+                    form.classList.add('was-validated');
+                    
+                    // Focus on the first invalid field after a short delay
+                    setTimeout(function() {
+                        const firstInvalid = form.querySelector(':invalid');
+                        if (firstInvalid) {
+                            firstInvalid.focus();
+                            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 300);
+                    
+                    return false;
+                }
+                
+                console.log('Form is valid, processing form with Dropzone files...');
+                
+                // Create FormData from the form
+                const formData = new FormData(form);
+                
+                // Add files from each dropzone
+                @foreach($generalAssets as $asset)
+                if (dropzoneFiles[{{ $asset->id }}] && dropzoneFiles[{{ $asset->id }}].length > 0) {
+                    console.log('Adding ' + dropzoneFiles[{{ $asset->id }}].length + ' files for asset {{ $asset->id }}');
+                    dropzoneFiles[{{ $asset->id }}].forEach(function(file, index) {
+                        formData.append('photos_{{ $asset->id }}[]', file);
+                    });
+                }
+                @endforeach
+                
+                // Show loading state
+                if (submitBtn) {
+                    const originalText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<i class="ph-spinner-gap me-2 ph-spin"></i>Updating...';
+                    submitBtn.disabled = true;
+                }
+                
+                // Submit via AJAX
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        if (typeof Toastify !== 'undefined') {
+                            Toastify({
+                                text: "Inspection updated successfully!",
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                            }).showToast();
+                        }
+                        
+                        // Redirect after a short delay
+                        setTimeout(function() {
+                            window.location.href = '{{ route("block-inspections.index") }}';
+                        }, 1000);
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to update inspection'));
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="ph-check me-2"></i>Update Inspection';
+                            submitBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    
+                    // Handle validation errors
+                    if (error.errors) {
+                        let errorMessage = 'Validation errors:\n';
+                        Object.keys(error.errors).forEach(key => {
+                            errorMessage += '- ' + error.errors[key].join('\n- ') + '\n';
+                        });
+                        alert(errorMessage);
+                    } else if (error.message) {
+                        alert('Error: ' + error.message);
+                    } else {
+                        alert('An error occurred while updating the inspection. Please try again.');
+                    }
+                    
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="ph-check me-2"></i>Update Inspection';
+                        submitBtn.disabled = false;
                     }
                 });
-
-                uploadArea.addEventListener('dragover', function(e) {
+                
+                return false;
+            });
+            
+            // Handle deletion of existing images
+            document.querySelectorAll('.delete-existing-image').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    this.style.backgroundColor = '#e9ecef';
-                });
-
-                uploadArea.addEventListener('dragleave', function(e) {
-                    e.preventDefault();
-                    this.style.backgroundColor = 'white';
-                });
-
-                uploadArea.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    this.style.backgroundColor = 'white';
-                    const fileInput = this.querySelector('input[type="file"]');
-                    if (fileInput) {
-                        fileInput.files = e.dataTransfer.files;
-                        // You can add file preview functionality here
+                    const imageId = this.getAttribute('data-image-id');
+                    
+                    if (confirm('Are you sure you want to delete this image?')) {
+                        // Send AJAX request to delete the image
+                        fetch('/block-inspection-images/' + imageId, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Remove the image element from DOM
+                                this.closest('.position-relative').remove();
+                                
+                                // Show success message
+                                alert('Image deleted successfully!');
+                            } else {
+                                alert('Failed to delete image: ' + (data.message || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('An error occurred while deleting the image.');
+                        });
                     }
                 });
             });

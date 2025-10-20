@@ -693,4 +693,46 @@ class BlockInspectionController extends Controller
             return 'na'; // Fair, Pending, or any other status
         }
     }
+
+    /**
+     * Delete an inspection asset image.
+     */
+    public function deleteImage(BlockInspectionAssetImage $image)
+    {
+        try {
+            // Delete the physical file from storage
+            if ($image->image_path && $image->image_name) {
+                $filePath = $image->image_path . '/' . $image->image_name;
+                if (Storage::disk('public')->exists($filePath)) {
+                    Storage::disk('public')->delete($filePath);
+                }
+            }
+
+            // Delete the database record
+            $image->delete();
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Image deleted successfully!'
+                ]);
+            }
+
+            return redirect()->back()->with('success', 'Image deleted successfully!');
+        } catch (\Exception $e) {
+            \Log::error('Failed to delete inspection asset image', [
+                'image_id' => $image->id,
+                'error' => $e->getMessage()
+            ]);
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete image: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->back()->withErrors(['error' => 'Failed to delete image.']);
+        }
+    }
 }

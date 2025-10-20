@@ -69,5 +69,17 @@ class BlockInspectionAssetImage extends Model
     {
         return $this->belongsTo(BuildingAsset::class);
     }
+
+    /**
+     * Get the image URL.
+     */
+    public function getImageUrlAttribute()
+    {
+        if ($this->image_path && $this->image_name) {
+            return asset('storage/' . $this->image_path . '/' . $this->image_name);
+        }
+        
+        return null;
+    }
 }
 
