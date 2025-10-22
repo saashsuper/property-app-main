@@ -185,7 +185,20 @@ class BlockVisitController extends Controller
 
     public function show(Request $request, BlockVisit $blockVisit)
     {
-        $blockVisit->load(['block.blockType', 'jobReason', 'jobStatus', 'createdByUser', 'updatedByUser', 'team.user', 'images']);
+        $blockVisit->load([
+            'block.blockType', 
+            'blockUnit.blockUnitType', 
+            'blockIssue.issueType', 
+            'blockIssue.issueStatus',
+            'blockIssue.priority',
+            'jobReason', 
+            'jobStatus', 
+            'createdByUser', 
+            'updatedByUser', 
+            'team.user', 
+            'images',
+            'results'
+        ]);
 
         if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
             $data = [
@@ -218,7 +231,12 @@ class BlockVisitController extends Controller
             ]);
         }
 
-        return view('block-visits.show', compact('blockVisit'));
+        // Get data for edit modal
+        $users = User::active()->orderBy('name')->get();
+        $jobReasons = JobReason::all();
+        $jobStatuses = JobStatus::all();
+        
+        return view('block-visits.show', compact('blockVisit', 'users', 'jobReasons', 'jobStatuses'));
     }
 
     /**
@@ -238,10 +256,13 @@ class BlockVisitController extends Controller
     public function update(Request $request, BlockVisit $blockVisit)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'nullable|exists:users,id',
             'scheduled_date_time' => 'required|date',
+            'start_date_time' => 'nullable|date',
+            'end_date_time' => 'nullable|date',
             'job_reason_id' => 'nullable|exists:job_reasons,id',
-            'notes' => 'nullable|string|max:255',
+            'job_status_id' => 'nullable|exists:job_statuses,id',
+            'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -255,21 +276,26 @@ class BlockVisitController extends Controller
         try {
             $blockVisit->update([
                 'scheduled_date_time' => $request->scheduled_date_time,
+                'start_date_time' => $request->start_date_time,
+                'end_date_time' => $request->end_date_time,
                 'job_reason_id' => $request->job_reason_id,
+                'job_status_id' => $request->job_status_id,
                 'notes' => $request->notes,
                 'updated_by' => auth()->id(),
             ]);
 
-            // Update team member (user assigned to the visit)
-            // First, remove existing team members
-            $blockVisit->team()->delete();
-            
-            // Add the new team member
-            $blockVisit->team()->create([
-                'user_id' => $request->user_id,
-                'leed' => true, // Set as lead team member
-                'created_by' => auth()->id(),
-            ]);
+            // Update team member if user_id is provided
+            if ($request->filled('user_id')) {
+                // First, remove existing team members
+                $blockVisit->team()->delete();
+                
+                // Add the new team member
+                $blockVisit->team()->create([
+                    'user_id' => $request->user_id,
+                    'leed' => true, // Set as lead team member
+                    'created_by' => auth()->id(),
+                ]);
+            }
 
             return response()->json([
                 'success' => true,

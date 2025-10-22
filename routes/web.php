@@ -133,6 +133,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/user-types', [App\Http\Controllers\UserTypeController::class, 'getUserTypes'])->name('api.user-types');
     Route::get('api/user-types/{userType}', [App\Http\Controllers\UserTypeController::class, 'getUserType'])->name('api.user-types.show');
     
+    // Roles & Permissions Management
+    Route::middleware(['permission:roles.view'])->group(function () {
+        Route::resource('roles', App\Http\Controllers\RoleController::class);
+        Route::post('roles/{role}/assign-user', [App\Http\Controllers\RoleController::class, 'assignToUser'])->name('roles.assign-user');
+        Route::post('roles/{role}/remove-user', [App\Http\Controllers\RoleController::class, 'removeFromUser'])->name('roles.remove-user');
+    });
+    
+    Route::middleware(['permission:permissions.view'])->group(function () {
+        Route::resource('permissions', App\Http\Controllers\PermissionController::class)->only(['index', 'show']);
+        Route::post('permissions/{role}/sync', [App\Http\Controllers\PermissionController::class, 'syncToRole'])->name('permissions.sync-to-role');
+    });
+    
     // Export Routes
     Route::prefix('export')->name('export.')->group(function () {
         Route::get('pdf/{type}', [App\Http\Controllers\ExportController::class, 'exportPdf'])->name('pdf');

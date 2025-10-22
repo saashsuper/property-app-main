@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ContactMethodsSeeder::class,
             SalutationSeeder::class,
             BlockTypeSeeder::class,
+            BuildingTypeSeeder::class,  // Added: Building types
             BlockInformationTypeSeeder::class,
             BlockContractorTypeSeeder::class,
             BlockBuildingTypeSeeder::class,
@@ -36,11 +37,13 @@ class DatabaseSeeder extends Seeder
             IssueStatusSeeder::class,
             IssueTypeSeeder::class,
             PrioritySeeder::class,
+            PermissionsSeeder::class,  // Added: Permissions and roles
         ]);
 
         // Seed main data
         $this->call([
             RealUserSeeder::class,
+            RoleUserSeeder::class,  // Added: Assign roles to users
             ContractorUserSeeder::class,
             RealBlockSeeder::class,
             BlockBuildingsSeeder::class,
@@ -92,6 +95,11 @@ class DatabaseSeeder extends Seeder
             'issue_types',
             'job_statuses',
             'job_reasons',
+            'model_has_permissions',  // Permission system tables
+            'model_has_roles',
+            'role_has_permissions',
+            'permissions',
+            'roles',
             'user_types',
             'states',
             'countries',

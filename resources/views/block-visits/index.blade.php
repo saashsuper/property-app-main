@@ -45,7 +45,11 @@
             <tbody>
               @forelse($visits as $visit)
                 <tr>
-                  <td><strong>{{ $visit->ref_no }}</strong></td>
+                  <td>
+                    <a href="{{ route('block-visits.show', $visit) }}" class="text-decoration-none">
+                      <strong>{{ $visit->ref_no }}</strong>
+                    </a>
+                  </td>
                   <td>
                     @if($visit->block)
                       <a href="{{ route('blocks.show', $visit->block) }}" class="text-decoration-none">
@@ -93,7 +97,6 @@
             </tbody>
           </table>
         </div>
-        {{ $visits->links('vendor.pagination.datatables') }}
       </div>
     </div>
   </div>

@@ -34,6 +34,11 @@ class BlockVisit extends Model
         return $this->belongsTo(BlockIssue::class);
     }
 
+    public function blockUnit()
+    {
+        return $this->belongsTo(BlockUnit::class);
+    }
+
     public function images()
     {
         return $this->hasMany(BlockVisitImage::class);

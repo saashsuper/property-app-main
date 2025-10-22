@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -70,7 +71,10 @@ class UserController extends Controller
             $userTypes = UserType::visible()->orderBy('name')->get();
         }
         
-        return view('users.create', compact('userTypes', 'isContractorAdmin'));
+        // Get all roles for assignment
+        $roles = Role::all();
+        
+        return view('users.create', compact('userTypes', 'isContractorAdmin', 'roles'));
     }
 
     /**
@@ -81,9 +85,11 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email',
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed|regex:/^[a-zA-Z0-9]+$/',
             'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,name',
         ]);
 
         if ($validator->fails()) {
@@ -132,7 +138,12 @@ class UserController extends Controller
             $data['avatar'] = $avatarPath . '/' . $avatarName;
         }
 
-        User::create($data);
+        $newUser = User::create($data);
+        
+        // Assign roles if provided
+        if ($request->has('roles')) {
+            $newUser->syncRoles($request->roles);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully!');
@@ -168,7 +179,11 @@ class UserController extends Controller
             $userTypes = UserType::visible()->orderBy('name')->get();
         }
         
-        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin'));
+        // Get all roles for assignment
+        $roles = Role::all();
+        $userRoles = $user->roles->pluck('name')->toArray();
+        
+        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin', 'roles', 'userRoles'));
     }
 
     /**
@@ -179,9 +194,11 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8|confirmed|regex:/^[a-zA-Z0-9]+$/',
             'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'roles' => 'nullable|array',
+            'roles.*' => 'exists:roles,name',
         ]);
 
         if ($validator->fails()) {
@@ -235,6 +252,11 @@ class UserController extends Controller
         }
 
         $user->update($data);
+        
+        // Sync roles if provided
+        if ($request->has('roles')) {
+            $user->syncRoles($request->roles);
+        }
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully!');
