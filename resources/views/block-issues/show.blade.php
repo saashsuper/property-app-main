@@ -1236,6 +1236,12 @@
                 // Disable auto discover to prevent conflicts
                 Dropzone.autoDiscover = false;
                 
+                // Ensure element is clean
+                const dropzoneElement = document.getElementById('issuePhotoDropzone');
+                if (dropzoneElement && dropzoneElement.dropzone) {
+                    dropzoneElement.dropzone.destroy();
+                }
+                
                 issuePhotoDropzone = new Dropzone("#issuePhotoDropzone", {
                     url: '{{ route("block-issues.upload-photos", $blockIssue->id) }}',
                     paramName: "images",
@@ -1245,6 +1251,7 @@
                     maxFilesize: 2, // 2MB per file
                     acceptedFiles: "image/*",
                     addRemoveLinks: true,
+                    clickable: true,
                     dictDefaultMessage: "Drop images here or click to upload",
                     dictRemoveFile: "Remove",
                     dictCancelUpload: "Cancel",
@@ -1329,6 +1336,13 @@
             
             // Clear all files
             $('#clearIssuePhotosBtn').on('click', function() {
+                if (issuePhotoDropzone) {
+                    issuePhotoDropzone.removeAllFiles(true);
+                }
+            });
+            
+            // Clear dropzone when modal is closed
+            $('#uploadPhotosModal').on('hidden.bs.modal', function() {
                 if (issuePhotoDropzone) {
                     issuePhotoDropzone.removeAllFiles(true);
                 }
