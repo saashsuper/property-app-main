@@ -117,6 +117,13 @@
     pointer-events: none;
 }
 
+/* Table column width management */
+#block-types-table th:nth-child(1) { width: 10%; } /* ID */
+#block-types-table th:nth-child(2) { width: 50%; } /* Name */
+#block-types-table th:nth-child(3) { width: 15%; } /* Blocks Count */
+#block-types-table th:nth-child(4) { width: 15%; } /* Created Date */
+#block-types-table th:nth-child(5) { width: 10%; } /* Actions */
+
 /* Responsive pagination */
 @media (max-width: 768px) {
     .pagination {
@@ -165,34 +172,19 @@
                             </a>
                         </div>
 
-                        <!-- Search Form -->
-                        <form action="{{ route('block-types.index') }}" method="GET" class="d-flex">
-                            <div class="input-group" style="min-width: 250px;">
-                                <input type="text" class="form-control" name="search" 
-                                       placeholder="Search block types..." 
-                                       value="{{ request('search') }}">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                @if(request('search'))
-                                    <a href="{{ route('block-types.index') }}" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                @endif
-                            </div>
-                        </form>
-
                         <!-- Add Button -->
+                        @admin
                         <a href="{{ route('block-types.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-2"></i>Add New Block Type
+                            <i class="ph-plus me-2"></i>Add New Block Type
                         </a>
+                        @endadmin
                     </div>
                 </div>
             </div>
-            <div class="card-body">
+            <div class="card-body mb-3">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
+                        <i class="ph-check-circle me-2"></i>
                         {{ session('success') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -200,16 +192,8 @@
 
                 @if(session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <i class="ph-x-circle me-2"></i>
                         {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                @if(request('search'))
-                    <div class="alert alert-info alert-dismissible fade show" role="alert">
-                        <i class="fas fa-search me-2"></i>
-                        Search results for "{{ request('search') }}": {{ $blockTypes->total() }} block type(s) found
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
@@ -230,7 +214,7 @@
                             <tr>
                                 <td>{{ $blockType->id }}</td>
                                 <td>
-                                    <strong>{{ $blockType->name }}</strong>
+                                    <strong><a href="{{ route('block-types.show', $blockType->id) }}" class="text-decoration-none">{{ $blockType->name }}</a></strong>
                                 </td>
                                 <td>
                                     <span class="badge bg-primary">{{ $blockType->blocks_count ?? 0 }}</span>
@@ -239,32 +223,22 @@
                                     <small>{{ $blockType->created_at->format('M d, Y') }}</small>
                                 </td>
                                 <td>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item" href="{{ route('block-types.show', $blockType->id) }}">
-                                                    <i class="fas fa-eye me-2"></i>View
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <a class="dropdown-item" href="{{ route('block-types.edit', $blockType->id) }}">
-                                                    <i class="fas fa-edit me-2"></i>Edit
-                                                </a>
-                                            </li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li>
-                                                <form action="{{ route('block-types.destroy', $blockType->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this block type?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="dropdown-item text-danger">
-                                                        <i class="fas fa-trash me-2"></i>Delete
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('block-types.show', $blockType->id) }}" class="btn btn-sm btn-outline-primary" title="View Block Type">
+                                            <i class="ph-eye"></i>
+                                        </a>
+                                        @admin
+                                        <a href="{{ route('block-types.edit', $blockType->id) }}" class="btn btn-sm btn-outline-warning" title="Edit Block Type">
+                                            <i class="ph-pencil"></i>
+                                        </a>
+                                        <form action="{{ route('block-types.destroy', $blockType->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this block type?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Block Type">
+                                                <i class="ph-trash"></i>
+                                            </button>
+                                        </form>
+                                        @endadmin
                                     </div>
                                 </td>
                             </tr>
@@ -272,8 +246,14 @@
                             <tr>
                                 <td colspan="5" class="text-center py-4">
                                     <div class="text-muted">
-                                        <i class="fas fa-inbox fa-3x mb-3"></i>
-                                        <p>No block types found. <a href="{{ route('block-types.create') }}" class="text-primary">Create your first block type</a></p>
+                                        <i class="ph-package fa-3x mb-3"></i>
+                                        <p>No block types found. 
+                                            @admin
+                                            <a href="{{ route('block-types.create') }}" class="text-primary">Create your first block type</a>
+                                            @else
+                                            Contact an administrator to create block types.
+                                            @endadmin
+                                        </p>
                                     </div>
                                 </td>
                             </tr>
@@ -315,24 +295,64 @@
 $(document).ready(function() {
     $('#block-types-table').DataTable({
         responsive: true,
-        dom: 'Bfrtip',
-        buttons: [
-            'copy', 'csv', 'excel', 'pdf', 'print', 'colvis'
+        scrollX: false,
+        autoWidth: false,
+        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+        order: [[0, 'asc']], // default sort by ID
+        columnDefs: [
+            { targets: [4], orderable: false }, // Actions column
+            { targets: [2, 3], type: 'num' }, // Blocks Count
+            { targets: [0], width: '10%' }, // ID
+            { targets: [1], width: '50%' }, // Name
+            { targets: [2], width: '15%' }, // Blocks Count
+            { targets: [3], width: '15%' }, // Created Date
+            { targets: [4], width: '10%' }  // Actions
         ],
-        pageLength: 15,
-        lengthMenu: [[15, 25, 50, -1], [15, 25, 50, "All"]],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         language: {
             search: "Search block types:",
             lengthMenu: "Show _MENU_ block types per page",
             info: "Showing _START_ to _END_ of _TOTAL_ block types",
             infoEmpty: "Showing 0 to 0 of 0 block types",
             infoFiltered: "(filtered from _MAX_ total block types)",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        },
+        initComplete: function() {
+            // Style the search box
+            $('.dataTables_filter input')
+                .addClass('form-control')
+                .removeClass('mb-3')
+                .css({
+                    'width': '300px',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin-left': '10px',
+                    'margin-bottom': '0 !important'
+                });
+            
+            // Style the page length dropdown
+            $('.dataTables_length select')
+                .addClass('form-select')
+                .css({
+                    'width': 'auto',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin': '0 10px'
+                });
+            
+            // Ensure labels and inputs are on the same line
+            $('.dataTables_length label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
+            });
+            
+            $('.dataTables_filter label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
+            });
         }
     });
 });
