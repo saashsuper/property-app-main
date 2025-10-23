@@ -37,11 +37,20 @@ class RealUserSeeder extends Seeder
             ]
         ];
 
-        foreach ($users as $user) {
-            \App\Models\User::updateOrCreate(
-                ['email' => $user['email']],
-                $user
+        foreach ($users as $userData) {
+            $user = \App\Models\User::updateOrCreate(
+                ['email' => $userData['email']],
+                $userData
             );
+            
+            // Assign roles based on user type
+            if ($user->id === 1) {
+                $user->syncRoles(['Super Admin']);
+                $this->command->info("Super Admin role assigned to: {$user->email}");
+            } elseif ($user->id === 2) {
+                $user->syncRoles(['Admin']);
+                $this->command->info("Admin role assigned to: {$user->email}");
+            }
         }
     }
 }

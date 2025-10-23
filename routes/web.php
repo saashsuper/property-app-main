@@ -46,8 +46,8 @@ Route::middleware(['auth'])->group(function () {
 
 // Block Management Routes
 Route::middleware(['auth'])->group(function () {
-    // Block Types - Admin only
-    Route::resource('block-types', App\Http\Controllers\BlockTypeController::class)->middleware('role:Admin');
+    // Block Types - Admin and Super Admin only
+    Route::resource('block-types', App\Http\Controllers\BlockTypeController::class)->middleware('role:Admin|Super Admin');
     Route::get('api/block-types', [App\Http\Controllers\BlockTypeController::class, 'getBlockTypes'])->name('api.block-types');
     
     // Blocks - Admin only for create, edit, delete
@@ -79,8 +79,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
     Route::post('work-orders/{workOrder}/reassign', [App\Http\Controllers\WorkOrderController::class, 'reassign'])->name('work-orders.reassign');
     
-    // Work Order management routes (Admin only, not Contractor Admin)
-    Route::middleware(['role:Admin'])->group(function () {
+    // Work Order management routes (Admin and Super Admin only)
+    Route::middleware(['role:Admin|Super Admin'])->group(function () {
         Route::get('work-orders/create', [App\Http\Controllers\WorkOrderController::class, 'create'])->name('work-orders.create');
         Route::post('work-orders', [App\Http\Controllers\WorkOrderController::class, 'store'])->name('work-orders.store');
         Route::get('work-orders/{workOrder}/edit', [App\Http\Controllers\WorkOrderController::class, 'edit'])->name('work-orders.edit');
@@ -184,16 +184,16 @@ Route::get('api/states/{countryId}', [App\Http\Controllers\BlockController::clas
 
 // Block Building Management Routes
 Route::middleware(['auth'])->group(function () {
-    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin');
+    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin|Super Admin');
 });
 
 // Block Unit Management Routes
 Route::middleware(['auth'])->group(function () {
-    Route::resource('block-units', BlockUnitController::class)->middleware('role:Admin');
-    Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload')->middleware('role:Admin');
-    Route::get('block-units/template/{block_id}', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template')->middleware('role:Admin');
-    Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin');
-    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin');
+    Route::resource('block-units', BlockUnitController::class)->middleware('role:Admin|Super Admin');
+    Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload')->middleware('role:Admin|Super Admin');
+    Route::get('block-units/template/{block_id}', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template')->middleware('role:Admin|Super Admin');
+    Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin|Super Admin');
+    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin|Super Admin');
 });
 
 // Specific routes that must come before catch-all
