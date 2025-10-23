@@ -36,6 +36,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/dashboard/issues-stats', [App\Http\Controllers\DashboardController::class, 'getIssuesStats'])->name('api.dashboard.issues-stats');
     Route::get('api/dashboard/recent-issues', [App\Http\Controllers\DashboardController::class, 'getRecentIssues'])->name('api.dashboard.recent-issues');
     Route::get('api/dashboard/recent-blocks', [App\Http\Controllers\DashboardController::class, 'getRecentBlocks'])->name('api.dashboard.recent-blocks');
+    
+    // Profile Routes
+    Route::get('profile', [App\Http\Controllers\ProfileController::class, 'show'])->name('profile.show');
+    Route::post('profile/update', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::post('profile/avatar', [App\Http\Controllers\ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+    Route::post('profile/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
 // Block Management Routes
@@ -93,6 +99,8 @@ Route::middleware(['auth'])->group(function () {
     
     // Site Visits (Block Visits)
     Route::resource('block-visits', App\Http\Controllers\BlockVisitController::class);
+    Route::post('block-visits/{blockVisit}/images/upload', [App\Http\Controllers\BlockVisitController::class, 'uploadImages'])->name('block-visits.images.upload');
+    Route::delete('block-visits/{blockVisit}/images/delete', [App\Http\Controllers\BlockVisitController::class, 'deleteImage'])->name('block-visits.images.delete');
 
     // Block Inspections
     Route::resource('block-inspections', App\Http\Controllers\BlockInspectionController::class);

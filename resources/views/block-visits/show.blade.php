@@ -522,7 +522,12 @@
                             <h6 class="card-title mb-0">
                                 <i class="ph-images me-2 text-primary"></i>Visit Images
                             </h6>
-                            <span class="badge bg-primary">{{ $blockVisit->images->count() }}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary">{{ $blockVisit->images->count() }}</span>
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadImagesModal">
+                                    <i class="ph-plus me-1"></i>Upload
+                                </button>
+                            </div>
                         </div>
       </div>
                     <div class="card-body" style="max-height: 500px; overflow-y: auto;">
@@ -536,7 +541,7 @@
               @endphp
               
               @if($isImage)
-                                        <div class="col-6">
+                                        <div class="col-6" data-image-id="{{ $image->id }}">
                                             <div class="position-relative">
                   <img src="{{ $image->image_url }}" 
                                                      class="img-fluid rounded visit-image-thumbnail" 
@@ -546,6 +551,14 @@
                                                      data-image-url="{{ $image->image_url }}"
                                                      data-image-name="{{ $image->display_name }}"
                                                      onclick="openImageCarousel({{ $image->id }})">
+                                                <div class="position-absolute top-0 end-0 m-1">
+                                                    <button type="button" class="btn btn-danger btn-sm delete-image-btn"
+                                                            data-image-id="{{ $image->id }}" 
+                                                            title="Delete Image"
+                                                            style="padding: 0.25rem 0.4rem; font-size: 0.7rem;">
+                                                        <i class="ph-trash"></i>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
               @else
@@ -707,6 +720,51 @@
     </div>
 </div>
 
+<!-- Upload Images Modal -->
+<div class="modal fade" id="uploadImagesModal" tabindex="-1" aria-labelledby="uploadImagesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadImagesModalLabel">
+                    <i class="ph-upload me-2"></i>Upload Visit Images
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Dropzone Container -->
+                <div class="mb-3">
+                    <label class="form-label">Upload Images <span class="text-danger">*</span></label>
+                    <div id="imageDropzone" class="dropzone">
+                        <div class="dz-message">
+                            <div class="mb-3">
+                                <i class="ph-cloud-upload display-4 text-muted"></i>
+                            </div>
+                            <h4>Drop images here or click to upload</h4>
+                            <p class="text-muted font-size-16">
+                                <strong>Requirements:</strong><br>
+                                • Maximum 10 images<br>
+                                • Each image max 5MB<br>
+                                • Total size max 15MB<br>
+                                • Formats: JPEG, PNG, JPG, GIF, WEBP
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <div id="uploadStatus" class="mt-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" id="clearBtn">
+                    <i class="ph-x me-1"></i>Clear All
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Image Preview Modal -->
 <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-labelledby="imagePreviewModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
@@ -740,9 +798,34 @@
   </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteImageModalLabel">
+                    <i class="ph-warning text-warning me-2"></i>Delete Image
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this image?</p>
+                <p class="text-muted mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="ph-trash me-1"></i>Yes, Delete Image
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section('script')
 <script>
 let allImages = [];
+let dropzone;
 
 $(document).ready(function() {
     // Collect all images on page load
@@ -752,6 +835,13 @@ $(document).ready(function() {
             url: $(this).data('image-url'),
             name: $(this).data('image-name')
         });
+    });
+
+    // Initialize Dropzone when modal is shown
+    $('#uploadImagesModal').on('shown.bs.modal', function() {
+        if (!dropzone) {
+            initializeDropzone();
+        }
     });
 
     // Handle edit site visit form submission
@@ -771,13 +861,13 @@ $(document).ready(function() {
             data: form.serialize(),
             success: function(response) {
                 if (response.success) {
+                    // Show success message in modal
                     showEditVisitAlert('success', response.message || 'Site visit updated successfully!');
                     
-                    // Close modal and reload page after delay
+                    // Reload page after brief delay to show the success message
                     setTimeout(() => {
-                        $('#editSiteVisitModal').modal('hide');
                         location.reload();
-                    }, 1500);
+                    }, 1000);
                 } else {
                     showEditVisitAlert('error', response.message || 'An error occurred.');
                     submitBtn.prop('disabled', false).html(originalBtnText);
@@ -797,6 +887,38 @@ $(document).ready(function() {
                 submitBtn.prop('disabled', false).html(originalBtnText);
             }
         });
+    });
+
+    // Delete image handlers
+    $(document).on('click', '.delete-image-btn', function() {
+        const imageId = $(this).data('image-id');
+        const imageCard = $(this).closest('.col-6');
+        
+        // Store the data for the confirmation modal
+        $('#confirmDeleteBtn').data('image-id', imageId);
+        $('#confirmDeleteBtn').data('image-card', imageCard);
+        
+        // Show the confirmation modal
+        $('#deleteImageModal').modal('show');
+    });
+    
+    // Handle confirmation button click
+    $('#confirmDeleteBtn').on('click', function() {
+        const imageId = $(this).data('image-id');
+        const imageCard = $(this).data('image-card');
+        
+        // Close the modal
+        $('#deleteImageModal').modal('hide');
+        
+        // Delete the image
+        deleteImage(imageId, imageCard);
+    });
+
+    // Clear all files
+    $('#clearBtn').on('click', function() {
+        if (dropzone) {
+            dropzone.removeAllFiles(true);
+        }
     });
 });
 
@@ -870,6 +992,169 @@ function updateImageInfo() {
     }
 }
 
+// Initialize Dropzone
+function initializeDropzone() {
+    // Disable auto discover to prevent conflicts
+    Dropzone.autoDiscover = false;
+    
+    dropzone = new Dropzone("#imageDropzone", {
+        url: '{{ route("block-visits.images.upload", $blockVisit->id) }}',
+        paramName: "images",
+        uploadMultiple: true,
+        parallelUploads: 10,
+        maxFiles: 10,
+        maxFilesize: 5, // 5MB per file
+        acceptedFiles: "image/*",
+        addRemoveLinks: true,
+        dictDefaultMessage: "Drop images here or click to upload",
+        dictRemoveFile: "Remove",
+        dictCancelUpload: "Cancel",
+        dictUploadCanceled: "Upload canceled",
+        dictInvalidFileType: "You can't upload files of this type.",
+        dictFileTooBig: "File is too big. Max filesize: 5MB.",
+        dictMaxFilesExceeded: "You can not upload more than 10 files.",
+        dictResponseError: "Server responded with an error.",
+        dictCancelUploadConfirmation: "Are you sure you want to cancel this upload?",
+        dictRemoveFileConfirmation: "Are you sure you want to remove this file?",
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        init: function() {
+            const dz = this;
+            
+            // Custom styling
+            this.on("addedfile", function(file) {
+                // Add custom styling to file preview
+                const preview = file.previewElement;
+                $(preview).addClass('dz-image-preview-custom');
+                
+                // Add file size info
+                const sizeInfo = $(preview).find('.dz-size');
+                if (sizeInfo.length === 0) {
+                    $(preview).find('.dz-details').append('<div class="dz-size"><span data-dz-size></span></div>');
+                }
+            });
+            
+            // Handle successful upload
+            this.on("successmultiple", function(files, response) {
+                showAlert('success', response.message);
+                
+                // Close modal after successful upload
+                setTimeout(() => {
+                    $('#uploadImagesModal').modal('hide');
+                    location.reload();
+                }, 1500);
+            });
+            
+            // Handle upload errors
+            this.on("errormultiple", function(files, response) {
+                let errorMessage = 'Upload failed. Please try again.';
+                
+                if (response && response.message) {
+                    errorMessage = response.message;
+                } else if (response && response.errors) {
+                    const errors = [];
+                    Object.values(response.errors).forEach(errorArray => {
+                        errors.push(...errorArray);
+                    });
+                    errorMessage = errors.join('<br>');
+                }
+                
+                showAlert('error', errorMessage);
+            });
+            
+            // Handle individual file errors
+            this.on("error", function(file, errorMessage) {
+                if (!this.getAcceptedFiles().some(f => f.status === 'error')) {
+                    showAlert('error', errorMessage);
+                }
+            });
+            
+            // Custom validation for total file size
+            this.on("addedfiles", function(files) {
+                let totalSize = 0;
+                const maxTotalSize = 15 * 1024 * 1024; // 15MB
+                
+                files.forEach(file => {
+                    totalSize += file.size;
+                });
+                
+                if (totalSize > maxTotalSize) {
+                    showAlert('error', `Total size exceeds 15MB (${(totalSize / 1024 / 1024).toFixed(1)}MB)`);
+                    files.forEach(file => {
+                        this.removeFile(file);
+                    });
+                }
+            });
+        }
+    });
+}
+
+// Delete image function
+function deleteImage(imageId, imageCard) {
+    $.ajax({
+        url: '{{ route("block-visits.images.delete", $blockVisit->id) }}',
+        type: 'DELETE',
+        data: {
+            image_id: imageId,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            showAlert('success', response.message);
+            
+            // Remove from allImages array
+            allImages = allImages.filter(img => img.id != imageId);
+            
+            imageCard.fadeOut(300, function() {
+                $(this).remove();
+                
+                // Update badge count
+                const imageCount = $('.visit-image-thumbnail').length;
+                $('.badge.bg-primary').first().text(imageCount);
+                
+                // Check if no images left
+                if (imageCount === 0) {
+                    $('.card-body').eq(-1).html(`
+                        <div class="text-center text-muted py-4">
+                            <i class="ph-image fs-1 d-block mb-2 opacity-50"></i>
+                            <p class="mb-0 small">No images attached</p>
+                        </div>
+                    `);
+                }
+            });
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            const errorMessage = response && response.message ? response.message : 'Delete failed. Please try again.';
+            showAlert('error', errorMessage);
+        }
+    });
+}
+
+// Show alert function
+function showAlert(type, message) {
+    // Remove any existing alerts first
+    $('.page-title-box').siblings('.alert').remove();
+    
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'check-circle' : 'warning';
+    const alert = $(`
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="ph-${icon} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `);
+    
+    // Insert alert after the page title row
+    $('.page-title-box').parent().parent().after(alert);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+        alert.alert('close');
+    }, 5000);
+}
+
 // Keyboard navigation
 $(document).on('keydown', function(e) {
     if ($('#imagePreviewModal').hasClass('show')) {
@@ -886,4 +1171,93 @@ $(document).on('keydown', function(e) {
     }
 });
 </script>
+
+<!-- Custom Dropzone and Modal Styling -->
+<style>
+/* Custom Dropzone Styling */
+.dropzone {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    background: #f8f9fa;
+    min-height: 200px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.dropzone:hover {
+    border-color: #667eea;
+    background: #f0f2ff;
+}
+
+.dropzone.dz-drag-hover {
+    border-color: #667eea;
+    background: #e8f0fe;
+}
+
+.dropzone .dz-message {
+    margin: 0;
+    color: #6c757d;
+}
+
+.dropzone .dz-message h4 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.dropzone .dz-message p {
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+/* File preview styling */
+.dz-image-preview-custom {
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    margin: 5px;
+    padding: 10px;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dz-image-preview-custom .dz-image {
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.dz-image-preview-custom .dz-details {
+    padding: 5px 0;
+    font-size: 12px;
+}
+
+.dz-image-preview-custom .dz-filename {
+    font-weight: 500;
+    color: #495057;
+}
+
+.dz-image-preview-custom .dz-size {
+    color: #6c757d;
+}
+
+.dz-image-preview-custom .dz-progress {
+    margin-top: 5px;
+}
+
+.dz-image-preview-custom .dz-remove {
+    color: #dc3545;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.dz-image-preview-custom .dz-remove:hover {
+    color: #c82333;
+    text-decoration: underline;
+}
+
+/* Progress bar styling */
+.dz-image-preview-custom .dz-progress .dz-upload {
+    background: #667eea;
+    border-radius: 2px;
+}
+</style>
 @endsection

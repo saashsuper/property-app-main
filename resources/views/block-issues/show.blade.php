@@ -45,6 +45,31 @@
             font-size: 0.8125rem;
             color: #6c757d;
         }
+
+        /* Card enhancements */
+        .card.border.shadow-sm {
+            transition: box-shadow 0.2s ease-in-out;
+        }
+        .card.border.shadow-sm:hover {
+            box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Avatar enhancements */
+        .avatar-xs {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .avatar-xs .avatar-title {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
     </style>
 @endsection
 @section('content')
@@ -316,107 +341,104 @@
                             <!-- Contact Information -->
                             @if($blockIssue->contact_name || $blockIssue->contact_mobile || $blockIssue->contact_email || $blockIssue->contactMethod || $blockIssue->contact_details)
                             <div class="col-12">
-                                <h5 class="mb-3">Contact Information</h5>
-                                
-                                <div class="row">
-                                    @if($blockIssue->contactMethod)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
-                                                            <i class="ph-phone-call"></i>
-                                                        </span>
+                                <div class="card border shadow-sm mb-3">
+                                    <div class="card-header bg-light border-bottom d-flex align-items-center">
+                                        <i class="ph-address-book fs-5 me-2 text-primary"></i>
+                                        <h5 class="mb-0 text-dark">Contact Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            @if($blockIssue->contact_name)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-primary-subtle text-primary rounded">
+                                                                <i class="ph-user"></i>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Contact Method</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->contactMethod->name }}</p>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Contact Name</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->contact_name }}</h6>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    @endif
+                                            @endif
 
-                                    @if($blockIssue->contact_details)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
-                                                            <i class="ph-note"></i>
-                                                        </span>
+                                            @if($blockIssue->contact_mobile)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-success-subtle text-success rounded">
+                                                                <i class="ph-phone"></i>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Contact Details</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->contact_details }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
-                                    @if($blockIssue->contact_name)
-                                    <div class="col-md-4">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-primary-subtle text-primary rounded-circle fs-3">
-                                                            <i class="ph-user"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Contact Name</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->contact_name }}</p>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Mobile</p>
+                                                        <h6 class="mb-0"><a href="tel:{{ $blockIssue->contact_mobile }}" class="text-dark">{{ $blockIssue->contact_mobile }}</a></h6>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    @endif
+                                            @endif
 
-                                    @if($blockIssue->contact_mobile)
-                                    <div class="col-md-4">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
-                                                            <i class="ph-phone"></i>
-                                                        </span>
+                                            @if($blockIssue->contact_email)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-warning-subtle text-warning rounded">
+                                                                <i class="ph-envelope"></i>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Contact Mobile</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->contact_mobile }}</p>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Email</p>
+                                                        <h6 class="mb-0"><a href="mailto:{{ $blockIssue->contact_email }}" class="text-dark text-truncate d-block">{{ $blockIssue->contact_email }}</a></h6>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    @endif
+                                            @endif
 
-                                    @if($blockIssue->contact_email)
-                                    <div class="col-md-4">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
-                                                            <i class="ph-envelope"></i>
-                                                        </span>
+                                            @if($blockIssue->contactMethod)
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-info-subtle text-info rounded">
+                                                                <i class="ph-phone-call"></i>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Contact Email</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->contact_email }}</p>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Preferred Method</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->contactMethod->name }}</h6>
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endif
+
+                                            @if($blockIssue->contact_details)
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-secondary-subtle text-secondary rounded">
+                                                                <i class="ph-note"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Additional Details</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->contact_details }}</h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
                                         </div>
                                     </div>
-                                    @endif
                                 </div>
                             </div>
                             @endif
@@ -424,48 +446,103 @@
                             <!-- Schedule Information -->
                             @if($blockIssue->preferred_start_date_time || $blockIssue->preferred_end_date_time)
                             <div class="col-12">
-                                <h5 class="mb-3">Schedule Information</h5>
-                                
-                                <div class="row">
-                                    @if($blockIssue->preferred_start_date_time)
-                                    <div class="col-md-6">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
-                                                            <i class="ph-calendar"></i>
-                                                        </span>
+                                <div class="card border shadow-sm mb-3">
+                                    <div class="card-header bg-light border-bottom d-flex align-items-center">
+                                        <i class="ph-calendar-check fs-5 me-2 text-info"></i>
+                                        <h5 class="mb-0 text-dark">Schedule Information</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            @if($blockIssue->preferred_start_date_time)
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-success-subtle text-success rounded">
+                                                                <i class="ph-calendar-plus"></i>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Preferred Start</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->preferred_start_date_time->format('M d, Y H:i') }}</p>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Preferred Start Date & Time</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->preferred_start_date_time->format('M d, Y') }}</h6>
+                                                        <p class="text-muted mb-0 small">{{ $blockIssue->preferred_start_date_time->format('h:i A') }}</p>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                    @endif
+                                            @endif
 
-                                    @if($blockIssue->preferred_end_date_time)
-                                    <div class="col-md-6">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
-                                                            <i class="ph-calendar"></i>
-                                                        </span>
+                                            @if($blockIssue->preferred_end_date_time)
+                                            <div class="col-md-6">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-danger-subtle text-danger rounded">
+                                                                <i class="ph-calendar-x"></i>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Preferred End</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->preferred_end_date_time->format('M d, Y H:i') }}</p>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Preferred End Date & Time</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->preferred_end_date_time->format('M d, Y') }}</h6>
+                                                        <p class="text-muted mb-0 small">{{ $blockIssue->preferred_end_date_time->format('h:i A') }}</p>
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endif
                                         </div>
                                     </div>
-                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+                            <!-- Additional Notes -->
+                            @if($blockIssue->note_for_access || $blockIssue->comment)
+                            <div class="col-12">
+                                <div class="card border shadow-sm mb-3">
+                                    <div class="card-header bg-light border-bottom d-flex align-items-center">
+                                        <i class="ph-note-pencil fs-5 me-2 text-warning"></i>
+                                        <h5 class="mb-0 text-dark">Additional Notes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            @if($blockIssue->note_for_access)
+                                            <div class="col-md-{{ $blockIssue->comment ? '6' : '12' }}">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-warning-subtle text-warning rounded">
+                                                                <i class="ph-lock-key"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Note for Access</p>
+                                                        <p class="mb-0">{{ $blockIssue->note_for_access }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if($blockIssue->comment)
+                                            <div class="col-md-{{ $blockIssue->note_for_access ? '6' : '12' }}">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-info-subtle text-info rounded">
+                                                                <i class="ph-chat-circle-text"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Comment</p>
+                                                        <p class="mb-0">{{ $blockIssue->comment }}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             @endif
@@ -473,7 +550,7 @@
                             </div> <!-- /.row (inner) -->
                             </div> <!-- /.col-lg-8 -->
 
-                            <!-- Right Column - Status Timeline and Photos -->
+                            <!-- Right Column - Photos -->
                             <div class="col-lg-4 order-lg-2 mt-3 mt-lg-0">
                                 <!-- Status Timeline -->
                                 <div class="mb-4">
@@ -635,55 +712,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Additional Notes -->
-                            @if($blockIssue->note_for_access || $blockIssue->comment)
-                            <div class="col-12">
-                                <h5 class="mb-3">Additional Notes</h5>
-                                
-                                <div class="row">
-                                    @if($blockIssue->note_for_access)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-secondary-subtle text-secondary rounded-circle fs-3">
-                                                            <i class="ph-file-text"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Note for Access</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->note_for_access }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
-
-                                    @if($blockIssue->comment)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="card border">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="avatar-sm me-3">
-                                                        <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
-                                                            <i class="ph-chat-circle"></i>
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1">Comment</h6>
-                                                        <p class="mb-0 text-muted">{{ $blockIssue->comment }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                            @endif
 
                             <!-- Related Entities -->
                             @if($blockIssue->siteVisit || $blockIssue->block_visit_id || $blockIssue->block_inspection_id)

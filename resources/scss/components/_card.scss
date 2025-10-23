@@ -9,7 +9,7 @@
 
 .card-header {
     border-bottom: var(--#{$prefix}card-header-border-width) solid $card-border-color;
-    padding-bottom: var(--#{$prefix}card-bottom-padding);
+    // padding-bottom: var(--#{$prefix}card-bottom-padding); // Removed: causes misalignment with flexbox centered content
 }
 
 //Card Header Dropdown

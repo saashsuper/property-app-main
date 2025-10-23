@@ -361,6 +361,136 @@ class BlockVisitController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Upload images for a block visit
+     */
+    public function uploadImages(Request $request, BlockVisit $blockVisit)
+    {
+        $validator = Validator::make($request->all(), [
+            'images' => 'required|array',
+            'images.*' => 'required|file|max:5120|mimes:jpeg,jpg,png,gif,webp',
+        ], [
+            'images.required' => 'Please select at least one image to upload.',
+            'images.*.max' => 'Each image must not exceed 5MB.',
+            'images.*.mimes' => 'Only JPEG, PNG, GIF, and WEBP images are allowed.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $uploadedCount = 0;
+            $images = $request->file('images');
+
+            // Validate total size
+            $totalSize = 0;
+            foreach ($images as $image) {
+                $totalSize += $image->getSize();
+            }
+
+            $maxTotalSize = 15 * 1024 * 1024; // 15MB
+            if ($totalSize > $maxTotalSize) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Total file size exceeds 15MB limit. Current total: ' . round($totalSize / 1024 / 1024, 2) . 'MB'
+                ], 422);
+            }
+
+            // Validate max 10 files
+            if (count($images) > 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can upload a maximum of 10 images at once.'
+                ], 422);
+            }
+
+            foreach ($images as $image) {
+                $timestamp = now()->format('YmdHis');
+                $randomString = Str::random(8);
+                $originalName = $image->getClientOriginalName();
+                $fileName = $timestamp . '_' . $randomString . '_' . $originalName;
+                
+                // Store file in storage/app/public/block-visits/{block_visit_id}
+                $path = $image->storeAs('block-visits/' . $blockVisit->id, $fileName, 'public');
+                
+                // Save to database
+                $blockVisit->images()->create([
+                    'image_path' => 'block-visits/' . $blockVisit->id,
+                    'image_name' => $fileName,
+                    's3_status' => false,
+                ]);
+
+                $uploadedCount++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $uploadedCount . ' image(s) uploaded successfully!',
+                'uploaded_count' => $uploadedCount
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Block Visit Image Upload Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error uploading images: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete an image from a block visit
+     */
+    public function deleteImage(Request $request, BlockVisit $blockVisit)
+    {
+        $validator = Validator::make($request->all(), [
+            'image_id' => 'required|exists:block_visit_images,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid image ID',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $image = $blockVisit->images()->find($request->image_id);
+
+            if (!$image) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Image not found or does not belong to this visit.'
+                ], 404);
+            }
+
+            // Delete file from storage
+            $filePath = $image->image_path . '/' . $image->image_name;
+            if (\Storage::disk('public')->exists($filePath)) {
+                \Storage::disk('public')->delete($filePath);
+            }
+
+            // Delete from database
+            $image->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Image deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Block Visit Image Delete Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting image: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }
 
 
