@@ -28,93 +28,13 @@ class RealUserSeeder extends Seeder
             [
                 'id' => 2,
                 'user_type_id' => 2, // Admin
-                'name' => 'John Smith',
-                'email' => 'john.smith@proman.com',
+                'name' => 'system@proman.com',
+                'email' => 'system@proman.com',
                 'email_verified_at' => now(),
-                'password' => Hash::make('password'),
+                'password' => Hash::make('password123'),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'id' => 3,
-                'user_type_id' => 3, // Financial Admin
-                'name' => 'Sarah Johnson',
-                'email' => 'sarah.johnson@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 4,
-                'user_type_id' => 4, // Property manager
-                'name' => 'Michael Brown',
-                'email' => 'michael.brown@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 5,
-                'user_type_id' => 5, // Office Administrator
-                'name' => 'Emma Wilson',
-                'email' => 'emma.wilson@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 6,
-                'user_type_id' => 4, // Property manager
-                'name' => 'David Taylor',
-                'email' => 'david.taylor@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 7,
-                'user_type_id' => 4, // Property manager
-                'name' => 'Lisa Anderson',
-                'email' => 'lisa.anderson@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 8,
-                'user_type_id' => 4, // Property manager
-                'name' => 'Robert Garcia',
-                'email' => 'robert.garcia@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 9,
-                'user_type_id' => 4, // Property manager
-                'name' => 'Jennifer Martinez',
-                'email' => 'jennifer.martinez@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'id' => 10,
-                'user_type_id' => 4, // Property manager
-                'name' => 'Christopher Robinson',
-                'email' => 'christopher.robinson@proman.com',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            ]
         ];
 
         foreach ($users as $user) {
