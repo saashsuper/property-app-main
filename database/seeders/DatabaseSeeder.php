@@ -42,18 +42,18 @@ class DatabaseSeeder extends Seeder
 
         // Seed main data
         $this->call([
-            RealUserSeeder::class,
-            RoleUserSeeder::class,  // Added: Assign roles to users
-            ContractorUserSeeder::class,
-            RealBlockSeeder::class,
-            BlockBuildingsSeeder::class,
-            BlockUnitsSeeder::class,
-            BlockVisitSeeder::class,
-            BlockVisitImageSeeder::class,
-            BlockInspectionSeeder::class,
-            BlockInspectionAssetImageSeeder::class,
-            BlockIssuesSeeder::class,
-            BlockWorkOrderSeeder::class,
+            // RealUserSeeder::class,
+            // RoleUserSeeder::class,  // Added: Assign roles to users
+            // ContractorUserSeeder::class,
+            // RealBlockSeeder::class,
+            // BlockBuildingsSeeder::class,
+            // BlockUnitsSeeder::class,
+            // BlockVisitSeeder::class,
+            // BlockVisitImageSeeder::class,
+            // BlockInspectionSeeder::class,
+            // BlockInspectionAssetImageSeeder::class,
+            // BlockIssuesSeeder::class,
+            // BlockWorkOrderSeeder::class,
         ]);
     }
 
