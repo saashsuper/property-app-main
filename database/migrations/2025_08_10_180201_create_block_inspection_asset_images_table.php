@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('block_inspection_asset_id');
             $table->unsignedBigInteger('block_inspection_id');
             $table->unsignedBigInteger('block_building_id')->default(0);
-            $table->unsignedInteger('building_asset_id')->nullable();
+            $table->unsignedSmallInteger('building_asset_id')->nullable();
             $table->string('image_path', 255)->nullable();
             $table->string('image_name', 100)->nullable();
             $table->unsignedSmallInteger('s3_status')->default(0);
