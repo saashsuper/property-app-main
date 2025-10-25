@@ -22,7 +22,7 @@ class BlockWorkOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator'])->active();
+        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit'])->active();
 
         // Search functionality
         if ($request->filled('search')) {
@@ -56,7 +56,7 @@ class BlockWorkOrderController extends Controller
             $query->where('block_id', $request->block_id);
         }
 
-        $workOrders = $query->orderBy('created_at', 'desc')->paginate(10);
+        $workOrders = $query->orderBy('created_at', 'desc')->get();
         $blocks = Block::orderBy('name')->get();
 
         return view('block-work-orders.index', compact('workOrders', 'blocks'));
@@ -85,7 +85,7 @@ class BlockWorkOrderController extends Controller
             'block_issue_id' => 'required|exists:block_issues,id',
             'issued_from' => 'nullable|integer',
             'from_id' => 'nullable|integer',
-            'block_unit_id' => 'nullable|exists:block_units,id',
+            'block_unit_id' => 'required|exists:block_units,id',
             'block_building_id' => 'nullable|exists:block_buildings,id',
             'priority_id' => 'required|integer|min:1|max:5',
             'issued_date_time' => 'nullable|date',
@@ -96,7 +96,6 @@ class BlockWorkOrderController extends Controller
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',
             'deadline_date' => 'nullable|date',
-            'status' => 'required|integer|min:1|max:5',
             'repair_category_id' => 'nullable|integer',
             'issue' => 'nullable|string|max:255',
             'note_for_access' => 'nullable|string|max:255',
@@ -124,6 +123,9 @@ class BlockWorkOrderController extends Controller
         
         // Auto-generate reference number
         $data['ref_no'] = $this->generateWorkOrderRefNo();
+        
+        // Set default status to Pending (1)
+        $data['status'] = 1;
         
         $data['issued_by'] = Auth::id();
         $data['created_by'] = Auth::id();

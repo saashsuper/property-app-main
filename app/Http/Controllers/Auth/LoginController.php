@@ -37,4 +37,45 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+    /**
+     * API Login - for mobile app (Sanctum token-based)
+     */
+    public function apiLogin(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+
+        if (!\Illuminate\Support\Facades\Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials',
+            ], 401);
+        }
+
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $token = $user->createToken('mobile-app')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+        ]);
+    }
+
+    /**
+     * API Logout - for mobile app
+     */
+    public function apiLogout(\Illuminate\Http\Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['success' => true, 'message' => 'Logged out']);
+    }
 }

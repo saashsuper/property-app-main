@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\BlockIssueController;
-use App\Http\Controllers\BlockUnitController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,57 +14,115 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// ============================================================================
+// Mobile App API Routes
+// ============================================================================
+
+// Public Routes
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'apiLogin']);
 });
 
-// Block Issues Search API
-Route::get('/block-issues', [BlockIssueController::class, 'index'])->name('api.block-issues');
-// function (Request $request) {
-//     $query = \App\Models\BlockIssue::with(['blockUnit', 'priority', 'issueStatus']);
+// Protected Routes (require authentication)
+Route::middleware('auth:sanctum')->group(function () {
     
-//     // Filter by block_id
-//     if ($request->has('block_id')) {
-//         $query->where('block_id', $request->block_id);
-//     }
+    // Auth & Profile
+    Route::prefix('auth')->group(function () {
+        Route::get('/user', function (\Illuminate\Http\Request $request) {
+            return response()->json($request->user());
+        });
+        Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'apiLogout']);
+    });
     
-//     // Filter by unit
-//     if ($request->has('unit') && $request->unit) {
-//         $query->where('block_unit_id', $request->unit);
-//     }
+    // Dashboard
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', function () {
+            // TODO: Create DashboardController
+            return response()->json([
+                'total_blocks' => \App\Models\Block::count(),
+                'total_units' => \App\Models\BlockUnit::count(),
+                'total_issues' => \App\Models\BlockIssue::count(),
+                'total_work_orders' => \App\Models\BlockWorkOrder::count(),
+            ]);
+        });
+    });
     
-//     // Filter by status
-//     if ($request->has('state') && $request->state) {
-//         $query->where('issue_status_id', $request->state);
-//     }
+    // Work Orders
+    Route::prefix('work-orders')->group(function () {
+        // Get work orders assigned to current user (contractor)
+        Route::get('/my-work-orders', function (\Illuminate\Http\Request $request) {
+            $workOrders = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus'])
+                ->where('contractor_id', $request->user()->id)
+                ->latest()
+                ->paginate(20);
+            return response()->json($workOrders);
+        });
+        
+        Route::get('/', function () {
+            // All work orders (admin/inspector view)
+            $workOrders = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus'])
+                ->latest()
+                ->paginate(20);
+            return response()->json($workOrders);
+        });
+        
+        Route::get('/{id}', function ($id) {
+            $workOrder = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus', 'images'])
+                ->findOrFail($id);
+            return response()->json($workOrder);
+        });
+    });
     
-//     // Filter by type
-//     if ($request->has('type') && $request->type) {
-//         $query->where('issue_type', $request->type);
-//     }
+    // Inspections
+    Route::prefix('inspections')->group(function () {
+        // Get inspections assigned to current user (inspector)
+        Route::get('/my-inspections', function (\Illuminate\Http\Request $request) {
+            $inspections = \App\Models\Inspection::with(['block'])
+                ->where('inspector_id', $request->user()->id)
+                ->latest()
+                ->paginate(20);
+            return response()->json($inspections);
+        });
+        
+        Route::get('/', function () {
+            // All inspections (admin view)
+            $inspections = \App\Models\Inspection::with(['block'])
+                ->latest()
+                ->paginate(20);
+            return response()->json($inspections);
+        });
+        
+        Route::get('/{id}', function ($id) {
+            $inspection = \App\Models\Inspection::with(['block', 'inspectionAssets'])
+                ->findOrFail($id);
+            return response()->json($inspection);
+        });
+    });
     
-//     // Filter by priority
-//     if ($request->has('priority') && $request->priority) {
-//         $query->where('priority_id', $request->priority);
-//     }
+    // Blocks
+    Route::prefix('blocks')->group(function () {
+        Route::get('/', function () {
+            $blocks = \App\Models\Block::with(['units'])->get();
+            return response()->json($blocks);
+        });
+        
+        Route::get('/{id}', function ($id) {
+            $block = \App\Models\Block::with(['units', 'buildings'])->findOrFail($id);
+            return response()->json($block);
+        });
+    });
     
-//     // Filter by keyword (search in issue title, description, and ref_no)
-//     if ($request->has('keyword') && $request->keyword) {
-//         $keyword = $request->keyword;
-//         $query->where(function($q) use ($keyword) {
-//             $q->where('issue', 'LIKE', "%{$keyword}%")
-//               ->orWhere('issue_details', 'LIKE', "%{$keyword}%")
-//               ->orWhere('ref_no', 'LIKE', "%{$keyword}%");
-//         });
-//     }
-    
-//     $issues = $query->orderBy('created_at', 'desc')->get();
-    
-//     return response()->json([
-//         'success' => true,
-//         'data' => $issues
-//     ]);
-// });
+    // Reference Data
+    Route::prefix('reference')->group(function () {
+        Route::get('/priorities', function () {
+            return response()->json(\App\Models\Priority::all());
+        });
+        Route::get('/job-statuses', function () {
+            return response()->json(\App\Models\JobStatus::all());
+        });
+        Route::get('/issue-statuses', function () {
+            return response()->json(\App\Models\IssueStatus::all());
+        });
+    });
+});
 
-// Block Unit Details API
-Route::get('/block-units/{blockUnit}', [BlockUnitController::class, 'show']);

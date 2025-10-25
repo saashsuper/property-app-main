@@ -70,14 +70,6 @@
                                         @enderror
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="ref_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control @error('ref_no') is-invalid @enderror" 
-                                               id="ref_no" name="ref_no" value="{{ old('ref_no') }}" required>
-                                        @error('ref_no')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
 
                                     <div class="mb-3">
                                         <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
@@ -94,20 +86,6 @@
                                         @enderror
                                     </div>
 
-                                    <div class="mb-3">
-                                        <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                                        <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                                            <option value="">Select Status</option>
-                                            <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>Pending</option>
-                                            <option value="2" {{ old('status') == '2' ? 'selected' : '' }}>In Progress</option>
-                                            <option value="3" {{ old('status') == '3' ? 'selected' : '' }}>Completed</option>
-                                            <option value="4" {{ old('status') == '4' ? 'selected' : '' }}>Cancelled</option>
-                                            <option value="5" {{ old('status') == '5' ? 'selected' : '' }}>On Hold</option>
-                                        </select>
-                                        @error('status')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
                                 </div>
 
                                 <!-- Location Information -->
@@ -115,9 +93,9 @@
                                     <h5 class="mb-3">Location Information</h5>
                                     
                                     <div class="mb-3">
-                                        <label for="block_unit_id" class="form-label">Block Unit</label>
-                                        <select class="form-select @error('block_unit_id') is-invalid @enderror" id="block_unit_id" name="block_unit_id">
-                                            <option value="">Select Unit (Optional)</option>
+                                        <label for="block_unit_id" class="form-label">Block Unit <span class="text-danger">*</span></label>
+                                        <select class="form-select @error('block_unit_id') is-invalid @enderror" id="block_unit_id" name="block_unit_id" required>
+                                            <option value="">Select Unit</option>
                                             @foreach($blockUnits as $unit)
                                                 <option value="{{ $unit->id }}" {{ old('block_unit_id') == $unit->id ? 'selected' : '' }}>
                                                     {{ $unit->unit_name }} - {{ $unit->block->name }}

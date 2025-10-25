@@ -146,11 +146,11 @@ class Issue extends Model
     public function getStatusColorAttribute()
     {
         $colors = [
-            1 => 'warning',    // Created - btn-warning
-            2 => 'primary',    // In Progress - btn-primary
-            3 => 'secondary',  // Work Order - btn-secondary
-            4 => 'success',    // Completed - btn-success
-            5 => 'light'       // Invoiced - btn-light
+            1 => 'warning',    // Created - btn-warning (yellow)
+            2 => 'primary',    // In Progress - btn-primary (blue)
+            3 => 'secondary',  // Work Order - btn-secondary (gray)
+            4 => 'success',    // Completed - btn-success (green)
+            5 => 'dark'        // Invoiced - btn-dark (dark gray/black)
         ];
 
         return $colors[$this->status] ?? 'secondary';

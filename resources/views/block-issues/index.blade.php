@@ -3,45 +3,239 @@
     Block Issues - PROMAN
 @endsection
 @section('css')
-    <!-- add your css here -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
-    <style>
-        /* Custom search input styling */
-        .custom-search-input {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
+<!-- DataTables CSS -->
+<link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet" type="text/css" />
+<!-- DataTables Responsive CSS -->
+<link href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap.min.css" rel="stylesheet" type="text/css" />
+<!-- DataTables Buttons CSS -->
+<link href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css" rel="stylesheet" type="text/css" />
+<!-- Dropzone CSS -->
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
 
-        .custom-search-input:focus {
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
+<style>
+/* Custom pagination styling inspired by DataTables */
+.pagination {
+    display: flex;
+    padding-left: 0;
+    list-style: none;
+    border-radius: 0.375rem;
+    margin: 0;
+}
 
-        /* Custom page length select styling */
-        .custom-page-length-select {
-            border: 1px solid #dee2e6;
-            border-radius: 0.375rem;
-            padding: 0.375rem 0.75rem;
-            font-size: 0.875rem;
-        }
+.page-item {
+    margin: 0 2px;
+}
 
-        .custom-page-length-select:focus {
-            border-color: #86b7fe;
-            outline: 0;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
+.page-link {
+    position: relative;
+    display: block;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25;
+    color: #6c757d;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    text-decoration: none;
+    border-radius: 0.25rem;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
 
-        /* Disabled button styling */
-        .btn.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-    </style>
+.page-link:hover {
+    z-index: 2;
+    color: #495057;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.page-link:focus {
+    z-index: 3;
+    color: #495057;
+    background-color: #e9ecef;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.page-item:first-child .page-link {
+    margin-left: 0;
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.page-item:last-child .page-link {
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: #fff;
+    border-color: #dee2e6;
+}
+
+/* DataTables-inspired button styling */
+.dt-button {
+    position: relative;
+    display: inline-block;
+    box-sizing: border-box;
+    margin: 0 2px;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    text-decoration: none;
+    outline: none;
+    transition: all 0.15s ease-in-out;
+}
+
+.dt-button:hover:not(.disabled) {
+    border-color: #6c757d;
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.dt-button.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+.dt-button.disabled {
+    cursor: default;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Disabled button styling */
+.btn.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Custom Dropzone Styling */
+.dropzone {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    background: #f8f9fa;
+    min-height: 150px;
+    padding: 15px;
+    transition: all 0.3s ease;
+}
+
+.dropzone:hover {
+    border-color: #667eea;
+    background: #f0f2ff;
+}
+
+.dropzone.dz-drag-hover {
+    border-color: #667eea;
+    background: #e8f0fe;
+}
+
+.dropzone .dz-message {
+    margin: 0;
+    color: #6c757d;
+}
+
+.dropzone .dz-message h4 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.dropzone .dz-message p {
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.dropzone .dz-preview {
+    margin: 8px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dropzone .dz-preview .dz-image {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dropzone .dz-preview .dz-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dropzone .dz-preview .dz-details {
+    padding: 8px;
+    background: #fff;
+    border-top: 1px solid #dee2e6;
+}
+
+.dropzone .dz-preview .dz-filename {
+    font-size: 12px;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 4px;
+}
+
+.dropzone .dz-preview .dz-size {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+.dropzone .dz-preview .dz-remove {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropzone .dz-preview .dz-remove:hover {
+    background: rgba(220, 53, 69, 1);
+}
+
+/* Responsive pagination */
+@media (max-width: 768px) {
+    .pagination {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .page-item {
+        margin: 2px;
+    }
+    
+    .page-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.8rem;
+    }
+}
+</style>
 @endsection
 @section('content')
 <div class="page-content">
@@ -281,10 +475,8 @@
         </div>
     </div>
 </div>
-@endsection
 
-@section('script')
-    <!-- Delete Confirmation Modal -->
+<!-- Delete Confirmation Modal -->
     <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1069,237 +1261,147 @@
         }
     };
     </script>
-    
-    <!-- Dropzone CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
-    <!-- Dropzone JS -->
-    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-    <script>
-    // Verify Dropzone is loaded
-    if (typeof Dropzone === 'undefined') {
-        console.error('Dropzone failed to load from CDN');
-        // Fallback to local or alternative CDN
-        document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"><\/script>');
-    }
-    </script>
-    
-    <style>
-    /* Custom Dropzone Styling */
-    .dropzone {
-        border: 2px dashed #dee2e6;
-        border-radius: 0.375rem;
-        background: #f8f9fa;
-        min-height: 150px;
-        padding: 15px;
-        transition: all 0.3s ease;
-    }
-
-    .dropzone:hover {
-        border-color: #667eea;
-        background: #f0f2ff;
-    }
-
-    .dropzone.dz-drag-hover {
-        border-color: #667eea;
-        background: #e8f0fe;
-    }
-
-    .dropzone .dz-message {
-        margin: 0;
-        color: #6c757d;
-    }
-
-    .dropzone .dz-message h4 {
-        color: #495057;
-        margin-bottom: 10px;
-    }
-
-    .dropzone .dz-message p {
-        margin-bottom: 0;
-        font-size: 14px;
-    }
-
-    .dropzone .dz-preview {
-        margin: 8px;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .dropzone .dz-preview .dz-image {
-        width: 120px;
-        height: 120px;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .dropzone .dz-preview .dz-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .dropzone .dz-preview .dz-details {
-        padding: 8px;
-        background: #fff;
-        border-top: 1px solid #dee2e6;
-    }
-
-    .dropzone .dz-preview .dz-filename {
-        font-size: 12px;
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 4px;
-    }
-
-    .dropzone .dz-preview .dz-size {
-        font-size: 11px;
-        color: #6c757d;
-    }
-
-    .dropzone .dz-preview .dz-remove {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        background: rgba(220, 53, 69, 0.8);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        font-size: 12px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .dropzone .dz-preview .dz-remove:hover {
-        background: rgba(220, 53, 69, 1);
-    }
-    </style>
 @endsection
 
 @section('script')
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
-    
-    <!-- Dropzone JS -->
-    <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-    
-    <script>
-        $(document).ready(function() {
-            console.log('Document ready, initializing DataTable...');
-            console.log('jQuery version:', $.fn.jquery);
-            console.log('DataTable exists:', typeof $.fn.DataTable);
-            console.log('Table element:', $('#blockIssuesTable').length);
+<!-- DataTables JavaScript -->
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<!-- DataTables Responsive JavaScript -->
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap.min.js"></script>
+<!-- DataTables Buttons JavaScript -->
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.colVis.min.js"></script>
+
+<!-- Dropzone JS -->
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Initialize DataTable
+    var table = $('#blockIssuesTable').DataTable({
+        responsive: true,
+        scrollX: false,
+        autoWidth: false,
+        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+        order: [[6, 'desc']], // default sort by Reported Date descending
+        columnDefs: [
+            { targets: [7], orderable: false }, // Actions column
+            { targets: [0], width: '10%' },  // Issue ID
+            { targets: [1], width: '20%' },  // Title
+            { targets: [2], width: '15%' },  // Block
+            { targets: [3], width: '12%' },  // Type
+            { targets: [4], width: '10%' },  // Priority
+            { targets: [5], width: '10%' },  // Status
+            { targets: [6], width: '13%' },  // Reported Date
+            { targets: [7], width: '10%' }   // Actions
+        ],
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        language: {
+            search: "Search block issues:",
+            lengthMenu: "Show _MENU_ block issues per page",
+            info: "Showing _START_ to _END_ of _TOTAL_ block issues",
+            infoEmpty: "Showing 0 to 0 of 0 block issues",
+            infoFiltered: "(filtered from _MAX_ total block issues)",
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+        },
+        initComplete: function() {
+            // Style the search box
+            $('.dataTables_filter input')
+                .addClass('form-control')
+                .removeClass('mb-3')
+                .css({
+                    'width': '300px',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin-left': '10px',
+                    'margin-bottom': '0 !important'
+                });
             
-            // Initialize DataTable
-            var table = $('#blockIssuesTable').DataTable({
-                responsive: true,
-                pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                order: [[6, 'desc']], // Sort by reported date descending
-                columnDefs: [
-                    { orderable: false, targets: [7] }, // Actions column
-                    { className: "text-center", targets: [0, 3, 4, 5, 7] }, // Center align specific columns
-                ],
-                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                     '<"row"<"col-sm-12"tr>>' +
-                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                language: {
-                    search: "",
-                    searchPlaceholder: "Search issues...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                    infoEmpty: "No entries found",
-                    infoFiltered: "(filtered from _MAX_ total entries)",
-                    paginate: {
-                        first: "First",
-                        last: "Last",
-                        next: "Next",
-                        previous: "Previous"
-                    }
-                },
-                initComplete: function() {
-                    // Customize search input
-                    $('.dataTables_filter input').addClass('custom-search-input');
-                    $('.dataTables_length select').addClass('custom-page-length-select');
-                }
+            // Style the page length dropdown
+            $('.dataTables_length select')
+                .addClass('form-select')
+                .css({
+                    'width': 'auto',
+                    'height': '38px',
+                    'font-size': '14px',
+                    'margin': '0 10px'
+                });
+            
+            // Ensure labels and inputs are on the same line
+            $('.dataTables_length label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
             });
-
-            // Toggle search panel
-            $('#toggleSearchBtn').on('click', function() {
-                $('#searchIssuesPanel').slideToggle();
+            
+            $('.dataTables_filter label').css({
+                'display': 'flex',
+                'align-items': 'center',
+                'margin-bottom': '0'
             });
-
-            // Close search panel
-            $('#closeSearchHeaderBtn').on('click', function() {
-                $('#searchIssuesPanel').slideUp();
-            });
-
-            // Search functionality
-            $('#searchIssuesBtn').on('click', function() {
-                var blockId = $('#search_block_id').val();
-                var status = $('#search_status').val();
-                var priority = $('#search_priority').val();
-                var keyword = $('#search_keyword').val();
-
-                // Build search query
-                var searchQuery = '';
-                if (blockId) searchQuery += 'block_id:' + blockId + ' ';
-                if (status) searchQuery += 'status:' + status + ' ';
-                if (priority) searchQuery += 'priority:' + priority + ' ';
-                if (keyword) searchQuery += keyword;
-
-                table.search(searchQuery).draw();
-                $('#searchIssuesPanel').slideUp();
-            });
-
-            // Clear search
-            $('#clearSearchBtn').on('click', function() {
-                $('#searchIssuesForm')[0].reset();
-                table.search('').draw();
-            });
-
-            // Show all
-            $('#showAllBtn').on('click', function() {
-                $('#searchIssuesForm')[0].reset();
-                table.search('').draw();
-                $('#searchIssuesPanel').slideUp();
-            });
-
-            // Update export button states based on table data
-            function updateExportButtons() {
-                var hasData = table.data().count() > 0;
-                $('#exportPdfBtn, #exportExcelBtn, #exportPrintBtn').toggleClass('disabled', !hasData);
-            }
-
-            // Update export buttons on table draw
-            table.on('draw', function() {
-                updateExportButtons();
-            });
-
-            // Initial update
-            updateExportButtons();
-        });
-
-        // Edit issue function
-        function editIssue(issueId) {
-            window.location.href = '/block-issues/' + issueId + '/edit';
         }
+    });
 
-        // Photo upload modal function
-        function openPhotoUploadModal(issueId) {
-            // This would open a photo upload modal
-            // For now, redirect to the issue show page
-            window.location.href = '/block-issues/' + issueId;
-        }
+    // Toggle search panel
+    $('#toggleSearchBtn').on('click', function() {
+        $('#searchIssuesPanel').slideToggle();
+    });
 
-    </script>
+    // Close search panel
+    $('#closeSearchHeaderBtn').on('click', function() {
+        $('#searchIssuesPanel').slideUp();
+    });
+
+    // Search functionality
+    $('#searchIssuesBtn').on('click', function() {
+        var blockId = $('#search_block_id').val();
+        var status = $('#search_status').val();
+        var priority = $('#search_priority').val();
+        var keyword = $('#search_keyword').val();
+
+        // Build search query
+        var searchQuery = '';
+        if (keyword) searchQuery += keyword;
+
+        table.search(searchQuery).draw();
+        $('#searchIssuesPanel').slideUp();
+    });
+
+    // Clear search
+    $('#clearSearchBtn').on('click', function() {
+        $('#searchIssuesForm')[0].reset();
+        table.search('').draw();
+    });
+
+    // Show all
+    $('#showAllBtn').on('click', function() {
+        $('#searchIssuesForm')[0].reset();
+        table.search('').draw();
+        $('#searchIssuesPanel').slideUp();
+    });
+
+    // Update export button states based on table data
+    function updateExportButtons() {
+        var hasData = table.data().count() > 0;
+        $('#exportPdfBtn, #exportExcelBtn, #exportPrintBtn').toggleClass('disabled', !hasData);
+    }
+
+    // Update export buttons on table draw
+    table.on('draw', function() {
+        updateExportButtons();
+    });
+
+    // Initial update
+    updateExportButtons();
+});
+</script>
 @endsection 
