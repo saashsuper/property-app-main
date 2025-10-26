@@ -10,52 +10,60 @@ class BlockInspectionValueSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * Data migrated from saashmagna.sql to match production database structure
      */
     public function run(): void
     {
         $values = [
-            // Condition values
-            ['block_inspection_value_type_id' => 1, 'name' => 'Excellent', 'description' => 'In excellent condition'],
-            ['block_inspection_value_type_id' => 1, 'name' => 'Good', 'description' => 'In good condition'],
-            ['block_inspection_value_type_id' => 1, 'name' => 'Fair', 'description' => 'In fair condition'],
-            ['block_inspection_value_type_id' => 1, 'name' => 'Poor', 'description' => 'In poor condition'],
-            ['block_inspection_value_type_id' => 1, 'name' => 'Critical', 'description' => 'In critical condition'],
+            // Type 1: Yes/No
+            ['id' => 1, 'block_inspection_value_type_id' => 1, 'value' => 'Yes', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 2, 'block_inspection_value_type_id' => 1, 'value' => 'No', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            ['id' => 3, 'block_inspection_value_type_id' => 1, 'value' => 'Needs Attention', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
             
-            // Status values
-            ['block_inspection_value_type_id' => 2, 'name' => 'Operational', 'description' => 'Fully operational'],
-            ['block_inspection_value_type_id' => 2, 'name' => 'Partially Operational', 'description' => 'Partially operational'],
-            ['block_inspection_value_type_id' => 2, 'name' => 'Non-Operational', 'description' => 'Not operational'],
-            ['block_inspection_value_type_id' => 2, 'name' => 'Under Maintenance', 'description' => 'Currently under maintenance'],
-            ['block_inspection_value_type_id' => 2, 'name' => 'Out of Service', 'description' => 'Out of service'],
+            // Type 2: Clean/Bad
+            ['id' => 4, 'block_inspection_value_type_id' => 2, 'value' => 'Clean', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 5, 'block_inspection_value_type_id' => 2, 'value' => 'Average', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
+            ['id' => 6, 'block_inspection_value_type_id' => 2, 'value' => 'Poor', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
             
-            // Priority values
-            ['block_inspection_value_type_id' => 3, 'name' => 'Low', 'description' => 'Low priority'],
-            ['block_inspection_value_type_id' => 3, 'name' => 'Medium', 'description' => 'Medium priority'],
-            ['block_inspection_value_type_id' => 3, 'name' => 'High', 'description' => 'High priority'],
-            ['block_inspection_value_type_id' => 3, 'name' => 'Urgent', 'description' => 'Urgent priority'],
-            ['block_inspection_value_type_id' => 3, 'name' => 'Critical', 'description' => 'Critical priority'],
+            // Type 3: Good/Avg/Poor
+            ['id' => 7, 'block_inspection_value_type_id' => 3, 'value' => 'Good', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 8, 'block_inspection_value_type_id' => 3, 'value' => 'Average', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
+            ['id' => 9, 'block_inspection_value_type_id' => 3, 'value' => 'Poor', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
             
-            // Compliance values
-            ['block_inspection_value_type_id' => 4, 'name' => 'Compliant', 'description' => 'Fully compliant'],
-            ['block_inspection_value_type_id' => 4, 'name' => 'Partially Compliant', 'description' => 'Partially compliant'],
-            ['block_inspection_value_type_id' => 4, 'name' => 'Non-Compliant', 'description' => 'Not compliant'],
-            ['block_inspection_value_type_id' => 4, 'name' => 'Under Review', 'description' => 'Under review'],
-            ['block_inspection_value_type_id' => 4, 'name' => 'Pending', 'description' => 'Pending compliance'],
+            // Type 4: Working/Not Working/Not applicable
+            ['id' => 10, 'block_inspection_value_type_id' => 4, 'value' => 'Working', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 11, 'block_inspection_value_type_id' => 4, 'value' => 'Not Working', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            ['id' => 12, 'block_inspection_value_type_id' => 4, 'value' => 'N/A', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
             
-            // Safety values
-            ['block_inspection_value_type_id' => 5, 'name' => 'Safe', 'description' => 'Safe condition'],
-            ['block_inspection_value_type_id' => 5, 'name' => 'Minor Issues', 'description' => 'Minor safety issues'],
-            ['block_inspection_value_type_id' => 5, 'name' => 'Moderate Risk', 'description' => 'Moderate safety risk'],
-            ['block_inspection_value_type_id' => 5, 'name' => 'High Risk', 'description' => 'High safety risk'],
-            ['block_inspection_value_type_id' => 5, 'name' => 'Dangerous', 'description' => 'Dangerous condition'],
+            // Type 5: Working/Not Working/Not checked
+            ['id' => 13, 'block_inspection_value_type_id' => 5, 'value' => 'Working', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 14, 'block_inspection_value_type_id' => 5, 'value' => 'Not Working', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            ['id' => 15, 'block_inspection_value_type_id' => 5, 'value' => 'Not checked', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
+            
+            // Type 6: Working/Partially Working/No lights
+            ['id' => 16, 'block_inspection_value_type_id' => 6, 'value' => 'Working', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 17, 'block_inspection_value_type_id' => 6, 'value' => 'Partially Working', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
+            ['id' => 18, 'block_inspection_value_type_id' => 6, 'value' => 'No lights', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            
+            // Type 7: Working/Not Working/Needs Attention
+            ['id' => 19, 'block_inspection_value_type_id' => 7, 'value' => 'Working', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 20, 'block_inspection_value_type_id' => 7, 'value' => 'Not Working', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            ['id' => 21, 'block_inspection_value_type_id' => 7, 'value' => 'Needs Attention', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
+            
+            // Type 8: No faults/Faults/Needs Attention
+            ['id' => 22, 'block_inspection_value_type_id' => 8, 'value' => 'No faults', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 23, 'block_inspection_value_type_id' => 8, 'value' => 'Faults', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            ['id' => 24, 'block_inspection_value_type_id' => 8, 'value' => 'Needs Attention', 'color' => 'btn-outline-primary', 'bg_color' => 'oranges'],
+            
+            // Type 9: Working/Not Working/No lights
+            ['id' => 25, 'block_inspection_value_type_id' => 9, 'value' => 'Working', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
+            ['id' => 26, 'block_inspection_value_type_id' => 9, 'value' => 'Not Working', 'color' => 'btn-outline-danger', 'bg_color' => 'reds'],
+            ['id' => 27, 'block_inspection_value_type_id' => 9, 'value' => 'No lights', 'color' => 'btn-outline-success', 'bg_color' => 'greens'],
         ];
 
         foreach ($values as $value) {
             BlockInspectionValue::updateOrCreate(
-                [
-                    'block_inspection_value_type_id' => $value['block_inspection_value_type_id'],
-                    'name' => $value['name']
-                ],
+                ['id' => $value['id']],
                 $value
             );
         }

@@ -197,7 +197,7 @@
                                         <td>{{ $asset->buildingAsset->name ?? 'N/A' }}</td>
                                         <td>
                                             <span class="badge bg-{{ $asset->inspectionValue->valueType->name == 'Good' ? 'success' : ($asset->inspectionValue->valueType->name == 'Fair' ? 'warning' : 'danger') }}-subtle">
-                                                {{ $asset->inspectionValue->name ?? 'N/A' }}
+                                                {{ $asset->inspectionValue->value ?? 'N/A' }}
                                             </span>
                                         </td>
                                         <td>{{ $asset->comments }}</td>

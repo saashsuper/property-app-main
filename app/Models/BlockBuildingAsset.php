@@ -5,17 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class BlockInspectionValue extends Model
+class BlockBuildingAsset extends Model
 {
     use HasFactory;
 
+    protected $primaryKey = 'id';
+    public $incrementing = false;
+    protected $keyType = 'integer';
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
+        'id',
+        'name',
         'block_inspection_value_type_id',
-        'value',
-        'color',
-        'bg_color',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'block_inspection_value_type_id' => 'integer',
     ];
@@ -26,13 +39,5 @@ class BlockInspectionValue extends Model
     public function valueType()
     {
         return $this->belongsTo(BlockInspectionValueType::class, 'block_inspection_value_type_id');
-    }
-
-    /**
-     * Get the inspection assets that use this value.
-     */
-    public function inspectionAssets()
-    {
-        return $this->hasMany(BlockInspectionAsset::class, 'block_inspection_value_id');
     }
 }

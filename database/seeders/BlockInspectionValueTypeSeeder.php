@@ -14,11 +14,15 @@ class BlockInspectionValueTypeSeeder extends Seeder
     public function run(): void
     {
         $valueTypes = [
-            ['id' => 1, 'name' => 'Condition'],
-            ['id' => 2, 'name' => 'Status'],
-            ['id' => 3, 'name' => 'Priority'],
-            ['id' => 4, 'name' => 'Compliance'],
-            ['id' => 5, 'name' => 'Safety'],
+            ['id' => 1, 'name' => 'Yes/No'],
+            ['id' => 2, 'name' => 'Clean/Bad'],
+            ['id' => 3, 'name' => 'Good/Avg/Poor'],
+            ['id' => 4, 'name' => 'Working/Not Working/Not applicable'],
+            ['id' => 5, 'name' => 'Working/Not Working/Not checked '],
+            ['id' => 6, 'name' => 'Working/Partially Working/No lights'],
+            ['id' => 7, 'name' => 'Working/Not Working/Needs Attention'],
+            ['id' => 8, 'name' => 'No faults/Faults/Needs Attention'],
+            ['id' => 9, 'name' => 'Working/Not Working/No lights'],
         ];
 
         foreach ($valueTypes as $valueType) {

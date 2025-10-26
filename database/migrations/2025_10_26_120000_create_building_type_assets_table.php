@@ -11,9 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('block_inspection_value_types', function (Blueprint $table) {
-            $table->smallIncrements('id');
-            $table->string('name', 50);
+        Schema::create('building_type_assets', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedSmallInteger('building_type_id');
+            $table->unsignedSmallInteger('building_asset_id');
             $table->timestamps();
         });
     }
@@ -23,6 +24,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('block_inspection_value_types');
+        Schema::dropIfExists('building_type_assets');
     }
 };
+

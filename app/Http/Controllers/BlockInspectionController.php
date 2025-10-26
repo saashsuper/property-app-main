@@ -683,7 +683,7 @@ class BlockInspectionController extends Controller
         }
         
         // Map based on the value name
-        $name = strtolower($inspectionValue->name);
+        $name = strtolower($inspectionValue->value);
         
         if (in_array($name, ['good', 'operational'])) {
             return 'working';
