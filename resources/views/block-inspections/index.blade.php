@@ -85,10 +85,11 @@
                                     <th>Reference</th>
                                     <th>Block</th>
                                     <th>Scheduled Date</th>
+                                    <th>Start Date/Time</th>
+                                    <th>End Date/Time</th>
                                     <th>Status</th>
                                     <th>Lead Inspector</th>
                                     <th>Team Size</th>
-                                    <th>Created By</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -113,6 +114,20 @@
                                             {{ $inspection->scheduled_date_time->format('M d, Y H:i') }}
                                         </td>
                                         <td>
+                                            @if($inspection->start_date_time)
+                                                {{ $inspection->start_date_time->format('M d, Y H:i') }}
+                                            @else
+                                                <span class="text-muted">Not started</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($inspection->end_date_time)
+                                                {{ $inspection->end_date_time->format('M d, Y H:i') }}
+                                            @else
+                                                <span class="text-muted">Not completed</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             <span class="badge bg-{{ $inspection->status_color }}-subtle text-{{ $inspection->status_color }}">
                                                 {{ $inspection->status_text }}
                                             </span>
@@ -127,9 +142,6 @@
                                             <span class="badge bg-info-subtle text-info">
                                                 {{ $inspection->inspectionTeams->count() }} members
                                             </span>
-                                        </td>
-                                        <td>
-                                            {{ $inspection->creator->name ?? 'N/A' }}
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2">
@@ -158,7 +170,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="ph-clipboard-text display-4"></i>
                                                 <h5 class="mt-2">No inspections found</h5>
