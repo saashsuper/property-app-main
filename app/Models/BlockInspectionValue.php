@@ -11,7 +11,7 @@ class BlockInspectionValue extends Model
 
     protected $fillable = [
         'block_inspection_value_type_id',
-        'value',
+        'name',
         'color',
         'bg_color',
     ];

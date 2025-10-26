@@ -8,24 +8,19 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * Align with saashmagna.sql production database structure:
-     * - Rename 'name' to 'value'
+     * Align with requirements:
      * - Remove 'description' column
      * - Make color columns NOT NULL
+     * - Keep column as 'name' (not 'value')
      */
     public function up(): void
     {
         Schema::table('block_inspection_values', function (Blueprint $table) {
-            // Drop the description column (doesn't exist in production)
+            // Drop the description column (not needed)
             $table->dropColumn('description');
         });
 
-        // Rename 'name' to 'value' to match production
-        Schema::table('block_inspection_values', function (Blueprint $table) {
-            $table->renameColumn('name', 'value');
-        });
-
-        // Modify color columns to be NOT NULL (matching production)
+        // Modify color columns to be NOT NULL
         Schema::table('block_inspection_values', function (Blueprint $table) {
             $table->string('color', 50)->nullable(false)->change();
             $table->string('bg_color', 30)->nullable(false)->change();
@@ -43,14 +38,9 @@ return new class extends Migration
             $table->string('bg_color', 30)->nullable()->change();
         });
 
-        // Rename 'value' back to 'name'
-        Schema::table('block_inspection_values', function (Blueprint $table) {
-            $table->renameColumn('value', 'name');
-        });
-
         // Restore description column
         Schema::table('block_inspection_values', function (Blueprint $table) {
-            $table->string('description', 255)->nullable()->after('value');
+            $table->string('description', 255)->nullable()->after('name');
         });
     }
 };
