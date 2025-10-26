@@ -136,6 +136,11 @@
                                                 <a href="{{ route('block-inspections.show', $inspection->id) }}" class="btn btn-sm btn-outline-primary" title="View">
                                                     <i class="ph-eye"></i>
                                                 </a>
+                                                @if($inspection->job_status_id == 3)
+                                                <a href="{{ route('block-inspections.download-pdf', $inspection->id) }}" class="btn btn-sm btn-outline-danger" title="Download PDF Report">
+                                                    <i class="ph-file-pdf"></i>
+                                                </a>
+                                                @endif
                                                 @admin
                                                 <a href="{{ route('block-inspections.edit', $inspection->id) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                     <i class="ph-pencil"></i>

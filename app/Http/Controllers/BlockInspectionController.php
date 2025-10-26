@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BlockInspectionController extends Controller
 {
@@ -130,7 +131,11 @@ class BlockInspectionController extends Controller
                 $query->withTrashed();
             }, 
             'inspectionAssets.buildingAsset', 
-            'inspectionAssets.inspectionValue'
+            'inspectionAssets.generalAsset',
+            'inspectionAssets.inspectionValue',
+            'inspectionAssets.inspectionValue.valueType',
+            'inspectionAssets.images',
+            'inspectionAssets.blockBuilding'
         ]);
         
         // Return JSON when requested (AJAX/Accept headers)
@@ -634,11 +639,15 @@ class BlockInspectionController extends Controller
             $path = $photo->storeAs($storagePath, $filename, 'public');
             
             // Create database record
+            // For general assets, building_asset_id should be null
+            // For building assets, building_asset_id should be the asset ID
+            $buildingAssetId = $inspectionAsset->block_general_asset_id ? null : $assetId;
+            
             BlockInspectionAssetImage::create([
                 'block_inspection_asset_id' => $inspectionAsset->id,
                 'block_inspection_id' => $blockInspection->id,
                 'block_building_id' => $building ? $building->id : null,
-                'building_asset_id' => $assetId,
+                'building_asset_id' => $buildingAssetId,
                 'image_path' => $storagePath,
                 'image_name' => $filename,
                 's3_status' => 0, // 0 = stored locally, not yet uploaded to S3
@@ -653,19 +662,20 @@ class BlockInspectionController extends Controller
     private function getStatusToValueMap()
     {
         // Map form status values to database inspection values
-        // working → Good (id: 2) or Operational (id: 6)
-        // not_working → Poor (id: 4) or Non-Operational (id: 8)
-        // na → Fair (id: 3) as neutral/not applicable status
+        // Based on production data from saashmagna.sql:
+        // working → Good (id: 7) or Working (id: 10, 13, 16, 19, 25)
+        // not_working → Poor (id: 6, 9) or Not Working (id: 11, 14, 20, 26)
+        // na → N/A (id: 12) or other neutral status
         
-        $workingValue = BlockInspectionValue::whereIn('name', ['Good', 'Operational'])->first();
-        $notWorkingValue = BlockInspectionValue::whereIn('name', ['Poor', 'Non-Operational'])->first();
-        $naValue = BlockInspectionValue::whereIn('name', ['Fair', 'Pending'])->first();
+        $workingValue = BlockInspectionValue::whereIn('name', ['Good', 'Working'])->first();
+        $notWorkingValue = BlockInspectionValue::whereIn('name', ['Poor', 'Not Working'])->first();
+        $naValue = BlockInspectionValue::whereIn('name', ['N/A', 'Average', 'Needs Attention'])->first();
 
-        // Fallback to specific IDs if queries fail
+        // Fallback to specific IDs from production data if queries fail
         return [
-            'working' => $workingValue->id ?? 2, // Good
-            'not_working' => $notWorkingValue->id ?? 4, // Poor
-            'na' => $naValue->id ?? 3, // Fair (neutral status)
+            'working' => $workingValue->id ?? 7, // Good (Type 3)
+            'not_working' => $notWorkingValue->id ?? 6, // Poor (Type 2)
+            'na' => $naValue->id ?? 12, // N/A (Type 4)
         ];
     }
 
@@ -682,15 +692,15 @@ class BlockInspectionController extends Controller
             return 'na'; // Default to N/A if value not found
         }
         
-        // Map based on the value name
-        $name = strtolower($inspectionValue->value);
+        // Map based on the value name (using 'name' field instead of deprecated 'value' field)
+        $name = strtolower($inspectionValue->name);
         
-        if (in_array($name, ['good', 'operational'])) {
+        if (in_array($name, ['good', 'operational', 'working'])) {
             return 'working';
-        } elseif (in_array($name, ['poor', 'non-operational'])) {
+        } elseif (in_array($name, ['poor', 'non-operational', 'not working'])) {
             return 'not_working';
         } else {
-            return 'na'; // Fair, Pending, or any other status
+            return 'na'; // Fair, Pending, N/A, or any other status
         }
     }
 
@@ -734,5 +744,39 @@ class BlockInspectionController extends Controller
 
             return redirect()->back()->withErrors(['error' => 'Failed to delete image.']);
         }
+    }
+
+    /**
+     * Generate and download PDF report for a completed inspection.
+     */
+    public function downloadPdf(BlockInspection $blockInspection)
+    {
+        // Load all necessary relationships
+        $blockInspection->load([
+            'block' => function($query) {
+                $query->withTrashed()->with(['blockType']);
+            }, 
+            'creator' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionTeams.user' => function($query) {
+                $query->withTrashed();
+            }, 
+            'inspectionAssets.buildingAsset', 
+            'inspectionAssets.generalAsset',
+            'inspectionAssets.inspectionValue',
+            'inspectionAssets.inspectionValue.valueType',
+            'inspectionAssets.images',
+            'inspectionAssets.blockBuilding'
+        ]);
+
+        // Generate PDF
+        $pdf = Pdf::loadView('block-inspections.pdf', [
+            'inspection' => $blockInspection,
+        ])->setPaper('a4', 'portrait');
+
+        $filename = 'Inspection_Report_' . $blockInspection->ref_no . '_' . now()->format('Y-m-d') . '.pdf';
+
+        return $pdf->download($filename);
     }
 }

@@ -16,6 +16,12 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">Inspection Details</h4>
                         <div class="d-flex gap-2">
+                            @if($blockInspection->job_status_id == 3)
+                                <a href="{{ route('block-inspections.download-pdf', $blockInspection->id) }}" class="btn btn-danger btn-sm">
+                                    <i class="ph-file-pdf me-2"></i>Download PDF Report
+                                </a>
+                            @endif
+                            
                             @if($blockInspection->job_status_id == 1)
                                 <form action="{{ route('block-inspections.start', $blockInspection->id) }}" method="POST" class="d-inline">
                                     @csrf
@@ -184,23 +190,51 @@
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
+                                    <th>Type</th>
                                     <th>Building</th>
                                     <th>Asset</th>
                                     <th>Status</th>
                                     <th>Comments</th>
+                                    <th>Images</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($blockInspection->inspectionAssets as $asset)
                                     <tr>
+                                        <td>
+                                            @if($asset->block_general_asset_id)
+                                                <span class="badge bg-info-subtle text-info">General Asset</span>
+                                            @else
+                                                <span class="badge bg-primary-subtle text-primary">Building Asset</span>
+                                            @endif
+                                        </td>
                                         <td>{{ $asset->blockBuilding->name ?? 'N/A' }}</td>
-                                        <td>{{ $asset->buildingAsset->name ?? 'N/A' }}</td>
+                                        <td>
+                                            @if($asset->block_general_asset_id)
+                                                {{ $asset->generalAsset->name ?? 'N/A' }}
+                                            @else
+                                                {{ $asset->buildingAsset->name ?? 'N/A' }}
+                                            @endif
+                                        </td>
                                         <td>
                                             <span class="badge bg-{{ $asset->inspectionValue->valueType->name == 'Good' ? 'success' : ($asset->inspectionValue->valueType->name == 'Fair' ? 'warning' : 'danger') }}-subtle">
-                                                {{ $asset->inspectionValue->value ?? 'N/A' }}
+                                                {{ $asset->inspectionValue->name ?? 'N/A' }}
                                             </span>
                                         </td>
-                                        <td>{{ $asset->comments }}</td>
+                                        <td>{{ $asset->comments ?? '-' }}</td>
+                                        <td>
+                                            @if($asset->images->count() > 0)
+                                                <div class="d-flex gap-1 flex-wrap">
+                                                    @foreach($asset->images as $image)
+                                                        <a href="{{ $image->image_url }}" target="_blank" class="d-inline-block">
+                                                            <img src="{{ $image->image_url }}" alt="Asset image" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <span class="text-muted">-</span>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
