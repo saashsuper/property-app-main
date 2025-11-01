@@ -199,5 +199,5 @@ Route::middleware(['auth'])->group(function () {
 // Specific routes that must come before catch-all
 Route::get('/blocks/{block}/information-table', [App\Http\Controllers\BlockController::class, 'blockInformationTable'])->name('blocks.information-table');
 
-// Catch-all route for SPA - must be last
-Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->where('any', '.*')->name('index');
+// Catch-all route for SPA - must be last (excludes mobile-api routes)
+Route::get('{any}', [App\Http\Controllers\HomeController::class, 'index'])->where('any', '^(?!mobile-api).*')->name('index');

@@ -24,12 +24,33 @@ Route::prefix('auth')->group(function () {
 });
 
 // Protected Routes (require authentication)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(function () {
     
     // Auth & Profile
     Route::prefix('auth')->group(function () {
         Route::get('/user', function (\Illuminate\Http\Request $request) {
-            return response()->json($request->user());
+            $user = $request->user()->load(['userType', 'roles']);
+            return response()->json([
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'avatar' => $user->avatar,
+                'is_active' => $user->is_active,
+                'email_verified_at' => $user->email_verified_at,
+                'created_at' => $user->created_at,
+                'updated_at' => $user->updated_at,
+                'user_type' => $user->userType ? [
+                    'id' => $user->userType->id,
+                    'name' => $user->userType->name,
+                    'description' => $user->userType->description,
+                ] : null,
+                'roles' => $user->roles->map(fn($role) => [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                ])->toArray(),
+            ]);
         });
         Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'apiLogout']);
     });
@@ -77,8 +98,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('inspections')->group(function () {
         // Get inspections assigned to current user (inspector)
         Route::get('/my-inspections', function (\Illuminate\Http\Request $request) {
-            $inspections = \App\Models\Inspection::with(['block'])
-                ->where('inspector_id', $request->user()->id)
+            $inspections = \App\Models\BlockInspection::with(['block', 'inspectionTeams'])
+                ->whereHas('inspectionTeams', function($query) use ($request) {
+                    $query->where('user_id', $request->user()->id);
+                })
                 ->latest()
                 ->paginate(20);
             return response()->json($inspections);
@@ -86,16 +109,69 @@ Route::middleware('auth:sanctum')->group(function () {
         
         Route::get('/', function () {
             // All inspections (admin view)
-            $inspections = \App\Models\Inspection::with(['block'])
+            $inspections = \App\Models\BlockInspection::with(['block'])
                 ->latest()
                 ->paginate(20);
             return response()->json($inspections);
         });
         
         Route::get('/{id}', function ($id) {
-            $inspection = \App\Models\Inspection::with(['block', 'inspectionAssets'])
-                ->findOrFail($id);
-            return response()->json($inspection);
+            $inspection = \App\Models\BlockInspection::with([
+                'block',
+                'inspectionAssets.images',
+                'inspectionTeams.user',
+                'creator',
+                'updater'
+            ])->findOrFail($id);
+            
+            return response()->json([
+                'id' => $inspection->id,
+                'ref_no' => $inspection->ref_no,
+                'block' => $inspection->block ? [
+                    'id' => $inspection->block->id,
+                    'name' => $inspection->block->name,
+                    'management_company' => $inspection->block->management_company,
+                    'address' => trim(($inspection->block->address1 ?? '') . ', ' . ($inspection->block->address2 ?? '') . ', ' . ($inspection->block->address3 ?? ''), ', '),
+                    'no_of_units' => $inspection->block->no_of_units,
+                    'car_spaces' => $inspection->block->car_spaces,
+                ] : null,
+                'scheduled_date_time' => $inspection->scheduled_date_time,
+                'start_date_time' => $inspection->start_date_time,
+                'end_date_time' => $inspection->end_date_time,
+                'notes' => $inspection->notes,
+                'status' => [
+                    'id' => $inspection->job_status_id,
+                    'name' => $inspection->status_text,
+                    'color' => $inspection->status_color,
+                ],
+                'is_mobile' => $inspection->is_mobile,
+                'inspection_teams' => $inspection->inspectionTeams->map(function($team) {
+                    return [
+                        'id' => $team->id,
+                        'user' => $team->user ? [
+                            'id' => $team->user->id,
+                            'name' => $team->user->name,
+                            'email' => $team->user->email,
+                        ] : null,
+                        'role' => $team->role,
+                        'is_lead' => $team->is_lead,
+                    ];
+                })->toArray(),
+                'inspection_assets' => $inspection->inspectionAssets->map(function($asset) {
+                    return [
+                        'id' => $asset->id,
+                        'asset_name' => $asset->asset_name ?? 'N/A',
+                        'notes' => $asset->notes,
+                        'images_count' => $asset->images->count(),
+                    ];
+                })->toArray(),
+                'created_by' => $inspection->creator ? [
+                    'id' => $inspection->creator->id,
+                    'name' => $inspection->creator->name,
+                ] : null,
+                'created_at' => $inspection->created_at,
+                'updated_at' => $inspection->updated_at,
+            ]);
         });
     });
     
