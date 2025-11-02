@@ -17,6 +17,7 @@ class BlockInspectionAsset extends Model
         'block_general_asset_id',
         'block_inspection_value_id',
         'comments',
+        'additional_comments',
     ];
 
     protected $casts = [

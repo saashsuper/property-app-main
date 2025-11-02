@@ -361,6 +361,183 @@
                                 </div>
                             </div>
 
+                            <!-- Building-Specific Assets Tabs (Dynamic) -->
+                            @foreach($buildings as $building)
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="building-{{ $building->id }}-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#building-{{ $building->id }}" aria-expanded="false" aria-controls="building-{{ $building->id }}">
+                                        <i class="ph-building me-3 text-info"></i>
+                                        <span class="fw-bold">{{ strtoupper($building->name) }}</span>
+                                        @if($building->buildingType)
+                                            <span class="badge bg-info ms-2">{{ $building->buildingType->name }}</span>
+                                        @endif
+                                        <i class="ph-caret-down ms-auto"></i>
+                                    </button>
+                                </h2>
+                                <div id="building-{{ $building->id }}" class="accordion-collapse collapse" aria-labelledby="building-{{ $building->id }}-header" data-bs-parent="#inspectionAccordion">
+                                    <div class="accordion-body">
+                                        @php
+                                            // Get assets for this specific building based on its type
+                                            $buildingAssets = $buildingAssetsMap[$building->id] ?? collect();
+                                        @endphp
+                                        
+                                        @if($buildingAssets->isEmpty())
+                                            @php
+                                                // Get existing observations/comments for this building (if any)
+                                                // For types 3 and 4, we store data with building_asset_id = NULL
+                                                $existingObservationsData = \App\Models\BlockInspectionAsset::where('block_inspection_id', $blockInspection->id)
+                                                    ->where('block_building_id', $building->id)
+                                                    ->whereNull('building_asset_id')
+                                                    ->whereNull('block_general_asset_id')
+                                                    ->first();
+                                                $existingObservations = $existingObservationsData ? $existingObservationsData->comments : '';
+                                                $existingComments = $existingObservationsData ? $existingObservationsData->additional_comments : '';
+                                            @endphp
+                                            
+                                            <!-- For Commercial Business Park (Type 4) and Houses (Type 3) -->
+                                            @if($building->buildingType && in_array($building->buildingType->id, [3, 4]))
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="building_{{ $building->id }}_observations" class="form-label fw-bold">Other Observations:</label>
+                                                            <textarea class="form-control" 
+                                                                      id="building_{{ $building->id }}_observations" 
+                                                                      name="building_{{ $building->id }}_observations" 
+                                                                      rows="5" 
+                                                                      placeholder="" 
+                                                                      maxlength="500">{{ old('building_' . $building->id . '_observations', $existingObservations) }}</textarea>
+                                                            <div class="form-text text-muted">Maximum allowable characters are 500.</div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="col-md-6">
+                                                        <div class="mb-3">
+                                                            <label for="building_{{ $building->id }}_comments" class="form-label fw-bold">Comments:</label>
+                                                            <textarea class="form-control" 
+                                                                      id="building_{{ $building->id }}_comments" 
+                                                                      name="building_{{ $building->id }}_comments" 
+                                                                      rows="5" 
+                                                                      placeholder="" 
+                                                                      maxlength="500">{{ old('building_' . $building->id . '_comments', $existingComments) }}</textarea>
+                                                            <div class="form-text text-muted">Maximum allowable characters are 500.</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <div class="alert alert-info">
+                                                    <i class="ph-info me-2"></i>
+                                                    No specific assets configured for this building type ({{ $building->buildingType->name ?? 'Unknown' }}).
+                                                </div>
+                                            @endif
+                                        @else
+                                            @foreach($buildingAssets as $asset)
+                                            @php
+                                                // Get existing data for this building asset (if any)
+                                                $existingDataKey = $building->id . '_' . $asset->id;
+                                                $existingDataCollection = $existingBuildingInspectionAssets->get($existingDataKey);
+                                                $existingData = $existingDataCollection ? $existingDataCollection->first() : null;
+                                                $selectedStatus = $existingData ? \App\Http\Controllers\BlockInspectionController::getValueToStatusMap($existingData->block_inspection_value_id) : null;
+                                                $existingNotes = $existingData ? $existingData->comments : '';
+                                            @endphp
+                                            
+                                            <!-- Asset Name Heading -->
+                                            <div class="row mb-2">
+                                                <div class="col-12">
+                                                    <h6 class="fw-bold text-start mb-0">{{ $asset->name }}</h6>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Asset Details Row -->
+                                            <div class="row mb-4 align-items-center">
+                                                <!-- Status/Condition Options -->
+                                                <div class="col-md-4">
+                                                    <div class="btn-group w-100" role="group" aria-label="Status options for {{ $asset->name }}">
+                                                        @if($asset->valueType && $asset->valueType->inspectionValues)
+                                                            @foreach($asset->valueType->inspectionValues as $index => $value)
+                                                                @php
+                                                                    $isFirst = $index === 0;
+                                                                    $isLast = $index === count($asset->valueType->inspectionValues) - 1;
+                                                                    $isSelected = $existingData && $existingData->block_inspection_value_id == $value->id;
+                                                                    
+                                                                    // Border radius classes
+                                                                    $radiusClass = '';
+                                                                    if ($isFirst) {
+                                                                        $radiusClass = 'rounded-start';
+                                                                        $radiusStyle = 'border-radius: 0.375rem 0 0 0.375rem !important;';
+                                                                    } elseif ($isLast) {
+                                                                        $radiusClass = 'rounded-end';
+                                                                        $radiusStyle = 'border-radius: 0 0.375rem 0.375rem 0 !important; border-left: 0 !important;';
+                                                                    } else {
+                                                                        $radiusStyle = 'border-radius: 0 !important; border-left: 0 !important; border-right: 0 !important;';
+                                                                    }
+                                                                    
+                                                                    // Color class based on value name
+                                                                    $colorClass = 'building-value-' . strtolower(str_replace([' ', '/'], ['_', '_'], $value->name));
+                                                                @endphp
+                                                                <input type="radio" class="btn-check" 
+                                                                       name="building_{{ $building->id }}_asset_value_{{ $asset->id }}" 
+                                                                       id="building_{{ $building->id }}_value_{{ $value->id }}_{{ $asset->id }}" 
+                                                                       value="{{ $value->id }}" 
+                                                                       autocomplete="off" 
+                                                                       {{ $isSelected ? 'checked' : '' }}>
+                                                                <label class="btn btn-outline-secondary btn-sm {{ $radiusClass }} {{ $colorClass }}" 
+                                                                       for="building_{{ $building->id }}_value_{{ $value->id }}_{{ $asset->id }}" 
+                                                                       style="{{ $radiusStyle }} color: black; border: 1px solid #dee2e6;">
+                                                                    {{ $value->name }}
+                                                                </label>
+                                                            @endforeach
+                                                        @else
+                                                            <span class="text-muted">No values configured</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Photo Upload Area -->
+                                                <div class="col-md-4">
+                                                    <label class="form-label small mb-2 fw-bold text-black">Photos:</label>
+                                                    <div id="building_{{ $building->id }}_dropzone_{{ $asset->id }}" class="dropzone" style="min-height: 150px; border: 2px dashed #d1d5db; border-radius: 0.375rem; background-color: white;">
+                                                        <div class="dz-message" data-dz-message>
+                                                            <i class="ph-cloud-arrow-up text-primary mb-2" style="font-size: 1.5rem;"></i>
+                                                            <div class="text-muted small">Drag & drop images or click to browse</div>
+                                                            <div class="text-muted" style="font-size: 0.75rem;">Max 5MB per image</div>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Existing Images Preview -->
+                                                    @if($existingData && $existingData->images->count() > 0)
+                                                    <div class="existing-images-preview mt-2">
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($existingData->images as $image)
+                                                            <div class="position-relative" style="width: 80px; height: 80px;">
+                                                                <img src="{{ $image->image_url }}" class="img-thumbnail" style="width: 100%; height: 100%; object-fit: cover;" alt="Existing image">
+                                                                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 delete-existing-image" data-image-id="{{ $image->id }}" style="padding: 0.1rem 0.3rem; font-size: 0.7rem;">
+                                                                    <i class="ph-x"></i>
+                                                                </button>
+                                                            </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                    @endif
+                                                </div>
+                                                
+                                                <!-- Notes -->
+                                                <div class="col-md-4">
+                                                    <label for="building_{{ $building->id }}_notes_{{ $asset->id }}" class="form-label small fw-bold text-black">Note:</label>
+                                                    <textarea class="form-control form-control-sm" 
+                                                              id="building_{{ $building->id }}_notes_{{ $asset->id }}" 
+                                                              name="building_{{ $building->id }}_notes_{{ $asset->id }}" 
+                                                              rows="3" 
+                                                              placeholder="Maximum allowable characters are 500." 
+                                                              maxlength="500">{{ $existingNotes }}</textarea>
+                                                    <div class="form-text small text-muted">Maximum allowable characters are 500.</div>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+
                         </div>
 
                         <div class="row">
@@ -603,6 +780,71 @@
     border-color: #146c43 !important;
     color: white !important;
 }
+
+/* Building asset value-specific colors */
+/* Green values: Yes, Clean, Good, Working, No faults, No lights */
+.btn-group .btn-check:checked + .building-value-yes,
+.btn-group .btn-check:checked + .building-value-clean,
+.btn-group .btn-check:checked + .building-value-good,
+.btn-group .btn-check:checked + .building-value-working,
+.btn-group .btn-check:checked + .building-value-no_faults,
+.btn-group .btn-check:checked + .building-value-no_lights,
+.btn-group .btn-check:checked + .building-value-n_a {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: white !important;
+}
+
+/* Orange/Warning values: Average, Needs Attention, Not checked, Partially Working */
+.btn-group .btn-check:checked + .building-value-average,
+.btn-group .btn-check:checked + .building-value-needs_attention,
+.btn-group .btn-check:checked + .building-value-not_checked,
+.btn-group .btn-check:checked + .building-value-partially_working {
+    background-color: #e67e22 !important;
+    border-color: #e67e22 !important;
+    color: white !important;
+}
+
+/* Red values: No, Poor, Not Working, Faults */
+.btn-group .btn-check:checked + .building-value-no,
+.btn-group .btn-check:checked + .building-value-poor,
+.btn-group .btn-check:checked + .building-value-not_working,
+.btn-group .btn-check:checked + .building-value-faults {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    color: white !important;
+}
+
+/* Hover states */
+.btn-group .btn-check:checked + .building-value-yes:hover,
+.btn-group .btn-check:checked + .building-value-clean:hover,
+.btn-group .btn-check:checked + .building-value-good:hover,
+.btn-group .btn-check:checked + .building-value-working:hover,
+.btn-group .btn-check:checked + .building-value-no_faults:hover,
+.btn-group .btn-check:checked + .building-value-no_lights:hover,
+.btn-group .btn-check:checked + .building-value-n_a:hover {
+    background-color: #157347 !important;
+    border-color: #146c43 !important;
+    color: white !important;
+}
+
+.btn-group .btn-check:checked + .building-value-average:hover,
+.btn-group .btn-check:checked + .building-value-needs_attention:hover,
+.btn-group .btn-check:checked + .building-value-not_checked:hover,
+.btn-group .btn-check:checked + .building-value-partially_working:hover {
+    background-color: #d35400 !important;
+    border-color: #d35400 !important;
+    color: white !important;
+}
+
+.btn-group .btn-check:checked + .building-value-no:hover,
+.btn-group .btn-check:checked + .building-value-poor:hover,
+.btn-group .btn-check:checked + .building-value-not_working:hover,
+.btn-group .btn-check:checked + .building-value-faults:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+    color: white !important;
+}
 </style>
 @endsection
 
@@ -749,6 +991,78 @@
             })();
             @endforeach
             
+            // Initialize Dropzone for each building asset
+            @foreach($buildings as $building)
+            @php
+                $buildingAssets = $buildingAssetsMap[$building->id] ?? collect();
+            @endphp
+            @foreach($buildingAssets as $asset)
+            (function() {
+                const buildingId = {{ $building->id }};
+                const assetId = {{ $asset->id }};
+                const dropzoneKey = 'building_' + buildingId + '_' + assetId;
+                const dropzoneElement = document.getElementById('building_' + buildingId + '_dropzone_' + assetId);
+                
+                if (dropzoneElement) {
+                    dropzoneFiles[dropzoneKey] = [];
+                    
+                    const myDropzone = new Dropzone('#building_' + buildingId + '_dropzone_' + assetId, {
+                        url: '#', // Dummy URL since we're handling submission manually
+                        paramName: 'building_' + buildingId + '_photos_' + assetId,
+                        autoProcessQueue: false,
+                        uploadMultiple: true,
+                        parallelUploads: 10,
+                        maxFiles: 10,
+                        maxFilesize: 5, // 5MB per file
+                        acceptedFiles: 'image/*',
+                        addRemoveLinks: true,
+                        dictDefaultMessage: '',
+                        dictRemoveFile: 'Remove',
+                        dictCancelUpload: 'Cancel',
+                        dictMaxFilesExceeded: 'Maximum 10 files allowed',
+                        previewTemplate: `
+                            <div class="dz-preview dz-file-preview">
+                                <div class="dz-image">
+                                    <img data-dz-thumbnail />
+                                </div>
+                                <div class="dz-details">
+                                    <div class="dz-filename"><span data-dz-name></span></div>
+                                    <div class="dz-size" data-dz-size></div>
+                                </div>
+                                <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                                <div class="dz-success-mark"><i class="ph-check-circle"></i></div>
+                                <div class="dz-error-mark"><i class="ph-x-circle"></i></div>
+                                <div class="dz-error-message"><span data-dz-errormessage></span></div>
+                                <a class="dz-remove" href="javascript:undefined;" data-dz-remove>Remove</a>
+                            </div>
+                        `,
+                        init: function() {
+                            const dz = this;
+                            
+                            // Store reference to dropzone
+                            dropzones[dropzoneKey] = dz;
+                            
+                            // Track files when added
+                            dz.on('addedfile', function(file) {
+                                console.log('File added to building_' + buildingId + '_dropzone_' + assetId + ':', file.name);
+                                dropzoneFiles[dropzoneKey].push(file);
+                            });
+                            
+                            // Remove from tracking when removed
+                            dz.on('removedfile', function(file) {
+                                console.log('File removed from building_' + buildingId + '_dropzone_' + assetId + ':', file.name);
+                                const index = dropzoneFiles[dropzoneKey].indexOf(file);
+                                if (index > -1) {
+                                    dropzoneFiles[dropzoneKey].splice(index, 1);
+                                }
+                            });
+                        }
+                    });
+                }
+            })();
+            @endforeach
+            @endforeach
+            
             // Modify form submission to include dropzone files
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -813,6 +1127,22 @@
                         formData.append('photos_{{ $asset->id }}[]', file);
                     });
                 }
+                @endforeach
+                
+                // Add files from each building asset dropzone
+                @foreach($buildings as $building)
+                @php
+                    $buildingAssets = $buildingAssetsMap[$building->id] ?? collect();
+                @endphp
+                @foreach($buildingAssets as $asset)
+                const buildingKey_{{ $building->id }}_{{ $asset->id }} = 'building_{{ $building->id }}_{{ $asset->id }}';
+                if (dropzoneFiles[buildingKey_{{ $building->id }}_{{ $asset->id }}] && dropzoneFiles[buildingKey_{{ $building->id }}_{{ $asset->id }}].length > 0) {
+                    console.log('Adding ' + dropzoneFiles[buildingKey_{{ $building->id }}_{{ $asset->id }}].length + ' files for building {{ $building->id }} asset {{ $asset->id }}');
+                    dropzoneFiles[buildingKey_{{ $building->id }}_{{ $asset->id }}].forEach(function(file, index) {
+                        formData.append('building_{{ $building->id }}_photos_{{ $asset->id }}[]', file);
+                    });
+                }
+                @endforeach
                 @endforeach
                 
                 // Show loading state

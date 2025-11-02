@@ -40,4 +40,33 @@ class BlockBuildingAsset extends Model
     {
         return $this->belongsTo(BlockInspectionValueType::class, 'block_inspection_value_type_id');
     }
+    
+    /**
+     * Get the inspection values for this asset type.
+     */
+    public function inspectionValues()
+    {
+        return $this->hasMany(BlockInspectionValue::class, 'block_inspection_value_type_id', 'block_inspection_value_type_id');
+    }
+    
+    /**
+     * Get the building type assets (pivot records).
+     */
+    public function buildingTypeAssets()
+    {
+        return $this->hasMany(BlockBuildingTypeAsset::class, 'block_building_asset_id');
+    }
+    
+    /**
+     * Get the building types that use this asset (many-to-many).
+     */
+    public function buildingTypes()
+    {
+        return $this->belongsToMany(
+            BlockBuildingType::class, 
+            'block_building_type_assets',
+            'block_building_asset_id',
+            'block_building_type_id'
+        )->withTimestamps();
+    }
 }

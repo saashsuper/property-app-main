@@ -220,7 +220,60 @@ class BlockInspectionController extends Controller
             ->get()
             ->keyBy('block_general_asset_id'); // Key by general asset ID for easy lookup
         
-        return view('block-inspections.edit', compact('blockInspection', 'blocks', 'users', 'generalAssets', 'existingInspectionAssets'));
+        // Load buildings for the selected block with their type
+        $buildings = $blockInspection->block->buildings()
+            ->with('buildingType')
+            ->orderBy('name')
+            ->get();
+        
+        // For each building, get applicable assets based on building_type_assets relationship
+        // Include general assets (type 0) and building-specific assets
+        $buildingAssetsMap = [];
+        foreach ($buildings as $building) {
+            $buildingTypeId = $building->building_type_id;
+            
+            // Get asset IDs for this building type (general type 0 + specific type)
+            $assetIds = \App\Models\BlockBuildingTypeAsset::whereIn('block_building_type_id', [0, $buildingTypeId])
+                ->where('block_building_asset_id', '>=', 5) // Only building-specific assets (5-10)
+                ->where('block_building_asset_id', '<=', 10)
+                ->pluck('block_building_asset_id')
+                ->unique()
+                ->toArray();
+            
+            // Load the actual assets with their inspection values
+            if (!empty($assetIds)) {
+                $buildingAssetsMap[$building->id] = \App\Models\BlockBuildingAsset::whereIn('id', $assetIds)
+                    ->with(['valueType.inspectionValues' => function($query) {
+                        $query->orderBy('id');
+                    }])
+                    ->orderBy('id')
+                    ->get();
+            } else {
+                $buildingAssetsMap[$building->id] = collect(); // Empty collection
+            }
+        }
+        
+        // Load existing inspection assets data for building assets
+        // Group by building_id and asset_id for easy lookup
+        $existingBuildingInspectionAssets = BlockInspectionAsset::where('block_inspection_id', $blockInspection->id)
+            ->whereNotNull('block_building_id')
+            ->whereNotNull('building_asset_id')
+            ->with(['buildingAsset', 'inspectionValue', 'images', 'blockBuilding'])
+            ->get()
+            ->groupBy(function($item) {
+                return $item->block_building_id . '_' . $item->building_asset_id;
+            });
+        
+        return view('block-inspections.edit', compact(
+            'blockInspection', 
+            'blocks', 
+            'users', 
+            'generalAssets', 
+            'existingInspectionAssets',
+            'buildings',
+            'buildingAssetsMap',
+            'existingBuildingInspectionAssets'
+        ));
     }
 
     /**
@@ -316,6 +369,9 @@ class BlockInspectionController extends Controller
 
         // Process General Assets data
         $this->processGeneralAssets($request, $blockInspection);
+        
+        // Process Building Assets data
+        $this->processBuildingAssets($request, $blockInspection);
 
         // Load the updated inspection with relationships
         $blockInspection->load([
@@ -614,6 +670,155 @@ class BlockInspectionController extends Controller
 
         \Log::info('=== processGeneralAssets END ===', [
             'total_assets' => $generalAssets->count(),
+            'processed_count' => $processedCount,
+        ]);
+    }
+
+    /**
+     * Process building assets data from the inspection edit form.
+     */
+    private function processBuildingAssets(Request $request, BlockInspection $blockInspection)
+    {
+        \Log::info('=== processBuildingAssets START ===', [
+            'inspection_id' => $blockInspection->id,
+            'block_id' => $blockInspection->block_id,
+        ]);
+
+        // Get all buildings for the block
+        $buildings = $blockInspection->block->buildings;
+        \Log::info('Buildings Count', ['count' => $buildings->count()]);
+        
+        // Get building assets (IDs 5-10: Stairs, Lights, Lifts, Walls, Fire Alarm, Doors/Fire Doors)
+        $buildingAssets = \App\Models\BlockBuildingAsset::whereIn('id', [5, 6, 7, 8, 9, 10])->get();
+        \Log::info('Building Assets Count', ['count' => $buildingAssets->count()]);
+
+        // Map status values to inspection value IDs
+        $statusToValueMap = $this->getStatusToValueMap();
+        \Log::info('Status to Value Map', $statusToValueMap);
+
+        $processedCount = 0;
+        foreach ($buildings as $building) {
+            $buildingId = $building->id;
+            $buildingTypeId = $building->building_type_id;
+            
+            // For Commercial Business Park (Type 4) and Houses (Type 3)
+            // Handle observations and comments instead of individual assets
+            if (in_array($buildingTypeId, [3, 4])) {
+                $observationsKey = "building_{$buildingId}_observations";
+                $commentsKey = "building_{$buildingId}_comments";
+                
+                // Only save if at least one field has data
+                if ($request->has($observationsKey) || $request->has($commentsKey)) {
+                    $observations = $request->input($observationsKey);
+                    $comments = $request->input($commentsKey);
+                    
+                    // Skip if both are empty
+                    if (empty($observations) && empty($comments)) {
+                        continue;
+                    }
+                    
+                    \Log::info("Creating/Updating Building Observations/Comments", [
+                        'building_id' => $buildingId,
+                        'building_type' => $buildingTypeId,
+                        'has_observations' => !empty($observations),
+                        'has_comments' => !empty($comments),
+                    ]);
+                    
+                    // Create or update inspection asset record for observations
+                    // We'll use a special marker: building_asset_id = NULL and a special field
+                    $inspectionAsset = BlockInspectionAsset::updateOrCreate(
+                        [
+                            'block_inspection_id' => $blockInspection->id,
+                            'block_building_id' => $buildingId,
+                            'building_asset_id' => null, // No specific asset
+                            'block_general_asset_id' => null,
+                        ],
+                        [
+                            'block_inspection_value_id' => null, // No value for text-only
+                            'comments' => $observations,
+                            'additional_comments' => $comments,
+                        ]
+                    );
+                    
+                    $processedCount++;
+                }
+                
+                continue; // Skip to next building
+            }
+            
+            // For other building types, process individual assets
+            foreach ($buildingAssets as $asset) {
+                $assetId = $asset->id;
+                
+                // Check if this building asset has any data submitted
+                // Format: building_{building_id}_asset_value_{asset_id}
+                $valueKey = "building_{$buildingId}_asset_value_{$assetId}";
+                $notesKey = "building_{$buildingId}_notes_{$assetId}";
+                $photosKey = "building_{$buildingId}_photos_{$assetId}";
+                
+                \Log::info("Checking Building {$building->name} - Asset {$asset->name}", [
+                    'building_id' => $buildingId,
+                    'asset_id' => $assetId,
+                    'value_key' => $valueKey,
+                    'has_value' => $request->has($valueKey),
+                    'value_id' => $request->input($valueKey),
+                    'has_notes' => $request->has($notesKey),
+                    'has_photos' => $request->hasFile($photosKey),
+                ]);
+                
+                // Skip if no value selected
+                if (!$request->has($valueKey)) {
+                    \Log::info("Skipping building {$buildingId} asset {$assetId} - no value selected");
+                    continue;
+                }
+
+                $inspectionValueId = $request->input($valueKey);
+                $notes = $request->input($notesKey);
+                
+                // Ensure notes is either a string or null
+                if (empty($notes)) {
+                    $notes = null;
+                }
+
+                \Log::info("Creating/Updating Building Inspection Asset", [
+                    'building_id' => $buildingId,
+                    'asset_id' => $assetId,
+                    'inspection_value_id' => $inspectionValueId,
+                    'notes' => $notes,
+                ]);
+
+                // Create or update the inspection asset record
+                $inspectionAsset = BlockInspectionAsset::updateOrCreate(
+                    [
+                        'block_inspection_id' => $blockInspection->id,
+                        'block_building_id' => $buildingId,
+                        'building_asset_id' => $assetId,
+                    ],
+                    [
+                        'block_general_asset_id' => null, // Building assets don't use general asset ID
+                        'block_inspection_value_id' => $inspectionValueId,
+                        'comments' => $notes,
+                    ]
+                );
+
+                \Log::info("Building Inspection Asset saved", [
+                    'id' => $inspectionAsset->id,
+                    'was_recently_created' => $inspectionAsset->wasRecentlyCreated,
+                ]);
+
+                $processedCount++;
+
+                // Process uploaded photos
+                if ($request->hasFile($photosKey)) {
+                    \Log::info("Processing photos for building {$buildingId} asset {$assetId}");
+                    $this->processAssetImages($request, $inspectionAsset, $blockInspection, $building, $assetId, $photosKey);
+                }
+            }
+        }
+
+        \Log::info('=== processBuildingAssets END ===', [
+            'total_buildings' => $buildings->count(),
+            'total_assets_per_building' => $buildingAssets->count(),
             'processed_count' => $processedCount,
         ]);
     }
