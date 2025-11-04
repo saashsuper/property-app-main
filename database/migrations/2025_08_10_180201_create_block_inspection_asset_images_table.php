@@ -8,6 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - Combines:
+     * - 2025_08_10_180201_create_block_inspection_asset_images_table.php (initial table creation)
+     * - 2025_10_18_100001_update_block_inspection_asset_images_for_general_assets.php
+     * - 2025_10_25_000002_add_gps_to_work_order_images_table.php (GPS fields only)
      */
     public function up(): void
     {
@@ -15,10 +20,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('block_inspection_asset_id');
             $table->unsignedBigInteger('block_inspection_id');
-            $table->unsignedBigInteger('block_building_id')->default(0);
+            $table->unsignedBigInteger('block_building_id')->nullable();
             $table->unsignedSmallInteger('building_asset_id')->nullable();
             $table->string('image_path', 255)->nullable();
             $table->string('image_name', 100)->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
             $table->unsignedSmallInteger('s3_status')->default(0);
             $table->timestamps();
             $table->softDeletes();

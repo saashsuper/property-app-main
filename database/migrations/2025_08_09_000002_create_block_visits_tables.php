@@ -6,11 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - Combines:
+     * - 2025_08_09_000002_create_block_visits_tables.php (initial table creation)
+     * - 2025_09_14_163151_add_block_issue_id_to_block_visits_table.php
+     * - 2025_10_12_132002_add_block_unit_id_to_block_visits_table.php
+     * - 2025_10_11_064455_add_image_name_to_block_visit_images_table.php (for block_visit_images)
+     */
     public function up(): void
     {
         Schema::create('block_visits', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedInteger('block_id');
+            $table->unsignedBigInteger('block_issue_id')->nullable();
+            $table->unsignedInteger('block_unit_id')->nullable();
             $table->string('ref_no', 30);
             $table->dateTime('scheduled_date_time');
             $table->dateTime('start_date_time')->nullable();
@@ -28,12 +39,16 @@ return new class extends Migration
             $table->mediumInteger('deleted_by')->nullable();
             $table->softDeletes();
             $table->timestamps();
+
+            // Foreign key constraint
+            $table->foreign('block_issue_id')->references('id')->on('block_issues')->onDelete('set null');
         });
 
         Schema::create('block_visit_images', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('block_visit_id');
             $table->string('image_path', 255)->nullable();
+            $table->string('image_name', 255)->nullable();
             $table->unsignedSmallInteger('s3_status')->default(0);
             $table->softDeletes();
             $table->timestamps();
@@ -64,6 +79,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('block_visit_teams');
@@ -72,5 +90,4 @@ return new class extends Migration
         Schema::dropIfExists('block_visits');
     }
 };
-
 

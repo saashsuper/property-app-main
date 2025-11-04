@@ -8,6 +8,10 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - Combines:
+     * - 2025_08_14_182533_create_block_information_table.php (initial table creation)
+     * - 2025_09_27_143224_add_soft_deletes_to_block_information_table.php
      */
     public function up(): void
     {
@@ -18,13 +22,16 @@ return new class extends Migration
             $table->text('description');
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
+            $table->unsignedBigInteger('deleted_by')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             // Foreign keys
             $table->foreign('block_id')->references('id')->on('blocks')->onDelete('cascade');
             $table->foreign('information_type_id')->references('id')->on('block_information_types')->onDelete('cascade');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('deleted_by')->references('id')->on('users')->onDelete('set null');
 
             // Indexes
             $table->index('block_id');
@@ -40,3 +47,4 @@ return new class extends Migration
         Schema::dropIfExists('block_information');
     }
 };
+

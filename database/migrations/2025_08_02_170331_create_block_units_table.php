@@ -8,14 +8,18 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - Combines:
+     * - 2025_08_02_170331_create_block_units_table.php (initial table creation)
+     * - 2025_09_01_070858_make_block_building_and_unit_type_nullable_in_block_units_table.php
      */
     public function up(): void
     {
         Schema::create('block_units', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('block_id');
-            $table->unsignedBigInteger('block_building_id');
-            $table->unsignedSmallInteger('block_unit_type_id');
+            $table->unsignedBigInteger('block_building_id')->nullable();
+            $table->unsignedSmallInteger('block_unit_type_id')->nullable();
             $table->string('unit_code', 50);
             $table->string('unit_name', 100);
             $table->string('owners_name', 100)->nullable();
@@ -40,8 +44,8 @@ return new class extends Migration
 
             // Foreign key constraints
             $table->foreign('block_id')->references('id')->on('blocks')->onDelete('cascade');
-            $table->foreign('block_building_id')->references('id')->on('block_buildings')->onDelete('cascade');
-            $table->foreign('block_unit_type_id')->references('id')->on('block_unit_types');
+            $table->foreign('block_building_id')->references('id')->on('block_buildings')->onDelete('set null');
+            $table->foreign('block_unit_type_id')->references('id')->on('block_unit_types')->onDelete('set null');
         });
     }
 
@@ -53,3 +57,4 @@ return new class extends Migration
         Schema::dropIfExists('block_units');
     }
 };
+

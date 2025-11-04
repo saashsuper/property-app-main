@@ -8,6 +8,10 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - Combines:
+     * - 2014_10_12_000000_create_user_types_table.php (initial table creation)
+     * - 2025_09_04_000001_add_is_hidden_to_user_types_table.php
      */
     public function up(): void
     {
@@ -15,6 +19,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->string('description')->nullable();
+            $table->boolean('is_hidden')->default(false);
             require_once __DIR__.'/helpers/CommonColumns.php';
             $commonColumns = require __DIR__.'/helpers/CommonColumns.php';
             $commonColumns->addCommonColumns($table);
@@ -29,3 +34,4 @@ return new class extends Migration
         Schema::dropIfExists('user_types');
     }
 };
+

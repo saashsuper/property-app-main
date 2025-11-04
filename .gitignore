@@ -51,3 +51,4 @@ coverage/
 *.sqlite3
 node_modules
 /public/storage
+database/migrations_backup_*

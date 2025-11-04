@@ -1,4 +1,4 @@
-<?php
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                <?php
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -8,6 +8,10 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
+     * CONSOLIDATED MIGRATION - Combines:
+     * - 2025_08_02_170550_create_block_issues_table.php (initial table creation)
+     * - 2025_08_23_085213_add_assigned_to_to_block_issues_table.php
      */
     public function up(): void
     {
@@ -34,6 +38,7 @@ return new class extends Migration
             $table->dateTime('preferred_end_date_time')->nullable();
             $table->string('note_for_access', 255)->nullable();
             $table->unsignedBigInteger('issued_by');
+            $table->unsignedBigInteger('assigned_to')->nullable();
             $table->unsignedInteger('block_visit_id')->nullable();
             $table->unsignedInteger('block_inspection_id')->nullable();
             $table->dateTime('issued_date_time')->nullable();
@@ -51,9 +56,9 @@ return new class extends Migration
             $table->foreign('block_unit_id')->references('id')->on('block_units')->onDelete('cascade');
             $table->foreign('contact_method_id')->references('id')->on('contact_methods')->onDelete('set null');
             $table->foreign('issued_by')->references('id')->on('users');
+            $table->foreign('assigned_to')->references('id')->on('users')->onDelete('set null');
             $table->foreign('created_by')->references('id')->on('users');
             $table->foreign('reported_by')->references('id')->on('users')->onDelete('cascade');
-            
         });
     }
 
@@ -65,3 +70,4 @@ return new class extends Migration
         Schema::dropIfExists('block_issues');
     }
 };
+
