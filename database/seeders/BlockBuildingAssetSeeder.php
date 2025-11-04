@@ -17,8 +17,10 @@ class BlockBuildingAssetSeeder extends Seeder
      */
     public function run(): void
     {
-        // Clear existing data
+        // Clear existing data (disable foreign key checks temporarily)
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         DB::table('block_building_assets')->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // Original 10 assets from saashmagna.sql building_assets table
         // Using exact block_inspection_value_type_id values from production database

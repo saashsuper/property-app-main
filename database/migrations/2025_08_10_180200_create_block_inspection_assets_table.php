@@ -40,7 +40,7 @@ return new class extends Migration
             $table->foreign('block_inspection_id')->references('id')->on('block_inspections')->onDelete('cascade');
             $table->foreign('block_building_id')->references('id')->on('block_buildings')->onDelete('cascade');
             $table->foreign('building_asset_id')->references('id')->on('building_assets')->onDelete('cascade');
-            $table->foreign('block_general_asset_id')->references('id')->on('block_general_assets')->onDelete('cascade');
+            // Note: block_general_asset_id foreign key will be added after block_general_assets table is created
             $table->foreign('block_inspection_value_id')->references('id')->on('block_inspection_values')->onDelete('cascade');
         });
     }
