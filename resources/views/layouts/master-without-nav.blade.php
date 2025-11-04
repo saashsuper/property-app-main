@@ -10,7 +10,7 @@
     <meta content="Property Management System" name="description" />
     <meta content="PROMAN" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/proman-favicon.svg') }}">
+    <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/absolute-property-group-favicon.svg') }}">
 
     @include('layouts.head-css')
     @stack('styles')
