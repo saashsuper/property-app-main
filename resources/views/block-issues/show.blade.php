@@ -108,6 +108,9 @@
                                 <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#createActionModal">
                                     <i class="ph-activity me-1"></i> Add Action
                                 </button>
+                                <button type="button" class="btn btn-dark btn-sm" onclick="printIssueDetails()">
+                                    <i class="ph-printer me-1"></i> Print
+                                </button>
                                 <a href="{{ route('block-issues.edit', $blockIssue) }}" class="btn btn-primary btn-sm">
                                     <i class="ph-pencil me-1"></i> Edit
                                 </a>
@@ -2288,7 +2291,126 @@
                 });
             }
         });
+        
+        // Print Issue Details Function
+        function printIssueDetails() {
+            // Add print class to body
+            document.body.classList.add('printing');
+            
+            // Trigger print dialog
+            window.print();
+            
+            // Remove print class after printing
+            setTimeout(function() {
+                document.body.classList.remove('printing');
+            }, 100);
+        }
     </script>
+    
+    <style>
+        /* Print Styles */
+        @media print {
+            /* Hide elements that shouldn't be printed */
+            .page-title-box,
+            .breadcrumb,
+            .card-header .d-flex.gap-2,
+            .btn,
+            button,
+            .modal,
+            .modal-backdrop,
+            .sidebar,
+            .navbar,
+            .footer,
+            .app-menu,
+            .navbar-menu,
+            .topbar,
+            #page-topbar,
+            .vertical-overlay {
+                display: none !important;
+            }
+            
+            /* Adjust page layout for printing */
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+            }
+            
+            .page-content {
+                margin: 0 !important;
+                padding: 20px !important;
+            }
+            
+            .container-fluid {
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+            
+            .card {
+                border: 1px solid #dee2e6 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            
+            .card-header {
+                background-color: #f8f9fa !important;
+                border-bottom: 1px solid #dee2e6 !important;
+                padding: 15px !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .card-title {
+                font-size: 18px !important;
+                font-weight: bold !important;
+            }
+            
+            /* Keep badge colors */
+            .badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            /* Ensure images print properly */
+            img {
+                max-width: 100% !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Add header with issue reference */
+            .page-content::before {
+                content: "Block Issue Details - Printed on " attr(data-print-date);
+                display: block;
+                font-size: 12px;
+                color: #6c757d;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #dee2e6;
+            }
+            
+            /* Better table printing */
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            /* Timeline adjustments for print */
+            .timeline::before {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .timeline-item::before {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
     
     <style>
         /* Custom Dropzone Styling */
