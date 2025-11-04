@@ -40,12 +40,11 @@ class DatabaseSeeder extends Seeder
             IssueTypeSeeder::class,
             PrioritySeeder::class,
             PermissionsSeeder::class,  // Added: Permissions and roles
-            UserSeeder::class,  // Added: Create default users including admin
+            RealUserSeeder::class,  // Create admin user with proper role assignment
         ]);
 
         // Seed main data
         $this->call([
-            // RealUserSeeder::class,
             // RoleUserSeeder::class,  // Added: Assign roles to users
             // ContractorUserSeeder::class,
             // RealBlockSeeder::class,
