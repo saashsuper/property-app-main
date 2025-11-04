@@ -135,17 +135,30 @@
         }
         
         .asset-status-working {
-            color: #28a745;
+            background-color: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
             font-weight: bold;
+            display: inline-block;
         }
         
         .asset-status-not-working {
-            color: #dc3545;
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
             font-weight: bold;
+            display: inline-block;
         }
         
         .asset-status-na {
-            color: #6c757d;
+            background-color: #ffc107;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
         }
         
         .footer {
@@ -206,8 +219,8 @@
         }
         
         .asset-image {
-            max-width: 180px;
-            max-height: 180px;
+            max-width: 300px;
+            max-height: 300px;
             border: 2px solid #dee2e6;
             margin: 5px;
             padding: 3px;
@@ -237,9 +250,30 @@
             color: #6c757d;
             margin-top: 3px;
         }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            max-width: 300px;
+            height: auto;
+        }
     </style>
 </head>
 <body>
+    <!-- Logo -->
+    <div class="logo-container">
+        @php
+            $logoPath = public_path('build/images/absolute-pdf-logo.JPG');
+        @endphp
+        @if(file_exists($logoPath))
+            <img src="{{ $logoPath }}" alt="Absolute Property Group" class="logo">
+        @endif
+    </div>
+
     <!-- Header -->
     <div class="header">
         <h1>BLOCK INSPECTION REPORT</h1>

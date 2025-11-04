@@ -217,17 +217,29 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $asset->inspectionValue->valueType->name == 'Good' ? 'success' : ($asset->inspectionValue->valueType->name == 'Fair' ? 'warning' : 'danger') }}-subtle">
+                                            @php
+                                                $valueName = strtolower($asset->inspectionValue->name ?? 'n/a');
+                                                if(in_array($valueName, ['good', 'working', 'operational'])) {
+                                                    $badgeClass = 'bg-success';
+                                                } elseif(in_array($valueName, ['poor', 'not working', 'non-operational'])) {
+                                                    $badgeClass = 'bg-danger';
+                                                } elseif(in_array($valueName, ['fair', 'needs attention', 'average'])) {
+                                                    $badgeClass = 'bg-warning';
+                                                } else {
+                                                    $badgeClass = 'bg-secondary';
+                                                }
+                                            @endphp
+                                            <span class="badge {{ $badgeClass }} text-white">
                                                 {{ $asset->inspectionValue->name ?? 'N/A' }}
                                             </span>
                                         </td>
                                         <td>{{ $asset->comments ?? '-' }}</td>
                                         <td>
                                             @if($asset->images->count() > 0)
-                                                <div class="d-flex gap-1 flex-wrap">
+                                                <div class="d-flex gap-2 flex-wrap">
                                                     @foreach($asset->images as $image)
                                                         <a href="{{ $image->image_url }}" target="_blank" class="d-inline-block">
-                                                            <img src="{{ $image->image_url }}" alt="Asset image" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                                            <img src="{{ $image->image_url }}" alt="Asset image" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;">
                                                         </a>
                                                     @endforeach
                                                 </div>
