@@ -1728,6 +1728,43 @@
             // Hide work order alert when modal is shown
             $('#createWorkOrderModal').on('show.bs.modal', function() {
                 hideWorkOrderAlert();
+                // Note: Don't reset work order type here - it's handled in resetWorkOrderModalToCreateMode()
+                // and would override the correct type when editing
+            });
+            
+            // Handle "Raise Work Order" button click (for creating new work orders)
+            $('button[data-bs-target="#createWorkOrderModal"]').on('click', function() {
+                // Reset to create mode (default to Outsource)
+                resetWorkOrderModalToCreateMode();
+            });
+            
+            // Clean up when modal is closed
+            $('#createWorkOrderModal').on('hidden.bs.modal', function() {
+                // Remove PUT method field if exists (for next open)
+                $('#createWorkOrderForm').find('input[name="_method"]').remove();
+            });
+            
+            // Handle Work Order Type toggle
+            $('#workOrderType').on('change', function() {
+                const selectedType = $(this).val();
+                
+                if (selectedType === 'inhouse') {
+                    // Show Property Manager, hide Contractor
+                    $('#propertyManagerFieldContainer').show();
+                    $('#contractorFieldContainer').hide();
+                    
+                    // Enable Property Manager field and disable Contractor field
+                    $('#propertyManagerField').prop('required', true).prop('disabled', false);
+                    $('#contractorField').prop('required', false).prop('disabled', true).val('');
+                } else {
+                    // Show Contractor, hide Property Manager
+                    $('#contractorFieldContainer').show();
+                    $('#propertyManagerFieldContainer').hide();
+                    
+                    // Enable Contractor field and disable Property Manager field
+                    $('#contractorField').prop('required', true).prop('disabled', false);
+                    $('#propertyManagerField').prop('required', false).prop('disabled', true).val('');
+                }
             });
 
             // Hide action alert when modal is shown
@@ -1974,8 +2011,9 @@
                 $('#workOrderSubmitBtnText').text('Raise Work Order');
                 $('#createWorkOrderForm').attr('action', '{{ route("block-work-orders.store") }}');
                 $('#createWorkOrderForm').find('input[name="_method"]').remove();
-                $('#createWorkOrderForm input[name="block_id"]').val('{{ $blockIssue->block->id }}');
                 $('#createWorkOrderForm input[name="block_issue_id"]').val('{{ $blockIssue->id }}');
+                // Reset work order type to default (Outsource)
+                $('#workOrderType').val('outsource').trigger('change');
                 hideWorkOrderAlert();
             }
 
@@ -2006,8 +2044,24 @@
                                 $('#createWorkOrderForm').append('<input type="hidden" name="_method" value="PUT">');
                             }
                             
-                            // Populate form fields
-                            $('#createWorkOrderForm select[name="contractor_id"]').val(workOrder.contractor_id || '');
+                            // Set Work Order Type based on whether assigned user is property manager
+                            if (workOrder.is_property_manager === true || workOrder.is_property_manager === 1) {
+                                // Set to In House and trigger change to show property manager field
+                                $('#workOrderType').val('inhouse').trigger('change');
+                                // Populate property manager field after change event
+                                setTimeout(() => {
+                                    $('#propertyManagerField').val(workOrder.contractor_id || '');
+                                }, 100);
+                            } else {
+                                // Set to Outsource and trigger change to show contractor field
+                                $('#workOrderType').val('outsource').trigger('change');
+                                // Populate contractor field after change event
+                                setTimeout(() => {
+                                    $('#contractorField').val(workOrder.contractor_id || '');
+                                }, 100);
+                            }
+                            
+                            // Populate other form fields
                             $('#createWorkOrderForm select[name="priority_id"]').val(workOrder.priority_id || '');
                             
                             // Format datetime for inputs
@@ -2612,24 +2666,18 @@
                             </div>
                         </div>
                         
-                        <!-- Hidden fields for block, unit, and building -->
-                        <input type="hidden" name="block_id" value="{{ $blockIssue->block->id }}">
+                        <!-- Only pass the issue ID - backend will populate all related data -->
                         <input type="hidden" name="block_issue_id" value="{{ $blockIssue->id }}">
-                        <input type="hidden" name="block_unit_id" value="">
-                        <input type="hidden" name="block_building_id" value="">
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Assign to Contractor <span class="text-danger">*</span></label>
-                                <select class="form-select" name="contractor_id" required>
-                                    <option value="">Select Contractor</option>
-                                    @foreach($contractors as $contractor)
-                                        <option value="{{ $contractor->id }}">
-                                            {{ $contractor->name }} ({{ $contractor->email }})
-                                        </option>
-                                    @endforeach
+                                <label class="form-label">Work Order Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="workOrderType" required>
+                                    <option value="outsource" selected>Outsource</option>
+                                    <option value="inhouse">In House</option>
                                 </select>
                             </div>
+                            
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Priority <span class="text-danger">*</span></label>
                                 <select class="form-select" name="priority_id" required>
@@ -2643,8 +2691,36 @@
                             </div>
                         </div>
                         
-                        <!-- Hidden field for default Pending status -->
-                        <input type="hidden" name="status" value="1">
+                        <div class="row">
+                            <div class="col-md-6 mb-3" id="contractorFieldContainer">
+                                <label class="form-label">Assign to Contractor <span class="text-danger">*</span></label>
+                                <select class="form-select" name="contractor_id" id="contractorField">
+                                    <option value="">Select Contractor</option>
+                                    @foreach($contractors as $contractor)
+                                        <option value="{{ $contractor->id }}">
+                                            {{ $contractor->name }} ({{ $contractor->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3" id="propertyManagerFieldContainer" style="display: none;">
+                                <label class="form-label">Assign Property Manager <span class="text-danger">*</span></label>
+                                <select class="form-select" name="property_manager_id" id="propertyManagerField">
+                                    <option value="">Select Property Manager</option>
+                                    @foreach($propertyManagers as $manager)
+                                        <option value="{{ $manager->id }}">
+                                            {{ $manager->name }} ({{ $manager->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Deadline Date</label>
+                                <input type="date" class="form-control" name="deadline_date">
+                            </div>
+                        </div>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -2657,29 +2733,13 @@
                             </div>
                         </div>
                         
-                        
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Deadline Date</label>
-                                <input type="date" class="form-control" name="deadline_date">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Comments</label>
+                                <textarea class="form-control" name="comment" rows="3" placeholder="Additional comments or notes..."></textarea>
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label class="form-label">Comments</label>
-                            <textarea class="form-control" name="comment" rows="3" placeholder="Additional comments or notes..."></textarea>
-                        </div>
-                        
-                        <!-- Hidden fields for obvious/default values -->
-                        <input type="hidden" name="issued_from" value="1">
-                        <input type="hidden" name="from_id" value="{{ auth()->id() }}">
-                        <input type="hidden" name="issued_date_time" value="{{ now()->format('Y-m-d\TH:i') }}">
-                        <input type="hidden" name="contact_name" value="">
-                        <input type="hidden" name="contact_mobile" value="">
-                        <input type="hidden" name="contact_email" value="">
-                        <input type="hidden" name="note_for_access" value="">
-                        <input type="hidden" name="repair_category_id" value="">
-                        <input type="hidden" name="issue" value="">
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

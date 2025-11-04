@@ -29,6 +29,7 @@ class BlockIssue extends Model
         'contractor_type_id',
         'priority_id',
         'block_unit_id',
+        'block_building_id',
         'contact_details',
         'issue',
         'issue_type',
@@ -89,6 +90,14 @@ class BlockIssue extends Model
     public function blockUnit()
     {
         return $this->belongsTo(BlockUnit::class, 'block_unit_id');
+    }
+
+    /**
+     * Get the block building that owns the issue.
+     */
+    public function blockBuilding()
+    {
+        return $this->belongsTo(BlockBuilding::class, 'block_building_id');
     }
 
     /**

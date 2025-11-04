@@ -237,6 +237,11 @@ class BlockIssueController extends Controller
             $q->where('name', 'Contractor Admin'); 
         })->orderBy('name')->get();
         
+        // Load property managers for in-house work orders
+        $propertyManagers = User::whereHas('userType', function($q) { 
+            $q->where('name', 'Property manager'); 
+        })->orderBy('name')->get();
+        
         // Return JSON data for AJAX requests (edit modal)
         if (request()->ajax()) {
             return response()->json([
@@ -245,7 +250,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors', 'propertyManagers'));
     }
 
     /**

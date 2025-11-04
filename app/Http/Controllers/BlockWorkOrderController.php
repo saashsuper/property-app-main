@@ -80,25 +80,15 @@ class BlockWorkOrderController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate only user-input fields
         $validator = Validator::make($request->all(), [
-            'block_id' => 'required|exists:blocks,id',
             'block_issue_id' => 'required|exists:block_issues,id',
-            'issued_from' => 'nullable|integer',
-            'from_id' => 'nullable|integer',
-            'block_unit_id' => 'required|exists:block_units,id',
-            'block_building_id' => 'nullable|exists:block_buildings,id',
             'priority_id' => 'required|integer|min:1|max:5',
-            'issued_date_time' => 'nullable|date',
-            'contractor_id' => 'nullable|integer',
-            'contact_name' => 'nullable|string|max:100',
-            'contact_mobile' => 'nullable|string|max:20',
-            'contact_email' => 'nullable|email|max:100',
+            'contractor_id' => 'nullable|exists:users,id',
+            'property_manager_id' => 'nullable|exists:users,id',
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',
             'deadline_date' => 'nullable|date',
-            'repair_category_id' => 'nullable|integer',
-            'issue' => 'nullable|string|max:255',
-            'note_for_access' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'pdf' => 'nullable|mimes:pdf|max:10240',
@@ -119,7 +109,31 @@ class BlockWorkOrderController extends Controller
                 ->withInput();
         }
 
-        $data = $request->except(['images', 'pdf']);
+        // Fetch the issue with related data from database
+        $issue = \App\Models\BlockIssue::with(['block', 'blockUnit', 'blockBuilding'])
+            ->findOrFail($request->block_issue_id);
+
+        // Populate data from issue (single source of truth)
+        $data = [
+            'block_id' => $issue->block_id,
+            'block_issue_id' => $issue->id,
+            'block_unit_id' => $issue->block_unit_id,
+            'block_building_id' => $issue->block_building_id,
+            'priority_id' => $request->priority_id,
+            'preferred_start_date_time' => $request->preferred_start_date_time,
+            'preferred_end_date_time' => $request->preferred_end_date_time,
+            'deadline_date' => $request->deadline_date,
+            'comment' => $request->comment,
+        ];
+        
+        // Handle contractor or property manager assignment
+        if ($request->property_manager_id) {
+            $data['contractor_id'] = $request->property_manager_id;
+            // You might want to add a flag to distinguish: $data['is_inhouse'] = true;
+        } elseif ($request->contractor_id) {
+            $data['contractor_id'] = $request->contractor_id;
+            // $data['is_inhouse'] = false;
+        }
         
         // Auto-generate reference number
         $data['ref_no'] = $this->generateWorkOrderRefNo();
@@ -127,7 +141,11 @@ class BlockWorkOrderController extends Controller
         // Set default status to Pending (1)
         $data['status'] = 1;
         
+        // Set system fields
         $data['issued_by'] = Auth::id();
+        $data['issued_from'] = 1;
+        $data['from_id'] = Auth::id();
+        $data['issued_date_time'] = now();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
 
@@ -195,13 +213,21 @@ class BlockWorkOrderController extends Controller
      */
     public function show(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images', 'contractor']);
+        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images', 'contractor.userType']);
+        
+        // Determine if contractor is a property manager
+        $isPropertyManager = false;
+        if ($blockWorkOrder->contractor && $blockWorkOrder->contractor->userType) {
+            $isPropertyManager = $blockWorkOrder->contractor->userType->name === 'Property manager';
+        }
         
         // Return JSON data for AJAX requests (edit modal)
         if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
             return response()->json([
                 'success' => true,
-                'data' => $blockWorkOrder
+                'data' => array_merge($blockWorkOrder->toArray(), [
+                    'is_property_manager' => $isPropertyManager
+                ])
             ]);
         }
         
@@ -228,40 +254,65 @@ class BlockWorkOrderController extends Controller
      */
     public function update(Request $request, BlockWorkOrder $blockWorkOrder)
     {
+        // Simplified validation for AJAX requests from issue details page
         $validator = Validator::make($request->all(), [
-            'block_id' => 'required|exists:blocks,id',
             'block_issue_id' => 'required|exists:block_issues,id',
-            'issued_from' => 'nullable|integer',
-            'from_id' => 'nullable|integer',
-            'block_unit_id' => 'nullable|exists:block_units,id',
-            'block_building_id' => 'nullable|exists:block_buildings,id',
             'priority_id' => 'required|integer|min:1|max:5',
-            'issued_date_time' => 'nullable|date',
-            'contractor_id' => 'nullable|integer',
-            'contact_name' => 'nullable|string|max:100',
-            'contact_mobile' => 'nullable|string|max:20',
-            'contact_email' => 'nullable|email|max:100',
+            'contractor_id' => 'nullable|exists:users,id',
+            'property_manager_id' => 'nullable|exists:users,id',
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',
             'deadline_date' => 'nullable|date',
-            'status' => 'required|integer|min:1|max:5',
-            'ref_no' => 'required|string|max:100|unique:block_work_orders,ref_no,' . $blockWorkOrder->id,
-            'repair_category_id' => 'nullable|integer',
-            'issue' => 'nullable|string|max:255',
-            'note_for_access' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
+            'status' => 'nullable|integer|min:1|max:5',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'pdf' => 'nullable|mimes:pdf|max:10240',
         ]);
 
         if ($validator->fails()) {
+            // Check if this is an AJAX request
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        $data = $request->except(['images', 'pdf']);
-        $data['updated_by'] = Auth::id();
+        // Fetch the issue with related data from database
+        $issue = \App\Models\BlockIssue::with(['block', 'blockUnit', 'blockBuilding'])
+            ->findOrFail($request->block_issue_id);
+
+        // Populate data from issue (single source of truth)
+        $data = [
+            'block_id' => $issue->block_id,
+            'block_issue_id' => $issue->id,
+            'block_unit_id' => $issue->block_unit_id,
+            'block_building_id' => $issue->block_building_id,
+            'priority_id' => $request->priority_id,
+            'preferred_start_date_time' => $request->preferred_start_date_time,
+            'preferred_end_date_time' => $request->preferred_end_date_time,
+            'deadline_date' => $request->deadline_date,
+            'comment' => $request->comment,
+            'updated_by' => Auth::id(),
+        ];
+        
+        // Handle contractor or property manager assignment
+        if ($request->property_manager_id) {
+            $data['contractor_id'] = $request->property_manager_id;
+        } elseif ($request->contractor_id) {
+            $data['contractor_id'] = $request->contractor_id;
+        }
+        
+        // Update status if provided
+        if ($request->has('status')) {
+            $data['status'] = $request->status;
+        }
 
         // Handle PDF upload
         if ($request->hasFile('pdf')) {
@@ -298,6 +349,15 @@ class BlockWorkOrderController extends Controller
         }
 
         $blockWorkOrder->update($data);
+
+        // Check if this is an AJAX request
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order updated successfully!',
+                'data' => $blockWorkOrder
+            ]);
+        }
 
         return redirect()->route('block-work-orders.index')
             ->with('success', 'Block work order updated successfully!');
