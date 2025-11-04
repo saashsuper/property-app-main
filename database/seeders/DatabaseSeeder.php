@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             IssueTypeSeeder::class,
             PrioritySeeder::class,
             PermissionsSeeder::class,  // Added: Permissions and roles
+            UserSeeder::class,  // Added: Create default users including admin
         ]);
 
         // Seed main data
@@ -101,6 +102,7 @@ class DatabaseSeeder extends Seeder
             'model_has_permissions',  // Permission system tables
             'model_has_roles',
             'role_has_permissions',
+            'users',  // Clear users before user_types
             'permissions',
             'roles',
             'user_types',
