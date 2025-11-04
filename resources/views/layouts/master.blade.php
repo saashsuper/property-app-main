@@ -20,7 +20,7 @@
     <link rel="manifest" href="/manifest.json">
     
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/proman-favicon.svg') }}">
+    <link rel="shortcut icon" href="{{ URL::asset('build/images/logos/absolute-property-group-favicon.svg') }}">
     <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
     
     <meta name="csrf-token" content="{{ csrf_token() }}">

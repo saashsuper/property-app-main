@@ -22,14 +22,14 @@ body {
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1rem 0;
+    padding: 4rem 0;
 }
 
 /* Ensure container fits properly */
 .container {
     max-width: 100%;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
 
 /* Fix card height issues */
@@ -38,10 +38,21 @@ body {
     max-height: none;
 }
 
+/* Add padding to main card container */
+.col-lg-11 > .card {
+    padding: 2rem;
+}
+
+@media (max-width: 768px) {
+    .col-lg-11 > .card {
+        padding: 1rem;
+    }
+}
+
 /* Responsive adjustments */
 @media (max-height: 800px) {
     .auth-page-wrapper {
-        padding: 0.5rem 0;
+        padding: 2rem 0;
     }
     
     .card-body {
@@ -51,7 +62,7 @@ body {
 
 @media (max-height: 600px) {
     .auth-page-wrapper {
-        padding: 0.25rem 0;
+        padding: 1rem 0;
     }
     
     .card-body {
@@ -62,7 +73,7 @@ body {
 /* Fix for smaller screens */
 @media (max-width: 768px) {
     .auth-page-wrapper {
-        padding: 0.5rem 0;
+        padding: 2rem 0;
     }
     
     .card-body {
@@ -77,8 +88,12 @@ body {
 }
 
 .col-lg-11, .col-xxl-5, .col-xxl-6 {
-    padding-left: 15px;
-    padding-right: 15px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.card {
+    margin: 1rem 0;
 }
 </style>
 @endpush
@@ -96,72 +111,17 @@ body {
                                 <div class="card auth-card bg-secondary h-100 border-0 shadow-none d-none d-sm-block mb-0">
                                     <div class="card-body py-5 d-flex justify-content-between flex-column">
                                         <div class="text-center">
-                                            <!-- PROMAN Logo on left side -->
+                                            <!-- Absolute Property Group Logo on left side -->
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <h1 class="text-white fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">PROMAN</h1>
+                                                <img src="{{ URL::asset('build/images/logos/absolute-property-group-logo.svg') }}" alt="Absolute Property Group" class="img-fluid" style="max-width: 350px; height: auto;">
                                             </div>
-                                            <h3 class="text-white">Start your journey with us.</h3>
                                         </div>
 
-                                        <div
-                                            class="auth-effect-main my-5 position-relative rounded-circle d-flex align-items-center justify-content-center mx-auto">
-                                            <div
-                                                class="effect-circle-1 position-relative mx-auto rounded-circle d-flex align-items-center justify-content-center">
-                                                <div
-                                                    class="effect-circle-2 position-relative mx-auto rounded-circle d-flex align-items-center justify-content-center">
-                                                    <div
-                                                        class="effect-circle-3 mx-auto rounded-circle position-relative text-white fs-4xl d-flex align-items-center justify-content-center">
-                                                        Welcome to <span class="text-primary ms-1">PROMAN</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <ul class="auth-user-list list-unstyled">
-                                                <li>
-                                                    <div class="avatar-sm d-inline-block">
-                                                        <div
-                                                            class="avatar-title bg-white shadow-lg overflow-hidden rounded-circle">
-                                                            <img src="{{ URL::asset('build/images/users/avatar-1.jpg') }}"
-                                                                alt="" class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="avatar-sm d-inline-block">
-                                                        <div
-                                                            class="avatar-title bg-white shadow-lg overflow-hidden rounded-circle">
-                                                            <img src="{{ URL::asset('build/images/users/avatar-2.jpg') }}"
-                                                                alt="" class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="avatar-sm d-inline-block">
-                                                        <div
-                                                            class="avatar-title bg-white shadow-lg overflow-hidden rounded-circle">
-                                                            <img src="{{ URL::asset('build/images/users/avatar-3.jpg') }}"
-                                                                alt="" class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="avatar-sm d-inline-block">
-                                                        <div
-                                                            class="avatar-title bg-white shadow-lg overflow-hidden rounded-circle">
-                                                            <img src="{{ URL::asset('build/images/users/avatar-4.jpg') }}"
-                                                                alt="" class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                <li>
-                                                    <div class="avatar-sm d-inline-block">
-                                                        <div
-                                                            class="avatar-title bg-white shadow-lg overflow-hidden rounded-circle">
-                                                            <img src="{{ URL::asset('build/images/users/avatar-5.jpg') }}"
-                                                                alt="" class="img-fluid">
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                            </ul>
+                                        <div class="my-5">
+                                            <p class="text-white opacity-75 text-center fs-lg">
+                                                Professional property management services<br>
+                                                since 1998
+                                            </p>
                                         </div>
 
                                         <div class="text-center">
@@ -169,8 +129,7 @@ body {
                                                 &copy;
                                                 <script>
                                                     document.write(new Date().getFullYear())
-                                                </script> PROMAN. Crafted with <i
-                                                    class="mdi mdi-heart text-danger"></i> by PROMAN
+                                                </script> Absolute Property Group
                                             </p>
                                         </div>
                                     </div>
@@ -181,12 +140,8 @@ body {
                                 <div class="card mb-0 border-0 shadow-none mb-0">
                                     <div class="card-body p-sm-5 m-lg-4">
                                         <div class="text-center mt-5">
-                                            <!-- PROMAN Logo -->
-                                            <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <h2 class="text-dark fw-bold" style="font-size: 2rem; letter-spacing: 1.5px;">PROMAN</h2>
-                                            </div>
                                             <h5 class="fs-3xl">Welcome Back</h5>
-                                            <p class="text-muted">Sign in to continue to PROMAN.</p>
+                                            <p class="text-muted">Sign in to continue to Absolute Property Group.</p>
                                         </div>
                                         <div class="p-2 mt-5">
                                             <form action="{{ route('login') }}" method="post">
@@ -238,22 +193,6 @@ body {
 
                                                 <div class="mt-4">
                                                     <button class="btn btn-primary w-100" type="submit">Sign In</button>
-                                                </div>
-
-                                                <div class="mt-4 pt-2 text-center">
-                                                    <div class="signin-other-title position-relative">
-                                                        <h5 class="fs-sm mb-4 title">Sign In with</h5>
-                                                    </div>
-                                                    <div class="pt-2 hstack gap-2 justify-content-center">
-                                                        <button type="button" class="btn btn-subtle-primary btn-icon"><i
-                                                                                                class="ph-facebook-logo fs-lg"></i></button>
-                            <button type="button" class="btn btn-subtle-danger btn-icon"><i
-                                class="ph-google-logo fs-lg"></i></button>
-                            <button type="button" class="btn btn-subtle-dark btn-icon"><i
-                                class="ph-github-logo fs-lg"></i></button>
-                            <button type="button" class="btn btn-subtle-info btn-icon"><i
-                                class="ph-twitter-logo fs-lg"></i></button>
-                                                    </div>
                                                 </div>
                                             </form>
 

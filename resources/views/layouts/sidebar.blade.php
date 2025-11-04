@@ -50,18 +50,18 @@
         <div class="navbar-brand-box">
             <a href="{{ route('root') }}" class="logo logo-dark">
                 <span class="logo-sm">
-                    <span class="fw-bold text-dark" style="font-size: 1rem; letter-spacing: 1px;">PROMAN</span>
+                    <img src="{{ URL::asset('build/images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="30">
                 </span>
                 <span class="logo-lg">
-                    <span class="fw-bold text-dark" style="font-size: 1.2rem; letter-spacing: 1.5px;">PROMAN</span>
+                    <img src="{{ URL::asset('build/images/logos/absolute-sidebar-logo.svg') }}" alt="Absolute Property Group" height="40">
                 </span>
             </a>
             <a href="{{ route('root') }}" class="logo logo-light">
                 <span class="logo-sm">
-                    <span class="fw-bold text-white" style="font-size: 1rem; letter-spacing: 1px;">PROMAN</span>
+                    <img src="{{ URL::asset('build/images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="30">
                 </span>
                 <span class="logo-lg">
-                    <span class="fw-bold text-white" style="font-size: 1.2rem; letter-spacing: 1.5px;">PROMAN</span>
+                    <img src="{{ URL::asset('build/images/logos/absolute-sidebar-logo-light.svg') }}" alt="Absolute Property Group" height="40">
                 </span>
             </a>
             <button type="button" class="btn btn-sm p-0 fs-3xl header-item float-end btn-vertical-sm-hover"
