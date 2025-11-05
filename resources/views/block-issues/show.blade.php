@@ -2297,25 +2297,79 @@
             // Add print class to body
             document.body.classList.add('printing');
             
+            // Set print date
+            const now = new Date();
+            const printDate = now.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            $('.page-content').attr('data-print-date', printDate);
+            
+            // Set issue reference number for header
+            const refNo = '{{ $blockIssue->ref_no ?? "" }}';
+            $('.card:first .card-header').attr('data-ref-no', refNo);
+            
+            // Hide empty sections before printing
+            hideEmptySections();
+            
             // Trigger print dialog
             window.print();
             
-            // Remove print class after printing
+            // Remove print class and restore sections after printing
             setTimeout(function() {
                 document.body.classList.remove('printing');
+                // Remove the temporary hide class
+                $('.print-hide-empty').removeClass('print-hide-empty');
             }, 100);
+        }
+        
+        // Function to hide empty sections
+        function hideEmptySections() {
+            // Check each card for empty content
+            $('.card').each(function() {
+                const $card = $(this);
+                const $tbody = $card.find('table tbody');
+                
+                // Check if this card has a table
+                if ($tbody.length > 0) {
+                    // Check if tbody is empty or only has a "no records" row
+                    const rowCount = $tbody.find('tr').length;
+                    const hasColspanRow = $tbody.find('tr td[colspan]').length > 0;
+                    const hasNoRecordsText = $tbody.text().toLowerCase().includes('no') && 
+                                            ($tbody.text().toLowerCase().includes('found') || 
+                                             $tbody.text().toLowerCase().includes('available') ||
+                                             $tbody.text().toLowerCase().includes('records'));
+                    
+                    // If empty or only has "no records" message, hide it for print
+                    if (rowCount === 0 || (rowCount === 1 && (hasColspanRow || hasNoRecordsText))) {
+                        $card.addClass('print-hide-empty');
+                    }
+                }
+                
+                // Also check for alert messages indicating no data
+                const hasNoDataAlert = $card.find('.alert-info, .alert-warning').filter(function() {
+                    const text = $(this).text().toLowerCase();
+                    return text.includes('no ') && (text.includes('actions') || text.includes('work orders') || text.includes('visits'));
+                }).length > 0;
+                
+                if (hasNoDataAlert) {
+                    $card.addClass('print-hide-empty');
+                }
+            });
         }
     </script>
     
     <style>
         /* Print Styles */
         @media print {
-            /* Hide elements that shouldn't be printed */
+            /* Hide only specific action buttons, not all buttons */
             .page-title-box,
             .breadcrumb,
-            .card-header .d-flex.gap-2,
-            .btn,
-            button,
+            .card-header .btn,
+            .card-header button,
             .modal,
             .modal-backdrop,
             .sidebar,
@@ -2325,89 +2379,302 @@
             .navbar-menu,
             .topbar,
             #page-topbar,
-            .vertical-overlay {
+            .vertical-overlay,
+            .dropzone,
+            #uploadPhotosModal,
+            form[onsubmit*="confirm"],
+            a.btn-outline-danger[title*="Delete"],
+            .ph-pencil,
+            .ph-trash {
                 display: none !important;
             }
             
             /* Adjust page layout for printing */
-            body {
-                margin: 0;
-                padding: 0;
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            html, body {
+                width: 210mm;
+                height: auto;
+                margin: 0 !important;
+                padding: 0 !important;
                 background: white;
+                font-size: 11pt;
             }
             
             .page-content {
                 margin: 0 !important;
-                padding: 20px !important;
+                padding: 10mm !important;
+                width: 210mm !important;
+                max-width: 210mm !important;
             }
             
             .container-fluid {
                 max-width: 100% !important;
+                width: 100% !important;
                 padding: 0 !important;
+                margin: 0 !important;
             }
             
+            .row {
+                margin: 0 !important;
+            }
+            
+            /* Card styling for print - ALLOW page breaks */
             .card {
-                border: 1px solid #dee2e6 !important;
+                border: 1px solid #ccc !important;
                 box-shadow: none !important;
-                page-break-inside: avoid;
-                margin-bottom: 20px;
+                page-break-inside: auto !important;
+                margin-bottom: 10px !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                break-inside: auto !important;
+                display: block !important;
+                width: 100% !important;
             }
             
             .card-header {
-                background-color: #f8f9fa !important;
-                border-bottom: 1px solid #dee2e6 !important;
-                padding: 15px !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                background-color: #f5f5f5 !important;
+                border-bottom: 1px solid #ccc !important;
+                padding: 8px !important;
+                display: block !important;
+                page-break-after: avoid;
+                margin: 0 !important;
             }
             
             .card-title {
-                font-size: 18px !important;
+                font-size: 13pt !important;
                 font-weight: bold !important;
+                color: #000 !important;
+                margin: 0 !important;
             }
             
-            /* Keep badge colors */
+            .card-body {
+                padding: 8px !important;
+                display: block !important;
+                page-break-inside: auto;
+            }
+            
+            /* Simplify badge colors for print - use borders instead */
             .badge {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                background-color: white !important;
+                color: #000 !important;
+                border: 1px solid #333 !important;
+                padding: 2px 6px !important;
+                display: inline-block !important;
+                font-size: 9pt !important;
+            }
+            
+            /* Keep priority/status colors but lighter */
+            .badge.bg-danger {
+                border-color: #dc3545 !important;
+                color: #dc3545 !important;
+            }
+            
+            .badge.bg-warning {
+                border-color: #ffc107 !important;
+                color: #856404 !important;
+            }
+            
+            .badge.bg-success {
+                border-color: #28a745 !important;
+                color: #28a745 !important;
+            }
+            
+            .badge.bg-primary {
+                border-color: #0d6efd !important;
+                color: #0d6efd !important;
+            }
+            
+            .badge.bg-info {
+                border-color: #17a2b8 !important;
+                color: #17a2b8 !important;
+            }
+            
+            /* Ensure all text is visible */
+            p, span, div, td, th, li {
+                color: #000 !important;
+                visibility: visible !important;
+                display: inline !important;
+            }
+            
+            div {
+                display: block !important;
             }
             
             /* Ensure images print properly */
             img {
-                max-width: 100% !important;
+                max-width: 150px !important;
+                max-height: 150px !important;
                 page-break-inside: avoid;
+                display: block !important;
+                margin: 5px;
             }
             
-            /* Add header with issue reference */
-            .page-content::before {
-                content: "Block Issue Details - Printed on " attr(data-print-date);
+            /* Hide the existing page title that's showing up */
+            .row:first-child .card:first-child .card-header h4 {
+                display: none !important;
+            }
+            
+            /* Add clean header for print - ONLY on the very first card */
+            .row:first-child .card:first-child .card-header::before {
+                content: "Block Issue Report - " attr(data-ref-no);
                 display: block;
-                font-size: 12px;
-                color: #6c757d;
-                margin-bottom: 15px;
-                padding-bottom: 10px;
-                border-bottom: 1px solid #dee2e6;
+                font-size: 16pt;
+                font-weight: bold;
+                color: #000;
+                margin-bottom: 8px;
+                padding-bottom: 5px;
+                border-bottom: 2px solid #333;
+            }
+            
+            /* Keep other card headers as they are */
+            .card-header h5,
+            .card-header .card-title {
+                display: block !important;
+            }
+            
+            /* Hide sections marked as empty by JavaScript */
+            .print-hide-empty {
+                display: none !important;
+            }
+            
+            /* Also hide cards with empty tables using CSS (backup method) */
+            .card:has(tbody tr td[colspan]:only-child),
+            .card:has(tbody:empty) {
+                display: none !important;
             }
             
             /* Better table printing */
             table {
-                page-break-inside: auto;
+                page-break-inside: auto !important;
+                width: 100% !important;
+                border-collapse: collapse !important;
+                display: table !important;
+                margin: 10px 0;
             }
             
-            tr {
+            table thead {
+                display: table-header-group !important;
+            }
+            
+            table tbody {
+                display: table-row-group !important;
+            }
+            
+            table tr {
+                display: table-row !important;
                 page-break-inside: avoid;
                 page-break-after: auto;
             }
             
-            /* Timeline adjustments for print */
-            .timeline::before {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+            table th, 
+            table td {
+                display: table-cell !important;
+                border: 1px solid #dee2e6 !important;
+                padding: 6px !important;
+                font-size: 10pt !important;
+                visibility: visible !important;
+                color: #000 !important;
             }
             
-            .timeline-item::before {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+            table th {
+                background-color: #f8f9fa !important;
+                font-weight: bold !important;
+            }
+            
+            /* Table borderless variant */
+            .table-borderless td,
+            .table-borderless th {
+                border: none !important;
+            }
+            
+            /* Timeline adjustments for print */
+            .timeline {
+                page-break-inside: auto;
+                display: block !important;
+            }
+            
+            .timeline-item {
+                page-break-inside: avoid;
+                display: block !important;
+                margin-bottom: 10px;
+            }
+            
+            /* Allow page breaks between sections */
+            .row {
+                page-break-inside: auto !important;
+                display: block !important;
+                width: 100%;
+            }
+            
+            /* Adjust column layout for print */
+            .col-lg-8,
+            .col-lg-4,
+            .col-md-6,
+            .col-12,
+            [class*="col-"] {
+                width: 100% !important;
+                max-width: 100% !important;
+                float: none !important;
+                display: block !important;
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                margin: 0 !important;
+            }
+            
+            /* Hide only action column header and cells, not all content */
+            table th:has(.ph-gear-six),
+            table td:has(.btn-outline-danger),
+            table td:has(form[method="POST"]) {
+                display: none !important;
+            }
+            
+            /* Avatar icons - keep visible but simplify */
+            .avatar-sm,
+            .avatar-xs {
+                display: inline-block !important;
+                width: 25px;
+                height: 25px;
+            }
+            
+            .avatar-title {
+                display: flex !important;
+            }
+            
+            /* Strong tags should be bold and visible */
+            strong {
+                font-weight: bold !important;
+                color: #000 !important;
+            }
+            
+            /* Ensure labels and content are visible */
+            .fw-medium,
+            .form-label,
+            label {
+                font-weight: 600 !important;
+                color: #000 !important;
+                display: inline-block !important;
+            }
+            
+            /* Photo gallery */
+            .gallery-item,
+            .issue-photo-item {
+                display: inline-block !important;
+                width: 150px;
+                margin: 5px;
+                page-break-inside: avoid;
+            }
+            
+            /* Section spacing */
+            h5, h4, h3 {
+                page-break-after: avoid;
+                margin-top: 15px;
+                margin-bottom: 10px;
+                color: #000 !important;
+                font-weight: bold !important;
             }
         }
     </style>

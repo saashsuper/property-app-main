@@ -187,7 +187,7 @@ class BlockVisitController extends Controller
     {
         $blockVisit->load([
             'block.blockType', 
-            'blockUnit.blockUnitType', 
+            'blockUnit.unitType', 
             'blockIssue.issueType', 
             'blockIssue.issueStatus',
             'blockIssue.priority',

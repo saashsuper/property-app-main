@@ -187,78 +187,102 @@
 
 <script>
 $(document).ready(function() {
-    $('#blocks-table').DataTable({
-        responsive: true,
-        scrollX: false,
-        autoWidth: false,
-        processing: true, // Show processing indicator during sort/search
-        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
-        // buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
-        order: [[0, 'asc']], // default sort by Name (0-based index)
-        columnDefs: [
-            { targets: [7], orderable: false }, // Actions (last column)
-            { targets: [4, 5, 6], type: 'num' }, // Units, Issues, Work Orders
-            { targets: [0], width: '25%' }, // Name
-            { targets: [1], width: '20%' }, // Management Company
-            { targets: [2], width: '15%' }, // Block Manager
-            { targets: [3], width: '25%' }, // Address
-            { targets: [4], width: '8%' },  // Units
-            { targets: [5], width: '8%' },  // Issues
-            { targets: [6], width: '10%' }, // Work Orders
-            { targets: [7], width: '9%' }   // Actions
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            search: "Search blocks:",
-            lengthMenu: "Show _MENU_ blocks per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ blocks",
-            infoEmpty: "Showing 0 to 0 of 0 blocks",
-            infoFiltered: "(filtered from _MAX_ total blocks)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
-            processing: '<i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...'
-        },
-        initComplete: function() {
-            // Hide loading spinner and show table
+    try {
+        // Check if DataTables is available
+        if (!$.fn.DataTable) {
+            console.error('DataTables library not loaded');
             $('#blocks-table-loading').addClass('d-none');
             $('#blocks-table').show();
-            
-            // Style the search box
-            $('.dataTables_filter input')
-                .addClass('form-control')
-                .removeClass('mb-3')
-                .css({
-                    'width': '300px',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin-left': '10px',
-                    'margin-bottom': '0 !important'
-                });
-            
-            // Style the page length dropdown
-            $('.dataTables_length select')
-                .addClass('form-select')
-                .css({
-                    'width': 'auto',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin': '0 10px'
-                });
-            
-            // Ensure labels and inputs are on the same line
-            $('.dataTables_length label').css({
-                'display': 'flex',
-                'align-items': 'center',
-                'margin-bottom': '0'
-            });
-            
-            $('.dataTables_filter label').css({
-                'display': 'flex',
-                'align-items': 'center',
-                'margin-bottom': '0'
-            });
+            return;
         }
-    });
+
+        $('#blocks-table').DataTable({
+            responsive: true,
+            scrollX: false,
+            autoWidth: false,
+            processing: true, // Show processing indicator during sort/search
+            dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+            // buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
+            order: [[0, 'asc']], // default sort by Name (0-based index)
+            columnDefs: [
+                { targets: [7], orderable: false }, // Actions (last column)
+                { targets: [4, 5, 6], type: 'num' }, // Units, Issues, Work Orders
+                { targets: [0], width: '25%' }, // Name
+                { targets: [1], width: '20%' }, // Management Company
+                { targets: [2], width: '15%' }, // Block Manager
+                { targets: [3], width: '25%' }, // Address
+                { targets: [4], width: '8%' },  // Units
+                { targets: [5], width: '8%' },  // Issues
+                { targets: [6], width: '10%' }, // Work Orders
+                { targets: [7], width: '9%' }   // Actions
+            ],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            language: {
+                search: "Search blocks:",
+                lengthMenu: "Show _MENU_ blocks per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ blocks",
+                infoEmpty: "Showing 0 to 0 of 0 blocks",
+                infoFiltered: "(filtered from _MAX_ total blocks)",
+                paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+                processing: '<i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...'
+            },
+            initComplete: function() {
+                // Hide loading spinner and show table
+                $('#blocks-table-loading').addClass('d-none');
+                $('#blocks-table').show();
+                
+                // Style the search box
+                $('.dataTables_filter input')
+                    .addClass('form-control')
+                    .removeClass('mb-3')
+                    .css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin-left': '10px',
+                        'margin-bottom': '0 !important'
+                    });
+                
+                // Style the page length dropdown
+                $('.dataTables_length select')
+                    .addClass('form-select')
+                    .css({
+                        'width': 'auto',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin': '0 10px'
+                    });
+                
+                // Ensure labels and inputs are on the same line
+                $('.dataTables_length label').css({
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'margin-bottom': '0'
+                });
+                
+                $('.dataTables_filter label').css({
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'margin-bottom': '0'
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        // Fallback: hide loader and show table anyway
+        $('#blocks-table-loading').addClass('d-none');
+        $('#blocks-table').show();
+    }
+    
+    // Fallback timeout - if table is still not visible after 3 seconds, force show it
+    setTimeout(function() {
+        if ($('#blocks-table').is(':hidden')) {
+            console.warn('DataTable initialization timeout - forcing table display');
+            $('#blocks-table-loading').addClass('d-none');
+            $('#blocks-table').show();
+        }
+    }, 3000);
 });
 </script>
 @endsection 

@@ -256,10 +256,10 @@
                                         <strong><i class="ph-hash me-2 text-info"></i>Unit Number:</strong><br>
                                         <span class="badge bg-info">{{ $blockVisit->blockUnit->unit_no }}</span>
                                     </p>
-                                    @if($blockVisit->blockUnit->blockUnitType)
+                                    @if($blockVisit->blockUnit->unitType)
                                     <p class="mb-2">
                                         <strong><i class="ph-tag me-2 text-primary"></i>Unit Type:</strong><br>
-                                        <span class="badge bg-primary">{{ $blockVisit->blockUnit->blockUnitType->name }}</span>
+                                        <span class="badge bg-primary">{{ $blockVisit->blockUnit->unitType->name }}</span>
                                     </p>
                                     @endif
                                     @if($blockVisit->blockUnit->contact_person)
@@ -637,8 +637,8 @@
                             <div class="form-control-plaintext bg-light p-2 rounded">
                                 @if($blockVisit->blockUnit)
                                     <strong>{{ $blockVisit->blockUnit->unit_no }}</strong>
-                                    @if($blockVisit->blockUnit->blockUnitType)
-                                        ({{ $blockVisit->blockUnit->blockUnitType->name }})
+                                    @if($blockVisit->blockUnit->unitType)
+                                        ({{ $blockVisit->blockUnit->unitType->name }})
               @endif
             @else
                                     <span class="text-muted">No unit specified</span>
