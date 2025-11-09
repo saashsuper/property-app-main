@@ -23,6 +23,7 @@
                             <th>Inspection Date</th>
                             <th>Inspector</th>
                             <th>Status</th>
+                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,6 +41,18 @@
                                     @else
                                         <span class="badge bg-secondary">Unknown (ID: {{ $inspection->job_status_id }})</span>
                                     @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a href="{{ route('block-inspections.show', $inspection->id) }}" class="btn btn-sm btn-outline-primary" title="View Inspection">
+                                            <i class="ph-eye"></i>
+                                        </a>
+                                        @if($inspection->job_status_id == 3)
+                                        <a href="{{ route('block-inspections.download-pdf', $inspection->id) }}" class="btn btn-sm btn-outline-danger" title="Download PDF Report">
+                                            <i class="ph-file-pdf"></i>
+                                        </a>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach

@@ -68,6 +68,18 @@
                                         <td class="align-middle text-wrap">{{ Str::limit($inspection->notes, 80) ?? 'N/A' }}</td>
                                         <td class="align-middle text-center">
                                             <div class="d-flex justify-content-center gap-2">
+                                                <a href="{{ route('block-inspections.show', $inspection->id) }}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="View Inspection">
+                                                    <i class="ph-eye"></i>
+                                                </a>
+                                                @if($inspection->job_status_id == 3)
+                                                <a href="{{ route('block-inspections.download-pdf', $inspection->id) }}"
+                                                   class="btn btn-sm btn-outline-danger"
+                                                   title="Download PDF Report">
+                                                    <i class="ph-file-pdf"></i>
+                                                </a>
+                                                @endif
                                                 <button class="btn btn-sm btn-outline-primary edit-inspection"
                                                         data-inspection-id="{{ $inspection->id }}"
                                                         data-user-id="{{ $userForEdit ?? '' }}"

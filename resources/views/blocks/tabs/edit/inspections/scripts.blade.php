@@ -513,6 +513,7 @@
                                 id: inspection.id,
                                 ref_no: inspection.ref_no,
                                 notes: inspection.notes,
+                                job_status_id: inspection.job_status_id,
                                 scheduled_date_attr: scheduleDateAttr,
                                 scheduled_time_attr: scheduleTimeAttr,
                                 scheduled_display: scheduleDisplay
@@ -540,9 +541,24 @@
 
     function renderActions(inspection, leadUserId, inspectorName) {
         const limitedNotes = (inspection.notes || '').replace(/"/g, '&quot;');
+        const viewUrl = "{{ route('block-inspections.show', ':id') }}".replace(':id', inspection.id);
+        const downloadUrl = "{{ route('block-inspections.download-pdf', ':id') }}".replace(':id', inspection.id);
+        const editDetailsUrl = "{{ route('block-inspections.edit', ':id') }}".replace(':id', inspection.id);
+        const canDownload = Number(inspection.job_status_id) === 3;
 
         return `
             <div class="d-flex justify-content-center gap-2">
+                <a href="${viewUrl}"
+                   class="btn btn-sm btn-outline-primary"
+                   title="View Inspection">
+                    <i class="ph-eye"></i>
+                </a>
+                ${canDownload ? `
+                <a href="${downloadUrl}"
+                   class="btn btn-sm btn-outline-danger"
+                   title="Download PDF Report">
+                    <i class="ph-file-pdf"></i>
+                </a>` : ''}
                 <button class="btn btn-sm btn-outline-primary edit-inspection"
                         data-inspection-id="${inspection.id}"
                         data-user-id="${leadUserId || ''}"
@@ -551,6 +567,11 @@
                         data-notes="${limitedNotes}"
                         title="Edit Inspection">
                     <i class="ph-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-warning"
+                        onclick="window.location.href='${editDetailsUrl}'"
+                        title="Update Inspection Details">
+                    <i class="ph-note-pencil"></i>
                 </button>
                 <button class="btn btn-sm btn-outline-danger"
                         onclick="inspectionShowDeleteConfirmation(${inspection.id}, {

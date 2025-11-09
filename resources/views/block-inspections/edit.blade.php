@@ -570,7 +570,7 @@
 }
 
 .dropzone .dz-message {
-    margin: 2em 0;
+    margin: 1em 0;
     text-align: center;
 }
 
@@ -695,20 +695,20 @@
 }
 
 /* Force override Bootstrap's button styles with maximum specificity */
-.btn-group .btn-outline-secondary {
+.btn-group .btn-outline-secondary:not([class*="building-value-"]) {
     background-color: white !important;
     color: black !important;
     border-color: #dee2e6 !important;
 }
 
 /* Override Bootstrap's default checked state with maximum specificity */
-.btn-group .btn-check:checked + .btn-outline-secondary {
+.btn-group .btn-check:checked + .btn-outline-secondary:not([class*="building-value-"]) {
     background-color: #198754 !important;
     border-color: #198754 !important;
     color: white !important;
 }
 
-.btn-group .btn-check:checked + .btn-outline-secondary:hover {
+.btn-group .btn-check:checked + .btn-outline-secondary:not([class*="building-value-"]):hover {
     background-color: #157347 !important;
     border-color: #146c43 !important;
     color: white !important;
@@ -769,13 +769,13 @@
 }
 
 /* Additional override for any remaining Bootstrap styles */
-.btn-group .btn-check:checked + .btn-outline-secondary.btn-sm {
+.btn-group .btn-check:checked + .btn-outline-secondary.btn-sm:not([class*="building-value-"]) {
     background-color: #198754 !important;
     border-color: #198754 !important;
     color: white !important;
 }
 
-.btn-group .btn-check:checked + .btn-outline-secondary.btn-sm:hover {
+.btn-group .btn-check:checked + .btn-outline-secondary.btn-sm:not([class*="building-value-"]):hover {
     background-color: #157347 !important;
     border-color: #146c43 !important;
     color: white !important;
@@ -783,6 +783,31 @@
 
 /* Building asset value-specific colors */
 /* Green values: Yes, Clean, Good, Working, No faults, No lights */
+/* Base (unchecked) color for Fire Alarm buttons */
+.btn-group .building-value-no_faults {
+    background-color: #eaf6ef !important;
+    border-color: #198754 !important;
+    color: #0f5132 !important;
+}
+
+.btn-group .building-value-faults {
+    background-color: #fdecee !important;
+    border-color: #dc3545 !important;
+    color: #842029 !important;
+}
+
+.btn-group .building-value-needs_attention {
+    background-color: #fff2e5 !important;
+    border-color: #e67e22 !important;
+    color: #7f3d00 !important;
+}
+
+.btn-group .building-value-no_faults:hover,
+.btn-group .building-value-faults:hover,
+.btn-group .building-value-needs_attention:hover {
+    filter: brightness(0.95);
+}
+
 .btn-group .btn-check:checked + .building-value-yes,
 .btn-group .btn-check:checked + .building-value-clean,
 .btn-group .btn-check:checked + .building-value-good,
@@ -962,7 +987,6 @@
                                 <div class="dz-success-mark"><i class="ph-check-circle"></i></div>
                                 <div class="dz-error-mark"><i class="ph-x-circle"></i></div>
                                 <div class="dz-error-message"><span data-dz-errormessage></span></div>
-                                <a class="dz-remove" href="javascript:undefined;" data-dz-remove>Remove</a>
                             </div>
                         `,
                         init: function() {
@@ -1033,7 +1057,6 @@
                                 <div class="dz-success-mark"><i class="ph-check-circle"></i></div>
                                 <div class="dz-error-mark"><i class="ph-x-circle"></i></div>
                                 <div class="dz-error-message"><span data-dz-errormessage></span></div>
-                                <a class="dz-remove" href="javascript:undefined;" data-dz-remove>Remove</a>
                             </div>
                         `,
                         init: function() {

@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Block Inspections
     Route::resource('block-inspections', App\Http\Controllers\BlockInspectionController::class);
+    Route::delete('block-inspection-images/{blockInspectionImage}', [App\Http\Controllers\BlockInspectionController::class, 'deleteImage'])->name('block-inspection-images.delete');
     Route::post('block-inspections/{blockInspection}/start', [App\Http\Controllers\BlockInspectionController::class, 'start'])->name('block-inspections.start');
     Route::post('block-inspections/{blockInspection}/complete', [App\Http\Controllers\BlockInspectionController::class, 'complete'])->name('block-inspections.complete');
     Route::get('block-inspections/{blockInspection}/download-pdf', [App\Http\Controllers\BlockInspectionController::class, 'downloadPdf'])->name('block-inspections.download-pdf');
