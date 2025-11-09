@@ -159,11 +159,19 @@
 <div class="modal fade" id="photoUploadModal" tabindex="-1" aria-labelledby="photoUploadModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="photoUploadModalLabel">
-                    <i class="ph-camera me-2"></i>Upload Photos
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header photo-upload-header border-0 py-3 px-4">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="photo-upload-icon">
+                            <i class="ph-camera"></i>
+                        </span>
+                        <h5 class="modal-title text-white mb-0" id="photoUploadModalLabel">Upload Photos</h5>
+                    </div>
+                    <p class="text-white-50 mb-0 small">
+                        Ref: <span class="fw-semibold text-white" id="photoUploadModalIssueRef">---</span>
+                    </p>
+                </div>
+                <button type="button" class="btn-close btn-close-white shadow-sm" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <!-- Message container -->
@@ -175,10 +183,22 @@
                 <!-- Issue Info -->
                 <div class="row mb-3">
                     <div class="col-12">
-                        <div class="card bg-light">
-                            <div class="card-body py-2">
-                                <h6 class="mb-1" id="photoUploadIssueTitle">Issue: Loading...</h6>
-                                <small class="text-muted" id="photoUploadIssueRef">Reference: Loading...</small>
+                        <div class="card border-0 shadow-sm issue-upload-summary">
+                            <div class="card-body py-3 px-3 px-lg-4">
+                                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                                    <div>
+                                        <p class="text-muted mb-1 small text-uppercase">Issue</p>
+                                        <h5 class="mb-1" id="photoUploadModalIssueTitle">Loading...</h5>
+                                        <div class="text-secondary small">
+                                            Reported unit: <span class="fw-semibold" id="photoUploadModalUnit">--</span>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 issue-upload-badges text-nowrap">
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary fw-semibold" id="photoUploadModalType">Type: --</span>
+                                        <span id="photoUploadModalPriority"></span>
+                                        <span id="photoUploadModalStatus"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -186,20 +206,14 @@
                 
                 <!-- Dropzone Container -->
                 <div class="mb-3">
-                    <label class="form-label">Upload Images <span class="text-danger">*</span></label>
+                    <label class="form-label fw-semibold text-muted text-uppercase small">Upload Images <span class="text-danger">*</span></label>
                     <div id="photoDropzone" class="dropzone">
-                        <div class="dz-message">
-                            <div class="mb-2">
-                                <i class="ph-cloud-upload display-4 text-muted"></i>
+                        <div class="dz-message text-center py-4">
+                            <div class="mb-2 text-primary">
+                                <i class="ph-cloud-arrow-up fs-1"></i>
                             </div>
-                            <h5>Drop images here or click to upload</h5>
-                            <p class="text-muted font-size-14 mb-0">
-                                <strong>Requirements:</strong><br>
-                                • Maximum 10 images<br>
-                                • Each image max 2MB<br>
-                                • Total size max 10MB<br>
-                                • Formats: JPEG, PNG, JPG, GIF
-                            </p>
+                            <h5 class="fw-semibold mb-1">Drag &amp; drop images here</h5>
+                            <p class="text-muted mb-0 small">or click to browse your files</p>
                         </div>
                     </div>
                 </div>
@@ -207,26 +221,96 @@
                 <!-- Custom CSS to override Dropzone defaults -->
                 <style>
                     #photoDropzone.dropzone {
-                        min-height: 100px !important;
-                        border: 2px dashed #ccc !important;
-                        border-radius: 6px !important;
+                        min-height: 96px !important;
+                        border: 2px dashed rgba(102, 126, 234, 0.45) !important;
+                        border-radius: 12px !important;
+                        background: #f8f9ff !important;
+                        transition: all 0.25s ease-in-out;
+                    }
+                    
+                    #photoDropzone.dropzone:hover,
+                    #photoDropzone.dropzone.dz-drag-hover {
+                        border-color: #667eea !important;
+                        background: #eef1ff !important;
+                        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15) !important;
                     }
                     
                     #photoDropzone .dz-message {
-                        padding: 15px 10px !important;
+                        padding: 15px 8px !important;
                         margin: 0 !important;
                         text-align: center !important;
+                        color: #4b5563 !important;
                     }
                     
                     #photoDropzone .dz-message h5 {
-                        margin: 10px 0 5px 0 !important;
-                        font-size: 16px !important;
+                        margin: 6px 0 3px 0 !important;
+                        font-size: 0.9rem !important;
+                        color: #1f2937 !important;
                     }
                     
                     #photoDropzone .dz-message p {
                         margin: 0 !important;
-                        font-size: 12px !important;
+                        font-size: 0.75rem !important;
                         line-height: 1.3 !important;
+                    }
+                    
+                    .photo-upload-header {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    }
+                    
+                    .photo-upload-icon {
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 38px;
+                        height: 38px;
+                        border-radius: 12px;
+                        background: rgba(255, 255, 255, 0.18);
+                        color: #ffffff;
+                        font-size: 1.25rem;
+                        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+                    }
+                    
+                    .photo-upload-header .btn-close {
+                        opacity: 0.85;
+                    }
+                    
+                    .photo-upload-header .btn-close:hover {
+                        opacity: 1;
+                    }
+                    
+                    .issue-upload-summary {
+                        background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+                        border-radius: 14px;
+                    }
+                    
+                    .issue-upload-summary h5 {
+                        font-weight: 600;
+                        color: #111827;
+                    }
+                    
+                    .issue-upload-summary .issue-upload-badges .badge {
+                        font-size: 0.75rem;
+                        padding: 0.45rem 0.7rem;
+                        border-radius: 999px;
+                        letter-spacing: 0.02em;
+                        background: #f1f5f9;
+                        color: #334155;
+                    }
+                    
+                    #photoUploadModalPriority .badge,
+                    #photoUploadModalStatus .badge {
+                        border-radius: 999px;
+                        font-size: 0.75rem;
+                        padding: 0.45rem 0.7rem;
+                    }
+                    
+                    #photoUploadModalPriority .badge {
+                        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+                    }
+                    
+                    #photoUploadModalStatus .badge {
+                        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.18);
                     }
                 </style>
                 

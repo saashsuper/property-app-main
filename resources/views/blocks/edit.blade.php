@@ -71,11 +71,16 @@
                                     Contractors
                                 </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="site-visit-tab" data-bs-toggle="tab" href="#site-visit" role="tab" aria-controls="site-visit" aria-selected="false">
-                                    Site Visit
-                                </a>
-                            </li>
+                            {{-- 
+                                TEMPORARILY DISABLED: Site Visit Tab
+                                DO NOT UNCOMMENT OR RESTORE THIS TAB WITHOUT EXPLICIT USER APPROVAL.
+                                Functionality will be reintroduced once the user requests it.
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link" id="site-visit-tab" data-bs-toggle="tab" href="#site-visit" role="tab" aria-controls="site-visit" aria-selected="false">
+                                        Site Visit
+                                    </a>
+                                </li>
+                            --}}
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="inspections-tab" data-bs-toggle="tab" href="#inspections" role="tab" aria-controls="inspections" aria-selected="false">
                                     Inspections
@@ -86,11 +91,16 @@
                                     Issues
                                 </a>
                             </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false">
-                                    Work Orders
-                                </a>
-                            </li>
+                            {{-- 
+                                TEMPORARILY DISABLED: Work Orders Tab
+                                DO NOT UNCOMMENT OR RESTORE THIS TAB WITHOUT EXPLICIT USER APPROVAL.
+                                Functionality will be reintroduced once the user requests it.
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false">
+                                        Work Orders
+                                    </a>
+                                </li>
+                            --}}
                         </ul>
 
                         <!-- Tab Content -->
@@ -120,10 +130,14 @@
                                 @include('blocks.tabs.edit.contractors.index')
                             </div>
 
-                            <!-- Site Visit Tab -->
-                            <div class="tab-pane fade" id="site-visit" role="tabpanel" aria-labelledby="site-visit-tab">
-                                @include('blocks.tabs.edit.site-visits.index')
-                            </div>
+                            {{-- 
+                                TEMPORARILY DISABLED: Site Visit Tab Content
+                                DO NOT RESTORE THIS SECTION WITHOUT EXPLICIT USER APPROVAL.
+                                Keep this block commented until instructed otherwise.
+                                <div class="tab-pane fade" id="site-visit" role="tabpanel" aria-labelledby="site-visit-tab">
+                                    @include('blocks.tabs.edit.site-visits.index')
+                                </div>
+                            --}}
 
                             <!-- Inspections Tab -->
                             <div class="tab-pane fade" id="inspections" role="tabpanel" aria-labelledby="inspections-tab">
@@ -135,10 +149,14 @@
                                 @include('blocks.tabs.edit.issues.index')
                             </div>
 
-                            <!-- Work Orders Tab -->
-                            <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab">
-                                @include('blocks.tabs.edit.work-orders.index')
-                            </div>
+                            {{-- 
+                                TEMPORARILY DISABLED: Work Orders Tab Content
+                                DO NOT RESTORE THIS SECTION WITHOUT EXPLICIT USER APPROVAL.
+                                Keep this block commented until instructed otherwise.
+                                <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab">
+                                    @include('blocks.tabs.edit.work-orders.index')
+                                </div>
+                            --}}
                         </div>
                     </div>
                 </div>

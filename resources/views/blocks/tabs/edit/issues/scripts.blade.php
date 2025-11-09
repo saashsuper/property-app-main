@@ -362,19 +362,9 @@ $(document).ready(function() {
                     <td>${priorityBadge}</td>
                     <td>${reportedDate}</td>
                     <td>
-                        <div class="btn-group btn-group-sm" role="group">
-                            <button class="btn btn-outline-primary" onclick="editActiveIssue(${JSON.stringify(issue).replace(/"/g, '&quot;')})" title="Edit Issue">
-                                <i class="ph-pencil"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="showDeleteConfirmation(${issue.id}, {
-                                ref_no: '${issue.ref_no || 'N/A'}',
-                                issue: '${issue.issue || 'N/A'}',
-                                priority: '${issue.priority_id || 'N/A'}',
-                                status: '${issue.issue_status_id || 'N/A'}'
-                            })" title="Delete Issue">
-                                <i class="ph-trash"></i>
-                            </button>
-                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="editActiveIssue(${JSON.stringify(issue).replace(/"/g, '&quot;')})" title="Edit Issue">
+                            <i class="ph-pencil"></i>
+                        </button>
                     </td>
                 </tr>
             `;
@@ -744,8 +734,21 @@ $(document).ready(function() {
                     const issue = data.data;
                     
                     // Update modal with issue info
-                    $('#photoUploadIssueTitle').text(`Issue: ${issue.issue || 'N/A'}`);
-                    $('#photoUploadIssueRef').text(`Reference: ${issue.ref_no || 'N/A'}`);
+                    const issueTitle = issue.issue || 'N/A';
+                    const issueRef = issue.ref_no || 'N/A';
+                    const issueType = issue.issue_type ? issue.issue_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Not specified';
+                    const issueUnit = issue.block_unit ? (issue.block_unit.unit_name || issue.block_unit.unit_code || `Unit #${issue.block_unit.id}`) : 'No unit linked';
+                    
+                    $('#photoUploadModalIssueTitle').text(issueTitle);
+                    $('#photoUploadModalIssueRef').text(issueRef);
+                    $('#photoUploadModalType').text(`Type: ${issueType}`);
+                    $('#photoUploadModalUnit').text(issueUnit);
+                    
+                    const priorityBadge = getPriorityBadge(issue.priority_id) || '<span class="badge bg-secondary">Priority: N/A</span>';
+                    const statusBadge = getStatusBadge(issue.issue_status_id) || '<span class="badge bg-secondary">Status: N/A</span>';
+                    
+                    $('#photoUploadModalPriority').html(priorityBadge);
+                    $('#photoUploadModalStatus').html(statusBadge);
                     
                     // Load existing photos
                     loadExistingPhotos(issueId);
@@ -1129,12 +1132,17 @@ $(document).ready(function() {
                             labelParts.push(unit.unit_name);
                         }
                         const label = labelParts.length > 0 ? labelParts.join(' - ') : `Unit #${unit.id}`;
+                        const searchTokens = [unit.unit_code, unit.unit_name]
+                            .filter(Boolean)
+                            .join(' ')
+                            .toLowerCase();
                         
                         return {
                             value: unit.id,
                             label: label,
                             unit_code: unit.unit_code,
-                            unit_name: unit.unit_name
+                            unit_name: unit.unit_name,
+                            searchValue: searchTokens
                         };
                     });
                     console.log('Mapped units data:', unitsData);
@@ -1194,12 +1202,17 @@ $(document).ready(function() {
                             labelParts.push(unit.unit_name);
                         }
                         const label = labelParts.length > 0 ? labelParts.join(' - ') : `Unit #${unit.id}`;
+                        const searchTokens = [unit.unit_code, unit.unit_name]
+                            .filter(Boolean)
+                            .join(' ')
+                            .toLowerCase();
                         
                         const unitObj = {
                             value: unit.id,
                             label: label,
                             unit_code: unit.unit_code,
-                            unit_name: unit.unit_name
+                            unit_name: unit.unit_name,
+                            searchValue: searchTokens
                         };
                         
                         // Check if this is the selected unit
@@ -1249,6 +1262,8 @@ $(document).ready(function() {
         const unitsHidden = document.getElementById('issue_block_unit_id_hidden');
         
         console.log('initializeUnitAutoComplete called with data:', unitsData);
+        
+        const escapeRegExp = (string) => string ? string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
         
         const uniqueUnits = Array.from(
             new Map(
@@ -1301,11 +1316,26 @@ $(document).ready(function() {
                 placeHolder: "Search for units...",
                 data: {
                     src: uniqueUnits,
-                    keys: ["label", "unit_name", "unit_code"]
+                    keys: ["searchValue"]
                 },
                 resultItem: {
-                    highlight: {
-                        render: true
+                    highlight: false,
+                    element: (item, data) => {
+                        const label = data.value.label || '';
+                        const query = (data.query || '').trim();
+                        
+                        if (!query) {
+                            item.innerHTML = label;
+                            return;
+                        }
+                        
+                        const regex = new RegExp(escapeRegExp(query), 'ig');
+                        const highlighted = label.replace(
+                            regex,
+                            match => `<span class="text-danger fw-semibold">${match}</span>`
+                        );
+                        
+                        item.innerHTML = highlighted;
                     }
                 },
                 events: {
@@ -1341,7 +1371,10 @@ $(document).ready(function() {
                 },
                 threshold: 1,
                 debounce: 300,
-                searchEngine: "loose",
+                searchEngine: function (query, record) {
+                    if (!record) return 0;
+                    return record.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
+                },
                 maxResults: 10
             });
             
