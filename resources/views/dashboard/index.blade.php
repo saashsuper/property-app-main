@@ -160,18 +160,18 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="flex-grow-1">
-                                <span class="text-muted text-uppercase fw-medium">Block Types</span>
+                                <span class="text-muted text-uppercase fw-medium">Issue Management</span>
                                 <h4 class="mb-0">
-                                    <a href="{{ route('block-types.index') }}" class="text-decoration-none text-success">
-                                        {{ $stats['total_block_types'] }}
+                                    <a href="{{ route('block-issues.index') }}" class="text-decoration-none text-danger">
+                                        {{ $stats['total_issues'] ?? 0 }}
                                     </a>
                                 </h4>
                             </div>
                             <div class="flex-shrink-0 text-end">
-                                <a href="{{ route('block-types.index') }}" class="text-decoration-none">
+                                <a href="{{ route('block-issues.index') }}" class="text-decoration-none">
                                     <div class="avatar-sm">
-                                        <span class="avatar-title bg-success-subtle text-success rounded-circle fs-3">
-                                            <i class="ph-grid-four"></i>
+                                        <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                            <i class="ph-clipboard-text"></i>
                                         </span>
                                     </div>
                                 </a>
@@ -558,13 +558,13 @@
                                 <div class="card border">
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
-                                            <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
-                                                <i class="ph-grid-four"></i>
+                                            <span class="avatar-title bg-danger-subtle text-danger rounded-circle fs-3">
+                                                <i class="ph-clipboard-text"></i>
                                             </span>
                                         </div>
-                                        <h5 class="card-title">Block Types</h5>
-                                        <p class="card-text text-muted">Manage different types of property blocks</p>
-                                        <a href="{{ route('block-types.index') }}" class="btn btn-info">Manage Types</a>
+                                        <h5 class="card-title">Issue Management</h5>
+                                        <p class="card-text text-muted">Track and resolve block issues quickly</p>
+                                        <a href="{{ route('block-issues.index') }}" class="btn btn-danger">View Issues</a>
                                     </div>
                                 </div>
                             </div>
@@ -572,13 +572,13 @@
                                 <div class="card border">
                                     <div class="card-body text-center">
                                         <div class="avatar-sm mx-auto mb-3">
-                                            <span class="avatar-title bg-warning-subtle text-warning rounded-circle fs-3">
-                                                <i class="ph-gear-six"></i>
+                                            <span class="avatar-title bg-info-subtle text-info rounded-circle fs-3">
+                                                <i class="ph-wrench"></i>
                                             </span>
                                         </div>
-                                        <h5 class="card-title">System Settings</h5>
-                                        <p class="card-text text-muted">Configure system preferences and settings</p>
-                                        <a href="#" class="btn btn-warning">Settings</a>
+                                        <h5 class="card-title">Work Orders</h5>
+                                        <p class="card-text text-muted">Review and manage open work orders</p>
+                                        <a href="{{ route('block-work-orders.index') }}" class="btn btn-info">Manage Work Orders</a>
                                     </div>
                                 </div>
                             </div>
@@ -589,158 +589,180 @@
         </div>
 
         <!-- Work Orders and Emergency Issues Row -->
-        <div class="row">
-            <div class="col-xl-4">
-                <!-- Recent Blocks -->
+        <div class="row gy-4 pb-4">
+            <div class="col-xl-4 col-lg-6">
                 <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">Recent Blocks</h4>
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <h4 class="card-title mb-0">Work Order Activity</h4>
+                            <small class="text-muted">Monitor pending and in-progress work orders</small>
+                        </div>
+                        <a href="{{ route('block-work-orders.index') }}" class="btn btn-sm btn-primary">
+                            View All
+                        </a>
                     </div>
                     <div class="card-body">
-                        @if(isset($recentBlocks) && $recentBlocks->count() > 0)
-                            <div class="list-group list-group-flush">
-                                @foreach($recentBlocks as $block)
-                                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h6 class="mb-1">{{ $block->name }}</h6>
-                                            <small class="text-muted">{{ $block->blockType->name ?? 'N/A' }}</small>
-                                        </div>
-                                        <a href="{{ route('blocks.show', $block) }}" class="btn btn-sm btn-outline-primary">
-                                            View
-                                        </a>
+                        <ul class="nav nav-pills nav-fill mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="pending-work-orders-tab" data-bs-toggle="tab" data-bs-target="#pending-work-orders-pane" type="button" role="tab" aria-controls="pending-work-orders-pane" aria-selected="true">
+                                    <i class="ph-clock me-1 text-warning"></i> Pending
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="ongoing-work-orders-tab" data-bs-toggle="tab" data-bs-target="#ongoing-work-orders-pane" type="button" role="tab" aria-controls="ongoing-work-orders-pane" aria-selected="false">
+                                    <i class="ph-spinner-gap me-1 text-info"></i> Ongoing
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="pending-work-orders-pane" role="tabpanel" aria-labelledby="pending-work-orders-tab">
+                                @if(isset($recentPendingWorkOrders) && $recentPendingWorkOrders->count() > 0)
+                                    <div class="list-group list-group-flush">
+                                        @foreach($recentPendingWorkOrders as $workOrder)
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No title', 40) }}</h6>
+                                                        <small class="text-muted d-block">
+                                                            <i class="ph-buildings me-1"></i>{{ $workOrder->block->name ?? 'N/A' }}
+                                                            <span class="mx-1">•</span>
+                                                            <span>Ref: {{ $workOrder->ref_no }}</span>
+                                                        </small>
+                                                        <small class="text-muted">
+                                                            <i class="ph-user me-1"></i>{{ $workOrder->contractor->name ?? 'Unassigned' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge bg-warning">Pending</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
                                     </div>
-                                @endforeach
+                                @else
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="ph-clock fs-2"></i>
+                                        <p class="mt-2 mb-0">No pending work orders</p>
+                                        <small>Great job staying on top of things!</small>
+                                    </div>
+                                @endif
                             </div>
-                        @else
-                            <div class="text-center py-4">
-                                <div class="text-muted">
-                                    <i class="ph-buildings fs-2"></i>
-                                    <p class="mt-2">No blocks found</p>
-                                    <a href="{{ route('blocks.create') }}" class="btn btn-primary btn-sm">
-                                        Create Your First Block
-                                    </a>
-                                </div>
+                            <div class="tab-pane fade" id="ongoing-work-orders-pane" role="tabpanel" aria-labelledby="ongoing-work-orders-tab">
+                                @if(isset($recentOngoingWorkOrders) && $recentOngoingWorkOrders->count() > 0)
+                                    <div class="list-group list-group-flush">
+                                        @foreach($recentOngoingWorkOrders as $workOrder)
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No title', 40) }}</h6>
+                                                        <small class="text-muted d-block">
+                                                            <i class="ph-buildings me-1"></i>{{ $workOrder->block->name ?? 'N/A' }}
+                                                            <span class="mx-1">•</span>
+                                                            <span>Ref: {{ $workOrder->ref_no }}</span>
+                                                        </small>
+                                                        <small class="text-muted">
+                                                            <i class="ph-user me-1"></i>{{ $workOrder->contractor->name ?? 'Unassigned' }}
+                                                        </small>
+                                                    </div>
+                                                    <span class="badge bg-info">In Progress</span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="ph-spinner-gap fs-2"></i>
+                                        <p class="mt-2 mb-0">No ongoing work orders</p>
+                                        <small>All assignments are either pending or completed.</small>
+                                    </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-xl-4">
-
-                <!-- Pending Work Orders -->
+            <div class="col-xl-4 col-lg-6">
                 <div class="card">
                     <div class="card-header">
-                        <h4 class="card-title">
-                            <i class="ph-clock me-2 text-warning"></i>Pending Work Orders
+                        <h4 class="card-title mb-0">
+                            <i class="ph-warning me-2 text-danger"></i>Emergency Issue Alerts
                         </h4>
+                        <small class="text-muted">Critical issues requiring immediate attention</small>
                     </div>
-                    <div class="card-body">
-                        @if(isset($recentPendingWorkOrders) && $recentPendingWorkOrders->count() > 0)
-                            <div class="list-group list-group-flush">
-                                @foreach($recentPendingWorkOrders as $workOrder)
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No title', 30) }}</h6>
-                                                <small class="text-muted">{{ $workOrder->block->name ?? 'N/A' }} - {{ $workOrder->ref_no }}</small>
-                                                <div class="mt-1">
-                                                    <small class="text-muted">
-                                                        <i class="ph-user me-1"></i>{{ $workOrder->contractor->name ?? 'Unassigned' }}
+                    <div class="card-body d-flex flex-column">
+                        <div class="flex-grow-1">
+                            @if(isset($emergencyIssues) && $emergencyIssues->count() > 0)
+                                <div class="list-group list-group-flush">
+                                    @foreach($emergencyIssues as $issue)
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-1">{{ Str::limit($issue->issue ?? 'No title', 42) }}</h6>
+                                                    <small class="text-muted d-block">
+                                                        <i class="ph-buildings me-1"></i>{{ $issue->block->name ?? 'N/A' }}
+                                                        <span class="mx-1">•</span>
+                                                        <span>Ref: {{ $issue->ref_no }}</span>
                                                     </small>
-                                                </div>
-                                            </div>
-                                            <span class="badge bg-warning">Pending</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center py-4">
-                                <div class="text-muted">
-                                    <i class="ph-clock fs-2"></i>
-                                    <p class="mt-2">No pending work orders</p>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Ongoing Work Orders -->
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">
-                            <i class="ph-spinner-gap me-2 text-info"></i>Ongoing Work Orders
-                        </h4>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($recentOngoingWorkOrders) && $recentOngoingWorkOrders->count() > 0)
-                            <div class="list-group list-group-flush">
-                                @foreach($recentOngoingWorkOrders as $workOrder)
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">{{ Str::limit($workOrder->issue ?? 'No title', 30) }}</h6>
-                                                <small class="text-muted">{{ $workOrder->block->name ?? 'N/A' }} - {{ $workOrder->ref_no }}</small>
-                                                <div class="mt-1">
-                                                    <small class="text-muted">
-                                                        <i class="ph-user me-1"></i>{{ $workOrder->contractor->name ?? 'Unassigned' }}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            <span class="badge bg-info">In Progress</span>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center py-4">
-                                <div class="text-muted">
-                                    <i class="ph-spinner-gap fs-2"></i>
-                                    <p class="mt-2">No ongoing work orders</p>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-            </div>
-            <div class="col-xl-4">
-                <!-- Emergency Issues -->
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="card-title">
-                            <i class="ph-warning me-2 text-danger"></i>Emergency Issues
-                        </h4>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($emergencyIssues) && $emergencyIssues->count() > 0)
-                            <div class="list-group list-group-flush">
-                                @foreach($emergencyIssues as $issue)
-                                    <div class="list-group-item">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1">{{ Str::limit($issue->issue ?? 'No title', 30) }}</h6>
-                                                <small class="text-muted">{{ $issue->block->name ?? 'N/A' }} - {{ $issue->ref_no }}</small>
-                                                <div class="mt-1">
-                                                    <span class="badge bg-danger-subtle text-danger">
+                                                    <span class="badge bg-danger-subtle text-danger mt-2">
                                                         {{ $issue->priority->label ?? 'High Priority' }}
                                                     </span>
                                                 </div>
+                                                <span class="badge bg-{{ $issue->status_color ?? 'secondary' }}">{{ $issue->status_text ?? 'Open' }}</span>
                                             </div>
-                                            <span class="badge bg-{{ $issue->status_color ?? 'secondary' }}">{{ $issue->status_text ?? 'Open' }}</span>
                                         </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="text-center py-4">
-                                <div class="text-muted">
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-5 text-muted">
                                     <i class="ph-shield-check fs-2 text-success"></i>
-                                    <p class="mt-2">No emergency issues</p>
+                                    <p class="mt-2 mb-0">No emergency issues</p>
                                     <small>All critical issues resolved</small>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 pt-0 mt-auto text-end">
+                        <a href="{{ route('block-issues.index') }}" class="btn btn-sm btn-outline-danger">
+                            Go to Issue Management
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-4 col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">
+                            <i class="ph-buildings me-2 text-primary"></i>Recent Blocks
+                        </h4>
+                        <small class="text-muted">Latest additions from your portfolio</small>
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="flex-grow-1">
+                            @if(isset($recentBlocks) && $recentBlocks->count() > 0)
+                                <div class="list-group list-group-flush">
+                                    @foreach($recentBlocks as $block)
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">{{ $block->name }}</h6>
+                                                <small class="text-muted">{{ $block->blockType->name ?? 'N/A' }}</small>
+                                            </div>
+                                            <a href="{{ route('blocks.show', $block) }}" class="btn btn-sm btn-outline-primary">
+                                                View
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-5 text-muted">
+                                    <i class="ph-buildings fs-2"></i>
+                                    <p class="mt-2 mb-0">No blocks found</p>
+                                    <small>Add a block to start tracking assets.</small>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 pt-0 mt-auto text-end">
+                        <a href="{{ route('blocks.create') }}" class="btn btn-sm btn-outline-primary">
+                            Create Block
+                        </a>
                     </div>
                 </div>
             </div>

@@ -53,6 +53,7 @@ class DashboardController extends Controller
             // Regular admin/other users - show all data
             $stats = [
                 'total_blocks' => Block::count(),
+                'total_issues' => BlockIssue::count(),
                 'total_block_types' => BlockType::count(),
                 'total_units' => BlockUnit::count(),
                 'total_work_orders' => BlockWorkOrder::count(),
@@ -164,6 +165,7 @@ class DashboardController extends Controller
     {
         $stats = [
             'total_blocks' => Block::count(),
+            'total_issues' => BlockIssue::count(),
             'total_block_types' => BlockType::count(),
             'total_units' => BlockUnit::count(),
             'total_work_orders' => BlockWorkOrder::count(),
