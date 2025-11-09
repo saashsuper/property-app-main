@@ -1121,9 +1121,18 @@ $(document).ready(function() {
                 
                 if (response.success && response.data && response.data.length > 0) {
                     unitsData = response.data.map(function(unit) {
+                        const labelParts = [];
+                        if (unit.unit_code) {
+                            labelParts.push(unit.unit_code);
+                        }
+                        if (unit.unit_name && unit.unit_name !== unit.unit_code) {
+                            labelParts.push(unit.unit_name);
+                        }
+                        const label = labelParts.length > 0 ? labelParts.join(' - ') : `Unit #${unit.id}`;
+                        
                         return {
                             value: unit.id,
-                            label: unit.unit_name,
+                            label: label,
                             unit_code: unit.unit_code,
                             unit_name: unit.unit_name
                         };
@@ -1177,9 +1186,18 @@ $(document).ready(function() {
                 
                 if (response.success && response.data && response.data.length > 0) {
                     unitsData = response.data.map(function(unit) {
+                        const labelParts = [];
+                        if (unit.unit_code) {
+                            labelParts.push(unit.unit_code);
+                        }
+                        if (unit.unit_name && unit.unit_name !== unit.unit_code) {
+                            labelParts.push(unit.unit_name);
+                        }
+                        const label = labelParts.length > 0 ? labelParts.join(' - ') : `Unit #${unit.id}`;
+                        
                         const unitObj = {
                             value: unit.id,
-                            label: unit.unit_name,
+                            label: label,
                             unit_code: unit.unit_code,
                             unit_name: unit.unit_name
                         };
@@ -1231,6 +1249,16 @@ $(document).ready(function() {
         const unitsHidden = document.getElementById('issue_block_unit_id_hidden');
         
         console.log('initializeUnitAutoComplete called with data:', unitsData);
+        
+        const uniqueUnits = Array.from(
+            new Map(
+                (Array.isArray(unitsData) ? unitsData : [])
+                    .filter(unit => unit && typeof unit.value !== 'undefined' && unit.value !== null)
+                    .map(unit => [unit.value, unit])
+            ).values()
+        );
+        
+        console.log('Unique units data for autocomplete:', uniqueUnits);
         console.log('unitsInput element:', unitsInput);
         
         if (!unitsInput) {
@@ -1264,7 +1292,7 @@ $(document).ready(function() {
             return;
         }
         
-        console.log('Initializing AutoComplete with', unitsData.length, 'units');
+        console.log('Initializing AutoComplete with', uniqueUnits.length, 'units');
         
         // Initialize new AutoComplete instance
         try {
@@ -1272,7 +1300,7 @@ $(document).ready(function() {
                 selector: "#issue_block_unit_id",
                 placeHolder: "Search for units...",
                 data: {
-                    src: unitsData,
+                    src: uniqueUnits,
                     keys: ["label", "unit_name", "unit_code"]
                 },
                 resultItem: {
