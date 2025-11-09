@@ -320,7 +320,7 @@
                                                 <!-- Photo Upload Area -->
                                                 <div class="col-md-4">
                                                     <label class="form-label small mb-2 fw-bold text-black">Photos:</label>
-                                                    <div id="dropzone_{{ $asset->id }}" class="dropzone" style="min-height: 150px; border: 2px dashed #d1d5db; border-radius: 0.375rem; background-color: white;">
+                                                    <div id="dropzone_{{ $asset->id }}" class="dropzone" style="min-height: 110px; border: 2px dashed #d1d5db; border-radius: 0.375rem; background-color: white;">
                                                         <div class="dz-message" data-dz-message>
                                                             <i class="ph-cloud-arrow-up text-primary mb-2" style="font-size: 1.5rem;"></i>
                                                             <div class="text-muted small">Drag & drop images or click to browse</div>
@@ -495,7 +495,7 @@
                                                 <!-- Photo Upload Area -->
                                                 <div class="col-md-4">
                                                     <label class="form-label small mb-2 fw-bold text-black">Photos:</label>
-                                                    <div id="building_{{ $building->id }}_dropzone_{{ $asset->id }}" class="dropzone" style="min-height: 150px; border: 2px dashed #d1d5db; border-radius: 0.375rem; background-color: white;">
+                                                    <div id="building_{{ $building->id }}_dropzone_{{ $asset->id }}" class="dropzone" style="min-height: 110px; border: 2px dashed #d1d5db; border-radius: 0.375rem; background-color: white;">
                                                         <div class="dz-message" data-dz-message>
                                                             <i class="ph-cloud-arrow-up text-primary mb-2" style="font-size: 1.5rem;"></i>
                                                             <div class="text-muted small">Drag & drop images or click to browse</div>

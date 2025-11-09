@@ -28,16 +28,19 @@
                             <div class="form-text">Only Property Manager users can be assigned as Lead Inspector</div>
                         </div>
 
+                        @php
+                            $defaultJobStatusId = old('job_status_id', 1);
+                        @endphp
                         <div class="col-md-6 mb-3">
                             <label for="job_status_id" class="form-label">Status</label>
                             <select class="form-select" id="job_status_id" name="job_status_id">
                                 <option value="">Select Status</option>
-                                <option value="1">Scheduled</option>
-                                <option value="2">In Progress</option>
-                                <option value="3">Completed</option>
-                                <option value="4">Cancelled</option>
-                                <option value="5">On Hold</option>
-                                <option value="6">Rescheduled</option>
+                                <option value="1" {{ $defaultJobStatusId == 1 ? 'selected' : '' }}>Scheduled</option>
+                                <option value="2" {{ $defaultJobStatusId == 2 ? 'selected' : '' }}>In Progress</option>
+                                <option value="3" {{ $defaultJobStatusId == 3 ? 'selected' : '' }}>Completed</option>
+                                <option value="4" {{ $defaultJobStatusId == 4 ? 'selected' : '' }}>Cancelled</option>
+                                <option value="5" {{ $defaultJobStatusId == 5 ? 'selected' : '' }}>On Hold</option>
+                                <option value="6" {{ $defaultJobStatusId == 6 ? 'selected' : '' }}>Rescheduled</option>
                             </select>
                         </div>
 
