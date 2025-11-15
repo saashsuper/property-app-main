@@ -113,7 +113,7 @@ body {
                                         <div class="text-center">
                                             <!-- Absolute Property Group Logo on left side -->
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <img src="{{ URL::asset('build/images/logos/absolute-property-group-logo.svg') }}" alt="Absolute Property Group" class="img-fluid" style="max-width: 350px; height: auto;">
+                                                <img src="{{ URL::asset('images/logos/absolute-property-group-logo.svg') }}" alt="Absolute Property Group" class="img-fluid" style="max-width: 350px; height: auto;">
                                             </div>
                                         </div>
 

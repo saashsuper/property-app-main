@@ -6,19 +6,19 @@
                 <div class="navbar-brand-box horizontal-logo">
                     <a href="index" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
+                            <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="26">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('build/images/logos/proman-logo-dark.svg') }}" alt="PROMAN" height="22">
+                            <img src="{{ URL::asset('images/logos/absolute-sidebar-logo.svg') }}" alt="Absolute Property Group" height="26">
                         </span>
                     </a>
 
                     <a href="index" class="logo logo-light">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('build/images/logos/proman-logo-sm.svg') }}" alt="PROMAN" height="22">
+                            <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="26">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="22">
+                            <img src="{{ URL::asset('images/logos/absolute-sidebar-logo-light.svg') }}" alt="Absolute Property Group" height="26">
                         </span>
                     </a>
                 </div>

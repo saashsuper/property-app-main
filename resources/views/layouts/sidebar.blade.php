@@ -50,18 +50,18 @@
         <div class="navbar-brand-box">
             <a href="{{ route('root') }}" class="logo logo-dark">
                 <span class="logo-sm">
-                    <img src="{{ URL::asset('build/images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="30">
+                    <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="44">
                 </span>
                 <span class="logo-lg">
-                    <img src="{{ URL::asset('build/images/logos/absolute-sidebar-logo.svg') }}" alt="Absolute Property Group" height="40">
+                    <img src="{{ URL::asset('images/logos/absolute-sidebar-logo.svg') }}" alt="Absolute Property Group" height="64">
                 </span>
             </a>
             <a href="{{ route('root') }}" class="logo logo-light">
                 <span class="logo-sm">
-                    <img src="{{ URL::asset('build/images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="30">
+                    <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="44">
                 </span>
                 <span class="logo-lg">
-                    <img src="{{ URL::asset('build/images/logos/absolute-sidebar-logo-light.svg') }}" alt="Absolute Property Group" height="40">
+                    <img src="{{ URL::asset('images/logos/absolute-sidebar-logo-light.svg') }}" alt="Absolute Property Group" height="64">
                 </span>
             </a>
             <button type="button" class="btn btn-sm p-0 fs-3xl header-item float-end btn-vertical-sm-hover"

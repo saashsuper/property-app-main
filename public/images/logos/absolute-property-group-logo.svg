@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1200">
+  <rect width="1600" height="1200" fill="#0C2C52" />
+  <rect x="620" y="140" width="360" height="360" fill="none" stroke="#F47B20" stroke-width="28" />
+  <text x="800" y="340" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="320" font-weight="600" fill="#FFFFFF">A</text>
+  <text x="800" y="780" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="220" letter-spacing="24" fill="#FFFFFF">ABSOLUTE</text>
+  <text x="470" y="920" font-family="Cinzel, 'Times New Roman', serif" font-size="70" fill="#FFFFFF">Estd.</text>
+  <text x="800" y="1020" text-anchor="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="110" letter-spacing="36" fill="#FFFFFF">PROPERTY GROUP</text>
+  <text x="1230" y="920" text-anchor="end" font-family="Cinzel, 'Times New Roman', serif" font-size="70" fill="#FFFFFF">1998</text>
+</svg>
+
