@@ -4,13 +4,7 @@
     <rect x="0" y="0" width="380" height="380" fill="none" stroke="#F47B20" stroke-width="30" />
     <text x="190" y="205" text-anchor="middle" dominant-baseline="middle" font-family="Cinzel, 'Times New Roman', serif" font-size="320" font-weight="600" fill="#0C2C52">A</text>
   </g>
-  <text x="980" y="320" font-family="Cinzel, 'Times New Roman', serif" font-size="230" letter-spacing="20" fill="#0C2C52">ABSOLUTE</text>
-  <text x="980" y="420" font-family="Cinzel, 'Times New Roman', serif" font-size="90" letter-spacing="32" fill="#0C2C52">PROPERTY GROUP</text>
-  <text x="640" y="420" font-family="Cinzel, 'Times New Roman', serif" font-size="70" fill="#0C2C52">Estd.</text>
-  <text x="1500" y="420" font-family="Cinzel, 'Times New Roman', serif" font-size="70" fill="#0C2C52">1998</text>
-  <text x="980" y="530" font-family="Cinzel, 'Times New Roman', serif" font-size="110" letter-spacing="20" fill="#0C2C52">MANAGEMENT</text>
-  <text x="1350" y="530" font-family="Cinzel, 'Times New Roman', serif" font-size="110" fill="#F47B20">|</text>
-  <text x="1470" y="530" font-family="Cinzel, 'Times New Roman', serif" font-size="110" letter-spacing="20" fill="#0C2C52">SALES</text>
-  <text x="1730" y="530" font-family="Cinzel, 'Times New Roman', serif" font-size="110" fill="#F47B20">|</text>
-  <text x="1860" y="530" font-family="Cinzel, 'Times New Roman', serif" font-size="110" letter-spacing="20" fill="#0C2C52">LETTINGS</text>
+  <text x="630" y="320" font-family="Cinzel, 'Times New Roman', serif" font-size="230" letter-spacing="20" fill="#0C2C52">ABSOLUTE</text>
+  <text x="630" y="420" font-family="Cinzel, 'Times New Roman', serif" font-size="90" letter-spacing="32" fill="#0C2C52">PROPERTY GROUP</text>
+  <text x="590" y="520" font-family="Cinzel, 'Times New Roman', serif" font-size="85" letter-spacing="4" fill="#0C2C52">MANAGEMENT | SALES | LETTINGS</text>
 </svg>
