@@ -49,9 +49,9 @@
                             <div class="mb-3">
                                 <label for="password" class="form-label">@lang('translation.new-password')</label>
                                 <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                       id="password" name="password" pattern="[a-zA-Z0-9]{8,}" 
-                                       title="Password must be alphanumeric and at least 8 characters">
-                                <div class="form-text">Password must be alphanumeric (letters and numbers only) and at least 8 characters long. @lang('translation.leave-blank-to-keep-current')</div>
+                                       id="password" name="password" pattern="(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}" 
+                                       title="Password must be at least 8 characters and include one uppercase and one special character">
+                                <div class="form-text">Password must be at least 8 characters and include at least one uppercase letter and one special character. @lang('translation.leave-blank-to-keep-current')</div>
                                 @error('password')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -115,30 +115,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label class="form-label">Assign Roles</label>
-                                <div class="border rounded p-3">
-                                    @foreach($roles as $role)
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->name }}" 
-                                               id="role_{{ $role->id }}" {{ in_array($role->name, $userRoles) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="role_{{ $role->id }}">
-                                            {{ $role->name }}
-                                            <small class="text-muted">({{ $role->permissions->count() }} permissions)</small>
-                                        </label>
-                                    </div>
-                                    @endforeach
-                                </div>
-                                <div class="form-text">Select one or more roles for this user</div>
-                                @error('roles')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="row">
                         <div class="col-12">

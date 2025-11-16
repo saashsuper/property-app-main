@@ -93,6 +93,12 @@
 
 @include('blocks.tabs.edit.block-information.modals')
 
+@php
+    $existingTypeIds = ($blockInformation && $blockInformation->count() > 0)
+        ? $blockInformation->pluck('information_type_id')->filter()->values()
+        : collect();
+@endphp
+
 @push('styles')
 <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css">
@@ -166,6 +172,12 @@
     min-width: 200px;
     max-width: none;
 }
+
+/* Grey out disabled options in selects for consistent appearance */
+select.form-select option:disabled {
+    color: #6c757d;
+    background-color: #f8f9fa;
+}
 </style>
 @endpush
 
@@ -187,6 +199,7 @@
 <!-- Global Configuration -->
 <script>
     window.blockId = {{ $block->id }};
+    window.existingBlockInformationTypeIds = {!! $existingTypeIds->toJson() !!};
     // CSRF token is available via meta tag: $('meta[name="csrf-token"]').attr('content')
     window.routes = {
         blockInformation: {

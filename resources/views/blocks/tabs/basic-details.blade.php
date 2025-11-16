@@ -148,10 +148,10 @@
     <div class="row">
         <div class="col-md-4">
             <div class="mb-3">
-                <label for="car_spaces" class="form-label">No. of Car Spaces <span class="text-danger">*</span></label>
-                <input type="number" class="form-control @error('car_spaces') is-invalid @enderror" 
-                       id="car_spaces" name="car_spaces" value="{{ old('car_spaces', $block->car_spaces) }}" min="0" required>
-                @error('car_spaces')
+                <label for="no_of_units" class="form-label">No. of Units</label>
+                <input type="number" class="form-control @error('no_of_units') is-invalid @enderror" 
+                       id="no_of_units" name="no_of_units" value="{{ old('no_of_units', $block->no_of_units) }}" min="0">
+                @error('no_of_units')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -159,10 +159,10 @@
         
         <div class="col-md-4">
             <div class="mb-3">
-                <label for="no_of_units" class="form-label">No. of Units</label>
-                <input type="number" class="form-control @error('no_of_units') is-invalid @enderror" 
-                       id="no_of_units" name="no_of_units" value="{{ old('no_of_units', $block->no_of_units) }}" min="0">
-                @error('no_of_units')
+                <label for="car_spaces" class="form-label">No. of Car Spaces <span class="text-danger">*</span></label>
+                <input type="number" class="form-control @error('car_spaces') is-invalid @enderror" 
+                       id="car_spaces" name="car_spaces" value="{{ old('car_spaces', $block->car_spaces) }}" min="0" required>
+                @error('car_spaces')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>

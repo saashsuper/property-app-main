@@ -129,7 +129,7 @@
 
             <div class="d-flex align-items-center">
 
-                <div class="dropdown topbar-head-dropdown ms-1 header-item">
+                {{-- <div class="dropdown topbar-head-dropdown ms-1 header-item">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-dark rounded-circle"
                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class='bi bi-grid fs-2xl'></i>
@@ -195,9 +195,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
-                <div class="dropdown ms-1 topbar-head-dropdown header-item">
+                {{-- <div class="dropdown ms-1 topbar-head-dropdown header-item">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-secondary rounded-circle"
                         data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         @switch(Session::get('lang'))
@@ -304,7 +304,7 @@
                             <span class="align-middle">عربي</span>
                         </a>
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="dropdown topbar-head-dropdown ms-1 header-item">
                     <button type="button" class="btn btn-icon btn-topbar btn-ghost-dark rounded-circle"
@@ -619,18 +619,18 @@
                     <div class="dropdown-menu dropdown-menu-end">
                         <!-- item-->
                         <h6 class="dropdown-header">Welcome {{ Auth::check() ? Auth::user()->name : 'Guest' }}!</h6>
-                        <a class="dropdown-item" href="{{ route('profile.show') }}"><i
+                        {{-- <a class="dropdown-item" href="{{ route('profile.show') }}"><i
                                 class="mdi mdi-account-circle text-muted fs-lg align-middle me-1"></i> <span
-                                class="align-middle"> @lang('translation.profile')</span></a>
-                        <a class="dropdown-item" href="javascript:void(0)"><i
+                                class="align-middle"> @lang('translation.profile')</span></a> --}}
+                        {{-- <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-message-text-outline text-muted fs-lg align-middle me-1"></i> <span
-                                class="align-middle">Messages</span></a>
-                        <a class="dropdown-item" href="javascript:void(0)"><i
+                                class="align-middle">Messages</span></a> --}}
+                        {{-- <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-calendar-check-outline text-muted fs-lg align-middle me-1"></i> <span
-                                class="align-middle">Taskboard</span></a>
-                        <a class="dropdown-item" href="javascript:void(0)"><i
+                                class="align-middle">Taskboard</span></a> --}}
+                        {{-- <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-lifebuoy text-muted fs-lg align-middle me-1"></i> <span
-                                class="align-middle">Help</span></a>
+                                class="align-middle">Help</span></a> --}}
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="javascript:void(0)"><i
                                 class="mdi mdi-wallet text-muted fs-lg align-middle me-1"></i> <span
@@ -641,10 +641,10 @@
                                         User
                                     @endif
                                 </b></span></a>
-                        <a class="dropdown-item" href="javascript:void(0)"><span
+                        {{-- <a class="dropdown-item" href="javascript:void(0)"><span
                                 class="badge bg-success-subtle text-success mt-1 float-end">New</span><i
                                 class="mdi mdi-cog-outline text-muted fs-lg align-middle me-1"></i> <span
-                                class="align-middle">@lang('translation.settings')</span></a>
+                                class="align-middle">@lang('translation.settings')</span></a> --}}
                         <a class="dropdown-item" href="{{ route('password.confirm') }}"><i
                                 class="mdi mdi-lock text-muted fs-lg align-middle me-1"></i> <span
                                 class="align-middle"> @lang('translation.lock-screen')</span></a>

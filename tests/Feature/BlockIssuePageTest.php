@@ -19,6 +19,7 @@ use App\Models\Priority;
 use App\Models\IssueStatus;
 use App\Models\UserType;
 use App\Models\BlockContractor;
+use Illuminate\Support\Str;
 
 class BlockIssuePageTest extends TestCase
 {
@@ -229,6 +230,54 @@ class BlockIssuePageTest extends TestCase
             'log_type' => 'site_visit_assigned',
             'user_id' => $this->user->id,
         ]);
+    }
+
+    /** @test */
+    public function test_issue_page_does_not_duplicate_issue_specific_site_visits()
+    {
+        // Create a site visit linked directly to this issue
+        $issueSpecificVisit = BlockVisit::create([
+            'block_id' => $this->block->id,
+            'block_issue_id' => $this->blockIssue->id,
+            'block_unit_id' => $this->blockUnit->id,
+            'ref_no' => 'SV-' . Str::upper(Str::random(6)),
+            'scheduled_date_time' => now()->addDay(),
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        // Create a general block site visit (not tied to the current issue)
+        $generalVisit = BlockVisit::create([
+            'block_id' => $this->block->id,
+            'block_issue_id' => null,
+            'block_unit_id' => $this->blockUnit->id,
+            'ref_no' => 'SV-' . Str::upper(Str::random(6)),
+            'scheduled_date_time' => now()->addDays(2),
+            'created_by' => $this->user->id,
+            'updated_by' => $this->user->id,
+        ]);
+
+        $response = $this->get(route('block-issues.show', $this->blockIssue));
+
+        $response->assertStatus(200);
+
+        $siteVisits = $response->viewData('siteVisits');
+        $relatedSiteVisits = $response->viewData('relatedSiteVisits');
+
+        $this->assertTrue(
+            $relatedSiteVisits->contains('id', $issueSpecificVisit->id),
+            'Issue-linked visit should appear in relatedSiteVisits collection'
+        );
+
+        $this->assertFalse(
+            $siteVisits->contains('id', $issueSpecificVisit->id),
+            'Issue-linked visit should not appear in general siteVisits collection'
+        );
+
+        $this->assertTrue(
+            $siteVisits->contains('id', $generalVisit->id),
+            'General block visit should remain visible in siteVisits collection'
+        );
     }
 
     /** @test */

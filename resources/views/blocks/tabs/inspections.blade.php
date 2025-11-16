@@ -23,7 +23,6 @@
                             <th>Inspection Date</th>
                             <th>Inspector</th>
                             <th>Status</th>
-                            <th class="text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -42,18 +41,6 @@
                                         <span class="badge bg-secondary">Unknown (ID: {{ $inspection->job_status_id }})</span>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <a href="{{ route('block-inspections.show', $inspection->id) }}" class="btn btn-sm btn-outline-primary" title="View Inspection">
-                                            <i class="ph-eye"></i>
-                                        </a>
-                                        @if($inspection->job_status_id == 3)
-                                        <a href="{{ route('block-inspections.download-pdf', $inspection->id) }}" class="btn btn-sm btn-outline-danger" title="Download PDF Report">
-                                            <i class="ph-file-pdf"></i>
-                                        </a>
-                                        @endif
-                                    </div>
-                                </td>
                             </tr>
                         @endforeach
                     </tbody>
@@ -61,9 +48,8 @@
             </div>
         @else
             <div class="text-center py-4">
-                                                    <i class="ph-magnifying-glass text-muted" style="font-size: 3rem;"></i>
+                <i class="ph-magnifying-glass text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No inspections scheduled for this block.</p>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addInspectionModal">Schedule First Inspection</button>
             </div>
         @endif
 

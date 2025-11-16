@@ -209,8 +209,12 @@ class BlockIssueController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Load site visits for this issue (both specific to this issue and general block visits)
+        // Load other site visits for this block (exclude ones already tied to this issue)
         $siteVisits = $blockIssue->block->blockVisits()
+            ->where(function ($query) use ($blockIssue) {
+                $query->whereNull('block_issue_id')
+                      ->orWhere('block_issue_id', '!=', $blockIssue->id);
+            })
             ->with(['jobReason', 'jobStatus', 'team.user', 'createdByUser', 'blockIssue'])
             ->orderBy('scheduled_date_time', 'desc')
             ->get();
@@ -278,8 +282,12 @@ class BlockIssueController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Load site visits for this issue (both specific to this issue and general block visits)
+        // Load other site visits for this block (exclude ones already tied to this issue)
         $siteVisits = $blockIssue->block->blockVisits()
+            ->where(function ($query) use ($blockIssue) {
+                $query->whereNull('block_issue_id')
+                      ->orWhere('block_issue_id', '!=', $blockIssue->id);
+            })
             ->with(['jobReason', 'jobStatus', 'team.user', 'createdByUser', 'blockIssue'])
             ->orderBy('scheduled_date_time', 'desc')
             ->get();

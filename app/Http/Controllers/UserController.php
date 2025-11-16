@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -71,10 +70,7 @@ class UserController extends Controller
             $userTypes = UserType::visible()->orderBy('name')->get();
         }
         
-        // Get all roles for assignment
-        $roles = Role::all();
-        
-        return view('users.create', compact('userTypes', 'isContractorAdmin', 'roles'));
+        return view('users.create', compact('userTypes', 'isContractorAdmin'));
     }
 
     /**
@@ -85,11 +81,11 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email',
-            'password' => 'nullable|string|min:8|confirmed|regex:/^[a-zA-Z0-9]+$/',
+            'password' => 'nullable|string|min:8|confirmed|regex:/^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/',
             'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,name',
+        ], [
+            'password.regex' => 'Password must contain at least one uppercase letter and one special character.',
         ]);
 
         if ($validator->fails()) {
@@ -101,9 +97,10 @@ class UserController extends Controller
         $user = auth()->user();
         $isContractorAdmin = $user->hasType('Contractor Admin');
         
+        $selectedType = UserType::find($request->user_type_id);
+
         // Validate that Contractor Admin can only create Contractor User types
         if ($isContractorAdmin) {
-            $selectedType = UserType::find($request->user_type_id);
             if (!$selectedType || $selectedType->name !== 'Contractor User') {
                 return redirect()->back()
                     ->withErrors(['user_type_id' => 'You can only create Contractor User accounts.'])
@@ -140,10 +137,7 @@ class UserController extends Controller
 
         $newUser = User::create($data);
         
-        // Assign roles if provided
-        if ($request->has('roles')) {
-            $newUser->syncRoles($request->roles);
-        }
+        $this->syncDefaultRolesForUser($newUser, $selectedType);
 
         return redirect()->route('users.index')
             ->with('success', 'User created successfully!');
@@ -179,11 +173,7 @@ class UserController extends Controller
             $userTypes = UserType::visible()->orderBy('name')->get();
         }
         
-        // Get all roles for assignment
-        $roles = Role::all();
-        $userRoles = $user->roles->pluck('name')->toArray();
-        
-        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin', 'roles', 'userRoles'));
+        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin'));
     }
 
     /**
@@ -194,11 +184,11 @@ class UserController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:191',
             'email' => 'required|string|email|max:191|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed|regex:/^[a-zA-Z0-9]+$/',
+            'password' => 'nullable|string|min:8|confirmed|regex:/^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/',
             'user_type_id' => 'required|exists:user_types,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'roles' => 'nullable|array',
-            'roles.*' => 'exists:roles,name',
+        ], [
+            'password.regex' => 'Password must contain at least one uppercase letter and one special character.',
         ]);
 
         if ($validator->fails()) {
@@ -216,9 +206,10 @@ class UserController extends Controller
                 ->with('error', 'You can only update users you created.');
         }
         
+        $selectedType = UserType::find($request->user_type_id);
+
         // Validate that Contractor Admin can only update to Contractor User type
         if ($isContractorAdmin) {
-            $selectedType = UserType::find($request->user_type_id);
             if (!$selectedType || $selectedType->name !== 'Contractor User') {
                 return redirect()->back()
                     ->withErrors(['user_type_id' => 'You can only assign Contractor User type.'])
@@ -252,11 +243,7 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        
-        // Sync roles if provided
-        if ($request->has('roles')) {
-            $user->syncRoles($request->roles);
-        }
+        $this->syncDefaultRolesForUser($user, $selectedType);
 
         return redirect()->route('users.index')
             ->with('success', 'User updated successfully!');
@@ -319,5 +306,29 @@ class UserController extends Controller
             'success' => true,
             'data' => $user
         ]);
+    }
+
+    /**
+     * Determine which roles should be assigned to a user type.
+     */
+    protected function getDefaultRolesForUserType(?UserType $userType): array
+    {
+        if (!$userType) {
+            return config('user_type_roles.default', []);
+        }
+
+        $mapping = config('user_type_roles', []);
+
+        return $mapping[$userType->name] ?? $mapping['default'] ?? [];
+    }
+
+    /**
+     * Sync default roles for a user based on their type.
+     */
+    protected function syncDefaultRolesForUser(User $user, ?UserType $userType = null): void
+    {
+        $roles = $this->getDefaultRolesForUserType($userType ?? $user->userType);
+
+        $user->syncRoles($roles);
     }
 }

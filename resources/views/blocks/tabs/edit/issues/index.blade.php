@@ -34,9 +34,11 @@
                         <i class="ph-printer"></i>
                     </a>
                 </div>
-                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#issueModal" onclick="openIssueModal('add')">
-                    <i class="ph-plus align-bottom me-1"></i> Report Issue
-                </button>
+                @if (empty($viewOnly))
+                    <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#issueModal" onclick="openIssueModal('add')">
+                        <i class="ph-plus align-bottom me-1"></i> Report Issue
+                    </button>
+                @endif
             </div>
         </div>
         

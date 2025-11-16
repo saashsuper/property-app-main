@@ -227,6 +227,11 @@ $(document).ready(function() {
             },
             success: function(data) {
                 if (data.success) {
+                    // Sync list of used information type ids if available
+                    try {
+                        const ids = (data.data || []).map(function(info){ return info.information_type_id; }).filter(Boolean);
+                        window.existingBlockInformationTypeIds = Array.from(new Set(ids));
+                    } catch (err) {}
                     // Clear and repopulate DataTable
                     blockInformationDataTable.clear();
                     
@@ -299,6 +304,13 @@ $(document).ready(function() {
         $form.off('submit').on('submit', function(e) {
             e.preventDefault();
             
+            // Prevent submitting a disabled (already used) type
+            const selectedOption = $('#information_type_id option:selected');
+            if (selectedOption.is(':disabled')) {
+                showMessage(messageId, 'warning', 'This information type has already been added.');
+                return;
+            }
+            
             const $submitBtn = $('#blockInformationSubmitBtn');
             const originalText = $submitBtn.html();
             $submitBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Saving...').prop('disabled', true);
@@ -340,6 +352,13 @@ $(document).ready(function() {
                     if (data.success) {
                         showMessage(messageId, 'success', successMessage);
                         $form[0].reset();
+                        
+                        // Update cached used type ids if API returns created item
+                        try {
+                            if (data.data && data.data.information_type_id) {
+                                window.existingBlockInformationTypeIds = Array.from(new Set([...(window.existingBlockInformationTypeIds || []), data.data.information_type_id]));
+                            }
+                        } catch (err) {}
                         
                         setTimeout(function() {
                             $('#' + modalId).modal('hide');
@@ -474,6 +493,9 @@ $(document).ready(function() {
                     $('#information_type_id').val(info.information_type_id || '');
                     $('#description').val(info.description || '');
                     
+                    // Disable options except the current one (editing)
+                    refreshInformationTypeSelect(info.information_type_id || null);
+                    
                     // Show the modal
                     $modal.modal('show');
                 } else {
@@ -500,6 +522,35 @@ $(document).ready(function() {
     function initializeModal(modalId) {
         // Clear any previous messages
         clearMessage('blockInformationMessage');
+        // For add mode, disable already used info types
+        if (modalId === 'blockInformationModal') {
+            refreshInformationTypeSelect(null);
+        }
+    }
+    
+    /**
+     * Disable already used information types in the select.
+     * keepEnabledId is used in edit mode to allow the current type.
+     */
+    function refreshInformationTypeSelect(keepEnabledId = null) {
+        const used = Array.isArray(window.existingBlockInformationTypeIds) ? window.existingBlockInformationTypeIds.map(String) : [];
+        const $select = $('#information_type_id');
+        if (!$select.length) return;
+        $select.find('option').each(function() {
+            const $opt = $(this);
+            const val = $opt.attr('value');
+            if (!val) {
+                $opt.prop('disabled', false).removeClass('text-muted');
+                return;
+            }
+            const disable = used.includes(String(val)) && String(val) !== String(keepEnabledId ?? '');
+            $opt.prop('disabled', disable);
+            if (disable) {
+                $opt.addClass('text-muted');
+            } else {
+                $opt.removeClass('text-muted');
+            }
+        });
     }
     
     // ========================================

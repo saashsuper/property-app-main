@@ -34,9 +34,8 @@
             </div>
         @else
             <div class="text-center py-4">
-                                                    <i class="ph-user-gear text-muted" style="font-size: 3rem;"></i>
+                <i class="ph-user-gear text-muted" style="font-size: 3rem;"></i>
                 <p class="text-muted mt-2">No contractors assigned to this block.</p>
-                <button class="btn btn-primary">Assign Contractor</button>
             </div>
         @endif
 
