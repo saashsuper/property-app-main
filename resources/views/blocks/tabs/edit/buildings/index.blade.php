@@ -61,6 +61,9 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="editBuilding({{ $building->id }})" title="Edit Building">
                                         <i class="ph-pencil"></i>
                                     </button>
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewBuildingDetails({{ $building->id }})" title="View Details">
+                                        <i class="ph-eye"></i>
+                                    </button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="buildingShowDeleteConfirmation({{ $building->id }}, {
                                         name: '{{ $building->name }}',
                                         description: '{{ Str::limit($building->description ?? 'No description provided', 30) }}',

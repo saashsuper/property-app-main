@@ -132,6 +132,65 @@
     </div>
 </div>
 
+<!-- View Unit Modal -->
+<div class="modal fade" id="viewUnitModal" tabindex="-1" aria-labelledby="viewUnitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="viewUnitModalLabel" style="color: white !important; padding-bottom: 15px;">Unit Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-bold mb-3">Basic</h6>
+                            <div class="mb-2"><strong>Unit Code:</strong> <span id="v_unit_code">-</span></div>
+                            <div class="mb-2"><strong>Unit Name:</strong> <span id="v_unit_name">-</span></div>
+                            <div class="mb-2"><strong>Type:</strong> <span id="v_unit_type">-</span></div>
+                            <div class="mb-2"><strong>Building/Core:</strong> <span id="v_building">-</span></div>
+                            <div class="mb-2"><strong>Resident:</strong> <span id="v_resident">-</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-bold mb-3">Owner & Contact</h6>
+                            <div class="mb-2"><strong>Owner's Name:</strong> <span id="v_owners_name">-</span></div>
+                            <div class="mb-2"><strong>Salutation:</strong> <span id="v_salutation">-</span></div>
+                            <div class="mb-2"><strong>Email:</strong> <span id="v_email">-</span></div>
+                            <div class="mb-2"><strong>Mobile:</strong> <span id="v_mobile_no">-</span></div>
+                            <div class="mb-2"><strong>Phone:</strong> <span id="v_phone_number">-</span></div>
+                            <div class="mb-2"><strong>Letting Agent:</strong> <span id="v_letting_agent">-</span></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="border rounded p-3 h-100">
+                            <h6 class="fw-bold mb-3">Address (if Non-Resident)</h6>
+                            <div class="mb-2"><strong>Address 1:</strong> <span id="v_address1">-</span></div>
+                            <div class="mb-2"><strong>Address 2:</strong> <span id="v_address2">-</span></div>
+                            <div class="mb-2"><strong>Address 3:</strong> <span id="v_address3">-</span></div>
+                            <div class="mb-2"><strong>Country:</strong> <span id="v_country">-</span></div>
+                            <div class="mb-2"><strong>County / State:</strong> <span id="v_state">-</span></div>
+                            <div class="mb-2"><strong>Zip / Eircode:</strong> <span id="v_zip">-</span></div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="border rounded p-3">
+                            <h6 class="fw-bold mb-2">Miscellaneous Info</h6>
+                            <div id="v_misc_info" class="text-muted">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ph-x me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
 <!-- Upload Unit Modal -->
 <div class="modal fade" id="uploadUnitModal" tabindex="-1" aria-labelledby="uploadUnitModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">

@@ -67,6 +67,8 @@ class BlockBuildingController extends Controller
 
     public function show(BlockBuilding $blockBuilding)
     {
+        // Ensure related type is included so UI can display it
+        $blockBuilding->load('buildingType');
         return response()->json([
             'success' => true,
             'data' => $blockBuilding

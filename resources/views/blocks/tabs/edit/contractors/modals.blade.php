@@ -59,6 +59,55 @@
     </div>
 </div>
 
+<!-- Contractor Details Modal -->
+<div class="modal fade" id="contractorDetailsModal" tabindex="-1" aria-labelledby="contractorDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="contractorDetailsModalLabel" style="color: white !important; padding-bottom: 15px;">
+                    <i class="ph-eye me-2"></i>Contractor Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Name:</label>
+                            <p class="form-control-plaintext" id="detail_contractor_name">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email:</label>
+                            <p class="form-control-plaintext" id="detail_contractor_email">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Type:</label>
+                            <p class="form-control-plaintext" id="detail_contractor_type">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status:</label>
+                            <p class="form-control-plaintext" id="detail_contractor_status">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ph-x me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteContractorModal" tabindex="-1" aria-labelledby="deleteContractorModalLabel" aria-hidden="true">
     <div class="modal-dialog">

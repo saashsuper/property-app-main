@@ -249,7 +249,10 @@ $(document).ready(function() {
                             unit.resident ? 'Yes' : 'No',
                             unit.mobile_no || 'N/A',
                             unit.letting_agent || 'N/A',
-                            `<button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})" title="Edit Unit">
+                            `<button class="btn btn-sm btn-outline-info" onclick="viewUnit(${unit.id})" title="View Unit">
+                                <i class="ph-eye"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})" title="Edit Unit">
                                 <i class="ph-pencil"></i>
                             </button> 
                             <button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation(${unit.id}, {
@@ -796,6 +799,70 @@ function unitDeleteUnit(unitId) {
 window.unitShowDeleteConfirmation = unitShowDeleteConfirmation;
 window.unitConfirmDeletion = unitShowDeleteConfirmation;
 window.unitDeleteUnit = unitDeleteUnit;
+
+/**
+ * View unit details in a read-only modal
+ * 
+ * @param {number} id - The ID of the unit to view
+ */
+function viewUnit(id) {
+    // Find and set loading state on the clicked button if present
+    let $viewBtn = $(`button[onclick="viewUnit(${id})"]`);
+    const originalText = $viewBtn.length > 0 ? $viewBtn.html() : 'View';
+    if ($viewBtn.length > 0) {
+        $viewBtn.html('<i class="ph-spinner ph-spin me-1"></i>Loading...').prop('disabled', true);
+    }
+    
+    $.ajax({
+        url: `/block-units/${id}`,
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(resp) {
+            if (!resp || !resp.success || !resp.data) {
+                showMessage('unitMessage', 'danger', 'Error loading unit details');
+                return;
+            }
+            const u = resp.data || {};
+            // Populate fields
+            $('#v_unit_code').text(u.unit_code || 'N/A');
+            $('#v_unit_name').text(u.unit_name || 'N/A');
+            $('#v_unit_type').text((u.unit_type && u.unit_type.name) ? u.unit_type.name : (u.unit_type_name || 'N/A'));
+            $('#v_building').text((u.building && u.building.name) ? u.building.name : (u.building_name || 'N/A'));
+            $('#v_resident').text(u.resident ? 'Yes' : 'No');
+            
+            $('#v_owners_name').text(u.owners_name || 'N/A');
+            $('#v_salutation').text(u.salutation || 'N/A');
+            $('#v_email').text(u.email || 'N/A');
+            $('#v_mobile_no').text(u.mobile_no || 'N/A');
+            $('#v_phone_number').text(u.phone_number || 'N/A');
+            $('#v_letting_agent').text(u.letting_agent || 'N/A');
+            
+            $('#v_address1').text(u.address1 || 'N/A');
+            $('#v_address2').text(u.address2 || 'N/A');
+            $('#v_address3').text(u.address3 || 'N/A');
+            $('#v_country').text(u.country_name || (u.country_id || 'N/A'));
+            $('#v_state').text(u.state_name || (u.state_id || 'N/A'));
+            $('#v_zip').text(u.zip || 'N/A');
+            
+            $('#v_misc_info').text(u.misc_info || 'N/A');
+            
+            // Show modal
+            $('#viewUnitModal').modal('show');
+        },
+        error: function() {
+            showMessage('unitMessage', 'danger', 'Error loading unit details');
+        },
+        complete: function() {
+            if ($viewBtn.length > 0) {
+                $viewBtn.html(originalText).prop('disabled', false);
+            }
+        }
+    });
+}
+window.viewUnit = viewUnit;
 
 // ========================================
 // SIMPLE ONCHANGE HANDLERS

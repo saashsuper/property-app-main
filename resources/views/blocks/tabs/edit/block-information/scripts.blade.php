@@ -425,6 +425,10 @@ $(document).ready(function() {
             $form.attr('action', window.routes?.blockInformation?.store || '/block-information');
             $form.find('input[name="_method"]').remove(); // Remove PUT method for add
             $form[0].reset(); // Reset form
+            // Hide meta lines
+            $('#blockInformationEditMeta').addClass('d-none');
+            $('#blockInformationEditMetaText').text('');
+            $('#blockInformationEditMetaHeader').addClass('d-none').text('');
             
             // Initialize modal before showing
             initializeModal('blockInformationModal');
@@ -495,6 +499,47 @@ $(document).ready(function() {
                     
                     // Disable options except the current one (editing)
                     refreshInformationTypeSelect(info.information_type_id || null);
+                    
+                    // Compose and show meta (header + body)
+                    try {
+                        const updatedAt = info.updated_at ? new Date(info.updated_at).toLocaleString('en-GB', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : null;
+                        const createdAt = info.created_at ? new Date(info.created_at).toLocaleString('en-GB', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : null;
+                        const updaterName = (info.updater && (info.updater.name || info.updater.full_name)) || null;
+                        const creatorName = (info.creator && (info.creator.name || info.creator.full_name)) || null;
+                        let metaText = '';
+                        if (updatedAt && updaterName) {
+                            metaText = `Last updated by ${updaterName} on ${updatedAt}`;
+                        } else if (updatedAt) {
+                            metaText = `Last updated on ${updatedAt}`;
+                        } else if (creatorName && createdAt) {
+                            metaText = `Created by ${creatorName} on ${createdAt}`;
+                        } else if (createdAt) {
+                            metaText = `Created on ${createdAt}`;
+                        }
+                        if (metaText) {
+                            $('#blockInformationEditMetaText').text(metaText);
+                            $('#blockInformationEditMeta').removeClass('d-none');
+                            $('#blockInformationEditMetaHeader').text(metaText).removeClass('d-none');
+                        } else {
+                            $('#blockInformationEditMeta').addClass('d-none');
+                            $('#blockInformationEditMetaHeader').addClass('d-none').text('');
+                        }
+                    } catch (e) {
+                        $('#blockInformationEditMeta').addClass('d-none');
+                        $('#blockInformationEditMetaHeader').addClass('d-none').text('');
+                    }
                     
                     // Show the modal
                     $modal.modal('show');

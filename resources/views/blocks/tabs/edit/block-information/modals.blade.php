@@ -3,7 +3,10 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="blockInformationModalLabel" style="color: white !important; padding-bottom: 15px;">Add Block Information</h5>
+                <div class="d-flex flex-column">
+                    <h5 class="modal-title" id="blockInformationModalLabel" style="color: white !important; padding-bottom: 6px;">Add Block Information</h5>
+                    <small id="blockInformationEditMetaHeader" class="text-white-50 d-none" style="margin-top: -4px;"></small>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
             <form id="blockInformationForm" method="POST" action="{{ route('block-information.store') }}">

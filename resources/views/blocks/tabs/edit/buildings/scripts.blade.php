@@ -228,9 +228,12 @@ $(document).ready(function() {
                             building.roof_type || 'N/A',
                             building.no_lift || 'N/A',
                             '<span class="badge bg-success">Active</span>',
-                            `<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(${building.id})" title="Edit Building">
+                        `<button class="btn btn-sm btn-outline-primary" onclick="editBuilding(${building.id})" title="Edit Building">
                                 <i class="ph-pencil"></i>
                             </button> 
+                            <button class="btn btn-sm btn-outline-info" onclick="viewBuildingDetails(${building.id})" title="View Details">
+                                <i class="ph-eye"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="buildingShowDeleteConfirmation(${building.id}, {
                                 name: '${building.name || 'N/A'}',
                                 type: '${building.building_type_name || 'N/A'}',
@@ -527,6 +530,30 @@ $(document).ready(function() {
     window.buildingShowDeleteConfirmation = buildingShowDeleteConfirmation;
     window.buildingConfirmDeletion = buildingShowDeleteConfirmation;
     window.buildingDeleteBuilding = buildingDeleteBuilding;
+    
+    /**
+     * View building details in a modal
+     * @param {number} id
+     */
+    window.viewBuildingDetails = function(id) {
+        $.ajax({
+            url: `/block-buildings/${id}`,
+            method: 'GET',
+            dataType: 'json',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            success: function(resp) {
+                if (resp && resp.success && resp.data) {
+                    const b = resp.data;
+                    $('#detail_building_name').text(b.name || 'N/A');
+                    $('#detail_building_type').text((b.building_type && (b.building_type.name || b.building_type)) || b.building_type_name || 'N/A');
+                    $('#detail_building_floors').text(b.floor_no ?? 'N/A');
+                    $('#detail_building_lifts').text(b.no_lift ?? 'N/A');
+                    $('#detail_building_roof').text(b.roof_type || 'N/A');
+                    $('#buildingDetailsModal').modal('show');
+                }
+            }
+        });
+    }
     
     // ========================================
     // SIMPLE ONCHANGE HANDLERS

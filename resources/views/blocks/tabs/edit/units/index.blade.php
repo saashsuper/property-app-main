@@ -65,6 +65,9 @@
                                 <td>{{ $unit->mobile_no ?? 'N/A' }}</td>
                                 <td>{{ $unit->letting_agent ?? 'N/A' }}</td>
                                 <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewUnit({{ $unit->id }})" title="View Unit">
+                                        <i class="ph-eye"></i>
+                                    </button>
                                     <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})" title="Edit Unit">
                                         <i class="ph-pencil"></i>
                                     </button>

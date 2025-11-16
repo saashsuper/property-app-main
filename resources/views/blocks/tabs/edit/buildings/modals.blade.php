@@ -55,6 +55,61 @@
     </div>
 </div>
 
+<!-- Building Details Modal -->
+<div class="modal fade" id="buildingDetailsModal" tabindex="-1" aria-labelledby="buildingDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
+                <h5 class="modal-title" id="buildingDetailsModalLabel" style="color: white !important; padding-bottom: 15px;">
+                    <i class="ph-eye me-2"></i>Building Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Building/Core:</label>
+                            <p class="form-control-plaintext" id="detail_building_name">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Type:</label>
+                            <p class="form-control-plaintext" id="detail_building_type">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Floors:</label>
+                            <p class="form-control-plaintext" id="detail_building_floors">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Lifts:</label>
+                            <p class="form-control-plaintext" id="detail_building_lifts">-</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Roof Type:</label>
+                            <p class="form-control-plaintext" id="detail_building_roof">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ph-x me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteBuildingModal" tabindex="-1" aria-labelledby="deleteBuildingModalLabel" aria-hidden="true">
     <div class="modal-dialog">

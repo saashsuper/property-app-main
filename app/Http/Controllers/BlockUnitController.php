@@ -95,9 +95,34 @@ class BlockUnitController extends Controller
 
     public function show(BlockUnit $blockUnit)
     {
+        // Include related data for view popup
+        $blockUnit->load(['building', 'unitType']);
+        // Resolve country/state names if present
+        $countryName = null;
+        $stateName = null;
+        if ($blockUnit->country_id) {
+            $country = \App\Models\Country::find($blockUnit->country_id);
+            $countryName = $country ? $country->country_name : null;
+        }
+        if ($blockUnit->state_id) {
+            $state = \App\Models\State::find($blockUnit->state_id);
+            $stateName = $state ? $state->name : null;
+        }
+        $data = $blockUnit->toArray();
+        // Attach friendly names and relation aliases expected by frontend
+        $data['building'] = $blockUnit->building ? [
+            'id' => $blockUnit->building->id,
+            'name' => $blockUnit->building->name,
+        ] : null;
+        $data['unit_type'] = $blockUnit->unitType ? [
+            'id' => $blockUnit->unitType->id,
+            'name' => $blockUnit->unitType->name,
+        ] : null;
+        $data['country_name'] = $countryName;
+        $data['state_name'] = $stateName;
         return response()->json([
             'success' => true,
-            'data' => $blockUnit
+            'data' => $data
         ]);
     }
 

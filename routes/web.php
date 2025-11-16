@@ -177,7 +177,9 @@ Route::get('block-information/get-by-block/{blockId}', [App\Http\Controllers\Blo
 
 Route::get('block-units/block/{blockId}', [App\Http\Controllers\BlockUnitController::class, 'getBlockUnits'])->name('block-units.by-block');
 Route::get('block-contractors/block/{blockId}', [App\Http\Controllers\BlockContractorController::class, 'getBlockContractors'])->name('block-contractors.by-block');
-Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');
+    Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');
+    // Allow read-only show for buildings (units show route reverted)
+    Route::get('block-buildings/{blockBuilding}', [App\Http\Controllers\BlockBuildingController::class, 'show'])->name('block-buildings.show');
 Route::get('block-visits/block/{blockId}', [App\Http\Controllers\BlockVisitController::class, 'getBlockVisits'])->name('block-visits.by-block');
 
 // API Routes for address fields

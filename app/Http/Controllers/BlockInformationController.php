@@ -94,7 +94,7 @@ class BlockInformationController extends Controller
     public function show(BlockInformation $blockInformation): JsonResponse
     {
         try {
-            $blockInformation->load(['informationType', 'creator']);
+            $blockInformation->load(['informationType', 'creator', 'updater']);
 
             return response()->json([
                 'success' => true,

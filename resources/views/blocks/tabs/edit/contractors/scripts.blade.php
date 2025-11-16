@@ -233,6 +233,9 @@ $(document).ready(function() {
                             `<button class="btn btn-sm btn-outline-primary" onclick="editContractor(${contractor.id})" title="Edit Contractor">
                                 <i class="ph-pencil"></i>
                             </button> 
+                            <button class="btn btn-sm btn-outline-info" onclick="viewContractorDetails(${contractor.id})" title="View Details">
+                                <i class="ph-eye"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="contractorShowDeleteConfirmation(${contractor.id}, {
                                 name: '${contractor.contractor_name || 'N/A'}',
                                 email: '${contractor.contractor_email || 'N/A'}',
@@ -627,5 +630,28 @@ function editContractor(id) {
 
 // Expose editContractor to global scope for DataTable onclick handlers
 window.editContractor = editContractor;
+
+/**
+ * View contractor details in a modal
+ * @param {number} id
+ */
+window.viewContractorDetails = function(id) {
+    $.ajax({
+        url: `/block-contractors/${id}`,
+        method: 'GET',
+        dataType: 'json',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        success: function(resp) {
+            if (resp && resp.success) {
+                const c = resp.contractor || resp.data || {};
+                $('#detail_contractor_name').text(c.contractor?.name || c.contractor_name || 'N/A');
+                $('#detail_contractor_email').text(c.contractor?.email || c.contractor_email || 'N/A');
+                $('#detail_contractor_type').text(c.contractor_type?.name || c.contractor_type_name || 'N/A');
+                $('#detail_contractor_status').text(c.status == 1 ? 'Default' : 'Active');
+                $('#contractorDetailsModal').modal('show');
+            }
+        }
+    });
+}
 
 </script>

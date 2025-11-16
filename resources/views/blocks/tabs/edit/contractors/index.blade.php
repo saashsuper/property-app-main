@@ -63,6 +63,9 @@
                                     <button class="btn btn-sm btn-outline-primary" onclick="editContractor({{ $contractor->id }})" title="Edit Contractor">
                                         <i class="ph-pencil"></i>
                                     </button>
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewContractorDetails({{ $contractor->id }})" title="View Details">
+                                        <i class="ph-eye"></i>
+                                    </button>
                                     <button class="btn btn-sm btn-outline-danger" onclick="contractorShowDeleteConfirmation({{ $contractor->id }}, {
                                         name: '{{ $contractor->name }}',
                                         company: '{{ $contractor->company_name }}',
