@@ -154,12 +154,7 @@
                                 <li class="nav-item">
                                     <a href="{{ route('block-issues.create') }}" class="{{ getSubmenuClasses('block-issues.create') }}">@lang('translation.create-block-issue')</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('issues.index') }}" class="{{ getSubmenuClasses('issues.index') }}">@lang('translation.general-issues')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('issues.create') }}" class="{{ getSubmenuClasses('issues.create') }}">@lang('translation.create-issue')</a>
-                                </li>
+                                {{-- Hidden General Issues and Create Issue submenu items --}}
                             </ul>
                         </div>
                     </li>

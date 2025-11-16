@@ -700,6 +700,7 @@ $(document).ready(function() {
     
     // Image preview modal
     $('#imagePreviewModal').on('show.bs.modal', function (event) {
+        const modal = $(this);
         const button = $(event.relatedTarget);
         const clickedImageId = button.data('image-id');
         
@@ -717,7 +718,7 @@ $(document).ready(function() {
         if (allImages.length === 0) return;
         
         // Build carousel items
-        const carouselInner = $('#carouselInner');
+        const carouselInner = modal.find('#carouselInner');
         carouselInner.empty();
         
         allImages.forEach((image, index) => {
@@ -733,42 +734,42 @@ $(document).ready(function() {
         // Update image info
         const currentImage = allImages.find(img => img.id == clickedImageId);
         if (currentImage) {
-            $('#previewImageName').text(currentImage.name);
+            modal.find('#previewImageName').text(currentImage.name);
             const currentIndex = allImages.findIndex(img => img.id == clickedImageId) + 1;
-            $('#imageCounter').text(`${currentIndex} of ${allImages.length}`);
+            modal.find('#imageCounter').text(`${currentIndex} of ${allImages.length}`);
         }
         
         // Initialize carousel
-        const carousel = new bootstrap.Carousel('#imageCarousel', {
+        const carousel = new bootstrap.Carousel(modal.find('#imageCarousel')[0], {
             interval: false, // Disable auto-slide
             wrap: true // Enable infinite loop
         });
         
         // Update info when slide changes
-        $('#imageCarousel').on('slid.bs.carousel', function (event) {
-            const activeItem = $(event.target).find('.carousel-item.active');
+        modal.find('#imageCarousel').on('slid.bs.carousel', function (event) {
+            const activeItem = modal.find('.carousel-item.active');
             const imageId = activeItem.data('image-id');
             const currentImage = allImages.find(img => img.id == imageId);
             
             if (currentImage) {
-                $('#previewImageName').text(currentImage.name);
+                modal.find('#previewImageName').text(currentImage.name);
                 const currentIndex = allImages.findIndex(img => img.id == imageId) + 1;
-                $('#imageCounter').text(`${currentIndex} of ${allImages.length}`);
+                modal.find('#imageCounter').text(`${currentIndex} of ${allImages.length}`);
             }
         });
         
         // Add keyboard navigation
         $(document).on('keydown', function(e) {
-            if ($('#imagePreviewModal').hasClass('show')) {
+            if (modal.hasClass('show')) {
                 if (e.key === 'ArrowLeft') {
                     e.preventDefault();
-                    $('#imageCarousel').carousel('prev');
+                    modal.find('#imageCarousel').carousel('prev');
                 } else if (e.key === 'ArrowRight') {
                     e.preventDefault();
-                    $('#imageCarousel').carousel('next');
+                    modal.find('#imageCarousel').carousel('next');
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
-                    $('#imagePreviewModal').modal('hide');
+                    modal.modal('hide');
                 }
             }
         });

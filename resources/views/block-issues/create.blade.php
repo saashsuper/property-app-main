@@ -36,7 +36,55 @@
                             @csrf
                             
                             <div class="row">
-                                <!-- Row 1: Contact Method, Unit Selection, Assigned To -->
+                                <!-- Row 0: Block (required outside block context) -->
+                                <div class="col-md-4 mb-3">
+                                    <label for="block_display" class="form-label">Block <span class="text-danger">*</span></label>
+                                    <div class="autoComplete_wrapper" id="blockAutoCompleteWrapper">
+                                        <input type="text"
+                                               class="form-control @error('block_id') is-invalid @enderror"
+                                               id="block_display"
+                                               name="block_display"
+                                               placeholder="Search and select a block..."
+                                               autocomplete="off"
+                                               required>
+                                        <input type="hidden" id="block_id" name="block_id" value="{{ old('block_id') }}">
+                                    </div>
+                                    @error('block_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                
+                                
+                                <!-- Row 1: Unit Selection, Assigned To -->
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control @error('block_unit_id') is-invalid @enderror" 
+                                           id="block_unit_id" name="block_unit_display" placeholder="Select a block to search units..." autocomplete="off" required disabled>
+                                    <input type="hidden" id="block_unit_id_hidden" name="block_unit_id" value="{{ old('block_unit_id') }}">
+                                    @error('block_unit_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-4 mb-3">
+                                    <label for="assigned_to" class="form-label">Assigned To <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('assigned_to') is-invalid @enderror" id="assigned_to" name="assigned_to" required>
+                                        <option value="">Select Property Manager</option>
+                                        @foreach($users as $user)
+                                            @if ($user->userType && $user->userType->name === 'Property manager')
+                                                <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>
+                                                    {{ $user->name }} ({{ $user->email }})
+                                                </option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                    @error('assigned_to')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                
+                                <!-- Row 2: Single row with Contact Method, Priority, Email -->
                                 <div class="col-md-4 mb-3">
                                     <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
                                     <select class="form-select @error('contact_method_id') is-invalid @enderror" id="contact_method_id" name="contact_method_id" required>
@@ -51,28 +99,30 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-
                                 <div class="col-md-4 mb-3">
-                                    <label for="block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('block_unit_id') is-invalid @enderror" 
-                                           id="block_unit_id" name="block_unit_id" placeholder="Search for units..." autocomplete="off" required>
-                                    <input type="hidden" id="block_unit_id_hidden" name="block_unit_id_hidden">
-                                    @error('block_unit_id')
+                                    <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('priority_id') is-invalid @enderror" id="priority_id" name="priority_id" required>
+                                        <option value="">Select Priority</option>
+                                        <option value="1" {{ old('priority_id') == '1' ? 'selected' : '' }}>Low</option>
+                                        <option value="2" {{ old('priority_id') == '2' ? 'selected' : '' }} selected>Normal</option>
+                                        <option value="3" {{ old('priority_id') == '3' ? 'selected' : '' }}>High</option>
+                                        <option value="4" {{ old('priority_id') == '4' ? 'selected' : '' }}>Urgent</option>
+                                        <option value="5" {{ old('priority_id') == '5' ? 'selected' : '' }}>Critical</option>
+                                    </select>
+                                    @error('priority_id')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-
                                 <div class="col-md-4 mb-3">
-                                    <label for="assigned_to" class="form-label">Assigned To <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control @error('assigned_to') is-invalid @enderror" 
-                                           id="assigned_to" name="assigned_to" placeholder="Search property managers..." autocomplete="off" required>
-                                    <input type="hidden" id="assigned_to_hidden" name="assigned_to_hidden">
-                                    @error('assigned_to')
+                                    <label for="contact_email" class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control @error('contact_email') is-invalid @enderror" 
+                                           id="contact_email" name="contact_email" value="{{ old('contact_email') }}" required>
+                                    @error('contact_email')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
-                                </div>`
+                                </div>
                                 
-                                <!-- Row 2: Category, Priority, Problem Overview -->
+                                <!-- Row 3: Left column (Category), Right two columns (Problem Overview and Issue Details) -->
                                 <div class="col-md-4 mb-3">
                                     <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
                                     <select class="form-select @error('issue_type') is-invalid @enderror" id="issue_type" name="issue_type" required>
@@ -97,23 +147,8 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-
-                                <div class="col-md-4 mb-3">
-                                    <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('priority_id') is-invalid @enderror" id="priority_id" name="priority_id" required>
-                                        <option value="">Select Priority</option>
-                                        <option value="1" {{ old('priority_id') == '1' ? 'selected' : '' }}>Low</option>
-                                        <option value="2" {{ old('priority_id') == '2' ? 'selected' : '' }} selected>Normal</option>
-                                        <option value="3" {{ old('priority_id') == '3' ? 'selected' : '' }}>High</option>
-                                        <option value="4" {{ old('priority_id') == '4' ? 'selected' : '' }}>Urgent</option>
-                                        <option value="5" {{ old('priority_id') == '5' ? 'selected' : '' }}>Critical</option>
-                                    </select>
-                                    @error('priority_id')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="col-md-4 mb-3">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
                                     <label for="issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control @error('issue') is-invalid @enderror" 
                                            id="issue" name="issue" value="{{ old('issue') }}" required>
@@ -121,25 +156,22 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                
-                                <!-- Row 3: Email, Fault Details -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="contact_email" class="form-label">Email <span class="text-danger">*</span></label>
-                                    <input type="email" class="form-control @error('contact_email') is-invalid @enderror" 
-                                           id="contact_email" name="contact_email" value="{{ old('contact_email') }}" required>
-                                    @error('contact_email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <!-- Row 4: Issue Details spanning full row -->
+                                <div class="col-12">
+                                    <div class="mb-3">
                                     <label for="issue_details" class="form-label">Issue Details</label>
                                     <textarea class="form-control @error('issue_details') is-invalid @enderror" 
-                                              id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail...">{{ old('issue_details') }}</textarea>
+                                                  id="issue_details" name="issue_details" rows="4" placeholder="Describe the issue in detail...">{{ old('issue_details') }}</textarea>
                                     @error('issue_details')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    </div>
                                 </div>
+
+                                <!-- Hidden contact_details to satisfy backend validation; synced from default_contact_details -->
+                                <input type="hidden" id="contact_details_hidden" name="contact_details" value="{{ old('contact_details') }}">
                                 
                                 <!-- Row 4: Default Contact Details -->
                                 <div class="col-12 mb-3">
@@ -285,65 +317,157 @@
 
 <script>
 
-// AutoComplete for Units
-const unitAutoComplete = new autoComplete({
-    selector: () => document.getElementById("block_unit_id"),
-    placeHolder: "Search for units...",
+// --- Searchable Block selector (autoComplete) ---
+let blockAutoComplete = null;
+let unitAutoCompleteInstance = null;
+let cachedUnitsForBlock = [];
+
+function initBlockAutoComplete(blocksData) {
+    if (blockAutoComplete && typeof blockAutoComplete.unInit === 'function') {
+        try { blockAutoComplete.unInit(); } catch(e) {}
+        blockAutoComplete = null;
+    }
+    blockAutoComplete = new autoComplete({
+        selector: () => document.getElementById("block_display"),
+        placeHolder: "Search and select a block...",
     data: {
-        src: async (query) => {
-            try {
-                const source = await fetch(`/api/units/search?q=${encodeURIComponent(query)}`);
-                const data = await source.json();
-                return data;
-            } catch (error) {
-                return [];
-            }
+            src: blocksData.map(function(b){
+                return {
+                    id: b.id,
+                    name: b.name,
+                    searchValue: (b.name || '').toLowerCase()
+                };
+            }),
+            keys: ["searchValue"]
         },
-        keys: ["unit_code", "unit_name"]
-    },
-    resultItem: {
-        highlight: true
-    },
+        resultItem: { highlight: false, element: (item, data) => { item.innerHTML = data.value.name || ''; } },
     events: {
         input: {
             selection: (event) => {
                 const selection = event.detail.selection.value;
-                document.getElementById("block_unit_id_hidden").value = selection.id;
-            }
-        }
-    }
-});
-
-// AutoComplete for Property Managers
-const assignedToAutoComplete = new autoComplete({
-    selector: () => document.getElementById("assigned_to"),
-    placeHolder: "Search property managers...",
-    data: {
-        src: async (query) => {
-            try {
-                const source = await fetch(`/api/users/property-managers?q=${encodeURIComponent(query)}`);
-                const data = await source.json();
-                return data;
-            } catch (error) {
-                return [];
+                    document.getElementById("block_display").value = selection.name;
+                    document.getElementById("block_id").value = selection.id;
+                    
+                    // Enable and reset unit field
+                    const unitInput = document.getElementById("block_unit_id");
+                    const unitHidden = document.getElementById("block_unit_id_hidden");
+                    unitInput.value = '';
+                    unitHidden.value = '';
+                    unitInput.placeholder = "Search for units...";
+                    unitInput.disabled = false;
+                    
+                    // Load units for selected block
+                    loadUnitsForBlock(selection.id);
+                }
             }
         },
-        keys: ["name", "email"]
-    },
-    resultItem: {
-        highlight: true
-    },
+        threshold: 1,
+        debounce: 200,
+        searchEngine: function (query, record) {
+            if (!record) return 0;
+            return record.toLowerCase().includes((query || '').toLowerCase()) ? 1 : 0;
+        },
+        maxResults: 10
+    });
+}
+
+function loadBlocksAndInit() {
+    fetch(`{{ route('api.blocks') }}`)
+        .then(resp => resp.json())
+        .then(json => {
+            const blocks = json && json.success ? (json.data || []) : [];
+            initBlockAutoComplete(blocks);
+            // If old value exists, try to prefill display
+            const oldBlockId = document.getElementById('block_id').value;
+            if (oldBlockId) {
+                const found = blocks.find(b => String(b.id) === String(oldBlockId));
+                if (found) {
+                    document.getElementById("block_display").value = found.name || '';
+                    // Also load units for that block
+                    loadUnitsForBlock(found.id);
+                }
+            }
+        })
+        .catch(() => initBlockAutoComplete([]));
+}
+
+// --- Units autocomplete scoped to selected block ---
+function initUnitAutoComplete(units) {
+    // Destroy existing
+    if (unitAutoCompleteInstance && typeof unitAutoCompleteInstance.unInit === 'function') {
+        try { unitAutoCompleteInstance.unInit(); } catch (e) {}
+        unitAutoCompleteInstance = null;
+    }
+    const mapped = (units || []).map(function(u){
+        const labelParts = [];
+        if (u.unit_code) labelParts.push(u.unit_code);
+        if (u.unit_name && u.unit_name !== u.unit_code) labelParts.push(u.unit_name);
+        const label = labelParts.length ? labelParts.join(' - ') : `Unit #${u.id}`;
+        const searchValue = [u.unit_code, u.unit_name].filter(Boolean).join(' ').toLowerCase();
+        return { id: u.id, label: label, searchValue: searchValue };
+    });
+    unitAutoCompleteInstance = new autoComplete({
+        selector: () => document.getElementById("block_unit_id"),
+        placeHolder: "Search for units...",
+        data: { src: mapped, keys: ["searchValue"] },
+        resultItem: { highlight: false, element: (item, data) => { item.innerHTML = data.value.label || ''; } },
     events: {
         input: {
             selection: (event) => {
                 const selection = event.detail.selection.value;
-                document.getElementById("assigned_to_hidden").value = selection.id;
+                    document.getElementById("block_unit_id").value = selection.label;
+                    document.getElementById("block_unit_id_hidden").value = selection.id;
+                }
             }
-        }
-    }
-});
+        },
+        threshold: 1,
+        debounce: 200,
+        searchEngine: function (query, record) {
+            if (!record) return 0;
+            return record.toLowerCase().includes((query || '').toLowerCase()) ? 1 : 0;
+        },
+        maxResults: 10
+    });
+}
 
-
+function loadUnitsForBlock(blockId) {
+    const unitInput = document.getElementById("block_unit_id");
+    unitInput.value = '';
+                    document.getElementById("block_unit_id_hidden").value = '';
+    unitInput.placeholder = 'Loading units...';
+    unitInput.disabled = true;
+    
+    fetch(`/block-units/block/${blockId}`)
+        .then(resp => resp.json())
+        .then(json => {
+            if (json && json.success) {
+                cachedUnitsForBlock = json.data || [];
+            } else {
+                cachedUnitsForBlock = [];
+            }
+            initUnitAutoComplete(cachedUnitsForBlock);
+            unitInput.placeholder = 'Search for units...';
+            unitInput.disabled = false;
+            
+            // Prefill if old unit selected
+            const oldUnitId = document.getElementById('block_unit_id_hidden').value;
+            if (oldUnitId) {
+                const found = cachedUnitsForBlock.find(u => String(u.id) === String(oldUnitId));
+                if (found) {
+                    const labelParts = [];
+                    if (found.unit_code) labelParts.push(found.unit_code);
+                    if (found.unit_name && found.unit_name !== found.unit_code) labelParts.push(found.unit_name);
+                    unitInput.value = labelParts.length ? labelParts.join(' - ') : `Unit #${found.id}`;
+                }
+            }
+        })
+        .catch(() => {
+            cachedUnitsForBlock = [];
+            initUnitAutoComplete(cachedUnitsForBlock);
+            unitInput.placeholder = 'No units found';
+            unitInput.disabled = false;
+        });
+}
 
 // Default contact details checkbox
 document.getElementById('use_default_contact').addEventListener('change', function() {
@@ -353,6 +477,61 @@ document.getElementById('use_default_contact').addEventListener('change', functi
         textarea.value = 'Default contact information will be used';
     } else {
         textarea.value = '';
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadBlocksAndInit();
+    
+    // Auto-fill contact details when selecting a Property Manager (like add issue popup)
+    const assignedSelect = document.getElementById('assigned_to');
+    if (assignedSelect) {
+        assignedSelect.addEventListener('change', function() {
+            const userId = this.value;
+            if (!userId) return;
+            fetch(`/api/users/${userId}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.success && data.data) {
+                    const user = data.data;
+                    const pieces = [];
+                    if (user.phone) pieces.push(`Phone: ${user.phone}`);
+                    if (user.email) pieces.push(`Email: ${user.email}`);
+                    if (user.address) pieces.push(`Address: ${user.address}`);
+                    const contactText = pieces.join('\\n');
+                    
+                    const useDefault = document.getElementById('use_default_contact');
+                    const defaultDetails = document.getElementById('default_contact_details');
+                    if (useDefault && useDefault.checked && defaultDetails) {
+                        defaultDetails.value = contactText || '';
+                    }
+                    
+                    // Always sync hidden contact_details with default details
+                    const hiddenContact = document.getElementById('contact_details_hidden');
+                    if (hiddenContact) {
+                        hiddenContact.value = (defaultDetails && defaultDetails.value) || contactText || '';
+                    }
+                }
+            })
+            .catch(() => {});
+        });
+    }
+    
+    // Keep hidden contact_details in sync when default contact details change manually
+    const defaultDetails = document.getElementById('default_contact_details');
+    if (defaultDetails) {
+        defaultDetails.addEventListener('input', function() {
+            const hiddenContact = document.getElementById('contact_details_hidden');
+            if (hiddenContact) {
+                hiddenContact.value = this.value || '';
+            }
+        });
     }
 });
 </script>
