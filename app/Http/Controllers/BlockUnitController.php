@@ -333,7 +333,10 @@ class BlockUnitController extends Controller
                 $data = $this->processCsvFile($file, $block);
             }
             
-            \Log::info('File processed', ['rows_count' => count($data)]);
+            \Log::info('File processed', [
+                'rows_count' => count($data),
+                'sample_row' => $data[0] ?? null
+            ]);
             
             // Import the units
             $importedCount = $this->importUnits($data, $block);
@@ -407,26 +410,212 @@ class BlockUnitController extends Controller
 
     public function downloadTemplate($block_id)
     {
-        // Validate that block_id exists
-        $block = Block::findOrFail($block_id);
-        
-        // Path to the Excel template file in public storage
-        $templatePath = public_path('storage/templates/unit-upload-template.xlsx');
-        
-        if (!file_exists($templatePath)) {
+        try {
+            // Validate that block_id exists
+            $block = Block::findOrFail($block_id);
+            
+            // Load buildings for this block
+            $buildings = $block->buildings()->orderBy('name')->get();
+            $buildingNames = $buildings->pluck('name')->toArray();
+            
+            // Load all unit types
+            $unitTypes = BlockUnitType::orderBy('name')->get();
+            $unitTypeNames = $unitTypes->pluck('name')->toArray();
+            
+            \Log::info('Generating template', [
+                'block_id' => $block_id,
+                'buildings_count' => count($buildingNames),
+                'unit_types_count' => count($unitTypeNames)
+            ]);
+            
+            // Create new Spreadsheet
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            
+            // Set headers with Building/Core and Unit Type at the beginning
+            $headers = [
+                'Unit Code',
+                'Unit Name',
+                'Building/Core',
+                'Unit Type',
+                'Owner\'s Name',
+                'Salutation',
+                'Email',
+                'Resident',
+                'Mobile Number',
+                'Phone Number',
+                'Letting Agent',
+                'Miscellaneous Info',
+                'Address Line 1',
+                'Address Line 2',
+                'Address Line 3',
+                'Zip/EirCode'
+            ];
+            
+            // Add headers to first row
+            foreach ($headers as $index => $header) {
+                $column = chr(65 + $index); // A, B, C, etc.
+                $sheet->setCellValue($column . '1', $header);
+                
+                // Style headers
+                $sheet->getStyle($column . '1')->getFont()->setBold(true);
+                $sheet->getStyle($column . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+                $sheet->getStyle($column . '1')->getFill()->getStartColor()->setRGB('E2E8F0');
+            }
+            
+            // Escape building names for use in formula (handle commas and quotes)
+            $escapedBuildingNames = array_map(function($name) {
+                // Replace quotes with double quotes and wrap in quotes if contains comma
+                $escaped = str_replace('"', '""', $name);
+                if (strpos($name, ',') !== false || strpos($name, '"') !== false) {
+                    return '"' . $escaped . '"';
+                }
+                return $escaped;
+            }, $buildingNames);
+            
+            // Escape unit type names for use in formula
+            $escapedUnitTypeNames = array_map(function($name) {
+                $escaped = str_replace('"', '""', $name);
+                if (strpos($name, ',') !== false || strpos($name, '"') !== false) {
+                    return '"' . $escaped . '"';
+                }
+                return $escaped;
+            }, $unitTypeNames);
+            
+            // Add dropdown validation for Building/Core column (Column C)
+            if (!empty($buildingNames)) {
+                $buildingValidation = $sheet->getCell('C2')->getDataValidation();
+                $buildingValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+                $buildingValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP);
+                $buildingValidation->setAllowBlank(true);
+                $buildingValidation->setShowInputMessage(true);
+                $buildingValidation->setShowErrorMessage(true);
+                $buildingValidation->setShowDropDown(true);
+                $buildingValidation->setErrorTitle('Invalid Building/Core');
+                $buildingValidation->setError('Please select a valid Building/Core from the dropdown list.');
+                $buildingValidation->setPromptTitle('Select Building/Core');
+                $buildingValidation->setPrompt('Please select a Building/Core from the dropdown list.');
+                // Use comma-separated list formula
+                $buildingValidation->setFormula1('"' . implode(',', $escapedBuildingNames) . '"');
+                
+                // Apply to all data rows (rows 2 to 1000)
+                for ($row = 2; $row <= 1000; $row++) {
+                    $sheet->getCell('C' . $row)->setDataValidation(clone $buildingValidation);
+                }
+            }
+            
+            // Add dropdown validation for Unit Type column (Column D)
+            if (!empty($unitTypeNames)) {
+                $unitTypeValidation = $sheet->getCell('D2')->getDataValidation();
+                $unitTypeValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+                $unitTypeValidation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP);
+                $unitTypeValidation->setAllowBlank(true);
+                $unitTypeValidation->setShowInputMessage(true);
+                $unitTypeValidation->setShowErrorMessage(true);
+                $unitTypeValidation->setShowDropDown(true);
+                $unitTypeValidation->setErrorTitle('Invalid Unit Type');
+                $unitTypeValidation->setError('Please select a valid Unit Type from the dropdown list.');
+                $unitTypeValidation->setPromptTitle('Select Unit Type');
+                $unitTypeValidation->setPrompt('Please select a Unit Type from the dropdown list.');
+                // Use comma-separated list formula
+                $unitTypeValidation->setFormula1('"' . implode(',', $escapedUnitTypeNames) . '"');
+                
+                // Apply to all data rows (rows 2 to 1000)
+                for ($row = 2; $row <= 1000; $row++) {
+                    $sheet->getCell('D' . $row)->setDataValidation(clone $unitTypeValidation);
+                }
+            }
+            
+            // Sample data
+            $sampleData = [
+                [
+                    'A101',
+                    'Apartment 101',
+                    !empty($buildingNames) ? $buildingNames[0] : '',
+                    !empty($unitTypeNames) ? $unitTypeNames[0] : '',
+                    'John Doe',
+                    'Mr.',
+                    'john.doe@example.com',
+                    'Yes',
+                    '+1234567890',
+                    '+1234567891',
+                    'ABC Properties',
+                    'Sample information for unit A101',
+                    '', // Address Line 1 - empty for residents
+                    '', // Address Line 2 - empty for residents
+                    '', // Address Line 3 - empty for residents
+                    ''  // Zip/EirCode - empty for residents
+                ],
+                [
+                    'A102',
+                    'Apartment 102',
+                    !empty($buildingNames) && count($buildingNames) > 1 ? $buildingNames[1] : (!empty($buildingNames) ? $buildingNames[0] : ''),
+                    !empty($unitTypeNames) && count($unitTypeNames) > 1 ? $unitTypeNames[1] : (!empty($unitTypeNames) ? $unitTypeNames[0] : ''),
+                    'Jane Smith',
+                    'Ms.',
+                    'jane.smith@example.com',
+                    'No',
+                    '+1234567892',
+                    '+1234567893',
+                    'XYZ Properties',
+                    'Sample information for unit A102',
+                    '123 Main Street',
+                    'Apt 102',
+                    'Dublin 2',
+                    'D02 XY12'
+                ]
+            ];
+            
+            // Add sample data
+            foreach ($sampleData as $rowIndex => $rowData) {
+                $row = $rowIndex + 2; // Start from row 2 (after headers)
+                foreach ($rowData as $colIndex => $value) {
+                    $column = chr(65 + $colIndex); // A, B, C, etc.
+                    $sheet->setCellValue($column . $row, $value);
+                }
+            }
+            
+            // Auto-size columns
+            foreach (range('A', 'P') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+            
+            // Add borders
+            $highestRow = $sheet->getHighestRow();
+            $highestColumn = $sheet->getHighestColumn();
+            $sheet->getStyle('A1:' . $highestColumn . $highestRow)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+            
+            // Generate filename with block name
+            $filename = 'unit_upload_template_' . str_replace(' ', '_', $block->name) . '_' . date('Y-m-d') . '.xlsx';
+            
+            // Create a temporary file for download
+            $tempFile = tempnam(sys_get_temp_dir(), 'unit_template_');
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($tempFile);
+            
+            // Return the Excel file as download with cache prevention headers
+            $response = response()->download($tempFile, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ])->deleteFileAfterSend(true);
+            
+            // Set cache prevention headers
+            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
+            
+            return $response;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error generating template: ' . $e->getMessage(), [
+                'block_id' => $block_id,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Template file not found.'
-            ], 404);
+                'message' => 'Error generating template: ' . $e->getMessage()
+            ], 500);
         }
-        
-        // Generate filename with block name
-        $filename = 'unit_upload_template_' . str_replace(' ', '_', $block->name) . '_' . date('Y-m-d') . '.xlsx';
-        
-        // Return the Excel file as download
-        return response()->download($templatePath, $filename, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
     }
 
 
@@ -460,44 +649,60 @@ class BlockUnitController extends Controller
                 'highest_column' => $highestColumn
             ]);
             
-            // Get headers from first row
+            // Get headers from first row and create header index map
             $headers = [];
+            $headerIndexMap = [];
+            $colIndex = 0;
             for ($col = 'A'; $col <= $highestColumn; $col++) {
-                $headers[] = trim($worksheet->getCell($col . '1')->getValue());
+                $headerValue = trim($worksheet->getCell($col . '1')->getValue());
+                $headers[] = $headerValue;
+                $headerIndexMap[$headerValue] = $colIndex;
+                $colIndex++;
             }
             
-            \Log::info('Headers extracted', ['headers' => $headers]);
+            \Log::info('Headers extracted', ['headers' => $headers, 'header_map' => $headerIndexMap]);
+            
+            // Helper function to get cell value by header name
+            $getValueByHeader = function($row, $headerName, $default = '') use ($worksheet, $headerIndexMap, $highestColumn) {
+                if (!isset($headerIndexMap[$headerName])) {
+                    return $default;
+                }
+                $colIndex = $headerIndexMap[$headerName];
+                $col = chr(65 + $colIndex); // Convert index to column letter
+                if ($col > $highestColumn) {
+                    return $default;
+                }
+                return trim($worksheet->getCell($col . $row)->getValue());
+            };
             
             // Process data rows (skip header row)
             for ($row = 2; $row <= $highestRow; $row++) {
                 $rowData = [];
-                $colIndex = 0;
                 
                 for ($col = 'A'; $col <= $highestColumn; $col++) {
                     $cellValue = trim($worksheet->getCell($col . $row)->getValue());
                     $rowData[] = $cellValue;
-                    $colIndex++;
                 }
                 
                 // Only process rows that have data
                 if (!empty(array_filter($rowData))) {
                     $processedRow = [
-                        'unit_code' => $rowData[0] ?? '',
-                        'unit_name' => $rowData[1] ?? '',
-                        'owners_name' => $rowData[2] ?? '',
-                        'salutation' => $rowData[3] ?? '',
-                        'email' => $rowData[4] ?? '',
-                        'resident' => strtolower($rowData[5] ?? '') === 'yes' ? 1 : 0,
-                        'mobile_no' => $rowData[6] ?? '',
-                        'phone_number' => $rowData[7] ?? '',
-                        'letting_agent' => $rowData[8] ?? '',
-                        'misc_info' => $rowData[9] ?? '',
-                        'address1' => $rowData[10] ?? '',
-                        'address2' => $rowData[11] ?? '',
-                        'address3' => $rowData[12] ?? '',
-                        'zip' => $rowData[13] ?? '',
-                        'building_name' => '', // No longer in template
-                        'unit_type_name' => '' // No longer in template
+                        'unit_code' => $getValueByHeader($row, 'Unit Code', ''),
+                        'unit_name' => $getValueByHeader($row, 'Unit Name', ''),
+                        'building_name' => $getValueByHeader($row, 'Building/Core', ''),
+                        'unit_type_name' => $getValueByHeader($row, 'Unit Type', ''),
+                        'owners_name' => $getValueByHeader($row, 'Owner\'s Name', ''),
+                        'salutation' => $getValueByHeader($row, 'Salutation', ''),
+                        'email' => $getValueByHeader($row, 'Email', ''),
+                        'resident' => strtolower($getValueByHeader($row, 'Resident', '')) === 'yes' ? 1 : 0,
+                        'mobile_no' => $getValueByHeader($row, 'Mobile Number', ''),
+                        'phone_number' => $getValueByHeader($row, 'Phone Number', ''),
+                        'letting_agent' => $getValueByHeader($row, 'Letting Agent', ''),
+                        'misc_info' => $getValueByHeader($row, 'Miscellaneous Info', ''),
+                        'address1' => $getValueByHeader($row, 'Address Line 1', ''),
+                        'address2' => $getValueByHeader($row, 'Address Line 2', ''),
+                        'address3' => $getValueByHeader($row, 'Address Line 3', ''),
+                        'zip' => $getValueByHeader($row, 'Zip/EirCode', ''),
                     ];
                     
                     $data[] = $processedRow;
@@ -529,28 +734,48 @@ class BlockUnitController extends Controller
         $data = [];
         $handle = fopen($file->getPathname(), 'r');
         
-        // Skip header row
+        // Get header row
         $headers = fgetcsv($handle);
+        if (!$headers) {
+            fclose($handle);
+            return $data;
+        }
+        
+        // Create header index map
+        $headerIndexMap = [];
+        foreach ($headers as $index => $header) {
+            $headerIndexMap[trim($header)] = $index;
+        }
+        
+        // Helper function to get value by header name
+        $getValueByHeader = function($row, $headerName, $default = '') use ($headerIndexMap) {
+            if (!isset($headerIndexMap[$headerName])) {
+                return $default;
+            }
+            $index = $headerIndexMap[$headerName];
+            return isset($row[$index]) ? trim($row[$index]) : $default;
+        };
         
         while (($row = fgetcsv($handle)) !== false) {
-            if (count($row) >= 14) {
+            // Only process rows that have data
+            if (!empty(array_filter($row))) {
                 $data[] = [
-                    'unit_code' => trim($row[0]),
-                    'unit_name' => trim($row[1]),
-                    'owners_name' => trim($row[2]),
-                    'salutation' => trim($row[3]),
-                    'email' => trim($row[4]),
-                    'resident' => strtolower(trim($row[5])) === 'yes' ? 1 : 0,
-                    'mobile_no' => trim($row[6]),
-                    'phone_number' => trim($row[7]),
-                    'letting_agent' => trim($row[8]),
-                    'misc_info' => trim($row[9]),
-                    'address1' => trim($row[10]),
-                    'address2' => trim($row[11]),
-                    'address3' => trim($row[12]),
-                    'zip' => trim($row[13]),
-                    'building_name' => '', // No longer in template
-                    'unit_type_name' => '' // No longer in template
+                    'unit_code' => $getValueByHeader($row, 'Unit Code', ''),
+                    'unit_name' => $getValueByHeader($row, 'Unit Name', ''),
+                    'building_name' => $getValueByHeader($row, 'Building/Core', ''),
+                    'unit_type_name' => $getValueByHeader($row, 'Unit Type', ''),
+                    'owners_name' => $getValueByHeader($row, 'Owner\'s Name', ''),
+                    'salutation' => $getValueByHeader($row, 'Salutation', ''),
+                    'email' => $getValueByHeader($row, 'Email', ''),
+                    'resident' => strtolower($getValueByHeader($row, 'Resident', '')) === 'yes' ? 1 : 0,
+                    'mobile_no' => $getValueByHeader($row, 'Mobile Number', ''),
+                    'phone_number' => $getValueByHeader($row, 'Phone Number', ''),
+                    'letting_agent' => $getValueByHeader($row, 'Letting Agent', ''),
+                    'misc_info' => $getValueByHeader($row, 'Miscellaneous Info', ''),
+                    'address1' => $getValueByHeader($row, 'Address Line 1', ''),
+                    'address2' => $getValueByHeader($row, 'Address Line 2', ''),
+                    'address3' => $getValueByHeader($row, 'Address Line 3', ''),
+                    'zip' => $getValueByHeader($row, 'Zip/EirCode', ''),
                 ];
             }
         }
@@ -564,8 +789,19 @@ class BlockUnitController extends Controller
         $importedCount = 0;
         $errors = [];
         
+        \Log::info('Starting unit import', [
+            'block_id' => $block->id,
+            'total_rows' => count($data)
+        ]);
+        
         foreach ($data as $index => $row) {
             try {
+                \Log::debug('Processing row', [
+                    'row_index' => $index + 2,
+                    'unit_code' => $row['unit_code'] ?? '',
+                    'building_name' => $row['building_name'] ?? '',
+                    'unit_type_name' => $row['unit_type_name'] ?? ''
+                ]);
                 // Check if unit code already exists
                 $existingUnit = BlockUnit::where('block_id', $block->id)
                     ->where('unit_code', $row['unit_code'])
@@ -576,24 +812,48 @@ class BlockUnitController extends Controller
                     continue; // Skip if unit code already exists
                 }
                 
-                // Find building by name (optional)
-                $building = null;
-                if (!empty($row['building_name'])) {
-                    $building = $block->buildings()->where('name', $row['building_name'])->first();
-                    if (!$building) {
-                        $errors[] = "Row " . ($index + 2) . ": Building '{$row['building_name']}' not found in this block";
-                        continue; // Skip if building not found
-                    }
+                // Find building by name (required)
+                if (empty($row['building_name'])) {
+                    $errors[] = "Row " . ($index + 2) . ": Building/Core is required";
+                    continue;
                 }
                 
-                // Find unit type by name (optional)
-                $unitType = null;
-                if (!empty($row['unit_type_name'])) {
-                    $unitType = BlockUnitType::where('name', $row['unit_type_name'])->first();
-                    if (!$unitType) {
-                        $errors[] = "Row " . ($index + 2) . ": Unit type '{$row['unit_type_name']}' not found";
-                        continue; // Skip if unit type not found
-                    }
+                // Try exact match first, then case-insensitive match
+                $building = $block->buildings()
+                    ->where('name', $row['building_name'])
+                    ->first();
+                
+                if (!$building) {
+                    // Try case-insensitive match
+                    $building = $block->buildings()
+                        ->whereRaw('LOWER(name) = ?', [strtolower(trim($row['building_name']))])
+                        ->first();
+                }
+                
+                if (!$building) {
+                    $availableBuildings = $block->buildings()->pluck('name')->implode(', ');
+                    $errors[] = "Row " . ($index + 2) . ": Building/Core '{$row['building_name']}' not found in this block. Available: " . ($availableBuildings ?: 'None');
+                    continue; // Skip if building not found
+                }
+                
+                // Find unit type by name (required)
+                if (empty($row['unit_type_name'])) {
+                    $errors[] = "Row " . ($index + 2) . ": Unit Type is required";
+                    continue;
+                }
+                
+                // Try exact match first, then case-insensitive match
+                $unitType = BlockUnitType::where('name', $row['unit_type_name'])->first();
+                
+                if (!$unitType) {
+                    // Try case-insensitive match
+                    $unitType = BlockUnitType::whereRaw('LOWER(name) = ?', [strtolower(trim($row['unit_type_name']))])->first();
+                }
+                
+                if (!$unitType) {
+                    $availableUnitTypes = BlockUnitType::pluck('name')->implode(', ');
+                    $errors[] = "Row " . ($index + 2) . ": Unit type '{$row['unit_type_name']}' not found. Available: " . ($availableUnitTypes ?: 'None');
+                    continue; // Skip if unit type not found
                 }
                 
                 // Only process address data if Resident = "No" (0)
@@ -625,8 +885,8 @@ class BlockUnitController extends Controller
                 // Prepare unit data
                 $unitData = [
                     'block_id' => $block->id,
-                    'block_building_id' => $building ? $building->id : null,
-                    'block_unit_type_id' => $unitType ? $unitType->id : null,
+                    'block_building_id' => $building->id,
+                    'block_unit_type_id' => $unitType->id,
                     'unit_code' => $row['unit_code'],
                     'unit_name' => $row['unit_name'],
                     'owners_name' => $row['owners_name'],
@@ -668,6 +928,14 @@ class BlockUnitController extends Controller
         if (!empty($errors)) {
             session()->flash('import_errors', $errors);
         }
+        
+        \Log::info('Unit import completed', [
+            'block_id' => $block->id,
+            'imported_count' => $importedCount,
+            'total_rows' => count($data),
+            'error_count' => count($errors),
+            'errors' => $errors
+        ]);
         
         return $importedCount;
     }

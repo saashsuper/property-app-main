@@ -219,7 +219,8 @@
                             <div class="form-text">
                                 <strong>Supported formats:</strong> Excel (.xlsx, .xls) or CSV (.csv)<br>
                                 <strong>Maximum file size:</strong> 5MB<br>
-                                <strong>Required columns:</strong> Unit Code, Unit Name, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info, Address Line 1, Address Line 2, Address Line 3, Zip/EirCode
+                                <strong>Required columns:</strong> Unit Code, Unit Name, Building/Core, Unit Type, Owner's Name, Salutation, Email, Resident, Mobile Number, Phone Number, Letting Agent, Miscellaneous Info, Address Line 1, Address Line 2, Address Line 3, Zip/EirCode<br>
+                                <strong>Note:</strong> Building/Core and Unit Type columns have dropdown lists for easy selection
                             </div>
                         </div>
                         <div class="col-12 mb-3">
@@ -228,6 +229,7 @@
                                 <ul class="mb-0">
                                     <li>Download the template file to see the required format</li>
                                     <li>Ensure all required fields are filled</li>
+                                    <li><strong>Building/Core and Unit Type:</strong> Use the dropdown lists in the Excel template to select valid values</li>
                                     <li>Unit codes must be unique within the block</li>
                                     <li>Resident field should be "Yes" or "No"</li>
                                     <li><strong>Address Logic:</strong> Address fields are only saved when Resident = "No"</li>
@@ -237,7 +239,7 @@
                             </div>
                         </div>
                         <div class="col-12 mb-3">
-                            <a href="{{ route('block-units.template', $block->id) }}" 
+                            <a href="{{ route('block-units.template', $block->id) }}?v={{ time() }}" 
                                class="btn btn-outline-primary">
                                 <i class="ph-download me-1"></i> Download Template
                             </a>
