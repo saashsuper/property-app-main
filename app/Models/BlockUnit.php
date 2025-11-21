@@ -77,6 +77,22 @@ class BlockUnit extends Model
     }
 
     /**
+     * Get the country that owns the unit.
+     */
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * Get the state that owns the unit.
+     */
+    public function state()
+    {
+        return $this->belongsTo(State::class);
+    }
+
+    /**
      * Boot the model and register model events.
      */
     protected static function boot()

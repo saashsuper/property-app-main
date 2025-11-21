@@ -56,7 +56,11 @@
                     @if($block->units && $block->units->count() > 0)
                         @foreach($block->units as $unit)
                             <tr>
-                                <td>{{ $unit->unit_code ?? 'N/A' }}</td>
+                                <td>
+                                    <a href="{{ route('block-units.show', $unit) }}" class="text-primary text-decoration-none fw-semibold" title="View Unit Details">
+                                        {{ $unit->unit_code ?? 'N/A' }}
+                                    </a>
+                                </td>
                                 <td>{{ $unit->unit_name ?? 'N/A' }}</td>
                                 <td>{{ $unit->unitType->name ?? 'N/A' }}</td>
                                 <td>{{ $unit->owners_name ?? 'N/A' }}</td>
@@ -65,9 +69,9 @@
                                 <td>{{ $unit->mobile_no ?? 'N/A' }}</td>
                                 <td>{{ $unit->letting_agent ?? 'N/A' }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-info" onclick="viewUnit({{ $unit->id }})" title="View Unit">
+                                    <a href="{{ route('block-units.show', $unit) }}" class="btn btn-sm btn-outline-info" title="View Unit Details">
                                         <i class="ph-eye"></i>
-                                    </button>
+                                    </a>
                                     <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})" title="Edit Unit">
                                         <i class="ph-pencil"></i>
                                     </button>
@@ -175,6 +179,32 @@ table.dataTable thead > tr > th.sorting_asc:before,
 table.dataTable thead > tr > th.sorting_desc:after {
     opacity: 1 !important;
 }
+
+/* Unit code hyperlink styling */
+#blockUnitsTable tbody td:first-child a,
+#blockUnitsTable tbody td a.text-primary {
+    color: #0d6efd !important;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+#blockUnitsTable tbody td:first-child a:hover,
+#blockUnitsTable tbody td a.text-primary:hover {
+    color: #0a58ca !important;
+    text-decoration: underline;
+}
+
+#blockUnitsTable tbody td:first-child a:visited,
+#blockUnitsTable tbody td a.text-primary:visited {
+    color: #6f42c1 !important;
+}
+
+/* Ensure links are visible in DataTables */
+#blockUnitsTable tbody td:first-child {
+    font-weight: 600;
+}
 </style>
 @endpush
 
@@ -202,7 +232,8 @@ table.dataTable thead > tr > th.sorting_desc:after {
     window.routes = {
         blockUnits: {
             store: '{{ route("block-units.store") }}',
-            upload: '{{ route("block-units.upload") }}'
+            upload: '{{ route("block-units.upload") }}',
+            showBase: '{{ url("block-units") }}'
         }
     };
     

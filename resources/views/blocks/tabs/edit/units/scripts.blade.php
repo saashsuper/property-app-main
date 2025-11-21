@@ -240,8 +240,12 @@ $(document).ready(function() {
                     blockUnitsDataTable.clear();
                     
                     data.data.forEach(function(unit) {
+                        // Generate the show URL
+                        const showBase = window.routes?.blockUnits?.showBase || '/block-units';
+                        const showUrl = `${showBase}/${unit.id}`;
+                        const unitCodeLink = `<a href="${showUrl}" class="text-primary text-decoration-none fw-semibold" title="View Unit Details">${unit.unit_code || 'N/A'}</a>`;
                         blockUnitsDataTable.row.add([
-                            unit.unit_code || 'N/A',
+                            unitCodeLink,
                             unit.unit_name || 'N/A',
                             unit.unit_type?.name || 'N/A',
                             unit.owners_name || 'N/A',
@@ -249,17 +253,17 @@ $(document).ready(function() {
                             unit.resident ? 'Yes' : 'No',
                             unit.mobile_no || 'N/A',
                             unit.letting_agent || 'N/A',
-                            `<button class="btn btn-sm btn-outline-info" onclick="viewUnit(${unit.id})" title="View Unit">
+                            `<a href="${showUrl}" class="btn btn-sm btn-outline-info" title="View Unit Details">
                                 <i class="ph-eye"></i>
-                            </button>
+                            </a>
                             <button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})" title="Edit Unit">
                                 <i class="ph-pencil"></i>
                             </button> 
                             <button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation(${unit.id}, {
-                                unit_code: '${unit.unit_code || 'N/A'}',
-                                unit_name: '${unit.unit_name || 'N/A'}',
-                                owners_name: '${unit.owners_name || 'N/A'}',
-                                unit_type: { name: '${unit.unit_type?.name || 'N/A'}' }
+                                unit_code: '${(unit.unit_code || 'N/A').replace(/'/g, "\\'")}',
+                                unit_name: '${(unit.unit_name || 'N/A').replace(/'/g, "\\'")}',
+                                owners_name: '${(unit.owners_name || 'N/A').replace(/'/g, "\\'")}',
+                                unit_type: { name: '${(unit.unit_type?.name || 'N/A').replace(/'/g, "\\'")}' }
                             })" title="Delete Unit">
                                 <i class="ph-trash"></i>
                             </button>`
