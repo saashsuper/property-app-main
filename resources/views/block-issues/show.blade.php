@@ -70,6 +70,45 @@
             justify-content: center;
             font-size: 1rem;
         }
+
+        /* Issue thumbnail images styling */
+        .issue-thumbnail-container {
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+            border: 2px solid #dee2e6;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+        }
+
+        .issue-thumbnail-container:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .issue-thumbnail {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Ensure all thumbnail containers have same dimensions */
+        #issueImageGallery .col-6 {
+            margin-bottom: 0.5rem;
+        }
+
+        #issueImageGallery .col-6 .issue-thumbnail-container {
+            min-height: 120px;
+            max-height: 120px;
+        }
     </style>
 @endsection
 @section('content')
@@ -342,7 +381,7 @@
                             </div>
 
                             <!-- Contact Information -->
-                            @if($blockIssue->contact_name || $blockIssue->contact_mobile || $blockIssue->contact_email || $blockIssue->contactMethod || $blockIssue->contact_details)
+                            @if($blockIssue->contact_name || $blockIssue->salutation || $blockIssue->contact_mobile || $blockIssue->phone_number || $blockIssue->contact_email || $blockIssue->contactMethod || $blockIssue->contact_details || ($blockIssue->blockUnit && ($blockIssue->blockUnit->owners_name || $blockIssue->blockUnit->email || $blockIssue->blockUnit->mobile_no || $blockIssue->blockUnit->phone_number || $blockIssue->blockUnit->letting_agent)))
                             <div class="col-12">
                                 <div class="card border shadow-sm mb-3">
                                     <div class="card-header bg-light border-bottom d-flex align-items-center">
@@ -351,6 +390,32 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="row g-3">
+                                            <!-- Issue Contact Details Section -->
+                                            @if($blockIssue->contact_name || $blockIssue->salutation || $blockIssue->contact_mobile || $blockIssue->phone_number || $blockIssue->contact_email || $blockIssue->contactMethod || $blockIssue->contact_details)
+                                            <div class="col-12">
+                                                <h6 class="mb-3 text-muted border-bottom pb-2">
+                                                    <i class="ph-user-circle me-2"></i>Issue Contact Details
+                                                </h6>
+                                            </div>
+                                            
+                                            @if($blockIssue->salutation)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-primary-subtle text-primary rounded">
+                                                                <i class="ph-user"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Salutation</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->salutation }}</h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
                                             @if($blockIssue->contact_name)
                                             <div class="col-md-4">
                                                 <div class="d-flex align-items-start">
@@ -375,13 +440,31 @@
                                                     <div class="flex-shrink-0">
                                                         <div class="avatar-xs">
                                                             <span class="avatar-title bg-success-subtle text-success rounded">
-                                                                <i class="ph-phone"></i>
+                                                                <i class="ph-device-mobile"></i>
                                                             </span>
                                                         </div>
                                                     </div>
                                                     <div class="flex-grow-1 ms-3">
                                                         <p class="text-muted mb-1 small">Mobile</p>
                                                         <h6 class="mb-0"><a href="tel:{{ $blockIssue->contact_mobile }}" class="text-dark">{{ $blockIssue->contact_mobile }}</a></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if($blockIssue->phone_number)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-info-subtle text-info rounded">
+                                                                <i class="ph-phone"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Phone Number</p>
+                                                        <h6 class="mb-0"><a href="tel:{{ $blockIssue->phone_number }}" class="text-dark">{{ $blockIssue->phone_number }}</a></h6>
                                                     </div>
                                                 </div>
                                             </div>
@@ -406,7 +489,7 @@
                                             @endif
 
                                             @if($blockIssue->contactMethod)
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
                                                         <div class="avatar-xs">
@@ -424,7 +507,7 @@
                                             @endif
 
                                             @if($blockIssue->contact_details)
-                                            <div class="col-md-6">
+                                            <div class="col-md-12">
                                                 <div class="d-flex align-items-start">
                                                     <div class="flex-shrink-0">
                                                         <div class="avatar-xs">
@@ -439,6 +522,106 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endif
+                                            @endif
+
+                                            <!-- Unit Contact Details Section -->
+                                            @if($blockIssue->blockUnit && ($blockIssue->blockUnit->owners_name || $blockIssue->blockUnit->email || $blockIssue->blockUnit->mobile_no || $blockIssue->blockUnit->phone_number || $blockIssue->blockUnit->letting_agent))
+                                            <div class="col-12 mt-4">
+                                                <h6 class="mb-3 text-muted border-bottom pb-2">
+                                                    <i class="ph-house me-2"></i>Unit Contact Details
+                                                </h6>
+                                            </div>
+
+                                            @if($blockIssue->blockUnit->owners_name)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-primary-subtle text-primary rounded">
+                                                                <i class="ph-user"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Owner's Name</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->blockUnit->owners_name }}</h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if($blockIssue->blockUnit->email)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-warning-subtle text-warning rounded">
+                                                                <i class="ph-envelope"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Unit Email</p>
+                                                        <h6 class="mb-0"><a href="mailto:{{ $blockIssue->blockUnit->email }}" class="text-dark text-truncate d-block">{{ $blockIssue->blockUnit->email }}</a></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if($blockIssue->blockUnit->mobile_no)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-success-subtle text-success rounded">
+                                                                <i class="ph-device-mobile"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Unit Mobile</p>
+                                                        <h6 class="mb-0"><a href="tel:{{ $blockIssue->blockUnit->mobile_no }}" class="text-dark">{{ $blockIssue->blockUnit->mobile_no }}</a></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if($blockIssue->blockUnit->phone_number)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-info-subtle text-info rounded">
+                                                                <i class="ph-phone"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Unit Phone</p>
+                                                        <h6 class="mb-0"><a href="tel:{{ $blockIssue->blockUnit->phone_number }}" class="text-dark">{{ $blockIssue->blockUnit->phone_number }}</a></h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
+
+                                            @if($blockIssue->blockUnit->letting_agent)
+                                            <div class="col-md-4">
+                                                <div class="d-flex align-items-start">
+                                                    <div class="flex-shrink-0">
+                                                        <div class="avatar-xs">
+                                                            <span class="avatar-title bg-secondary-subtle text-secondary rounded">
+                                                                <i class="ph-buildings"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-grow-1 ms-3">
+                                                        <p class="text-muted mb-1 small">Letting Agent</p>
+                                                        <h6 class="mb-0">{{ $blockIssue->blockUnit->letting_agent }}</h6>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @endif
                                             @endif
                                         </div>
                                     </div>
@@ -682,10 +865,9 @@
                                             @if($blockIssue->images && $blockIssue->images->count() > 0)
                                                 @foreach($blockIssue->images as $image)
                                                     <div class="col-6" data-image-id="{{ $image->id }}">
-                                                        <div class="position-relative">
+                                                        <div class="position-relative issue-thumbnail-container">
                                                             <img src="{{ $image->image_url }}" 
-                                                                 class="img-fluid rounded" 
-                                                                 style="height: 120px; width: 100%; object-fit: cover; cursor: pointer;"
+                                                                 class="img-fluid issue-thumbnail" 
                                                                  alt="{{ $image->display_name }}"
                                                                  data-bs-toggle="modal" 
                                                                  data-bs-target="#imagePreviewModal"
@@ -1304,6 +1486,14 @@
                             // Add custom styling to file preview
                             const preview = file.previewElement;
                             $(preview).addClass('dz-image-preview-custom');
+                            
+                            // Fix remove button tooltip to show file name instead of "object object"
+                            const removeLink = $(preview).find('.dz-remove');
+                            if (removeLink.length) {
+                                const fileName = file.name || 'Remove file';
+                                removeLink.attr('title', `Remove ${fileName}`);
+                                removeLink.attr('aria-label', `Remove ${fileName}`);
+                            }
                             
                             // Add file size info
                             const sizeInfo = $(preview).find('.dz-size');
