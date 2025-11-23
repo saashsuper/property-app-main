@@ -1356,6 +1356,10 @@ $(document).ready(function() {
                                 // Update the hidden input with the selected value (unit ID)
                                 unitsHidden.value = selectedUnit.value;
                                 
+                                // Populate contact details from unit
+                                console.log('Calling getUnitContactDetails with unit ID:', selectedUnit.value);
+                                getUnitContactDetails(selectedUnit.value);
+                                
                                 console.log('Calling fetchUnitIssues with unit ID:', selectedUnit.value);
                                 // Fetch and display issues for the selected unit
                                 fetchUnitIssues(selectedUnit.value);
@@ -1570,6 +1574,60 @@ $(document).ready(function() {
         });
     }
     
+    /**
+     * Get unit contact details and populate default contact details
+     */
+    function getUnitContactDetails(unitId) {
+        if (!unitId) return;
+        
+        // Only populate if use_default_contact is checked
+        if (!$('#use_default_contact').is(':checked')) {
+            return;
+        }
+        
+        $.ajax({
+            url: '/api/block-unit-contact-details',
+            method: 'GET',
+            data: {
+                block_unit_id: unitId
+            },
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content'),
+                'Accept': 'application/json'
+            },
+            success: function(data) {
+                if (data.success && data.data) {
+                    const unit = data.data;
+                    
+                    // Use the formatted contact_details string from the API
+                    if (unit.contact_details) {
+                        $('#default_contact_details').val(unit.contact_details);
+                    } else {
+                        // Fallback: build contact details string if API doesn't provide formatted string
+                        let contactDetails = '';
+                        if (unit.mobile_no) {
+                            contactDetails += `Mobile: ${unit.mobile_no}`;
+                        }
+                        if (unit.phone_number) {
+                            contactDetails += contactDetails ? `\nPhone: ${unit.phone_number}` : `Phone: ${unit.phone_number}`;
+                        }
+                        if (unit.email) {
+                            contactDetails += contactDetails ? `\nEmail: ${unit.email}` : `Email: ${unit.email}`;
+                        }
+                        if (unit.owners_name) {
+                            contactDetails += contactDetails ? `\nOwner: ${unit.owners_name}` : `Owner: ${unit.owners_name}`;
+                        }
+                        $('#default_contact_details').val(contactDetails);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading unit contact details:', error);
+            }
+        });
+    }
+    
     // ========================================
     // TRIGGER FUNCTIONS
     // ========================================
@@ -1668,10 +1726,15 @@ $(document).ready(function() {
     });
     
     // Handle assigned_to change to populate default contact details
+    // Note: Unit contact details take priority over property manager
     $('#assigned_to').on('change', function() {
         const userId = $(this).val();
         if (userId && $('#use_default_contact').is(':checked')) {
-            getUserDetails(userId);
+            // Only populate from property manager if no unit is selected
+            const unitId = $('#issue_block_unit_id_hidden').val();
+            if (!unitId) {
+                getUserDetails(userId);
+            }
         }
     });
     
@@ -1679,9 +1742,16 @@ $(document).ready(function() {
     $('#use_default_contact').on('change', function() {
         if (this.checked) {
             $('#default_contact_details').prop('readonly', true).addClass('bg-light');
-            const userId = $('#assigned_to').val();
-            if (userId) {
-                getUserDetails(userId);
+            // Prioritize unit contact details over property manager
+            const unitId = $('#issue_block_unit_id_hidden').val();
+            if (unitId) {
+                getUnitContactDetails(unitId);
+            } else {
+                // Fallback to property manager if no unit selected
+                const userId = $('#assigned_to').val();
+                if (userId) {
+                    getUserDetails(userId);
+                }
             }
         } else {
             $('#default_contact_details').prop('readonly', false).removeClass('bg-light');
@@ -1945,10 +2015,13 @@ $(document).ready(function() {
     // EVENT HANDLERS
     // ========================================
     
-    // Handle unit selection change to load active issues
+    // Handle unit selection change to load active issues and populate contact details
     $('#issue_block_unit_id_hidden').on('change', function() {
         const unitId = $(this).val();
         if (unitId) {
+            // Populate contact details from unit
+            getUnitContactDetails(unitId);
+            // Load active issues for the unit
             loadActiveIssuesForUnit(unitId);
         }
     });
