@@ -236,13 +236,13 @@
                                         <td>{{ $asset->comments ?? '-' }}</td>
                                         <td>
                                             @if($asset->images->count() > 0)
-                                                <div class="d-flex gap-2 flex-wrap">
-                                                    @foreach($asset->images as $image)
-                                                        <a href="{{ $image->image_url }}" target="_blank" class="d-inline-block">
-                                                            <img src="{{ $image->image_url }}" alt="Asset image" class="img-thumbnail" style="width: 120px; height: 120px; object-fit: cover; cursor: pointer;">
-                                                        </a>
-                                                    @endforeach
-                                                </div>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-info view-asset-images-btn" 
+                                                        data-asset-id="{{ $asset->id }}"
+                                                        data-image-id="{{ $asset->images->first()->id }}"
+                                                        title="View Images ({{ $asset->images->count() }})">
+                                                    <i class="ph-camera"></i>
+                                                </button>
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif
@@ -323,4 +323,227 @@
             </div>
         </div>
     </div>
+
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="assetImagePreviewModal" tabindex="-1" aria-labelledby="assetImagePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assetImagePreviewModalLabel">
+                        <i class="ph-images me-2"></i>Inspection Asset Images
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Image Carousel -->
+                    <div id="assetImageCarousel" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner" id="assetCarouselInner">
+                            <!-- Images will be dynamically added here -->
+                        </div>
+                        
+                        <!-- Navigation Arrows -->
+                        <button class="carousel-control-prev" type="button" data-bs-target="#assetImageCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#assetImageCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Image Info -->
+                    <div class="p-3 text-center bg-light border-top">
+                        <h6 id="previewAssetImageName" class="mb-1"></h6>
+                        <small class="text-muted" id="assetImageCounter"></small>
+                    </div>
+                    
+                    <!-- Thumbnails -->
+                    <div class="p-3 bg-light border-top">
+                        <div class="d-flex gap-2 flex-wrap justify-content-center" id="assetImageThumbnails">
+                            <!-- Thumbnails will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Collect all images from all inspection assets
+            let allAssetImages = [];
+            
+            @foreach($blockInspection->inspectionAssets as $asset)
+                @if($asset->images->count() > 0)
+                    @foreach($asset->images as $image)
+                        allAssetImages.push({
+                            id: {{ $image->id }},
+                            url: {!! json_encode($image->image_url) !!},
+                            name: {!! json_encode($image->image_name ?? "Asset Image") !!},
+                            assetId: {{ $asset->id }},
+                            assetName: {!! json_encode($asset->block_general_asset_id ? ($asset->generalAsset->name ?? "N/A") : ($asset->buildingAsset->name ?? "N/A")) !!}
+                        });
+                    @endforeach
+                @endif
+            @endforeach
+            
+            // Handle view images button click
+            $('.view-asset-images-btn').on('click', function() {
+                const clickedImageId = $(this).data('image-id');
+                openAssetImageModal(clickedImageId);
+            });
+            
+            function openAssetImageModal(clickedImageId) {
+                if (allAssetImages.length === 0) return;
+                
+                const modal = $('#assetImagePreviewModal');
+                const carouselInner = modal.find('#assetCarouselInner');
+                const thumbnailsContainer = modal.find('#assetImageThumbnails');
+                
+                // Clear previous content
+                carouselInner.empty();
+                thumbnailsContainer.empty();
+                
+                // Build carousel items and thumbnails
+                allAssetImages.forEach((image, index) => {
+                    const isActive = image.id == clickedImageId ? 'active' : '';
+                    
+                    // Carousel item
+                    const carouselItem = $(`
+                        <div class="carousel-item ${isActive}" data-image-id="${image.id}">
+                            <img src="${image.url}" class="d-block w-100" style="max-height: 60vh; object-fit: contain;" alt="${image.name}">
+                        </div>
+                    `);
+                    carouselInner.append(carouselItem);
+                    
+                    // Thumbnail
+                    const thumbnail = $(`
+                        <div class="thumbnail-item ${isActive}" data-image-id="${image.id}" style="cursor: pointer; border: 2px solid ${isActive ? '#0d6efd' : 'transparent'}; border-radius: 4px; padding: 2px;">
+                            <img src="${image.url}" 
+                                 alt="${image.name}" 
+                                 style="width: 80px; height: 80px; object-fit: cover; border-radius: 2px;"
+                                 class="img-thumbnail">
+                        </div>
+                    `);
+                    thumbnailsContainer.append(thumbnail);
+                });
+                
+                // Update image info
+                updateAssetImageInfo(clickedImageId);
+                
+                // Initialize carousel
+                const carousel = new bootstrap.Carousel(modal.find('#assetImageCarousel')[0], {
+                    interval: false,
+                    wrap: true
+                });
+                
+                // Update info when slide changes
+                modal.find('#assetImageCarousel').on('slid.bs.carousel', function (event) {
+                    const activeItem = modal.find('.carousel-item.active');
+                    const imageId = activeItem.data('image-id');
+                    updateAssetImageInfo(imageId);
+                    updateThumbnailSelection(imageId);
+                });
+                
+                // Handle thumbnail click
+                thumbnailsContainer.on('click', '.thumbnail-item', function() {
+                    const imageId = $(this).data('image-id');
+                    const carousel = bootstrap.Carousel.getInstance(modal.find('#assetImageCarousel')[0]);
+                    const targetIndex = allAssetImages.findIndex(img => img.id == imageId);
+                    if (targetIndex !== -1) {
+                        carousel.to(targetIndex);
+                    }
+                });
+                
+                // Add keyboard navigation
+                $(document).off('keydown.assetImageModal');
+                $(document).on('keydown.assetImageModal', function(e) {
+                    if (modal.hasClass('show')) {
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            modal.find('#assetImageCarousel').carousel('prev');
+                        } else if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            modal.find('#assetImageCarousel').carousel('next');
+                        } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            modal.modal('hide');
+                        }
+                    }
+                });
+                
+                // Clean up on modal close
+                modal.on('hidden.bs.modal', function() {
+                    $(document).off('keydown.assetImageModal');
+                });
+                
+                // Show modal
+                modal.modal('show');
+            }
+            
+            function updateAssetImageInfo(imageId) {
+                const currentImage = allAssetImages.find(img => img.id == imageId);
+                if (currentImage) {
+                    $('#previewAssetImageName').text(currentImage.name);
+                    const currentIndex = allAssetImages.findIndex(img => img.id == imageId) + 1;
+                    $('#assetImageCounter').text(`${currentIndex} of ${allAssetImages.length} - ${currentImage.assetName}`);
+                }
+            }
+            
+            function updateThumbnailSelection(imageId) {
+                $('#assetImageThumbnails .thumbnail-item').each(function() {
+                    const $item = $(this);
+                    if ($item.data('image-id') == imageId) {
+                        $item.addClass('active').css('border-color', '#0d6efd');
+                    } else {
+                        $item.removeClass('active').css('border-color', 'transparent');
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <style>
+        #assetImagePreviewModal .modal-dialog {
+            max-width: 90vw;
+            max-height: 90vh;
+        }
+        
+        #assetImagePreviewModal .modal-content {
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        #assetImagePreviewModal .modal-body {
+            padding: 0;
+        }
+        
+        #assetImagePreviewModal .thumbnail-item {
+            transition: all 0.2s ease;
+        }
+        
+        #assetImagePreviewModal .thumbnail-item:hover {
+            transform: scale(1.05);
+            border-color: #0d6efd !important;
+        }
+        
+        #assetImagePreviewModal .thumbnail-item.active {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+        }
+        
+        #assetImagePreviewModal .carousel-control-prev,
+        #assetImagePreviewModal .carousel-control-next {
+            background-color: rgba(0, 0, 0, 0.3);
+            width: 50px;
+        }
+        
+        #assetImagePreviewModal .carousel-control-prev:hover,
+        #assetImagePreviewModal .carousel-control-next:hover {
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    @endpush
 @endsection
