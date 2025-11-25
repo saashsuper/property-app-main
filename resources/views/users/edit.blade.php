@@ -79,6 +79,7 @@
                                     <option value="">@lang('translation.select-user-type')</option>
                                     @foreach($userTypes as $userType)
                                         <option value="{{ $userType->id }}" 
+                                                data-name="{{ $userType->name }}"
                                                 {{ old('user_type_id', $user->user_type_id) == $userType->id ? 'selected' : '' }}>
                                             {{ $userType->name }}
                                         </option>
@@ -91,6 +92,22 @@
                         </div>
                         
                         <div class="col-md-6">
+                            <div class="mb-3" id="contract-company-wrapper" style="display: none;">
+                                <label for="contract_company_id" class="form-label">Contract Company</label>
+                                <select class="form-select @error('contract_company_id') is-invalid @enderror" 
+                                        id="contract_company_id" name="contract_company_id">
+                                    <option value="">Select Contract Company</option>
+                                    @foreach($contractCompanies as $company)
+                                        <option value="{{ $company->id }}" {{ old('contract_company_id', $user->contract_company_id) == $company->id ? 'selected' : '' }}>
+                                            {{ $company->company_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('contract_company_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            
                             <div class="mb-3">
                                 <label for="avatar" class="form-label">@lang('translation.avatar')</label>
                                 <input type="file" class="form-control @error('avatar') is-invalid @enderror" 
@@ -133,4 +150,29 @@
         </div>
     </div>
 </div>
+@section('script')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('user_type_id');
+    const contractCompanyWrapper = document.getElementById('contract-company-wrapper');
+
+    function toggleContractCompanyField() {
+        const selected = userTypeSelect.options[userTypeSelect.selectedIndex];
+        const typeName = selected ? selected.getAttribute('data-name') : '';
+        
+        // Show/hide contract company for Contractor Admin and Contractor User
+        if (typeName === 'Contractor Admin' || typeName === 'Contractor User') {
+            contractCompanyWrapper.style.display = '';
+        } else {
+            contractCompanyWrapper.style.display = 'none';
+            const contractCompanySelect = document.getElementById('contract_company_id');
+            if (contractCompanySelect) contractCompanySelect.value = '';
+        }
+    }
+
+    userTypeSelect.addEventListener('change', toggleContractCompanyField);
+    // Initialize on page load
+    toggleContractCompanyField();
+});
+</script>
 @endsection

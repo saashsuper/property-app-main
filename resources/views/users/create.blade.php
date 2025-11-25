@@ -89,6 +89,22 @@
                         </div>
 
                         <div class="col-md-6">
+                            <div class="mb-3" id="contract-company-wrapper" style="display: none;">
+                                <label for="contract_company_id" class="form-label">Contract Company</label>
+                                <select class="form-select @error('contract_company_id') is-invalid @enderror" 
+                                        id="contract_company_id" name="contract_company_id">
+                                    <option value="">Select Contract Company</option>
+                                    @foreach($contractCompanies as $company)
+                                        <option value="{{ $company->id }}" {{ old('contract_company_id') == $company->id ? 'selected' : '' }}>
+                                            {{ $company->company_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('contract_company_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            
                             <div class="mb-3" id="web-login-wrapper" style="display: none;">
                                 <label class="form-label" for="is_web_login_required">Web Login Required</label>
                                 <div class="form-check form-switch form-switch-lg">
@@ -132,22 +148,34 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const userTypeSelect = document.getElementById('user_type_id');
-    const wrapper = document.getElementById('web-login-wrapper');
+    const webLoginWrapper = document.getElementById('web-login-wrapper');
+    const contractCompanyWrapper = document.getElementById('contract-company-wrapper');
 
-    function toggleWebLogin() {
+    function toggleFields() {
         const selected = userTypeSelect.options[userTypeSelect.selectedIndex];
         const typeName = selected ? selected.getAttribute('data-name') : '';
+        
+        // Show/hide web login for Contractor Admin
         if (typeName === 'Contractor Admin') {
-            wrapper.style.display = '';
+            webLoginWrapper.style.display = '';
         } else {
-            wrapper.style.display = 'none';
+            webLoginWrapper.style.display = 'none';
             const cb = document.getElementById('is_web_login_required');
             if (cb) cb.checked = false;
         }
+        
+        // Show/hide contract company for Contractor Admin and Contractor User
+        if (typeName === 'Contractor Admin' || typeName === 'Contractor User') {
+            contractCompanyWrapper.style.display = '';
+        } else {
+            contractCompanyWrapper.style.display = 'none';
+            const contractCompanySelect = document.getElementById('contract_company_id');
+            if (contractCompanySelect) contractCompanySelect.value = '';
+        }
     }
 
-    userTypeSelect.addEventListener('change', toggleWebLogin);
-    toggleWebLogin();
+    userTypeSelect.addEventListener('change', toggleFields);
+    toggleFields();
 });
 </script>
 @endsection
