@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\UserType;
+use App\Models\ContractCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -70,7 +71,10 @@ class UserController extends Controller
             $userTypes = UserType::visible()->orderBy('name')->get();
         }
         
-        return view('users.create', compact('userTypes', 'isContractorAdmin'));
+        // Get contract companies for dropdown
+        $contractCompanies = ContractCompany::orderBy('company_name')->get();
+        
+        return view('users.create', compact('userTypes', 'isContractorAdmin', 'contractCompanies'));
     }
 
     /**
@@ -83,6 +87,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:191|unique:users,email',
             'password' => 'nullable|string|min:8|confirmed|regex:/^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/',
             'user_type_id' => 'required|exists:user_types,id',
+            'contract_company_id' => 'nullable|exists:contract_companies,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             'password.regex' => 'Password must contain at least one uppercase letter and one special character.',
@@ -104,6 +109,20 @@ class UserController extends Controller
             if (!$selectedType || $selectedType->name !== 'Contractor User') {
                 return redirect()->back()
                     ->withErrors(['user_type_id' => 'You can only create Contractor User accounts.'])
+                    ->withInput();
+            }
+        }
+
+        // Validate that only one Contractor Admin can exist per contract company
+        if ($selectedType && $selectedType->name === 'Contractor Admin' && $request->filled('contract_company_id')) {
+            $existingAdmin = User::where('user_type_id', $selectedType->id)
+                ->where('contract_company_id', $request->contract_company_id)
+                ->whereNull('deleted_at')
+                ->first();
+            
+            if ($existingAdmin) {
+                return redirect()->back()
+                    ->withErrors(['contract_company_id' => 'A Contractor Admin already exists for this contract company. Only one Contractor Admin is allowed per contract company.'])
                     ->withInput();
             }
         }
@@ -173,7 +192,10 @@ class UserController extends Controller
             $userTypes = UserType::visible()->orderBy('name')->get();
         }
         
-        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin'));
+        // Get contract companies for dropdown
+        $contractCompanies = ContractCompany::orderBy('company_name')->get();
+        
+        return view('users.edit', compact('user', 'userTypes', 'isContractorAdmin', 'contractCompanies'));
     }
 
     /**
@@ -186,6 +208,7 @@ class UserController extends Controller
             'email' => 'required|string|email|max:191|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:8|confirmed|regex:/^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).+$/',
             'user_type_id' => 'required|exists:user_types,id',
+            'contract_company_id' => 'nullable|exists:contract_companies,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             'password.regex' => 'Password must contain at least one uppercase letter and one special character.',
@@ -213,6 +236,29 @@ class UserController extends Controller
             if (!$selectedType || $selectedType->name !== 'Contractor User') {
                 return redirect()->back()
                     ->withErrors(['user_type_id' => 'You can only assign Contractor User type.'])
+                    ->withInput();
+            }
+        }
+
+        // Validate that only one Contractor Admin can exist per contract company
+        // Check if user is being set to Contractor Admin or is already a Contractor Admin changing contract company
+        $isBecomingContractorAdmin = $selectedType && $selectedType->name === 'Contractor Admin';
+        $contractorAdminType = UserType::where('name', 'Contractor Admin')->first();
+        $isAlreadyContractorAdmin = $contractorAdminType && $user->user_type_id == $contractorAdminType->id;
+        $contractCompanyChanged = $request->filled('contract_company_id') && 
+                                  $user->contract_company_id != $request->contract_company_id;
+        
+        if (($isBecomingContractorAdmin || ($isAlreadyContractorAdmin && $contractCompanyChanged)) && 
+            $request->filled('contract_company_id') && $contractorAdminType) {
+            $existingAdmin = User::where('user_type_id', $contractorAdminType->id)
+                ->where('contract_company_id', $request->contract_company_id)
+                ->where('id', '!=', $user->id) // Exclude the current user being updated
+                ->whereNull('deleted_at')
+                ->first();
+            
+            if ($existingAdmin) {
+                return redirect()->back()
+                    ->withErrors(['contract_company_id' => 'A Contractor Admin already exists for this contract company. Only one Contractor Admin is allowed per contract company.'])
                     ->withInput();
             }
         }
