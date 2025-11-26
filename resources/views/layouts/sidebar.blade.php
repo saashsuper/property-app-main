@@ -161,11 +161,11 @@
                     @endif
 
                     <li class="nav-item">
-                        <a class="{{ getMenuClasses(null, ['users.*', 'user-types.*']) }}" href="#sidebarUsers" data-bs-toggle="collapse"
-                            role="button" aria-expanded="{{ hasActiveChild(['users.*', 'user-types.*']) ? 'true' : 'false' }}" aria-controls="sidebarUsers">
+                        <a class="{{ getMenuClasses(null, ['users.*', 'user-types.*', 'contract-companies.*']) }}" href="#sidebarUsers" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['users.*', 'user-types.*', 'contract-companies.*']) ? 'true' : 'false' }}" aria-controls="sidebarUsers">
                             <i class="ph-users"></i> <span>@lang('translation.users')</span>
                         </a>
-                        <div class="{{ getDropdownClasses(['users.*', 'user-types.*']) }}" id="sidebarUsers">
+                        <div class="{{ getDropdownClasses(['users.*', 'user-types.*', 'contract-companies.*']) }}" id="sidebarUsers">
                             <ul class="nav nav-sm flex-column">
                                 <li class="nav-item">
                                     <a href="{{ route('users.index') }}" class="{{ getSubmenuClasses('users.index') }}">@lang('translation.list-users')</a>
@@ -184,6 +184,9 @@
                                 </li>
                                 <li class="nav-item">
                                     <a href="{{ route('user-types.create') }}" class="{{ getSubmenuClasses('user-types.create') }}">@lang('translation.create-user-type')</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('contract-companies.index') }}" class="{{ getSubmenuClasses('contract-companies.*') }}">Contract Companies</a>
                                 </li>
                                 @endadmin
                                 @endif

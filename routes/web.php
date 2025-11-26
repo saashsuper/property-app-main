@@ -142,6 +142,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/user-types', [App\Http\Controllers\UserTypeController::class, 'getUserTypes'])->name('api.user-types');
     Route::get('api/user-types/{userType}', [App\Http\Controllers\UserTypeController::class, 'getUserType'])->name('api.user-types.show');
     
+    // Contract Companies
+    Route::resource('contract-companies', App\Http\Controllers\ContractCompanyController::class);
+    
     // Roles & Permissions Management
     Route::middleware(['permission:roles.view'])->group(function () {
         Route::resource('roles', App\Http\Controllers\RoleController::class);
