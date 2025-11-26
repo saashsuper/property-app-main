@@ -205,7 +205,7 @@ class BlockIssueController extends Controller
         
         // Load work orders for this issue
         $workOrders = $blockIssue->workOrders()
-            ->with(['issuedBy', 'creator', 'priority', 'contractor'])
+            ->with(['issuedBy', 'creator', 'priority', 'contractCompany', 'contractor'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -236,10 +236,9 @@ class BlockIssueController extends Controller
             $q->where('name', 'Contractor Admin'); 
         })->orderBy('name')->get();
         
-        // Load contractor admin users for work order modal
-        $contractors = User::whereHas('userType', function($q) { 
-            $q->where('name', 'Contractor Admin'); 
-        })->orderBy('name')->get();
+        // Load contract companies for work order modal
+        $contractors = \App\Models\Contractor::orderBy('name')
+            ->get();
         
         // Load property managers for in-house work orders
         $propertyManagers = User::whereHas('userType', function($q) { 

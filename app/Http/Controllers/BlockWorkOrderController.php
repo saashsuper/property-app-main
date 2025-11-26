@@ -84,7 +84,7 @@ class BlockWorkOrderController extends Controller
         $validator = Validator::make($request->all(), [
             'block_issue_id' => 'required|exists:block_issues,id',
             'priority_id' => 'required|integer|min:1|max:5',
-            'contractor_id' => 'nullable|exists:users,id',
+            'contractor_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\Contractor::class, 'id')],
             'property_manager_id' => 'nullable|exists:users,id',
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',
@@ -182,7 +182,7 @@ class BlockWorkOrderController extends Controller
 
         // Create issue log entry
         if ($workOrder->block_issue_id) {
-            $contractor = $workOrder->contractor ? $workOrder->contractor->name : 'contractor';
+            $contractor = $workOrder->contractCompany ? $workOrder->contractCompany->name : ($workOrder->contractor ? $workOrder->contractor->name : 'contractor');
             IssueLog::createLog(
                 $workOrder->block_issue_id,
                 'work_order_created',
@@ -213,9 +213,9 @@ class BlockWorkOrderController extends Controller
      */
     public function show(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images', 'contractor.userType']);
+        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images', 'contractCompany', 'contractor.userType']);
         
-        // Determine if contractor is a property manager
+        // Determine if contractor is a property manager (for backward compatibility)
         $isPropertyManager = false;
         if ($blockWorkOrder->contractor && $blockWorkOrder->contractor->userType) {
             $isPropertyManager = $blockWorkOrder->contractor->userType->name === 'Property manager';
@@ -258,7 +258,7 @@ class BlockWorkOrderController extends Controller
         $validator = Validator::make($request->all(), [
             'block_issue_id' => 'required|exists:block_issues,id',
             'priority_id' => 'required|integer|min:1|max:5',
-            'contractor_id' => 'nullable|exists:users,id',
+            'contractor_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\Contractor::class, 'id')],
             'property_manager_id' => 'nullable|exists:users,id',
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',

@@ -358,9 +358,22 @@ class BlockController extends Controller
         $blockTypes = BlockType::orderBy('name')->get();
         $countries = Country::orderBy('country_name')->get();
         $states = State::orderBy('name')->get();
+        // Get property managers (users with "Property manager" user type)
+        // Exclude soft-deleted users and ensure userType relationship is loaded
         $propertyManagers = User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
-        })->orderBy('name')->get();
+        })
+        ->with('userType')
+        ->where('is_active', true)
+        ->orderBy('name')
+        ->get();
+        
+        // Debug: Log property managers count
+        \Log::info('Property Managers for Edit Block:', [
+            'count' => $propertyManagers->count(),
+            'ids' => $propertyManagers->pluck('id')->toArray(),
+            'names' => $propertyManagers->pluck('name')->toArray()
+        ]);
         $priorities = \App\Models\Priority::ordered()->get();
         $block->load([
             'blockType', 

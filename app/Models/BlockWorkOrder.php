@@ -101,10 +101,19 @@ class BlockWorkOrder extends Model
 
     /**
      * Get the contractor (user) for the work order.
+     * @deprecated Use contractCompany() instead
      */
     public function contractor()
     {
         return $this->belongsTo(User::class, 'contractor_id');
+    }
+
+    /**
+     * Get the contract company for the work order.
+     */
+    public function contractCompany()
+    {
+        return $this->belongsTo(Contractor::class, 'contractor_id');
     }
 
     /**

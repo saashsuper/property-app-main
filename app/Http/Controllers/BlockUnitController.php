@@ -129,8 +129,22 @@ class BlockUnitController extends Controller
             ]);
         }
         
+        // Load active issues (status: Created/Open=1, In Progress=2)
+        $activeIssues = \App\Models\BlockIssue::where('block_unit_id', $blockUnit->id)
+            ->whereIn('issue_status_id', [1, 2])
+            ->with(['priority', 'issueStatus', 'issueType', 'assignedTo'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Load active work orders (status = 1 for active)
+        $activeWorkOrders = \App\Models\BlockWorkOrder::where('block_unit_id', $blockUnit->id)
+            ->where('status', 1)
+            ->with(['priority', 'contractor', 'blockIssue'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
         // Return full page view
-        return view('block-units.show', compact('blockUnit'));
+        return view('block-units.show', compact('blockUnit', 'activeIssues', 'activeWorkOrders'));
     }
 
     public function destroy(BlockUnit $blockUnit)
