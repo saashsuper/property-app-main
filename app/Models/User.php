@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'address',
         'is_active',
         'user_type_id',
+        'contract_company_id',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -62,6 +63,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function userType()
     {
         return $this->belongsTo('App\Models\UserType', 'user_type_id');
+    }
+
+    /**
+     * Get the contract company associated with this user
+     */
+    public function contractCompany()
+    {
+        return $this->belongsTo('App\Models\ContractCompany', 'contract_company_id');
     }
 
     /**
