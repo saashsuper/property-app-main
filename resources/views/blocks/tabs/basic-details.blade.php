@@ -31,12 +31,16 @@
                 <select class="form-select @error('block_manager_id') is-invalid @enderror" 
                         id="block_manager_id" name="block_manager_id">
                     <option value="">Select Block Manager</option>
-                    @foreach($propertyManagers as $propertyManager)
-                        <option value="{{ $propertyManager->id }}" 
-                            {{ old('block_manager_id', $block->block_manager_id) == $propertyManager->id ? 'selected' : '' }}>
-                            {{ $propertyManager->name }}
-                        </option>
-                    @endforeach
+                    @if(isset($propertyManagers) && $propertyManagers->count() > 0)
+                        @foreach($propertyManagers as $propertyManager)
+                            <option value="{{ $propertyManager->id }}" 
+                                {{ old('block_manager_id', $block->block_manager_id) == $propertyManager->id ? 'selected' : '' }}>
+                                {{ $propertyManager->name }}
+                            </option>
+                        @endforeach
+                    @else
+                        <option value="" disabled>No property managers available</option>
+                    @endif
                 </select>
                 @error('block_manager_id')
                     <div class="invalid-feedback">{{ $message }}</div>

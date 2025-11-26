@@ -996,7 +996,10 @@
                                                     <span class="badge bg-primary">{{ $workOrder->ref_no }}</span>
                                                 </td>
                                                 <td>
-                                                    @if($workOrder->contractor)
+                                                    @if($workOrder->contractCompany)
+                                                        <strong>{{ $workOrder->contractCompany->name }}</strong>
+                                                        <br><small class="text-muted">{{ $workOrder->contractCompany->code }}</small>
+                                                    @elseif($workOrder->contractor)
                                                         <strong>{{ $workOrder->contractor->name }}</strong>
                                                         <br><small class="text-muted">{{ $workOrder->contractor->email }}</small>
                                                     @else
@@ -3274,12 +3277,14 @@
                             <div class="col-md-6 mb-3" id="contractorFieldContainer">
                                 <label class="form-label">Assign to Contractor <span class="text-danger">*</span></label>
                                 <select class="form-select" name="contractor_id" id="contractorField">
-                                    <option value="">Select Contractor</option>
-                                    @foreach($contractors as $contractor)
-                                        <option value="{{ $contractor->id }}">
-                                            {{ $contractor->name }} ({{ $contractor->email }})
-                                        </option>
-                                    @endforeach
+                                    <option value="">Select Contract Company</option>
+                                    @if(isset($contractors) && $contractors->count() > 0)
+                                        @foreach($contractors as $contractor)
+                                            <option value="{{ $contractor->id }}">
+                                                {{ $contractor->name }} ({{ $contractor->code }})
+                                            </option>
+                                        @endforeach
+                                    @endif
                                 </select>
                             </div>
                             

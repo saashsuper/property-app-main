@@ -68,9 +68,14 @@
                                         <span class="text-white-50">{{ $block->created_at ? $block->created_at->format('h:i A') : 'N/A' }}</span>
                                     </div>
                                     <div class="d-flex gap-2">
+                                        @admin
                                         <a href="{{ route('blocks.edit', $block) }}" class="btn btn-light btn-sm">
                                             <i class="ph-pencil me-2"></i>Edit Block
                                         </a>
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" title="Delete Block" dusk="delete-block-{{ $block->id }}">
+                                            <i class="ph-trash me-2"></i>Delete Block
+                                        </button>
+                                        @endadmin
                                         <a href="{{ route('blocks.index') }}" class="btn btn-outline-light btn-sm">
                                             <i class="ph-list me-2"></i>Block List
                                         </a>
@@ -557,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete Image Confirmation Modal -->
 <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -576,6 +581,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
                     <i class="ph-trash me-1"></i>Yes, Delete Image
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Block Confirmation Modal -->
+<div class="modal fade" id="deleteBlockModal" tabindex="-1" aria-labelledby="deleteBlockModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteBlockModalLabel">
+                    <i class="ph-warning text-warning me-2"></i>Confirm Delete Block
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong>{{ $block->name }}</strong>?</p>
+                <p class="text-muted mb-0">This action cannot be undone. All associated data (units, issues, work orders, etc.) will also be deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteBlockForm" action="{{ route('blocks.destroy', $block->id) }}" method="POST" class="d-inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger" dusk="confirm-delete-block-{{ $block->id }}">
+                        <i class="ph-trash me-1"></i>Yes, Delete Block
+                    </button>
+                </form>
             </div>
         </div>
     </div>

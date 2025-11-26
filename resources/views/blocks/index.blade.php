@@ -11,10 +11,9 @@
 #blocks-table th:nth-child(2) { width: 20%; } /* Management Company */
 #blocks-table th:nth-child(3) { width: 15%; } /* Block Manager */
 #blocks-table th:nth-child(4) { width: 25%; } /* Address */
-#blocks-table th:nth-child(5) { width: 8%; }  /* Units */
-#blocks-table th:nth-child(6) { width: 8%; }  /* Issues */
-#blocks-table th:nth-child(7) { width: 10%; } /* Work Orders */
-#blocks-table th:nth-child(8) { width: 9%; }  /* Actions */
+#blocks-table th:nth-child(5) { width: 10%; }  /* Units */
+#blocks-table th:nth-child(6) { width: 10%; }  /* Issues */
+#blocks-table th:nth-child(7) { width: 15%; } /* Work Orders */
 </style>
 @endsection
 
@@ -91,7 +90,6 @@
                                 <th>Units</th>
                                 <th>Issues</th>
                                 <th>Work Orders</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -130,29 +128,10 @@
                                     @endif
                                 </td>
                                 <td><span class="badge bg-success">{{ $block->workOrders->where('status', 1)->count() }}</span></td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="{{ route('blocks.show', $block->id) }}" class="btn btn-sm btn-outline-primary" title="View Block">
-                                            <i class="ph-eye"></i>
-                                        </a>
-                                        @admin
-                                        <a href="{{ route('blocks.edit', $block->id) }}" class="btn btn-sm btn-outline-warning" title="Edit Block">
-                                            <i class="ph-pencil"></i>
-                                        </a>
-                                        <form action="{{ route('blocks.destroy', $block->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this block?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Block" dusk="delete-block-{{ $block->id }}">
-                                                <i class="ph-trash"></i>
-                                            </button>
-                                        </form>
-                                        @endadmin
-                                    </div>
-                                </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="7" class="text-center py-4">
                                     <div class="text-muted">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
                                         <p>No blocks found. 
@@ -205,16 +184,14 @@ $(document).ready(function() {
             // buttons: ['copy', 'csv', 'excel', 'pdf', 'print', 'colvis'],
             order: [[0, 'asc']], // default sort by Name (0-based index)
             columnDefs: [
-                { targets: [7], orderable: false }, // Actions (last column)
                 { targets: [4, 5, 6], type: 'num' }, // Units, Issues, Work Orders
                 { targets: [0], width: '25%' }, // Name
                 { targets: [1], width: '20%' }, // Management Company
                 { targets: [2], width: '15%' }, // Block Manager
                 { targets: [3], width: '25%' }, // Address
-                { targets: [4], width: '8%' },  // Units
-                { targets: [5], width: '8%' },  // Issues
-                { targets: [6], width: '10%' }, // Work Orders
-                { targets: [7], width: '9%' }   // Actions
+                { targets: [4], width: '10%' },  // Units
+                { targets: [5], width: '10%' },  // Issues
+                { targets: [6], width: '15%' } // Work Orders
             ],
             pageLength: 10,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],

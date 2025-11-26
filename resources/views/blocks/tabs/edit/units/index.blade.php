@@ -49,7 +49,6 @@
                         <th>Resident</th>
                         <th>Mobile</th>
                         <th>Letting Agent</th>
-                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,22 +67,6 @@
                                 <td>{{ $unit->resident ? 'Yes' : 'No' }}</td>
                                 <td>{{ $unit->mobile_no ?? 'N/A' }}</td>
                                 <td>{{ $unit->letting_agent ?? 'N/A' }}</td>
-                                <td>
-                                    <a href="{{ route('block-units.show', $unit) }}" class="btn btn-sm btn-outline-info" title="View Unit Details">
-                                        <i class="ph-eye"></i>
-                                    </a>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})" title="Edit Unit">
-                                        <i class="ph-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation({{ $unit->id }}, {
-                                        unit_code: '{{ $unit->unit_code }}',
-                                        unit_name: '{{ $unit->unit_name }}',
-                                        owners_name: '{{ $unit->owners_name }}',
-                                        unit_type: { name: '{{ $unit->unitType->name ?? 'N/A' }}' }
-                                    })" title="Delete Unit">
-                                        <i class="ph-trash"></i>
-                                    </button>
-                                </td>
                             </tr>
                         @endforeach
                     @endif

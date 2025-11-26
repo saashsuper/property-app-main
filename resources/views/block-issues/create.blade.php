@@ -417,6 +417,8 @@ function initUnitAutoComplete(units) {
                 const selection = event.detail.selection.value;
                     document.getElementById("block_unit_id").value = selection.label;
                     document.getElementById("block_unit_id_hidden").value = selection.id;
+                    // Populate contact details from unit
+                    getUnitContactDetails(selection.id);
                 }
             }
         },
@@ -458,6 +460,8 @@ function loadUnitsForBlock(blockId) {
                     if (found.unit_code) labelParts.push(found.unit_code);
                     if (found.unit_name && found.unit_name !== found.unit_code) labelParts.push(found.unit_name);
                     unitInput.value = labelParts.length ? labelParts.join(' - ') : `Unit #${found.id}`;
+                    // Load contact details for pre-selected unit
+                    getUnitContactDetails(found.id);
                 }
             }
         })
@@ -469,12 +473,83 @@ function loadUnitsForBlock(blockId) {
         });
 }
 
+/**
+ * Get unit contact details and populate default contact details
+ * Similar to the function in block edit tab's create issue popup
+ */
+function getUnitContactDetails(unitId) {
+    if (!unitId) return;
+    
+    // Only populate if use_default_contact is checked
+    const useDefaultCheckbox = document.getElementById('use_default_contact');
+    if (!useDefaultCheckbox || !useDefaultCheckbox.checked) {
+        return;
+    }
+    
+    fetch('/api/block-unit-contact-details?block_unit_id=' + unitId, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data) {
+            const unit = data.data;
+            const defaultDetails = document.getElementById('default_contact_details');
+            const hiddenContact = document.getElementById('contact_details_hidden');
+            
+            // Use the formatted contact_details string from the API
+            if (unit.contact_details) {
+                if (defaultDetails) {
+                    defaultDetails.value = unit.contact_details;
+                }
+                if (hiddenContact) {
+                    hiddenContact.value = unit.contact_details;
+                }
+            } else {
+                // Fallback: build contact details string if API doesn't provide formatted string
+                let contactDetails = '';
+                if (unit.mobile_no) {
+                    contactDetails += `Mobile: ${unit.mobile_no}`;
+                }
+                if (unit.phone_number) {
+                    contactDetails += contactDetails ? `\nPhone: ${unit.phone_number}` : `Phone: ${unit.phone_number}`;
+                }
+                if (unit.email) {
+                    contactDetails += contactDetails ? `\nEmail: ${unit.email}` : `Email: ${unit.email}`;
+                }
+                if (unit.owners_name) {
+                    contactDetails += contactDetails ? `\nOwner: ${unit.owners_name}` : `Owner: ${unit.owners_name}`;
+                }
+                
+                if (defaultDetails) {
+                    defaultDetails.value = contactDetails;
+                }
+                if (hiddenContact) {
+                    hiddenContact.value = contactDetails;
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error loading unit contact details:', error);
+    });
+}
+
 // Default contact details checkbox
 document.getElementById('use_default_contact').addEventListener('change', function() {
     const textarea = document.getElementById('default_contact_details');
     textarea.readOnly = this.checked;
     if (this.checked) {
-        textarea.value = 'Default contact information will be used';
+        // If a unit is selected, reload its contact details
+        const unitId = document.getElementById('block_unit_id_hidden').value;
+        if (unitId) {
+            getUnitContactDetails(unitId);
+        } else {
+            textarea.value = 'Default contact information will be used';
+        }
     } else {
         textarea.value = '';
     }
@@ -483,45 +558,6 @@ document.getElementById('use_default_contact').addEventListener('change', functi
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadBlocksAndInit();
-    
-    // Auto-fill contact details when selecting a Property Manager (like add issue popup)
-    const assignedSelect = document.getElementById('assigned_to');
-    if (assignedSelect) {
-        assignedSelect.addEventListener('change', function() {
-            const userId = this.value;
-            if (!userId) return;
-            fetch(`/api/users/${userId}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data && data.success && data.data) {
-                    const user = data.data;
-                    const pieces = [];
-                    if (user.phone) pieces.push(`Phone: ${user.phone}`);
-                    if (user.email) pieces.push(`Email: ${user.email}`);
-                    if (user.address) pieces.push(`Address: ${user.address}`);
-                    const contactText = pieces.join('\\n');
-                    
-                    const useDefault = document.getElementById('use_default_contact');
-                    const defaultDetails = document.getElementById('default_contact_details');
-                    if (useDefault && useDefault.checked && defaultDetails) {
-                        defaultDetails.value = contactText || '';
-                    }
-                    
-                    // Always sync hidden contact_details with default details
-                    const hiddenContact = document.getElementById('contact_details_hidden');
-                    if (hiddenContact) {
-                        hiddenContact.value = (defaultDetails && defaultDetails.value) || contactText || '';
-                    }
-                }
-            })
-            .catch(() => {});
-        });
-    }
     
     // Keep hidden contact_details in sync when default contact details change manually
     const defaultDetails = document.getElementById('default_contact_details');
