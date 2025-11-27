@@ -133,6 +133,14 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Get the job status for the work order.
+     */
+    public function jobStatus()
+    {
+        return $this->belongsTo(JobStatus::class, 'status');
+    }
+
+    /**
      * Get the images for the work order.
      */
     public function images()

@@ -29,7 +29,7 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
     // Auth & Profile
     Route::prefix('auth')->group(function () {
         Route::get('/user', function (\Illuminate\Http\Request $request) {
-            $user = $request->user()->load(['userType', 'roles']);
+            $user = $request->user()->load(['userType', 'roles', 'contractCompany']);
             return response()->json([
                 'id' => $user->id,
                 'name' => $user->name,
@@ -45,6 +45,11 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                     'id' => $user->userType->id,
                     'name' => $user->userType->name,
                     'description' => $user->userType->description,
+                ] : null,
+                'contract_company' => $user->contractCompany ? [
+                    'id' => $user->contractCompany->id,
+                    'name' => $user->contractCompany->name,
+                    'description' => $user->contractCompany->description ?? null,
                 ] : null,
                 'roles' => $user->roles->map(fn($role) => [
                     'id' => $role->id,
@@ -88,8 +93,19 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         });
         
         Route::get('/{id}', function ($id) {
-            $workOrder = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus', 'images'])
-                ->findOrFail($id);
+            $workOrder = \App\Models\BlockWorkOrder::with([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ])->findOrFail($id);
             return response()->json($workOrder);
         });
     });
