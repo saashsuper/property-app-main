@@ -108,6 +108,170 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             ])->findOrFail($id);
             return response()->json($workOrder);
         });
+        
+        // Start work order (update status to "In Progress")
+        Route::post('/{id}/start', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Get "In Progress" job status
+            $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
+            
+            if (!$inProgressStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'In Progress status not found'
+                ], 404);
+            }
+            
+            // Update status to "In Progress"
+            $workOrder->status = $inProgressStatus->id;
+            $workOrder->updated_by = $request->user()->id;
+            $workOrder->save();
+            
+            // Reload with relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order started successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Pause work order (update status to "On Hold")
+        Route::post('/{id}/pause', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Get "On Hold" job status
+            $onHoldStatus = \App\Models\JobStatus::where('name', 'On Hold')->first();
+            
+            if (!$onHoldStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'On Hold status not found'
+                ], 404);
+            }
+            
+            // Update status to "On Hold"
+            $workOrder->status = $onHoldStatus->id;
+            $workOrder->updated_by = $request->user()->id;
+            $workOrder->save();
+            
+            // Reload with relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order paused successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Resume work order (update status from "On Hold" to "In Progress")
+        Route::post('/{id}/resume', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Get "In Progress" job status
+            $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
+            
+            if (!$inProgressStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'In Progress status not found'
+                ], 404);
+            }
+            
+            // Update status to "In Progress"
+            $workOrder->status = $inProgressStatus->id;
+            $workOrder->updated_by = $request->user()->id;
+            $workOrder->save();
+            
+            // Reload with relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order resumed successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Complete work order (update status to "Completed")
+        Route::post('/{id}/complete', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Get "Completed" job status
+            $completedStatus = \App\Models\JobStatus::where('name', 'Completed')->first();
+            
+            if (!$completedStatus) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Completed status not found'
+                ], 404);
+            }
+            
+            // Update status to "Completed"
+            $workOrder->status = $completedStatus->id;
+            $workOrder->updated_by = $request->user()->id;
+            $workOrder->save();
+            
+            // Reload with relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order completed successfully',
+                'data' => $workOrder
+            ]);
+        });
     });
     
     // Inspections
