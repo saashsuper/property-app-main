@@ -20,7 +20,10 @@
     <link rel="manifest" href="/manifest.json">
     
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('images/logos/absolute-property-group-favicon.svg') }}">
+    @php
+        $faviconVersion = file_exists(public_path('images/logos/absolute-property-group-favicon.svg')) ? filemtime(public_path('images/logos/absolute-property-group-favicon.svg')) : time();
+    @endphp
+    <link rel="shortcut icon" href="{{ URL::asset('images/logos/absolute-property-group-favicon.svg') }}?v={{ $faviconVersion }}">
     <link rel="apple-touch-icon" href="/images/icons/icon-192x192.png">
     
     <meta name="csrf-token" content="{{ csrf_token() }}">

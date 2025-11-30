@@ -10,7 +10,10 @@
     <meta content="Property Management System" name="description" />
     <meta content="PROMAN" name="author" />
     <!-- App favicon -->
-    <link rel="shortcut icon" href="{{ URL::asset('images/logos/absolute-property-group-favicon.svg') }}">
+    @php
+        $faviconVersion = file_exists(public_path('images/logos/absolute-property-group-favicon.svg')) ? filemtime(public_path('images/logos/absolute-property-group-favicon.svg')) : time();
+    @endphp
+    <link rel="shortcut icon" href="{{ URL::asset('images/logos/absolute-property-group-favicon.svg') }}?v={{ $faviconVersion }}">
 
     @include('layouts.head-css')
     @stack('styles')

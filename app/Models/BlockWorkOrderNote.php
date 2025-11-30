@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class BlockWorkOrderImage extends Model
+class BlockWorkOrderNote extends Model
 {
     use HasFactory, SoftDeletes;
 
@@ -17,10 +17,8 @@ class BlockWorkOrderImage extends Model
      */
     protected $fillable = [
         'block_work_order_id',
-        'image_name',
-        'image_path',
-        'strat_time',
-        's3_status',
+        'note',
+        'note_type',
         'created_by',
     ];
 
@@ -31,18 +29,11 @@ class BlockWorkOrderImage extends Model
      */
     protected $casts = [
         'block_work_order_id' => 'integer',
-        's3_status' => 'integer',
+        'created_by' => 'integer',
     ];
 
     /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array<int, string>
-     */
-    protected $appends = ['image_url'];
-
-    /**
-     * Get the block work order that owns the image.
+     * Get the block work order that owns the note.
      */
     public function blockWorkOrder()
     {
@@ -50,22 +41,10 @@ class BlockWorkOrderImage extends Model
     }
 
     /**
-     * Get the user who created/uploaded the image.
+     * Get the user who created the note.
      */
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
-    }
-
-    /**
-     * Get the image URL.
-     */
-    public function getImageUrlAttribute()
-    {
-        if ($this->image_path && $this->image_name) {
-            return asset('storage/' . $this->image_path . '/' . $this->image_name);
-        }
-        
-        return null;
     }
 }

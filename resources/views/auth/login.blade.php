@@ -112,8 +112,11 @@ body {
                                     <div class="card-body py-5 d-flex justify-content-between flex-column">
                                         <div class="text-center">
                                             <!-- Absolute Property Group Logo on left side -->
+                                            @php
+                                                $loginLogoVersion = file_exists(public_path('images/logos/absolute-property-group-logo.svg')) ? filemtime(public_path('images/logos/absolute-property-group-logo.svg')) : time();
+                                            @endphp
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <img src="{{ URL::asset('images/logos/absolute-property-group-logo.svg') }}" alt="Absolute Property Group" class="img-fluid" style="max-width: 350px; height: auto;">
+                                                <img src="{{ URL::asset('images/logos/absolute-property-group-logo.svg') }}?v={{ $loginLogoVersion }}" alt="Absolute Property Group" class="img-fluid" style="max-width: 350px; height: auto;">
                                             </div>
                                         </div>
 

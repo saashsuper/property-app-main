@@ -16,106 +16,153 @@
                         <span class="message-text"></span>
                     </div>
                     
-                    <div class="row">
-                        <!-- Full Width Form Fields -->
-                        <div class="col-12">
-                            <div class="row">
-                                <!-- Row 1: Unit Selection, Contact Method, Assigned To -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="issue_block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
-                                    <div class="autoComplete_wrapper" id="unitAutoCompleteWrapper">
-                                        <input type="text" 
-                                               class="form-control" 
-                                               id="issue_block_unit_id" 
-                                               name="block_unit_display" 
-                                               placeholder="Search for units..." 
-                                               autocomplete="off" 
-                                               required>
-                                        <input type="hidden" id="issue_block_unit_id_hidden" name="block_unit_id" value="">
+                    <!-- Step Indicator -->
+                    <div class="step-wizard mb-4">
+                        <ul class="step-wizard-list">
+                            <li class="step-wizard-item active" data-step="1">
+                                <span class="step-wizard-icon">
+                                    <i class="ph-file-text"></i>
+                                </span>
+                                <span class="step-wizard-label">Issue Details</span>
+                            </li>
+                            <li class="step-wizard-item" data-step="2">
+                                <span class="step-wizard-icon">
+                                    <i class="ph-images"></i>
+                                </span>
+                                <span class="step-wizard-label">Upload Images</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Step 1: Issue Details -->
+                    <div class="step-content" id="step1" data-step="1">
+                        <div class="row">
+                            <!-- Full Width Form Fields -->
+                            <div class="col-12">
+                                <div class="row">
+                                    <!-- Row 1: Unit Selection, Contact Method, Assigned To -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="issue_block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
+                                        <div class="autoComplete_wrapper" id="unitAutoCompleteWrapper">
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="issue_block_unit_id" 
+                                                   name="block_unit_display" 
+                                                   placeholder="Search for units..." 
+                                                   autocomplete="off" 
+                                                   required>
+                                            <input type="hidden" id="issue_block_unit_id_hidden" name="block_unit_id" value="">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="contact_method_id" name="contact_method_id" required>
+                                            <option value="">Select Contact Method</option>
+                                            @foreach ($contactMethods as $contactMethod)
+                                                <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="assigned_to" class="form-label">Assigned To<span class="text-danger">*</span></label>
+                                        <select class="form-select" id="assigned_to" name="assigned_to" required>
+                                            <option value="">Select Property Manager</option>
+                                            @foreach ($users as $user)
+                                                @if ($user->userType && $user->userType->name === 'Property manager')
+                                                    <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                                @endif
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <!-- Row 2: Category, Priority, Problem Overview -->
+                                    <div class="col-md-4 mb-3">
+                                        <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="issue_type" name="issue_type" required>
+                                            <option value="">{{ __('translation.select-issue-category') }}</option>
+                                            @foreach ($issueTypes as $issueType)
+                                                <option value="{{ $issueType->name }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="priority_id" name="priority_id" required>
+                                            <option value="">Select Priority</option>
+                                            <option value="1">Low</option>
+                                            <option value="2" selected>Normal</option>
+                                            <option value="3">High</option>
+                                            <option value="4">Urgent</option>
+                                            <option value="5">Critical</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="issue" name="issue" required>
+                                    </div>
+
+                                    <!-- Row 3: Dynamic Contact Details based on Contact Method -->
+                                    <div class="col-md-6 mb-3" id="contact_details_container">
+                                        <label for="contact_details" class="form-label">Reported By <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="contact_details" name="contact_details" placeholder="Enter contact details..." required>
+                                        <div class="form-text">Please provide relevant contact information</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="issue_details" class="form-label">Issue Details</label>
+                                        <textarea class="form-control" id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
+                                    </div>
+
+                                    <!-- Row 4: Default Contact Details -->
+                                    <div class="col-12 mb-2">
+                                        <label for="default_contact_details" class="form-label">Default Contact Details</label>
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
+                                            <label class="form-check-label" for="use_default_contact">
+                                                Use default contact details
+                                            </label>
+                                        </div>
+                                        <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly></textarea>
                                     </div>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="contact_method_id" name="contact_method_id" required>
-                                        <option value="">Select Contact Method</option>
-                                        @foreach ($contactMethods as $contactMethod)
-                                            <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="assigned_to" class="form-label">Assigned To<span class="text-danger">*</span></label>
-                                    <select class="form-select" id="assigned_to" name="assigned_to" required>
-                                        <option value="">Select Property Manager</option>
-                                        @foreach ($users as $user)
-                                            @if ($user->userType && $user->userType->name === 'Property manager')
-                                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
-                                            @endif
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Row 2: Category, Priority, Problem Overview -->
-                                <div class="col-md-4 mb-3">
-                                    <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="issue_type" name="issue_type" required>
-                                        <option value="">{{ __('translation.select-issue-category') }}</option>
-                                        @foreach ($issueTypes as $issueType)
-                                            <option value="{{ $issueType->name }}">
-                                                {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="priority_id" class="form-label">Priority <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="priority_id" name="priority_id" required>
-                                        <option value="">Select Priority</option>
-                                        <option value="1">Low</option>
-                                        <option value="2" selected>Normal</option>
-                                        <option value="3">High</option>
-                                        <option value="4">Urgent</option>
-                                        <option value="5">Critical</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label for="issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="issue" name="issue" required>
-                                </div>
-
-                                <!-- Row 3: Dynamic Contact Details based on Contact Method -->
-                                <div class="col-md-6 mb-3" id="contact_details_container">
-                                    <label for="contact_details" class="form-label">Reported By <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="contact_details" name="contact_details" placeholder="Enter contact details..." required>
-                                    <div class="form-text">Please provide relevant contact information</div>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="issue_details" class="form-label">Issue Details</label>
-                                    <textarea class="form-control" id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
-                                </div>
-
-                                <!-- Row 4: Default Contact Details -->
-                                <div class="col-12 mb-2">
-                                    <label for="default_contact_details" class="form-label">Default Contact Details</label>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
-                                        <label class="form-check-label" for="use_default_contact">
-                                            Use default contact details
-                                        </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Image Upload -->
+                    <div class="step-content d-none" id="step2" data-step="2">
+                        <div class="row">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold mb-3">Upload Images <span class="text-muted">(Optional)</span></label>
+                                <div id="issueImageDropzone" class="dropzone">
+                                    <div class="dz-message text-center py-5">
+                                        <div class="mb-3 text-primary">
+                                            <i class="ph-cloud-arrow-up" style="font-size: 3rem;"></i>
+                                        </div>
+                                        <h5 class="fw-semibold mb-2">Drag &amp; drop images here</h5>
+                                        <p class="text-muted mb-0">or click to browse your files</p>
+                                        <p class="text-muted small mt-2">Supported formats: JPG, PNG, GIF (Max 10MB per file)</p>
                                     </div>
-                                    <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly></textarea>
                                 </div>
-
-
+                                <div id="issueImagePreview" class="mt-3 row g-2">
+                                    <!-- Uploaded images preview will appear here -->
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary" id="issueSubmitBtn">
-                        <i class="ph-check me-1"></i> Create
+                    <button type="button" class="btn btn-secondary" id="prevStepBtn" style="display: none;">
+                        <i class="ph-arrow-left me-1"></i> Previous
                     </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="ph-x me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextStepBtn">
+                        <i class="ph-arrow-right me-1"></i> Next
+                    </button>
+                    <button type="submit" class="btn btn-primary d-none" id="issueSubmitBtn">
+                        <i class="ph-check me-1"></i> Create Issue
                     </button>
                 </div>
             </form>

@@ -4,21 +4,34 @@
             <div class="d-flex">
                 <!-- LOGO -->
                 <div class="navbar-brand-box horizontal-logo">
+                    @php
+                        $logoFiles = [
+                            public_path('images/logos/absolute-icon-only.svg'),
+                            public_path('images/logos/absolute-sidebar-logo.svg'),
+                            public_path('images/logos/absolute-sidebar-logo-light.svg')
+                        ];
+                        $logoVersion = time();
+                        foreach ($logoFiles as $file) {
+                            if (file_exists($file)) {
+                                $logoVersion = max($logoVersion, filemtime($file));
+                            }
+                        }
+                    @endphp
                     <a href="index" class="logo logo-dark">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="26">
+                            <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}?v={{ $logoVersion }}" alt="Absolute Property Group" height="26">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('images/logos/absolute-sidebar-logo.svg') }}" alt="Absolute Property Group" height="26">
+                            <img src="{{ URL::asset('images/logos/absolute-sidebar-logo.svg') }}?v={{ $logoVersion }}" alt="Absolute Property Group" height="26">
                         </span>
                     </a>
 
                     <a href="index" class="logo logo-light">
                         <span class="logo-sm">
-                            <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}" alt="Absolute Property Group" height="26">
+                            <img src="{{ URL::asset('images/logos/absolute-icon-only.svg') }}?v={{ $logoVersion }}" alt="Absolute Property Group" height="26">
                         </span>
                         <span class="logo-lg">
-                            <img src="{{ URL::asset('images/logos/absolute-sidebar-logo-light.svg') }}" alt="Absolute Property Group" height="26">
+                            <img src="{{ URL::asset('images/logos/absolute-sidebar-logo-light.svg') }}?v={{ $logoVersion }}" alt="Absolute Property Group" height="26">
                         </span>
                     </a>
                 </div>

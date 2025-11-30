@@ -149,6 +149,22 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Get the notes for the work order.
+     */
+    public function notes()
+    {
+        return $this->hasMany(BlockWorkOrderNote::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get the team members for the work order.
+     */
+    public function teamMembers()
+    {
+        return $this->hasMany(BlockWorkOrderTeam::class)->orderBy('is_lead', 'desc')->orderBy('created_at', 'asc');
+    }
+
+    /**
      * Get the user who issued the work order.
      */
     public function issuedBy()

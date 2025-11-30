@@ -100,7 +100,8 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'blockIssue',
                 'priority',
                 'jobStatus',
-                'images',
+                'images.creator',
+                'notes.creator',
                 'contractor',
                 'issuedBy',
                 'creator',
@@ -136,7 +137,8 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'blockIssue',
                 'priority',
                 'jobStatus',
-                'images',
+                'images.creator',
+                'notes.creator',
                 'contractor',
                 'issuedBy',
                 'creator',
@@ -154,6 +156,11 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         Route::post('/{id}/pause', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
             
+            // Validate pause reason
+            $request->validate([
+                'reason' => 'required|string|max:1000',
+            ]);
+            
             // Get "On Hold" job status
             $onHoldStatus = \App\Models\JobStatus::where('name', 'On Hold')->first();
             
@@ -169,6 +176,14 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             $workOrder->updated_by = $request->user()->id;
             $workOrder->save();
             
+            // Create a note with pause reason
+            \App\Models\BlockWorkOrderNote::create([
+                'block_work_order_id' => $workOrder->id,
+                'note' => 'Pause Reason: ' . $request->reason,
+                'note_type' => 'pause_reason',
+                'created_by' => $request->user()->id,
+            ]);
+            
             // Reload with relationships
             $workOrder->load([
                 'blockUnit',
@@ -177,7 +192,8 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'blockIssue',
                 'priority',
                 'jobStatus',
-                'images',
+                'images.creator',
+                'notes.creator',
                 'contractor',
                 'issuedBy',
                 'creator',
@@ -272,6 +288,750 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'data' => $workOrder
             ]);
         });
+        
+        // Upload photos for work order
+        Route::post('/{id}/photos', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Check current photo count
+            $currentPhotoCount = $workOrder->images()->count();
+            
+            // Validate
+            $request->validate([
+                'photos.*' => 'required|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
+            ]);
+            
+            $photos = $request->file('photos');
+            $totalPhotos = $currentPhotoCount + count($photos);
+            
+            // Check if adding these photos would exceed the limit of 6
+            if ($totalPhotos > 6) {
+                $allowed = 6 - $currentPhotoCount;
+                return response()->json([
+                    'success' => false,
+                    'message' => "Maximum 6 photos allowed. You can add {$allowed} more photo(s).",
+                ], 422);
+            }
+            
+            $uploadedPhotos = [];
+            
+            foreach ($photos as $photo) {
+                $imagePath = 'work-orders/' . $workOrder->id;
+                $imageName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+                
+                // Store the image
+                $photo->storeAs('public/' . $imagePath, $imageName);
+                
+                // Create database record
+                $workOrderImage = \App\Models\BlockWorkOrderImage::create([
+                    'block_work_order_id' => $workOrder->id,
+                    'image_path' => $imagePath,
+                    'image_name' => $imageName,
+                    's3_status' => 0,
+                    'created_by' => $request->user()->id,
+                ]);
+                
+                $uploadedPhotos[] = [
+                    'id' => $workOrderImage->id,
+                    'image_path' => $imagePath,
+                    'image_name' => $imageName,
+                ];
+            }
+            
+            // Reload work order with all relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Photos uploaded successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Delete photo from work order
+        Route::delete('/{id}/photos/{photoId}', function (\Illuminate\Http\Request $request, $id, $photoId) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if job is completed
+            $workOrder->load('jobStatus');
+            if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete photos from a completed work order',
+                ], 403);
+            }
+            
+            // Find the photo
+            $photo = \App\Models\BlockWorkOrderImage::where('id', $photoId)
+                ->where('block_work_order_id', $workOrder->id)
+                ->first();
+            
+            if (!$photo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photo not found',
+                ], 404);
+            }
+            
+            // Check permissions: 
+            // 1. User can delete if they created it
+            // 2. Contractor Admin can delete any photo from their team's work orders
+            $canDelete = false;
+            
+            if ($photo->created_by === $user->id) {
+                // User created this photo
+                $canDelete = true;
+            } else {
+                // Check if user is Contractor Admin and this work order belongs to their team
+                $user->load('userType');
+                if ($user->userType && $user->userType->name === 'Contractor Admin') {
+                    // Check if work order's contractor is in the same contract company
+                    if ($workOrder->contractor_id) {
+                        $workOrderContractor = \App\Models\User::find($workOrder->contractor_id);
+                        if ($workOrderContractor) {
+                            $workOrderContractor->load('contractCompany');
+                            $user->load('contractCompany');
+                            // Check if they're in the same contract company
+                            if ($workOrderContractor->contract_company_id === $user->contract_company_id) {
+                                $canDelete = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (!$canDelete) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete this photo',
+                ], 403);
+            }
+            
+            // Delete file from storage
+            $filePath = 'public/' . $photo->image_path . '/' . $photo->image_name;
+            if (\Illuminate\Support\Facades\Storage::exists($filePath)) {
+                \Illuminate\Support\Facades\Storage::delete($filePath);
+            }
+            
+            // Delete database record
+            $photo->delete();
+            
+            // Reload work order with all relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo deleted successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Add note to work order
+        Route::post('/{id}/notes', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Check if job is completed
+            $workOrder->load('jobStatus');
+            if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot add notes to a completed work order',
+                ], 403);
+            }
+            
+            $request->validate([
+                'note' => 'required|string|max:5000',
+            ]);
+            
+            // Create new note
+            $note = \App\Models\BlockWorkOrderNote::create([
+                'block_work_order_id' => $workOrder->id,
+                'note' => $request->note,
+                'created_by' => $request->user()->id,
+            ]);
+            
+            // Reload work order with all relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'notes.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Note added successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Delete note from work order
+        Route::delete('/{id}/notes/{noteId}', function (\Illuminate\Http\Request $request, $id, $noteId) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if job is completed
+            $workOrder->load('jobStatus');
+            if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot delete notes from a completed work order',
+                ], 403);
+            }
+            
+            // Find the note
+            $note = \App\Models\BlockWorkOrderNote::where('id', $noteId)
+                ->where('block_work_order_id', $workOrder->id)
+                ->first();
+            
+            if (!$note) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Note not found',
+                ], 404);
+            }
+            
+            // Check permissions: 
+            // 1. User can delete if they created it
+            // 2. Contractor Admin can delete any note from their team's work orders
+            $canDelete = false;
+            
+            if ($note->created_by === $user->id) {
+                // User created this note
+                $canDelete = true;
+            } else {
+                // Check if user is Contractor Admin and this work order belongs to their team
+                $user->load('userType');
+                if ($user->userType && $user->userType->name === 'Contractor Admin') {
+                    // Check if work order's contractor is in the same contract company
+                    if ($workOrder->contractor_id) {
+                        $workOrderContractor = \App\Models\User::find($workOrder->contractor_id);
+                        if ($workOrderContractor) {
+                            $workOrderContractor->load('contractCompany');
+                            $user->load('contractCompany');
+                            // Check if they're in the same contract company
+                            if ($workOrderContractor->contract_company_id === $user->contract_company_id) {
+                                $canDelete = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if (!$canDelete) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to delete this note',
+                ], 403);
+            }
+            
+            // Delete note
+            $note->delete();
+            
+            // Reload work order with all relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'notes.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Note deleted successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Get team members for work order
+        Route::get('/{id}/team', function ($id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $teamMembers = [];
+            $addedUserIds = [];
+            
+            // Add primary contractor if exists (contractor_id could be User ID)
+            if ($workOrder->contractor_id) {
+                // Try to find as User first
+                $contractor = \App\Models\User::find($workOrder->contractor_id);
+                if ($contractor) {
+                    $contractor->load('userType', 'contractCompany');
+                    $teamMembers[] = [
+                        'id' => 'contractor-' . $contractor->id,
+                        'user' => [
+                            'id' => $contractor->id,
+                            'name' => $contractor->name,
+                            'email' => $contractor->email,
+                            'phone' => $contractor->phone,
+                            'avatar' => $contractor->avatar,
+                            'user_type' => $contractor->userType ? [
+                                'id' => $contractor->userType->id,
+                                'name' => $contractor->userType->name,
+                            ] : null,
+                        ],
+                        'role' => 'Contractor',
+                        'is_lead' => true,
+                    ];
+                    $addedUserIds[] = $contractor->id;
+                }
+            }
+            
+            // Add admin (issued_by) if exists and different from contractor
+            if ($workOrder->issued_by && !in_array($workOrder->issued_by, $addedUserIds)) {
+                $admin = \App\Models\User::find($workOrder->issued_by);
+                if ($admin) {
+                    $admin->load('userType');
+                    $teamMembers[] = [
+                        'id' => 'admin-' . $admin->id,
+                        'user' => [
+                            'id' => $admin->id,
+                            'name' => $admin->name,
+                            'email' => $admin->email,
+                            'phone' => $admin->phone,
+                            'avatar' => $admin->avatar,
+                            'user_type' => $admin->userType ? [
+                                'id' => $admin->userType->id,
+                                'name' => $admin->userType->name,
+                            ] : null,
+                        ],
+                        'role' => 'Admin',
+                        'is_lead' => true,
+                    ];
+                    $addedUserIds[] = $admin->id;
+                }
+            }
+            
+            // Add team members from block_work_order_teams table (exclude users already added as contractor/admin)
+            $workOrder->load(['teamMembers.user.userType', 'teamMembers.addedBy']);
+            foreach ($workOrder->teamMembers as $teamMember) {
+                if ($teamMember->user && !in_array($teamMember->user->id, $addedUserIds)) {
+                    $teamMembers[] = [
+                        'id' => $teamMember->id,
+                        'user' => [
+                            'id' => $teamMember->user->id,
+                            'name' => $teamMember->user->name,
+                            'email' => $teamMember->user->email,
+                            'phone' => $teamMember->user->phone,
+                            'avatar' => $teamMember->user->avatar,
+                            'user_type' => $teamMember->user->userType ? [
+                                'id' => $teamMember->user->userType->id,
+                                'name' => $teamMember->user->userType->name,
+                            ] : null,
+                        ],
+                        'role' => $teamMember->role ?? 'Contractor',
+                        'is_lead' => $teamMember->is_lead ?? false,
+                        'added_by' => $teamMember->added_by,
+                        'addedBy' => $teamMember->addedBy ? [
+                            'id' => $teamMember->addedBy->id,
+                            'name' => $teamMember->addedBy->name,
+                            'email' => $teamMember->addedBy->email,
+                        ] : null,
+                    ];
+                    $addedUserIds[] = $teamMember->user->id;
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $teamMembers
+            ]);
+        });
+        
+        // Get available users to add to team (same contract company)
+        Route::get('/{id}/team/available-users', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if user is Contractor Admin
+            $user->load('userType');
+            if (!$user->userType || $user->userType->name !== 'Contractor Admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Contractor Admin can add team members',
+                ], 403);
+            }
+            
+            // Get users from same contract company
+            $user->load('contractCompany');
+            if (!$user->contract_company_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User is not associated with a contract company',
+                ], 403);
+            }
+            
+            // Get existing team member user IDs to exclude
+            $excludedUserIds = [];
+            
+            // Add contractor if exists
+            if ($workOrder->contractor_id) {
+                $contractor = \App\Models\User::find($workOrder->contractor_id);
+                if ($contractor) {
+                    $excludedUserIds[] = $contractor->id;
+                }
+            }
+            
+            // Add admin if exists
+            if ($workOrder->issued_by) {
+                $excludedUserIds[] = $workOrder->issued_by;
+            }
+            
+            // Add existing team members from team table
+            $workOrder->load('teamMembers');
+            foreach ($workOrder->teamMembers as $teamMember) {
+                if ($teamMember->user_id) {
+                    $excludedUserIds[] = $teamMember->user_id;
+                }
+            }
+            
+            // Get all users from same contract company (Contractor Users) excluding existing team members
+            $availableUsers = \App\Models\User::whereHas('userType', function($q) {
+                $q->where('name', 'Contractor User');
+            })
+            ->where('contract_company_id', $user->contract_company_id)
+            ->where('is_active', true)
+            ->whereNotIn('id', array_unique($excludedUserIds))
+            ->with('userType')
+            ->orderBy('name')
+            ->get();
+            
+            $usersList = [];
+            foreach ($availableUsers as $availableUser) {
+                $usersList[] = [
+                    'id' => $availableUser->id,
+                    'name' => $availableUser->name,
+                    'email' => $availableUser->email,
+                    'phone' => $availableUser->phone,
+                    'avatar' => $availableUser->avatar,
+                    'user_type' => $availableUser->userType ? [
+                        'id' => $availableUser->userType->id,
+                        'name' => $availableUser->userType->name,
+                    ] : null,
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $usersList
+            ]);
+        });
+        
+        // Add team member
+        Route::post('/{id}/team', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if user is Contractor Admin
+            $user->load('userType');
+            if (!$user->userType || $user->userType->name !== 'Contractor Admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Contractor Admin can add team members',
+                ], 403);
+            }
+            
+            $request->validate([
+                'user_id' => 'required|integer|exists:users,id',
+            ]);
+            
+            $newUserId = $request->user_id;
+            
+            // Get the user to add
+            $userToAdd = \App\Models\User::findOrFail($newUserId);
+            $userToAdd->load('contractCompany');
+            
+            // Verify user is from same contract company
+            $user->load('contractCompany');
+            if ($userToAdd->contract_company_id !== $user->contract_company_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You can only add users from your contract company',
+                ], 403);
+            }
+            
+            // Check if user is already in team (as contractor or in team table)
+            if ($workOrder->contractor_id == $newUserId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This user is already the primary contractor',
+                ], 422);
+            }
+            
+            $existingTeamMember = \App\Models\BlockWorkOrderTeam::where('block_work_order_id', $workOrder->id)
+                ->where('user_id', $newUserId)
+                ->first();
+            
+            if ($existingTeamMember) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This user is already in the team',
+                ], 422);
+            }
+            
+            // Add team member
+            $teamMember = \App\Models\BlockWorkOrderTeam::create([
+                'block_work_order_id' => $workOrder->id,
+                'user_id' => $newUserId,
+                'role' => 'Contractor',
+                'is_lead' => false,
+                'added_by' => $user->id,
+            ]);
+            
+            // Reload team members
+            $workOrder->load(['teamMembers.user.userType', 'teamMembers.addedBy']);
+            
+            // Build team members list (same structure as GET endpoint)
+            $teamMembers = [];
+            if ($workOrder->contractor_id) {
+                $contractor = \App\Models\User::find($workOrder->contractor_id);
+                if ($contractor) {
+                    $contractor->load('userType');
+                    $teamMembers[] = [
+                        'id' => 'contractor-' . $contractor->id,
+                        'user' => [
+                            'id' => $contractor->id,
+                            'name' => $contractor->name,
+                            'email' => $contractor->email,
+                            'phone' => $contractor->phone,
+                            'avatar' => $contractor->avatar,
+                            'user_type' => $contractor->userType ? [
+                                'id' => $contractor->userType->id,
+                                'name' => $contractor->userType->name,
+                            ] : null,
+                        ],
+                        'role' => 'Contractor',
+                        'is_lead' => true,
+                    ];
+                }
+            }
+            if ($workOrder->issued_by && (!$workOrder->contractor_id || $workOrder->issued_by != $workOrder->contractor_id)) {
+                $admin = \App\Models\User::find($workOrder->issued_by);
+                if ($admin) {
+                    $admin->load('userType');
+                    $teamMembers[] = [
+                        'id' => 'admin-' . $admin->id,
+                        'user' => [
+                            'id' => $admin->id,
+                            'name' => $admin->name,
+                            'email' => $admin->email,
+                            'phone' => $admin->phone,
+                            'avatar' => $admin->avatar,
+                            'user_type' => $admin->userType ? [
+                                'id' => $admin->userType->id,
+                                'name' => $admin->userType->name,
+                            ] : null,
+                        ],
+                        'role' => 'Admin',
+                        'is_lead' => true,
+                    ];
+                }
+            }
+            foreach ($workOrder->teamMembers as $tm) {
+                if ($tm->user) {
+                    $teamMembers[] = [
+                        'id' => $tm->id,
+                        'user' => [
+                            'id' => $tm->user->id,
+                            'name' => $tm->user->name,
+                            'email' => $tm->user->email,
+                            'phone' => $tm->user->phone,
+                            'avatar' => $tm->user->avatar,
+                            'user_type' => $tm->user->userType ? [
+                                'id' => $tm->user->userType->id,
+                                'name' => $tm->user->userType->name,
+                            ] : null,
+                        ],
+                        'role' => $tm->role ?? 'Contractor',
+                        'is_lead' => $tm->is_lead ?? false,
+                        'added_by' => $tm->added_by,
+                        'addedBy' => $tm->addedBy ? [
+                            'id' => $tm->addedBy->id,
+                            'name' => $tm->addedBy->name,
+                            'email' => $tm->addedBy->email,
+                        ] : null,
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Team member added successfully',
+                'data' => $teamMembers
+            ]);
+        });
+        
+        // Remove team member
+        Route::delete('/{id}/team/{teamMemberId}', function (\Illuminate\Http\Request $request, $id, $teamMemberId) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if user is Contractor Admin
+            $user->load('userType');
+            if (!$user->userType || $user->userType->name !== 'Contractor Admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Contractor Admin can remove team members',
+                ], 403);
+            }
+            
+            // Find team member
+            $teamMember = \App\Models\BlockWorkOrderTeam::where('id', $teamMemberId)
+                ->where('block_work_order_id', $workOrder->id)
+                ->first();
+            
+            if (!$teamMember) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Team member not found',
+                ], 404);
+            }
+            
+            // Cannot remove lead members (primary contractor/admin)
+            if ($teamMember->is_lead) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot remove primary team members',
+                ], 403);
+            }
+            
+            // Verify team member is from same contract company
+            $teamMemberUser = \App\Models\User::find($teamMember->user_id);
+            if ($teamMemberUser) {
+                $teamMemberUser->load('contractCompany');
+                $user->load('contractCompany');
+                if ($teamMemberUser->contract_company_id !== $user->contract_company_id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'You can only remove team members from your contract company',
+                    ], 403);
+                }
+            }
+            
+            // Remove team member
+            $teamMember->delete();
+            
+            // Reload team members
+            $workOrder->load(['teamMembers.user.userType', 'teamMembers.addedBy']);
+            
+            // Build team members list (same structure as GET endpoint)
+            $teamMembers = [];
+            if ($workOrder->contractor_id) {
+                $contractor = \App\Models\User::find($workOrder->contractor_id);
+                if ($contractor) {
+                    $contractor->load('userType');
+                    $teamMembers[] = [
+                        'id' => 'contractor-' . $contractor->id,
+                        'user' => [
+                            'id' => $contractor->id,
+                            'name' => $contractor->name,
+                            'email' => $contractor->email,
+                            'phone' => $contractor->phone,
+                            'avatar' => $contractor->avatar,
+                            'user_type' => $contractor->userType ? [
+                                'id' => $contractor->userType->id,
+                                'name' => $contractor->userType->name,
+                            ] : null,
+                        ],
+                        'role' => 'Contractor',
+                        'is_lead' => true,
+                    ];
+                }
+            }
+            if ($workOrder->issued_by && (!$workOrder->contractor_id || $workOrder->issued_by != $workOrder->contractor_id)) {
+                $admin = \App\Models\User::find($workOrder->issued_by);
+                if ($admin) {
+                    $admin->load('userType');
+                    $teamMembers[] = [
+                        'id' => 'admin-' . $admin->id,
+                        'user' => [
+                            'id' => $admin->id,
+                            'name' => $admin->name,
+                            'email' => $admin->email,
+                            'phone' => $admin->phone,
+                            'avatar' => $admin->avatar,
+                            'user_type' => $admin->userType ? [
+                                'id' => $admin->userType->id,
+                                'name' => $admin->userType->name,
+                            ] : null,
+                        ],
+                        'role' => 'Admin',
+                        'is_lead' => true,
+                    ];
+                }
+            }
+            foreach ($workOrder->teamMembers as $tm) {
+                if ($tm->user) {
+                    $teamMembers[] = [
+                        'id' => $tm->id,
+                        'user' => [
+                            'id' => $tm->user->id,
+                            'name' => $tm->user->name,
+                            'email' => $tm->user->email,
+                            'phone' => $tm->user->phone,
+                            'avatar' => $tm->user->avatar,
+                            'user_type' => $tm->user->userType ? [
+                                'id' => $tm->user->userType->id,
+                                'name' => $tm->user->userType->name,
+                            ] : null,
+                        ],
+                        'role' => $tm->role ?? 'Contractor',
+                        'is_lead' => $tm->is_lead ?? false,
+                        'added_by' => $tm->added_by,
+                        'addedBy' => $tm->addedBy ? [
+                            'id' => $tm->addedBy->id,
+                            'name' => $tm->addedBy->name,
+                            'email' => $tm->addedBy->email,
+                        ] : null,
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Team member removed successfully',
+                'data' => $teamMembers
+            ]);
+        });
     });
     
     // Inspections
@@ -351,6 +1111,39 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 ] : null,
                 'created_at' => $inspection->created_at,
                 'updated_at' => $inspection->updated_at,
+            ]);
+        });
+    });
+    
+    // Block Issues
+    Route::prefix('block-issues')->group(function () {
+        Route::get('/{id}', function ($id) {
+            $blockIssue = \App\Models\BlockIssue::with([
+                'block',
+                'blockUnit',
+                'blockBuilding',
+                'priority',
+                'issueStatus',
+                'issueType',
+                'reportedBy',
+                'assignedTo',
+                'issuedBy',
+                'creator',
+                'updater',
+                'contactMethod',
+                'images'
+            ])->findOrFail($id);
+            
+            return response()->json($blockIssue);
+        });
+        
+        Route::get('/{id}/photos', function ($id) {
+            $blockIssue = \App\Models\BlockIssue::findOrFail($id);
+            $photos = $blockIssue->images()->orderBy('created_at', 'desc')->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $photos
             ]);
         });
     });

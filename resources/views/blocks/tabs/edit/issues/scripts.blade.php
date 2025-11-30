@@ -417,6 +417,13 @@ $(document).ready(function() {
             
             const formData = new FormData(this);
             
+            // Add images from Dropzone if in step 2 (create mode)
+            if (!isEdit && issueDropzone && issueDropzone.files.length > 0) {
+                issueDropzone.files.forEach(function(file, index) {
+                    formData.append('images[]', file);
+                });
+            }
+            
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
@@ -432,6 +439,14 @@ $(document).ready(function() {
                         const finalSuccessMessage = isEdit ? 'Issue updated successfully!' : successMessage;
                         showMessage(messageId, 'success', finalSuccessMessage);
                         $form[0].reset();
+                        
+                        // Clear dropzone files
+                        if (issueDropzone) {
+                            issueDropzone.removeAllFiles();
+                        }
+                        
+                        // Reset step form
+                        resetStepForm();
                         
                         setTimeout(function() {
                             $('#' + modalId).modal('hide');
@@ -493,12 +508,16 @@ $(document).ready(function() {
         const $submitBtn = $('#issueSubmitBtn');
         
         if (mode === 'add') {
-            // Add mode
+            // Add mode - show step form
             $modalLabel.text('Create Issue');
-            $submitBtn.html('<i class="ph-check me-1"></i> Create');
+            $submitBtn.html('<i class="ph-check me-1"></i> Create Issue');
             $form.attr('action', window.routes?.blockIssues?.store || '/block-issues');
             $form.find('input[name="_method"]').remove(); // Remove PUT method for add
             $form[0].reset(); // Reset form
+            
+            // Show step form for add mode
+            $('.step-wizard').show();
+            resetStepForm();
             
             // Initialize modal before showing
             initializeModal('issueModal');
@@ -551,6 +570,13 @@ $(document).ready(function() {
                         $form.append('<input type="hidden" name="_method" value="PUT">');
                     }
                     
+                    // Hide step form for edit mode - show all fields at once
+                    $('.step-wizard').hide();
+                    $('.step-content').removeClass('d-none');
+                    $('#step1, #step2').removeClass('d-none');
+                    $('#prevStepBtn, #nextStepBtn').hide();
+                    $('#issueSubmitBtn').removeClass('d-none');
+                    
                     // Initialize modal first
                     initializeModal('issueModal');
                     
@@ -597,7 +623,244 @@ $(document).ready(function() {
     function initializeModal(modalId) {
         // Clear any previous messages
         clearMessage('issueMessage');
+        
+        // Reset step form to step 1
+        resetStepForm();
     }
+    
+    // ========================================
+    // STEP FORM NAVIGATION
+    // ========================================
+    
+    /** @var {number} currentStep - Current step in the form (1 or 2) */
+    let currentStep = 1;
+    
+    /** @var {Dropzone} issueDropzone - Dropzone instance for image uploads */
+    let issueDropzone = null;
+    
+    /**
+     * Reset step form to initial state
+     */
+    function resetStepForm() {
+        currentStep = 1;
+        updateStepDisplay();
+        
+        // Destroy existing dropzone if it exists
+        if (issueDropzone) {
+            issueDropzone.destroy();
+            issueDropzone = null;
+        }
+    }
+    
+    /**
+     * Update step display and navigation buttons
+     */
+    function updateStepDisplay() {
+        // Update step indicators
+        $('.step-wizard-item').each(function(index) {
+            const stepNum = index + 1;
+            const $stepItem = $(this);
+            
+            $stepItem.removeClass('active completed');
+            
+            if (stepNum < currentStep) {
+                $stepItem.addClass('completed');
+            } else if (stepNum === currentStep) {
+                $stepItem.addClass('active');
+            }
+        });
+        
+        // Show/hide step content
+        $('.step-content').addClass('d-none');
+        $(`#step${currentStep}`).removeClass('d-none');
+        
+        // Update navigation buttons
+        const $prevBtn = $('#prevStepBtn');
+        const $nextBtn = $('#nextStepBtn');
+        const $submitBtn = $('#issueSubmitBtn');
+        
+        if (currentStep === 1) {
+            $prevBtn.hide();
+            $nextBtn.show().removeClass('d-none');
+            $submitBtn.addClass('d-none');
+        } else if (currentStep === 2) {
+            $prevBtn.show().removeClass('d-none');
+            $nextBtn.addClass('d-none');
+            $submitBtn.removeClass('d-none');
+            
+            // Initialize dropzone if not already initialized
+            if (!issueDropzone) {
+                initializeIssueDropzone();
+            }
+        }
+    }
+    
+    /**
+     * Validate step 1 form fields
+     * @returns {boolean} - True if valid, false otherwise
+     */
+    function validateStep1() {
+        const requiredFields = [
+            { id: 'issue_block_unit_id_hidden', name: 'Unit Selection' },
+            { id: 'contact_method_id', name: 'Contact Method' },
+            { id: 'assigned_to', name: 'Assigned To' },
+            { id: 'issue_type', name: 'Issue Category' },
+            { id: 'priority_id', name: 'Priority' },
+            { id: 'issue', name: 'Problem Overview' },
+            { id: 'contact_details', name: 'Reported By' }
+        ];
+        
+        let isValid = true;
+        const errors = [];
+        
+        requiredFields.forEach(function(field) {
+            const $field = $('#' + field.id);
+            const value = $field.val();
+            
+            if (!value || value.trim() === '') {
+                isValid = false;
+                errors.push(field.name);
+                $field.addClass('is-invalid');
+            } else {
+                $field.removeClass('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            showMessage('issueMessage', 'danger', 'Please fill in all required fields: ' + errors.join(', '));
+            // Scroll to first invalid field
+            const firstInvalid = $('.is-invalid').first();
+            if (firstInvalid.length) {
+                $('html, body').animate({
+                    scrollTop: firstInvalid.offset().top - 100
+                }, 500);
+            }
+        } else {
+            clearMessage('issueMessage');
+        }
+        
+        return isValid;
+    }
+    
+    /**
+     * Move to next step
+     */
+    function nextStep() {
+        if (currentStep === 1) {
+            if (validateStep1()) {
+                currentStep = 2;
+                updateStepDisplay();
+            }
+        }
+    }
+    
+    /**
+     * Move to previous step
+     */
+    function previousStep() {
+        if (currentStep === 2) {
+            currentStep = 1;
+            updateStepDisplay();
+        }
+    }
+    
+    /**
+     * Initialize Dropzone for image uploads
+     */
+    function initializeIssueDropzone() {
+        if (typeof Dropzone === 'undefined') {
+            console.error('Dropzone is not loaded');
+            return;
+        }
+        
+        // Destroy existing instance if any
+        if (issueDropzone) {
+            issueDropzone.destroy();
+        }
+        
+        // Initialize Dropzone
+        issueDropzone = new Dropzone('#issueImageDropzone', {
+            url: '#', // Will be handled by form submission
+            autoProcessQueue: false,
+            uploadMultiple: true,
+            parallelUploads: 10,
+            maxFiles: 20,
+            maxFilesize: 10, // 10MB
+            acceptedFiles: 'image/*',
+            addRemoveLinks: true,
+            dictDefaultMessage: '',
+            dictRemoveFile: 'Remove',
+            dictCancelUpload: 'Cancel',
+            dictFileTooBig: function(file) {
+                return 'File is too big (' + (file.size / 1024 / 1024).toFixed(2) + 'MB). Max filesize: 10MB.';
+            },
+            dictInvalidFileType: 'Invalid file type. Only images are allowed.',
+            dictMaxFilesExceeded: function(maxFiles) {
+                return 'You can only upload ' + maxFiles + ' files.';
+            },
+            previewsContainer: '#issueImagePreview',
+            previewTemplate: `
+                <div class="dz-preview dz-file-preview col-md-3 col-6 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="dz-image position-relative" style="height: 150px; overflow: hidden; border-radius: 8px 8px 0 0;">
+                            <img data-dz-thumbnail class="w-100 h-100" style="object-fit: cover;" />
+                            <div class="dz-remove position-absolute top-0 end-0 m-2" data-dz-remove style="background: rgba(220, 53, 69, 0.9); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10;">
+                                <i class="ph-x"></i>
+                            </div>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="dz-filename small text-truncate" data-dz-name style="font-weight: 500;"></div>
+                            <div class="dz-size text-muted" data-dz-size style="font-size: 0.75rem;"></div>
+                        </div>
+                        <div class="dz-progress position-absolute bottom-0 start-0 w-100" style="height: 4px; background: #e9ecef;">
+                            <span class="dz-upload bg-primary" data-dz-uploadprogress style="display: block; height: 100%; width: 0%; transition: width 0.3s;"></span>
+                        </div>
+                        <div class="dz-error-message text-danger small p-2" data-dz-errormessage style="display: none;"></div>
+                    </div>
+                </div>
+            `,
+            init: function() {
+                const dropzoneInstance = this;
+                
+                // Clear preview container on initialization
+                $('#issueImagePreview').html('');
+                
+                // Handle file addition
+                this.on('addedfile', function(file) {
+                    // File added callback
+                });
+                
+                // Handle file removal
+                this.on('removedfile', function(file) {
+                    // File removed callback
+                });
+                
+                // Handle upload progress
+                this.on('uploadprogress', function(file, progress, bytesSent) {
+                    // Upload progress callback
+                });
+            }
+        });
+    }
+    
+    // Step navigation button handlers
+    $(document).on('click', '#nextStepBtn', function(e) {
+        e.preventDefault();
+        nextStep();
+    });
+    
+    $(document).on('click', '#prevStepBtn', function(e) {
+        e.preventDefault();
+        previousStep();
+    });
+    
+    // Reset form when modal is closed
+    $('#issueModal').on('hidden.bs.modal', function() {
+        resetStepForm();
+        if (issueDropzone) {
+            issueDropzone.removeAllFiles();
+        }
+    });
     
     // ========================================
     // DELETE CONFIRMATION MODAL

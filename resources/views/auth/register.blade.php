@@ -14,8 +14,11 @@
                                     <div class="card-body py-5 d-flex justify-content-between flex-column h-100">
                                         <div class="text-center">
                                             <!-- PROMAN Logo on left side -->
+                                            @php
+                                                $registerLogoVersion = file_exists(public_path('build/images/logos/proman-logo-light.svg')) ? filemtime(public_path('build/images/logos/proman-logo-light.svg')) : time();
+                                            @endphp
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}" alt="PROMAN" height="80" class="img-fluid mx-auto">
+                                                <img src="{{ URL::asset('build/images/logos/proman-logo-light.svg') }}?v={{ $registerLogoVersion }}" alt="PROMAN" height="80" class="img-fluid mx-auto">
                                             </div>
                                             <h3 class="text-white">Start your journey with us.</h3>
                                             <p class="text-white opacity-75 fs-base">It brings together your tasks,
@@ -101,8 +104,11 @@
                                     <div class="card-body p-sm-5 m-lg-4">
                                         <div class="text-center mt-2">
                                             <!-- PROMAN Logo -->
+                                            @php
+                                                $registerLogoDarkVersion = file_exists(public_path('build/images/logos/proman-logo.svg')) ? filemtime(public_path('build/images/logos/proman-logo.svg')) : time();
+                                            @endphp
                                             <div class="mb-4 d-flex justify-content-center align-items-center">
-                                                <img src="{{ URL::asset('build/images/logos/proman-logo.svg') }}" alt="PROMAN" height="60" class="img-fluid mx-auto">
+                                                <img src="{{ URL::asset('build/images/logos/proman-logo.svg') }}?v={{ $registerLogoDarkVersion }}" alt="PROMAN" height="60" class="img-fluid mx-auto">
                                             </div>
                                             <h5 class="fs-3xl">Create your free account</h5>
                                             <p class="text-muted">Get your free PROMAN account now</p>
