@@ -97,7 +97,16 @@
                                                 <span class="text-muted">N/A</span>
                                             @endif
                                         </td>
-                                        <td>{{ Str::limit($workOrder->issue, 50) ?? 'N/A' }}</td>
+                                        <td>
+                                            @php
+                                                $issueText = $workOrder->blockIssue->issue ?? $workOrder->issue ?? null;
+                                            @endphp
+                                            @if($issueText)
+                                                {{ Str::limit($issueText, 50) }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
                                         <td>
                                             @php
                                                 $priorityColors = [

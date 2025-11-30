@@ -30,8 +30,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="ref_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="ref_no" name="ref_no" required>
+                                <label for="ref_no" class="form-label">Reference Number</label>
+                                <input type="text" class="form-control" id="ref_no" name="ref_no" value="Auto-generated" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                                <small class="text-muted">Reference number will be automatically generated upon creation</small>
                             </div>
 
                             <div class="mb-3">
@@ -239,8 +240,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="edit_ref_no" class="form-label">Reference Number <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="edit_ref_no" name="ref_no" required>
+                                <label for="edit_ref_no" class="form-label">Reference Number</label>
+                                <input type="text" class="form-control" id="edit_ref_no" name="ref_no" readonly style="background-color: #e9ecef; cursor: not-allowed;">
+                                <small class="text-muted">Reference number cannot be changed</small>
                             </div>
 
                             <div class="mb-3">

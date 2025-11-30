@@ -392,7 +392,10 @@ class BlockController extends Controller
         ]);
         $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
         $blockInformationTypes = \App\Models\BlockInformationType::ordered()->get();
-        $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)->latest()->get();
+        $blockWorkOrders = \App\Models\BlockWorkOrder::where('block_id', $block->id)
+            ->with(['blockUnit', 'issuedBy', 'blockIssue'])
+            ->latest()
+            ->get();
         $blockInspections = \App\Models\BlockInspection::where('block_id', $block->id)->with([
             'creator' => function($query) {
                 $query->withTrashed();

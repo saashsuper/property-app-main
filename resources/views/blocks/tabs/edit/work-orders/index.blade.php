@@ -38,58 +38,103 @@
             <table class="table table-bordered table-hover w-100" id="workOrdersTable">
                 <thead class="table-light">
                     <tr>
-                        <th class="min-width-sm">Work Order #</th>
-                        <th class="min-width-md">Title</th>
-                        <th class="min-width-sm">Priority</th>
-                        <th class="min-width-sm">Status</th>
-                        <th class="min-width-sm">Created Date</th>
-                        <th class="text-center min-width-sm">Actions</th>
+                        <th>Ref No</th>
+                        <th>Unit</th>
+                        <th>Issue</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Contact</th>
+                        <th>Deadline</th>
+                        <th>Issued By</th>
+                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if($blockWorkOrders && $blockWorkOrders->count() > 0)
                         @foreach($blockWorkOrders as $workOrder)
                             <tr>
-                                <td class="align-middle">#{{ $workOrder->id }}</td>
-                                <td class="align-middle">{{ $workOrder->issue ?? 'N/A' }}</td>
-                                <td class="align-middle text-nowrap">
-                                    @if($workOrder->priority_id == 1)
-                                        <span class="badge bg-success">Low</span>
-                                    @elseif($workOrder->priority_id == 2)
-                                        <span class="badge bg-info">Normal</span>
-                                    @elseif($workOrder->priority_id == 3)
-                                        <span class="badge bg-warning">High</span>
-                                    @elseif($workOrder->priority_id == 4)
-                                        <span class="badge bg-danger">Urgent</span>
-                                    @elseif($workOrder->priority_id == 5)
-                                        <span class="badge bg-dark">Critical</span>
+                                <td class="align-middle">
+                                    <a href="{{ route('block-work-orders.show', $workOrder) }}" class="text-decoration-none">
+                                        <strong>#{{ $workOrder->ref_no }}</strong>
+                                    </a>
+                                </td>
+                                <td class="align-middle">
+                                    @if($workOrder->blockUnit)
+                                        <span class="badge bg-secondary">{{ $workOrder->blockUnit->unit_name }}</span>
                                     @else
-                                        <span class="badge bg-secondary">Unknown</span>
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td class="align-middle">
+                                    @php
+                                        $issueText = $workOrder->blockIssue->issue ?? $workOrder->issue ?? null;
+                                    @endphp
+                                    @if($issueText)
+                                        {{ Str::limit($issueText, 50) }}
+                                    @else
+                                        <span class="text-muted">N/A</span>
                                     @endif
                                 </td>
                                 <td class="align-middle text-nowrap">
-                                    @if($workOrder->status == 1)
-                                        <span class="badge bg-warning">Open</span>
-                                    @elseif($workOrder->status == 2)
-                                        <span class="badge bg-info">In Progress</span>
+                                    @php
+                                        $priorityColors = [
+                                            1 => 'success',
+                                            2 => 'info',
+                                            3 => 'warning',
+                                            4 => 'danger',
+                                            5 => 'dark'
+                                        ];
+                                        $color = $priorityColors[$workOrder->priority_id] ?? 'info';
+                                    @endphp
+                                    <span class="badge bg-{{ $color }}">{{ $workOrder->priority_text }}</span>
+                                </td>
+                                <td class="align-middle text-nowrap">
+                                    @php
+                                        $statusColors = [
+                                            1 => 'warning',
+                                            2 => 'info',
+                                            3 => 'success',
+                                            4 => 'secondary',
+                                            5 => 'danger'
+                                        ];
+                                        $color = $statusColors[$workOrder->status] ?? 'secondary';
+                                    @endphp
+                                    <span class="badge bg-{{ $color }}">{{ $workOrder->status_text }}</span>
+                                </td>
+                                <td class="align-middle">
+                                    @if($workOrder->contact_name)
+                                        <div>{{ $workOrder->contact_name }}</div>
+                                        @if($workOrder->contact_email)
+                                            <small class="text-muted">{{ $workOrder->contact_email }}</small>
+                                        @endif
                                     @else
-                                        <span class="badge bg-success">Completed</span>
+                                        <span class="text-muted">N/A</span>
                                     @endif
                                 </td>
-                                <td class="align-middle text-nowrap">{{ $workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A' }}</td>
+                                <td class="align-middle text-nowrap">
+                                    @if($workOrder->deadline_date)
+                                        {{ $workOrder->deadline_date->format('M d, Y') }}
+                                    @else
+                                        <span class="text-muted">N/A</span>
+                                    @endif
+                                </td>
+                                <td class="align-middle">
+                                    <div>{{ $workOrder->issuedBy->name ?? 'N/A' }}</div>
+                                    <small class="text-muted">{{ $workOrder->created_at->format('M d, Y') }}</small>
+                                </td>
                                 <td class="align-middle text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <button class="btn btn-sm btn-outline-primary" onclick="viewWorkOrder({{ $workOrder->id }})" title="View Work Order">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <a href="{{ route('block-work-orders.show', $workOrder) }}" class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="ph-eye"></i>
-                                        </button>
+                                        </a>
                                         <button class="btn btn-sm btn-outline-warning" onclick="editWorkOrder({{ $workOrder->id }})" title="Edit Work Order">
                                             <i class="ph-pencil"></i>
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger" onclick="workOrderShowDeleteConfirmation({{ $workOrder->id }}, {
-                                            ref_no: '#{{ $workOrder->id }}',
-                                            title: '{{ $workOrder->issue ?? 'N/A' }}',
-                                            priority: '{{ $workOrder->priority_id == 1 ? 'Low' : ($workOrder->priority_id == 2 ? 'Normal' : ($workOrder->priority_id == 3 ? 'High' : ($workOrder->priority_id == 4 ? 'Urgent' : ($workOrder->priority_id == 5 ? 'Critical' : 'Unknown')))) }}',
-                                            status: '{{ $workOrder->status == 1 ? 'Open' : ($workOrder->status == 2 ? 'In Progress' : 'Completed') }}',
+                                            ref_no: '#{{ $workOrder->ref_no }}',
+                                            title: '{{ Str::limit($workOrder->issue ?? 'N/A', 50) }}',
+                                            priority: '{{ $workOrder->priority_text }}',
+                                            status: '{{ $workOrder->status_text }}',
                                             created_date: '{{ $workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A' }}'
                                         })" title="Delete Work Order">
                                             <i class="ph-trash"></i>
@@ -122,9 +167,6 @@
         vertical-align: middle;
         font-size: 0.85rem;
     }
-
-    #workOrdersTable .min-width-sm { min-width: 120px; }
-    #workOrdersTable .min-width-md { min-width: 160px; }
 </style>
 @endpush
 

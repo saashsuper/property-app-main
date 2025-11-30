@@ -91,16 +91,11 @@
                                     Issues
                                 </a>
                             </li>
-                            {{-- 
-                                TEMPORARILY DISABLED: Work Orders Tab
-                                DO NOT UNCOMMENT OR RESTORE THIS TAB WITHOUT EXPLICIT USER APPROVAL.
-                                Functionality will be reintroduced once the user requests it.
-                                <li class="nav-item" role="presentation">
-                                    <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false">
-                                        Work Orders
-                                    </a>
-                                </li>
-                            --}}
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="work-orders-tab" data-bs-toggle="tab" href="#work-orders" role="tab" aria-controls="work-orders" aria-selected="false">
+                                    Work Orders
+                                </a>
+                            </li>
                         </ul>
 
                         <!-- Tab Content -->
@@ -149,14 +144,10 @@
                                 @include('blocks.tabs.edit.issues.index')
                             </div>
 
-                            {{-- 
-                                TEMPORARILY DISABLED: Work Orders Tab Content
-                                DO NOT RESTORE THIS SECTION WITHOUT EXPLICIT USER APPROVAL.
-                                Keep this block commented until instructed otherwise.
-                                <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab">
-                                    @include('blocks.tabs.edit.work-orders.index')
-                                </div>
-                            --}}
+                            <!-- Work Orders Tab -->
+                            <div class="tab-pane fade" id="work-orders" role="tabpanel" aria-labelledby="work-orders-tab">
+                                @include('blocks.tabs.edit.work-orders.index')
+                            </div>
                         </div>
                     </div>
                 </div>

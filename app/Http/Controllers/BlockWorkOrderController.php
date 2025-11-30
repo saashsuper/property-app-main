@@ -213,7 +213,24 @@ class BlockWorkOrderController extends Controller
      */
     public function show(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        $blockWorkOrder->load(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'creator', 'images', 'contractCompany', 'contractor.userType']);
+        $blockWorkOrder->load([
+            'block', 
+            'blockIssue.priority', 
+            'blockIssue.issueStatus', 
+            'blockIssue.issueType', 
+            'blockIssue.contactMethod',
+            'blockIssue.reportedBy',
+            'blockIssue.assignedTo',
+            'blockIssue.blockUnit',
+            'blockIssue.blockBuilding',
+            'blockUnit', 
+            'blockBuilding', 
+            'issuedBy', 
+            'creator', 
+            'images', 
+            'contractCompany', 
+            'contractor.userType'
+        ]);
         
         // Determine if contractor is a property manager (for backward compatibility)
         $isPropertyManager = false;

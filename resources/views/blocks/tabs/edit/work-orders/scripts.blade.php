@@ -64,9 +64,18 @@
                 autoWidth: false,
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
-                order: [[0, 'desc']],
+                order: [[0, 'desc']], // default sort by Ref No descending
                 columnDefs: [
-                    { targets: [5], orderable: false } // Actions column not sortable
+                    { targets: [8], orderable: false }, // Actions column
+                    { targets: [0], width: '8%' },   // Ref No
+                    { targets: [1], width: '10%' },  // Unit
+                    { targets: [2], width: '18%' },   // Issue
+                    { targets: [3], width: '8%' },    // Priority
+                    { targets: [4], width: '8%' },     // Status
+                    { targets: [5], width: '10%' },   // Contact
+                    { targets: [6], width: '8%' },   // Deadline
+                    { targets: [7], width: '12%' },  // Issued By
+                    { targets: [8], width: '6%' }     // Actions
                 ],
                 language: {
                     lengthMenu: 'Show _MENU_ work orders per page',
@@ -150,6 +159,11 @@
                 const msg = document.getElementById('createWorkOrderMessage');
                 if (msg) msg.innerHTML = '';
                 setCurrentDateTime();
+                // Set ref_no to show auto-generated placeholder
+                const refNoField = document.getElementById('ref_no');
+                if (refNoField) {
+                    refNoField.value = 'Auto-generated';
+                }
             });
 
             createModal.addEventListener('hidden.bs.modal', () => {
@@ -169,7 +183,13 @@
                 if (msg) msg.innerHTML = '';
             });
 
-            editModal.addEventListener('hidden.bs.modal', () => {
+            editModal.addEventListener('hide.bs.modal', (event) => {
+                // Prevent backdrop from being removed if there are other modals
+                const openModals = document.querySelectorAll('.modal.show');
+                // Allow Bootstrap to handle backdrop normally
+            });
+
+            editModal.addEventListener('hidden.bs.modal', (event) => {
                 const form = document.getElementById('editWorkOrderForm');
                 if (form) {
                     form.reset();
@@ -177,28 +197,33 @@
                 }
                 const msg = document.getElementById('editWorkOrderMessage');
                 if (msg) msg.innerHTML = '';
+                
+                // Ensure proper cleanup - check for other open modals
+                setTimeout(() => {
+                    const openModals = document.querySelectorAll('.modal.show');
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    
+                    // If no modals are open, clean up any remaining backdrop
+                    if (openModals.length === 0) {
+                        backdrops.forEach(backdrop => backdrop.remove());
+                        // Ensure body is properly restored
+                        if (!document.querySelector('.modal.show')) {
+                            document.body.classList.remove('modal-open');
+                            document.body.style.overflow = '';
+                            document.body.style.paddingRight = '';
+                        }
+                    }
+                }, 150);
             });
         }
     }
 
     function attachEditHandlers() {
-        document.querySelectorAll('.btn-outline-primary').forEach(button => {
-            if (button.title === 'View Work Order' && !button.dataset.bound) {
-                button.dataset.bound = 'true';
-                button.addEventListener('click', () => {
-                    const row = button.closest('tr');
-                    const workOrderId = row.querySelector('td:first-child').textContent.replace('#', '');
-                    viewWorkOrder(workOrderId);
-                });
-            }
-        });
-
         document.querySelectorAll('.btn-outline-warning').forEach(button => {
             if (button.title === 'Edit Work Order' && !button.dataset.bound) {
                 button.dataset.bound = 'true';
-                button.addEventListener('click', () => {
-                    const row = button.closest('tr');
-                    const workOrderId = row.querySelector('td:first-child').textContent.replace('#', '');
+                button.addEventListener('click', function() {
+                    const workOrderId = this.getAttribute('onclick').match(/\d+/)[0];
                     editWorkOrder(workOrderId);
                 });
             }
@@ -207,21 +232,26 @@
         document.querySelectorAll('.btn-outline-danger').forEach(button => {
             if (button.title === 'Delete Work Order' && !button.dataset.bound) {
                 button.dataset.bound = 'true';
-                button.addEventListener('click', () => {
-                    const row = button.closest('tr');
-                    const workOrderId = row.querySelector('td:first-child').textContent.replace('#', '');
-                    const title = row.querySelector('td:nth-child(2)').textContent;
-                    const priority = row.querySelector('td:nth-child(3)').textContent.trim();
-                    const status = row.querySelector('td:nth-child(4)').textContent.trim();
-                    const createdDate = row.querySelector('td:nth-child(5)').textContent;
-                    
-                    workOrderShowDeleteConfirmation(workOrderId, {
-                        ref_no: `#${workOrderId}`,
-                        title: title,
-                        priority: priority,
-                        status: status,
-                        created_date: createdDate
-                    });
+                button.addEventListener('click', function() {
+                    const onclickAttr = this.getAttribute('onclick');
+                    const match = onclickAttr.match(/workOrderShowDeleteConfirmation\((\d+),/);
+                    if (match) {
+                        const workOrderId = match[1];
+                        const row = this.closest('tr');
+                        const refNo = row.querySelector('td:nth-child(1)').textContent.trim();
+                        const issue = row.querySelector('td:nth-child(3)').textContent.trim();
+                        const priority = row.querySelector('td:nth-child(4) .badge').textContent.trim();
+                        const status = row.querySelector('td:nth-child(5) .badge').textContent.trim();
+                        const issuedBy = row.querySelector('td:nth-child(8)').textContent.split('\n')[1]?.trim() || row.querySelector('td:nth-child(8)').textContent.trim();
+                        
+                        workOrderShowDeleteConfirmation(workOrderId, {
+                            ref_no: refNo,
+                            title: issue,
+                            priority: priority,
+                            status: status,
+                            created_date: issuedBy
+                        });
+                    }
                 });
             }
         });
@@ -287,6 +317,10 @@
 
     function buildPayload(form) {
         const data = Object.fromEntries(new FormData(form));
+        // Remove ref_no from create form since it's auto-generated
+        if (form.id === 'createWorkOrderForm') {
+            delete data.ref_no;
+        }
         return data;
     }
 
@@ -373,30 +407,70 @@
                     data.data.forEach(function(workOrder) {
                         const priorityBadge = PRIORITY_BADGES[workOrder.priority_id] || PRIORITY_BADGES.default;
                         const statusBadge = STATUS_BADGES[workOrder.status] || STATUS_BADGES.default;
+                        
+                        // Format dates
+                        const deadlineDate = workOrder.deadline_date ? new Date(workOrder.deadline_date).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: '2-digit' 
+                        }) : '<span class="text-muted">N/A</span>';
+                        
                         const createdDate = workOrder.created_at ? new Date(workOrder.created_at).toLocaleDateString('en-US', { 
                             year: 'numeric', 
                             month: 'short', 
                             day: '2-digit' 
                         }) : 'N/A';
                         
+                        // Unit display - handle both camelCase and snake_case
+                        const blockUnit = workOrder.block_unit || workOrder.blockUnit;
+                        const unitDisplay = blockUnit ? 
+                            `<span class="badge bg-secondary">${blockUnit.unit_name}</span>` : 
+                            '<span class="text-muted">N/A</span>';
+                        
+                        // Contact display
+                        let contactDisplay = '<span class="text-muted">N/A</span>';
+                        if (workOrder.contact_name) {
+                            contactDisplay = `<div>${workOrder.contact_name}</div>`;
+                            if (workOrder.contact_email) {
+                                contactDisplay += `<small class="text-muted">${workOrder.contact_email}</small>`;
+                            }
+                        }
+                        
+                        // Issued By display - handle both camelCase and snake_case
+                        const issuedBy = workOrder.issued_by || workOrder.issuedBy;
+                        const issuedByDisplay = issuedBy ? 
+                            `<div>${issuedBy.name || 'N/A'}</div><small class="text-muted">${createdDate}</small>` : 
+                            '<div>N/A</div>';
+                        
+                        // Issue text (limit to 50 chars) - get from blockIssue if available
+                        const blockIssue = workOrder.block_issue || workOrder.blockIssue;
+                        const issueTextRaw = (blockIssue && blockIssue.issue) ? blockIssue.issue : (workOrder.issue || null);
+                        const issueText = issueTextRaw ? (issueTextRaw.length > 50 ? issueTextRaw.substring(0, 50) + '...' : issueTextRaw) : '<span class="text-muted">N/A</span>';
+                        
+                        // Ref No link
+                        const refNoLink = `<a href="/block-work-orders/${workOrder.id}" class="text-decoration-none"><strong>#${workOrder.ref_no}</strong></a>`;
+                        
                         workOrdersDT.row.add([
-                            `#${workOrder.id}`,
-                            workOrder.issue || 'N/A',
+                            refNoLink,
+                            unitDisplay,
+                            issueText,
                             priorityBadge,
                             statusBadge,
-                            createdDate,
-                            `<div class="d-flex justify-content-center gap-2">
-                                <button class="btn btn-sm btn-outline-primary" onclick="viewWorkOrder(${workOrder.id})" title="View Work Order">
+                            contactDisplay,
+                            deadlineDate,
+                            issuedByDisplay,
+                            `<div class="d-flex justify-content-center gap-1">
+                                <a href="/block-work-orders/${workOrder.id}" class="btn btn-sm btn-outline-primary" title="View">
                                     <i class="ph-eye"></i>
-                                </button>
+                                </a>
                                 <button class="btn btn-sm btn-outline-warning" onclick="editWorkOrder(${workOrder.id})" title="Edit Work Order">
                                     <i class="ph-pencil"></i>
                                 </button>
                                 <button class="btn btn-sm btn-outline-danger" onclick="workOrderShowDeleteConfirmation(${workOrder.id}, {
-                                    ref_no: '#${workOrder.id}',
-                                    title: '${workOrder.issue || 'N/A'}',
+                                    ref_no: '#${workOrder.ref_no}',
+                                    title: '${issueText.replace(/'/g, "\\'")}',
                                     priority: '${workOrder.priority_id == 1 ? 'Low' : (workOrder.priority_id == 2 ? 'Normal' : (workOrder.priority_id == 3 ? 'High' : (workOrder.priority_id == 4 ? 'Urgent' : (workOrder.priority_id == 5 ? 'Critical' : 'Unknown'))))}',
-                                    status: '${workOrder.status == 1 ? 'Open' : (workOrder.status == 2 ? 'In Progress' : 'Completed')}',
+                                    status: '${workOrder.status == 1 ? 'Pending' : (workOrder.status == 2 ? 'In Progress' : (workOrder.status == 3 ? 'Completed' : (workOrder.status == 4 ? 'Cancelled' : 'On Hold')))}',
                                     created_date: '${createdDate}'
                                 })" title="Delete Work Order">
                                     <i class="ph-trash"></i>
@@ -415,8 +489,8 @@
     };
 
     function viewWorkOrder(workOrderId) {
-        // Implementation for viewing work order details
-        console.log('View work order:', workOrderId);
+        // Navigate to work order show page
+        window.location.href = `/block-work-orders/${workOrderId}`;
     }
 
     function editWorkOrder(workOrderId) {
@@ -473,7 +547,12 @@
             setValue('edit_deadline_date', formatDateForInput(workOrder.deadline_date));
         }
 
-        const modal = new bootstrap.Modal(document.getElementById('editWorkOrderModal'));
+        const modalElement = document.getElementById('editWorkOrderModal');
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        });
         modal.show();
     }
 

@@ -72,7 +72,15 @@
                                         </div>
                                         <div class="row mb-2">
                                             <div class="col-sm-4"><strong>Block Issue:</strong></div>
-                                            <div class="col-sm-8">{{ $blockWorkOrder->blockIssue->ref_no ?? 'N/A' }}</div>
+                                            <div class="col-sm-8">
+                                                @if($blockWorkOrder->blockIssue)
+                                                    <a href="{{ route('block-issues.show', $blockWorkOrder->blockIssue) }}" class="text-decoration-none">
+                                                        <span class="badge bg-primary">{{ $blockWorkOrder->blockIssue->ref_no }}</span>
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">N/A</span>
+                                                @endif
+                                            </div>
                                         </div>
                                         <div class="row mb-2">
                                             <div class="col-sm-4"><strong>Priority:</strong></div>
@@ -138,13 +146,165 @@
                             </div>
                         </div>
 
-                        <!-- Issue Description -->
-                        @if($blockWorkOrder->issue)
+                        <!-- Related Issue Details -->
+                        @if($blockWorkOrder->blockIssue)
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card border">
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">
+                                            <i class="ph-file-text me-2"></i>Related Issue Details
+                                        </h5>
+                                        <a href="{{ route('block-issues.show', $blockWorkOrder->blockIssue) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="ph-eye me-1"></i> View Full Issue
+                                        </a>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Issue Reference:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        <a href="{{ route('block-issues.show', $blockWorkOrder->blockIssue) }}" class="text-decoration-none">
+                                                            <span class="badge bg-primary">{{ $blockWorkOrder->blockIssue->ref_no }}</span>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Issue Title:</strong></div>
+                                                    <div class="col-sm-8">{{ $blockWorkOrder->blockIssue->issue ?? 'N/A' }}</div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Issue Type:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        @if($blockWorkOrder->blockIssue->issueType)
+                                                            <span class="badge bg-info">{{ $blockWorkOrder->blockIssue->issueType->name }}</span>
+                                                        @elseif($blockWorkOrder->blockIssue->issue_type)
+                                                            <span class="badge bg-info">{{ $blockWorkOrder->blockIssue->issue_type }}</span>
+                                                        @else
+                                                            <span class="text-muted">N/A</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Priority:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        @php
+                                                            $issuePriorityColors = [
+                                                                1 => 'success',
+                                                                2 => 'info',
+                                                                3 => 'warning',
+                                                                4 => 'danger',
+                                                                5 => 'dark'
+                                                            ];
+                                                            $issuePriorityId = $blockWorkOrder->blockIssue->priority_id ?? null;
+                                                            $issuePriorityColor = $issuePriorityColors[$issuePriorityId] ?? 'secondary';
+                                                            $issuePriorityText = $blockWorkOrder->blockIssue->priority_text ?? 'N/A';
+                                                        @endphp
+                                                        <span class="badge bg-{{ $issuePriorityColor }}">{{ $issuePriorityText }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Status:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        @php
+                                                            $issueStatusColors = [
+                                                                1 => 'warning',
+                                                                2 => 'info',
+                                                                3 => 'success',
+                                                                4 => 'secondary',
+                                                                5 => 'danger'
+                                                            ];
+                                                            $issueStatusId = $blockWorkOrder->blockIssue->issue_status_id ?? $blockWorkOrder->blockIssue->status ?? null;
+                                                            $issueStatusColor = $issueStatusColors[$issueStatusId] ?? 'secondary';
+                                                            $issueStatusText = $blockWorkOrder->blockIssue->status_text ?? 'N/A';
+                                                        @endphp
+                                                        <span class="badge bg-{{ $issueStatusColor }}">{{ $issueStatusText }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Reported Date:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        {{ $blockWorkOrder->blockIssue->created_at ? $blockWorkOrder->blockIssue->created_at->format('M d, Y H:i') : 'N/A' }}
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Reported By:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        {{ $blockWorkOrder->blockIssue->reportedBy->name ?? 'N/A' }}
+                                                    </div>
+                                                </div>
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Assigned To:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        {{ $blockWorkOrder->blockIssue->assignedTo->name ?? 'N/A' }}
+                                                    </div>
+                                                </div>
+                                                @if($blockWorkOrder->blockIssue->blockUnit)
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Issue Unit:</strong></div>
+                                                    <div class="col-sm-8">
+                                                        <span class="badge bg-secondary">{{ $blockWorkOrder->blockIssue->blockUnit->unit_name }}</span>
+                                                    </div>
+                                                </div>
+                                                @endif
+                                                @if($blockWorkOrder->blockIssue->blockBuilding)
+                                                <div class="row mb-3">
+                                                    <div class="col-sm-4"><strong>Issue Building:</strong></div>
+                                                    <div class="col-sm-8">{{ $blockWorkOrder->blockIssue->blockBuilding->name }}</div>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        @if($blockWorkOrder->blockIssue->issue_details || $blockWorkOrder->blockIssue->description)
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <div class="border-top pt-3">
+                                                    <strong>Issue Description:</strong>
+                                                    <p class="mt-2 mb-0 text-muted">
+                                                        {{ $blockWorkOrder->blockIssue->issue_details ?? $blockWorkOrder->blockIssue->description ?? 'No description available' }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+                                        
+                                        @if($blockWorkOrder->blockIssue->contact_name || $blockWorkOrder->blockIssue->contact_email || $blockWorkOrder->blockIssue->contact_mobile)
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                                <div class="border-top pt-3">
+                                                    <strong>Issue Contact Information:</strong>
+                                                    <div class="mt-2">
+                                                        @if($blockWorkOrder->blockIssue->contact_name)
+                                                            <div><strong>Name:</strong> {{ $blockWorkOrder->blockIssue->contact_name }}</div>
+                                                        @endif
+                                                        @if($blockWorkOrder->blockIssue->contact_email)
+                                                            <div><strong>Email:</strong> {{ $blockWorkOrder->blockIssue->contact_email }}</div>
+                                                        @endif
+                                                        @if($blockWorkOrder->blockIssue->contact_mobile)
+                                                            <div><strong>Mobile:</strong> {{ $blockWorkOrder->blockIssue->contact_mobile }}</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Work Order Issue Description (if different from related issue) -->
+                        @if($blockWorkOrder->issue && (!$blockWorkOrder->blockIssue || $blockWorkOrder->issue !== $blockWorkOrder->blockIssue->issue))
                         <div class="row mt-3">
                             <div class="col-12">
                                 <div class="card border">
                                     <div class="card-header bg-light">
-                                        <h5 class="card-title mb-0">Issue Description</h5>
+                                        <h5 class="card-title mb-0">Work Order Issue Description</h5>
                                     </div>
                                     <div class="card-body">
                                         <p class="mb-0">{{ $blockWorkOrder->issue }}</p>
