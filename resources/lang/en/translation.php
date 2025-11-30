@@ -360,6 +360,7 @@ return [
     "edit" => "Edit",
     "delete" => "Delete",
     "create" => "Create",
+    "update" => "Update",
     "save" => "Save",
     "cancel" => "Cancel",
     "close" => "Close",

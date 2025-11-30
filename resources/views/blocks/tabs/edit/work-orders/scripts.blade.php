@@ -150,6 +150,10 @@
         attachEditHandlers();
     }
 
+    // Unit autocomplete instance
+    let unitAutoComplete = null;
+    let isInitializingAutoComplete = false;
+
     function bindModalEvents() {
         const createModal = document.getElementById('createWorkOrderModal');
         const editModal = document.getElementById('editWorkOrderModal');
@@ -158,12 +162,28 @@
             createModal.addEventListener('show.bs.modal', () => {
                 const msg = document.getElementById('createWorkOrderMessage');
                 if (msg) msg.innerHTML = '';
-                setCurrentDateTime();
-                // Set ref_no to show auto-generated placeholder
-                const refNoField = document.getElementById('ref_no');
-                if (refNoField) {
-                    refNoField.value = 'Auto-generated';
+                
+                // Reset unit and issue selects
+                const unitInput = document.getElementById('work_order_unit_search');
+                const unitHidden = document.getElementById('work_order_unit_id_hidden');
+                const issueSelect = document.getElementById('block_issue_id_select');
+                
+                if (unitInput) {
+                    unitInput.value = '';
                 }
+                if (unitHidden) {
+                    unitHidden.value = '';
+                }
+                if (issueSelect) {
+                    issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+                    issueSelect.disabled = true;
+                }
+                
+                // Refresh units dropdown with latest data (like create issue popup)
+                // Use longer delay to ensure modal and library are ready
+                setTimeout(() => {
+                    refreshUnitsDropdown();
+                }, 300);
             });
 
             createModal.addEventListener('hidden.bs.modal', () => {
@@ -174,8 +194,307 @@
                 }
                 const msg = document.getElementById('createWorkOrderMessage');
                 if (msg) msg.innerHTML = '';
+                
+                // Cleanup autocomplete
+                if (unitAutoComplete) {
+                    try {
+                        unitAutoComplete.unInit();
+                    } catch (e) {
+                        console.warn('Error destroying autocomplete:', e);
+                    }
+                    unitAutoComplete = null;
+                }
+                
+                // Remove any existing autocomplete list elements from DOM
+                const existingLists = document.querySelectorAll('[id^="autoComplete_list"]');
+                existingLists.forEach(list => {
+                    list.remove();
+                });
+                
+                isInitializingAutoComplete = false;
             });
         }
+    }
+    
+    /**
+     * Refresh units dropdown with latest data from database
+     * 
+     * Fetches units for the current block and initializes AutoComplete.js
+     * Similar to how it's done in the create issue popup
+     */
+    function refreshUnitsDropdown() {
+        const blockId = window.blockId || $('input[name="block_id"]').val() || document.getElementById('work_order_block_id')?.value;
+        
+        if (!blockId) {
+            console.error('Block ID not found. Please ensure you are on a block edit page.');
+            const unitInput = document.getElementById('work_order_unit_search');
+            if (unitInput) {
+                unitInput.disabled = true;
+                unitInput.placeholder = 'Block ID not found';
+            }
+            return;
+        }
+        
+        // Set block_id in hidden field
+        const blockIdField = document.getElementById('work_order_block_id');
+        if (blockIdField) {
+            blockIdField.value = blockId;
+        }
+        
+        // Show loading state for units input
+        const $unitsInput = $('#work_order_unit_search');
+        const $unitsHidden = $('#work_order_unit_id_hidden');
+        
+        // Set loading state
+        $unitsInput.val('Loading units...').prop('disabled', true);
+        
+        // Fetch fresh units data using jQuery AJAX (like create issue popup)
+        $.ajax({
+            url: `/block-units/block/${blockId}`,
+            type: 'GET',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                console.log('Units API response:', response);
+                let unitsData = [];
+                
+                if (response.success && response.data && response.data.length > 0) {
+                    unitsData = response.data.map(function(unit) {
+                        const labelParts = [];
+                        if (unit.unit_code) {
+                            labelParts.push(unit.unit_code);
+                        }
+                        if (unit.unit_name && unit.unit_name !== unit.unit_code) {
+                            labelParts.push(unit.unit_name);
+                        }
+                        const label = labelParts.length > 0 ? labelParts.join(' - ') : `Unit #${unit.id}`;
+                        const searchTokens = [unit.unit_code, unit.unit_name]
+                            .filter(Boolean)
+                            .join(' ')
+                            .toLowerCase();
+                        
+                        return {
+                            value: unit.id,
+                            label: label,
+                            unit_code: unit.unit_code,
+                            unit_name: unit.unit_name,
+                            block_building_id: unit.block_building_id,
+                            searchValue: searchTokens
+                        };
+                    });
+                    console.log('Mapped units data:', unitsData);
+                } else {
+                    console.warn('No units found in response');
+                }
+                
+                $unitsInput.val('').prop('disabled', false);
+                
+                // Initialize or refresh AutoComplete.js
+                initializeUnitAutoComplete(unitsData);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching units:', error);
+                console.error('XHR:', xhr);
+                $unitsInput.val('Error loading units').prop('disabled', false);
+            }
+        });
+    }
+    
+    /**
+     * Initialize AutoComplete.js for the units dropdown
+     * 
+     * Creates a searchable autocomplete with keyboard navigation
+     * Similar to how it's done in the create issue popup
+     * 
+     * @param {Array} unitsData - Array of unit objects for autocomplete with value, label, searchValue properties
+     */
+    function initializeUnitAutoComplete(unitsData) {
+        // Prevent multiple simultaneous initializations
+        if (isInitializingAutoComplete) {
+            console.warn('AutoComplete initialization already in progress, skipping...');
+            return;
+        }
+        
+        isInitializingAutoComplete = true;
+        
+        const unitsInput = document.getElementById('work_order_unit_search');
+        const unitsHidden = document.getElementById('work_order_unit_id_hidden');
+        
+        console.log('initializeUnitAutoComplete called with data:', unitsData);
+        
+        const escapeRegExp = (string) => string ? string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+        
+        const uniqueUnits = Array.from(
+            new Map(
+                (Array.isArray(unitsData) ? unitsData : [])
+                    .filter(unit => unit && typeof unit.value !== 'undefined' && unit.value !== null)
+                    .map(unit => [unit.value, unit])
+            ).values()
+        );
+        
+        console.log('Unique units data for autocomplete:', uniqueUnits);
+        console.log('unitsInput element:', unitsInput);
+        
+        if (!unitsInput) {
+            console.error('Unit input element not found!');
+            isInitializingAutoComplete = false;
+            return;
+        }
+        
+        // Destroy existing AutoComplete instance if it exists
+        if (unitAutoComplete) {
+            console.log('Destroying existing AutoComplete instance');
+            try {
+                unitAutoComplete.unInit();
+            } catch (e) {
+                console.warn('Error destroying autocomplete:', e);
+            }
+            unitAutoComplete = null;
+        }
+        
+        // Remove any existing autocomplete list elements from DOM
+        const existingLists = document.querySelectorAll('[id^="autoComplete_list"]');
+        existingLists.forEach(list => {
+            console.log('Removing existing autocomplete list:', list.id);
+            list.remove();
+        });
+        
+        // Check if AutoComplete is available
+        if (typeof autoComplete === 'undefined') {
+            console.error('AutoComplete library is not loaded!');
+            isInitializingAutoComplete = false;
+            return;
+        }
+        
+        console.log('Initializing AutoComplete with', uniqueUnits.length, 'units');
+        
+        // Initialize new AutoComplete instance
+        try {
+            unitAutoComplete = new autoComplete({
+                selector: () => document.getElementById("work_order_unit_search"),
+                placeHolder: "Search for units...",
+                data: {
+                    src: uniqueUnits,
+                    keys: ["searchValue"]
+                },
+                resultItem: {
+                    highlight: false,
+                    element: (item, data) => {
+                        const label = data.value.label || '';
+                        const query = (data.query || '').trim();
+                        
+                        if (!query) {
+                            item.innerHTML = label;
+                            return;
+                        }
+                        
+                        const regex = new RegExp(escapeRegExp(query), 'ig');
+                        const highlighted = label.replace(
+                            regex,
+                            match => `<span class="text-danger fw-semibold">${match}</span>`
+                        );
+                        
+                        item.innerHTML = highlighted;
+                    }
+                },
+                events: {
+                    input: {
+                        selection: (event) => {
+                            console.log('AutoComplete selection event:', event.detail);
+                            const selection = event.detail.selection;
+                            console.log('Selection object:', selection);
+                            console.log('Selection value:', selection.value);
+                            
+                            // The selection.value contains the actual unit data
+                            const selectedUnit = selection.value;
+                            console.log('Selected unit:', selectedUnit);
+                            
+                            if (selectedUnit && selectedUnit.value) {
+                                // Update the visible input with the selected label
+                                if (unitsInput) {
+                                    unitsInput.value = selectedUnit.label;
+                                }
+                                // Update the hidden input with the selected value (unit ID)
+                                if (unitsHidden) {
+                                    unitsHidden.value = selectedUnit.value;
+                                }
+                                
+                                // Set block_unit_id hidden field
+                                const blockUnitIdField = document.getElementById('work_order_block_unit_id');
+                                if (blockUnitIdField) {
+                                    blockUnitIdField.value = selectedUnit.value;
+                                }
+                                
+                                // Set block_building_id if available
+                                const blockBuildingIdField = document.getElementById('work_order_block_building_id');
+                                if (blockBuildingIdField && selectedUnit.block_building_id) {
+                                    blockBuildingIdField.value = selectedUnit.block_building_id;
+                                }
+                                
+                                // Load issues for selected unit
+                                loadIssuesForUnit(selectedUnit.value);
+                            } else {
+                                console.log('No unit found for selection:', selection);
+                            }
+                        }
+                    }
+                },
+                threshold: 1,
+                debounce: 300,
+                searchEngine: function (query, record) {
+                    if (!record) return 0;
+                    return record.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
+                },
+                maxResults: 10
+            });
+            
+            console.log('AutoComplete successfully initialized');
+            isInitializingAutoComplete = false;
+            
+        } catch (error) {
+            console.error('Error initializing AutoComplete.js:', error);
+            isInitializingAutoComplete = false;
+        }
+    }
+    
+    function loadIssuesForUnit(unitId) {
+        const issueSelect = document.getElementById('block_issue_id_select');
+        if (!issueSelect) return;
+        
+        // Show loading state
+        issueSelect.disabled = true;
+        issueSelect.innerHTML = '<option value="">Loading issues...</option>';
+        
+        // Fetch issues for the unit
+        fetch(`/api/block-unit-active-issues?unit_id=${unitId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && data.data.length > 0) {
+                issueSelect.innerHTML = '<option value="">Select Issue</option>';
+                data.data.forEach(issue => {
+                    const option = document.createElement('option');
+                    option.value = issue.id;
+                    option.textContent = `${issue.ref_no} - ${issue.issue}`;
+                    issueSelect.appendChild(option);
+                });
+                issueSelect.disabled = false;
+            } else {
+                issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
+                issueSelect.disabled = true;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading issues:', error);
+            issueSelect.innerHTML = '<option value="">Error loading issues</option>';
+            issueSelect.disabled = true;
+        });
+    }
 
         if (editModal) {
             editModal.addEventListener('show.bs.modal', () => {
@@ -216,6 +535,44 @@
                 }, 150);
             });
         }
+    }
+    
+    function loadIssuesForUnit(unitId) {
+        const issueSelect = document.getElementById('block_issue_id_select');
+        if (!issueSelect) return;
+        
+        // Show loading state
+        issueSelect.disabled = true;
+        issueSelect.innerHTML = '<option value="">Loading issues...</option>';
+        
+        // Fetch issues for the unit
+        fetch(`/api/block-unit-active-issues?unit_id=${unitId}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && data.data.length > 0) {
+                issueSelect.innerHTML = '<option value="">Select Issue</option>';
+                data.data.forEach(issue => {
+                    const option = document.createElement('option');
+                    option.value = issue.id;
+                    option.textContent = `${issue.ref_no} - ${issue.issue}`;
+                    issueSelect.appendChild(option);
+                });
+                issueSelect.disabled = false;
+            } else {
+                issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
+                issueSelect.disabled = true;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading issues:', error);
+            issueSelect.innerHTML = '<option value="">Error loading issues</option>';
+            issueSelect.disabled = true;
+        });
     }
 
     function attachEditHandlers() {
@@ -317,9 +674,18 @@
 
     function buildPayload(form) {
         const data = Object.fromEntries(new FormData(form));
-        // Remove ref_no from create form since it's auto-generated
+        // Remove ref_no from create form since it's auto-generated at backend
         if (form.id === 'createWorkOrderForm') {
             delete data.ref_no;
+            // Ensure block_id and block_issue_id are included from hidden fields
+            const blockId = document.getElementById('work_order_block_id');
+            const blockIssueId = document.getElementById('work_order_block_issue_id');
+            if (blockId && blockId.value) {
+                data.block_id = blockId.value;
+            }
+            if (blockIssueId && blockIssueId.value) {
+                data.block_issue_id = blockIssueId.value;
+            }
         }
         return data;
     }
@@ -636,23 +1002,112 @@
         }, 5000);
     }
 
-    // Auto-populate issue description when issue is selected
-    const issueSelect = document.getElementById('block_issue_id');
-    const issueDescription = document.getElementById('issue');
-
-    if (issueSelect && issueDescription) {
-        issueSelect.addEventListener('change', function() {
-            if (this.value) {
-                const selectedOption = this.options[this.selectedIndex];
-                const optionText = selectedOption.text;
-                const issueText = optionText.split(' - ')[1];
-                if (issueText) {
-                    issueDescription.value = issueText;
+    // Populate work order form when issue is selected
+    document.addEventListener('DOMContentLoaded', function() {
+        const issueSelect = document.getElementById('block_issue_id_select');
+        
+        if (issueSelect) {
+            issueSelect.addEventListener('change', function() {
+                const issueId = this.value;
+                
+                if (!issueId) {
+                    return;
                 }
+                
+                // Fetch issue details and populate form
+                fetch(`/api/block-issues/${issueId}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data) {
+                        populateWorkOrderFormFromIssue(data.data);
+                    } else {
+                        showToast('danger', 'Failed to load issue details. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching issue details:', error);
+                    showToast('danger', 'Error loading issue details. Please try again.');
+                });
+            });
+        }
+    });
+    
+    function populateWorkOrderFormFromIssue(issue) {
+        // Set hidden fields
+        const blockIdField = document.getElementById('work_order_block_id');
+        const blockIssueIdField = document.getElementById('work_order_block_issue_id');
+        const blockUnitIdField = document.getElementById('work_order_block_unit_id');
+        const blockBuildingIdField = document.getElementById('work_order_block_building_id');
+        
+        if (blockIdField) {
+            blockIdField.value = issue.block_id || '';
+        }
+        if (blockIssueIdField) {
+            blockIssueIdField.value = issue.id || '';
+        }
+        // block_unit_id is already set when unit is selected, but update if different
+        if (blockUnitIdField && issue.block_unit_id) {
+            blockUnitIdField.value = issue.block_unit_id;
+        }
+        if (blockBuildingIdField) {
+            blockBuildingIdField.value = issue.block_building_id || '';
+        }
+        
+        // Populate priority (use issue priority if available)
+        const priorityField = document.getElementById('work_order_priority_id');
+        if (priorityField && issue.priority_id) {
+            priorityField.value = issue.priority_id;
+        }
+        
+        // Issue description field removed - using single comments field instead
+        
+        // Populate contact information
+        const contactNameField = document.getElementById('work_order_contact_name');
+        if (contactNameField && issue.contact_name) {
+            contactNameField.value = issue.contact_name;
+        }
+        
+        const contactMobileField = document.getElementById('work_order_contact_mobile');
+        if (contactMobileField && issue.contact_mobile) {
+            contactMobileField.value = issue.contact_mobile;
+        }
+        
+        const contactEmailField = document.getElementById('work_order_contact_email');
+        if (contactEmailField && issue.contact_email) {
+            contactEmailField.value = issue.contact_email;
+        }
+        
+        // Populate preferred start/end dates
+        const preferredStartField = document.getElementById('work_order_preferred_start');
+        if (preferredStartField && issue.preferred_start_date_time) {
+            const startDate = new Date(issue.preferred_start_date_time);
+            preferredStartField.value = formatDateTimeForInput(issue.preferred_start_date_time);
+        }
+        
+        const preferredEndField = document.getElementById('work_order_preferred_end');
+        if (preferredEndField && issue.preferred_end_date_time) {
+            preferredEndField.value = formatDateTimeForInput(issue.preferred_end_date_time);
+        }
+        
+        // Populate deadline date (default to 7 days from now if not set)
+        const deadlineField = document.getElementById('work_order_deadline');
+        if (deadlineField) {
+            if (issue.deadline_date) {
+                deadlineField.value = formatDateForInput(issue.deadline_date);
             } else {
-                issueDescription.value = '';
+                // Default to 7 days from now
+                const defaultDeadline = new Date();
+                defaultDeadline.setDate(defaultDeadline.getDate() + 7);
+                deadlineField.value = formatDateForInput(defaultDeadline.toISOString());
             }
-        });
+        }
+        
+        // Note for access field removed - using single comments field instead
     }
 
     // Delete confirmation function

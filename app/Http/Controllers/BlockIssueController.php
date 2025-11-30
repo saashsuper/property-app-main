@@ -432,7 +432,7 @@ class BlockIssueController extends Controller
      */
     public function getBlockIssue(BlockIssue $blockIssue)
     {
-        $blockIssue->load(['block', 'reportedBy', 'assignedTo', 'creator', 'updater']);
+        $blockIssue->load(['block', 'blockUnit', 'blockBuilding', 'priority', 'reportedBy', 'assignedTo', 'creator', 'updater']);
 
         return response()->json([
             'success' => true,

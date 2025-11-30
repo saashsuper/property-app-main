@@ -574,7 +574,8 @@ $(document).ready(function() {
                     $('.step-wizard').hide();
                     $('.step-content').removeClass('d-none');
                     $('#step1, #step2').removeClass('d-none');
-                    $('#prevStepBtn, #nextStepBtn').hide();
+                    // Reset form wizard state
+                    resetStepForm();
                     $('#issueSubmitBtn').removeClass('d-none');
                     
                     // Initialize modal first
@@ -629,11 +630,8 @@ $(document).ready(function() {
     }
     
     // ========================================
-    // STEP FORM NAVIGATION
+    // STEP FORM NAVIGATION (Using fullkit wizard style)
     // ========================================
-    
-    /** @var {number} currentStep - Current step in the form (1 or 2) */
-    let currentStep = 1;
     
     /** @var {Dropzone} issueDropzone - Dropzone instance for image uploads */
     let issueDropzone = null;
@@ -642,56 +640,35 @@ $(document).ready(function() {
      * Reset step form to initial state
      */
     function resetStepForm() {
-        currentStep = 1;
-        updateStepDisplay();
+        // Reset to first tab
+        const firstTab = document.getElementById('pills-issue-details-tab');
+        if (firstTab) {
+            firstTab.click();
+        }
+        
+        // Disable step 2 tab until issue is created
+        const step2Tab = document.getElementById('pills-upload-images-tab');
+        if (step2Tab) {
+            step2Tab.disabled = true;
+        }
+        
+        // Reset progress bar
+        const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+        
+        // Reset footer buttons
+        $('#step1Footer').removeClass('d-none');
+        $('#step2Footer').addClass('d-none');
+        
+        // Clear created issue ID
+        $('#created_issue_id').val('');
         
         // Destroy existing dropzone if it exists
         if (issueDropzone) {
             issueDropzone.destroy();
             issueDropzone = null;
-        }
-    }
-    
-    /**
-     * Update step display and navigation buttons
-     */
-    function updateStepDisplay() {
-        // Update step indicators
-        $('.step-wizard-item').each(function(index) {
-            const stepNum = index + 1;
-            const $stepItem = $(this);
-            
-            $stepItem.removeClass('active completed');
-            
-            if (stepNum < currentStep) {
-                $stepItem.addClass('completed');
-            } else if (stepNum === currentStep) {
-                $stepItem.addClass('active');
-            }
-        });
-        
-        // Show/hide step content
-        $('.step-content').addClass('d-none');
-        $(`#step${currentStep}`).removeClass('d-none');
-        
-        // Update navigation buttons
-        const $prevBtn = $('#prevStepBtn');
-        const $nextBtn = $('#nextStepBtn');
-        const $submitBtn = $('#issueSubmitBtn');
-        
-        if (currentStep === 1) {
-            $prevBtn.hide();
-            $nextBtn.show().removeClass('d-none');
-            $submitBtn.addClass('d-none');
-        } else if (currentStep === 2) {
-            $prevBtn.show().removeClass('d-none');
-            $nextBtn.addClass('d-none');
-            $submitBtn.removeClass('d-none');
-            
-            // Initialize dropzone if not already initialized
-            if (!issueDropzone) {
-                initializeIssueDropzone();
-            }
         }
     }
     
@@ -743,25 +720,15 @@ $(document).ready(function() {
     }
     
     /**
-     * Move to next step
+     * Validate step 1 before allowing next tab
+     * This is called by the nexttab button
      */
-    function nextStep() {
-        if (currentStep === 1) {
-            if (validateStep1()) {
-                currentStep = 2;
-                updateStepDisplay();
-            }
+    function validateAndProceedToNextTab(nextTabId) {
+        if (validateStep1()) {
+            // Validation passed, proceed to next tab
+            document.getElementById(nextTabId).click();
         }
-    }
-    
-    /**
-     * Move to previous step
-     */
-    function previousStep() {
-        if (currentStep === 2) {
-            currentStep = 1;
-            updateStepDisplay();
-        }
+        // If validation fails, prevent tab change (handled by validateStep1)
     }
     
     /**
@@ -844,14 +811,216 @@ $(document).ready(function() {
     }
     
     // Step navigation button handlers
-    $(document).on('click', '#nextStepBtn', function(e) {
+    // Handle "Create Issue and Upload Images" button click
+    $(document).on('click', '#createIssueAndUploadBtn', function(e) {
         e.preventDefault();
-        nextStep();
+        
+        // Validate step 1 first
+        if (!validateStep1()) {
+            return; // Validation failed, stop here
+        }
+        
+        const $btn = $(this);
+        const originalText = $btn.html();
+        const $form = $('#issueForm');
+        const messageId = 'issueMessage';
+        
+        // Disable button and show loading
+        $btn.html('<i class="ph-spinner-gap ph-spin label-icon align-middle fs-lg me-2"></i>Creating Issue...').prop('disabled', true);
+        
+        // Create FormData with only step 1 fields (no images yet)
+        const formData = new FormData($form[0]);
+        
+        // Submit to create the issue
+        $.ajax({
+            url: $form.attr('action'),
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data) {
+                if (data.success && data.data && data.data.id) {
+                    // Issue created successfully, store the issue ID
+                    const issueId = data.data.id;
+                    $('#created_issue_id').val(issueId);
+                    
+                    // Show success message
+                    showMessage(messageId, 'success', 'Issue created successfully! Now you can upload images.');
+                    
+                    // Enable step 2 tab and navigate to it
+                    const step2Tab = document.getElementById('pills-upload-images-tab');
+                    if (step2Tab) {
+                        step2Tab.disabled = false;
+                        
+                        // Switch footer buttons
+                        $('#step1Footer').addClass('d-none');
+                        $('#step2Footer').removeClass('d-none');
+                        
+                        setTimeout(function() {
+                            step2Tab.click();
+                        }, 500);
+                    }
+                } else {
+                    showMessage(messageId, 'danger', 'Error creating issue. Please try again.');
+                    $btn.html(originalText).prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                if (xhr.status === 422) {
+                    // Validation errors
+                    const errors = xhr.responseJSON.errors;
+                    if (errors) {
+                        // Clear previous error messages
+                        $form.find('.is-invalid').removeClass('is-invalid');
+                        $form.find('.invalid-feedback').remove();
+                        
+                        // Show validation errors
+                        Object.keys(errors).forEach(field => {
+                            const $input = $form.find(`[name="${field}"]`);
+                            if ($input.length) {
+                                $input.addClass('is-invalid');
+                                const errorDiv = $('<div class="invalid-feedback"></div>').text(errors[field][0]);
+                                $input.after(errorDiv);
+                            }
+                        });
+                    }
+                    showMessage(messageId, 'danger', 'Please correct the errors and try again.');
+                } else {
+                    showMessage(messageId, 'danger', 'Error creating issue. Please try again.');
+                }
+                $btn.html(originalText).prop('disabled', false);
+            }
+        });
     });
     
-    $(document).on('click', '#prevStepBtn', function(e) {
+    // Prevent direct navigation to step 2 before issue is created
+    $(document).on('show.bs.tab', '#pills-upload-images-tab', function(e) {
+        const issueId = $('#created_issue_id').val();
+        if (!issueId) {
+            e.preventDefault();
+            showMessage('issueMessage', 'warning', 'Please create the issue first before uploading images.');
+            return false;
+        }
+    });
+    
+    // Switch footer buttons based on active tab and issue creation status
+    $(document).on('shown.bs.tab', 'button[data-bs-toggle="pill"]', function(e) {
+        const issueId = $('#created_issue_id').val();
+        const targetId = $(e.target).attr('data-bs-target');
+        
+        // Once issue is created, always show step 2 footer
+        if (issueId) {
+            $('#step1Footer').addClass('d-none');
+            $('#step2Footer').removeClass('d-none');
+        } else {
+            // Issue not created yet - show step 1 footer
+            if (targetId === '#pills-issue-details') {
+                $('#step1Footer').removeClass('d-none');
+                $('#step2Footer').addClass('d-none');
+            } else {
+                $('#step1Footer').addClass('d-none');
+                $('#step2Footer').addClass('d-none');
+            }
+        }
+    });
+    
+    // Initialize dropzone when upload images tab is shown
+    $(document).on('shown.bs.tab', '#pills-upload-images-tab', function() {
+        // Only initialize if issue has been created
+        const issueId = $('#created_issue_id').val();
+        if (!issueId) {
+            // Issue not created yet, go back to step 1
+            showMessage('issueMessage', 'warning', 'Please create the issue first.');
+            document.getElementById('pills-issue-details-tab').click();
+            return;
+        }
+        
+        // Initialize dropzone if not already initialized
+        if (!issueDropzone) {
+            initializeIssueDropzone();
+        }
+    });
+    
+    // Handle "Upload Images" button click in step 2
+    $(document).on('click', '#uploadImagesBtn', function(e) {
         e.preventDefault();
-        previousStep();
+        
+        const issueId = $('#created_issue_id').val();
+        if (!issueId) {
+            showMessage('issueMessage', 'danger', 'Issue ID not found. Please go back and create the issue first.');
+            return;
+        }
+        
+        if (!issueDropzone || issueDropzone.files.length === 0) {
+            showMessage('issueMessage', 'warning', 'Please add at least one image to upload.');
+            return;
+        }
+        
+        const $btn = $(this);
+        const originalText = $btn.html();
+        const messageId = 'issueMessage';
+        
+        // Disable button and show loading
+        $btn.html('<i class="ph-spinner-gap ph-spin me-1"></i>Uploading...').prop('disabled', true);
+        
+        // Create FormData with images
+        const formData = new FormData();
+        issueDropzone.files.forEach(function(file, index) {
+            formData.append('images[]', file);
+        });
+        
+        // Upload images to the created issue
+        $.ajax({
+            url: `/block-issues/${issueId}/photos`,
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data) {
+                if (data.success) {
+                    showMessage(messageId, 'success', 'Images uploaded successfully!');
+                    
+                    // Clear dropzone files
+                    if (issueDropzone) {
+                        issueDropzone.removeAllFiles();
+                    }
+                    
+                    // Close modal and refresh table after a short delay
+                    setTimeout(function() {
+                        $('#issueModal').modal('hide');
+                        refreshBlockIssuesTable();
+                    }, 1000);
+                } else {
+                    showMessage(messageId, 'danger', 'Error uploading images. Please try again.');
+                    $btn.html(originalText).prop('disabled', false);
+                }
+            },
+            error: function(xhr, status, error) {
+                let errorMessage = 'Error uploading images. Please try again.';
+                if (xhr.status === 422) {
+                    const errors = xhr.responseJSON.errors;
+                    if (errors && errors.images) {
+                        errorMessage = errors.images[0];
+                    } else if (xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                }
+                showMessage(messageId, 'danger', errorMessage);
+                $btn.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+    
+    // Handle "Skip & Close" button - just close the modal
+    $(document).on('click', '#skipUploadBtn', function(e) {
+        // Refresh table to show the newly created issue
+        refreshBlockIssuesTable();
     });
     
     // Reset form when modal is closed

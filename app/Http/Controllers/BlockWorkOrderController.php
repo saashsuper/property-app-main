@@ -119,9 +119,15 @@ class BlockWorkOrderController extends Controller
             'block_issue_id' => $issue->id,
             'block_unit_id' => $issue->block_unit_id,
             'block_building_id' => $issue->block_building_id,
-            'priority_id' => $request->priority_id,
-            'preferred_start_date_time' => $request->preferred_start_date_time,
-            'preferred_end_date_time' => $request->preferred_end_date_time,
+            'priority_id' => $request->priority_id ?? $issue->priority_id,
+            'status' => $request->status ?? 1, // Default to Pending
+            'issue' => $request->issue ?? $issue->issue,
+            'contact_name' => $request->contact_name ?? $issue->contact_name,
+            'contact_mobile' => $request->contact_mobile ?? $issue->contact_mobile,
+            'contact_email' => $request->contact_email ?? $issue->contact_email,
+            'note_for_access' => $request->note_for_access ?? $issue->note_for_access,
+            'preferred_start_date_time' => $request->preferred_start_date_time ?? $issue->preferred_start_date_time,
+            'preferred_end_date_time' => $request->preferred_end_date_time ?? $issue->preferred_end_date_time,
             'deadline_date' => $request->deadline_date,
             'comment' => $request->comment,
         ];
@@ -137,9 +143,6 @@ class BlockWorkOrderController extends Controller
         
         // Auto-generate reference number
         $data['ref_no'] = $this->generateWorkOrderRefNo();
-        
-        // Set default status to Pending (1)
-        $data['status'] = 1;
         
         // Set system fields
         $data['issued_by'] = Auth::id();

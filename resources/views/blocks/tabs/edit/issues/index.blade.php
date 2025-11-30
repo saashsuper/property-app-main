@@ -358,155 +358,7 @@
     margin-bottom: 0.5rem;
 }
 
-/* Step Wizard Styling */
-#issueModal .step-wizard {
-    padding: 1.5rem 0;
-    margin-bottom: 2rem;
-}
-
-#issueModal .step-wizard-list {
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    list-style: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    position: relative;
-    width: 100%;
-}
-
-#issueModal .step-wizard-item {
-    display: flex !important;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    flex: 1;
-    max-width: 250px;
-    z-index: 2;
-}
-
-#issueModal .step-wizard-item::before {
-    content: '';
-    position: absolute;
-    top: 24px;
-    left: 50%;
-    width: 100%;
-    height: 3px;
-    background: #e9ecef;
-    z-index: 1;
-    transition: all 0.3s ease;
-    border-radius: 2px;
-}
-
-#issueModal .step-wizard-item:first-child::before {
-    display: none;
-}
-
-#issueModal .step-wizard-item.active::before,
-#issueModal .step-wizard-item.completed::before {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-#issueModal .step-wizard-icon {
-    width: 48px !important;
-    height: 48px !important;
-    border-radius: 50% !important;
-    background: #f8f9fa !important;
-    border: 3px solid #e9ecef !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.25rem !important;
-    color: #6c757d !important;
-    margin-bottom: 0.75rem !important;
-    position: relative;
-    z-index: 3;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-#issueModal .step-wizard-icon i {
-    font-size: 1.25rem;
-    line-height: 1;
-}
-
-#issueModal .step-wizard-item.active .step-wizard-icon {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    border-color: #667eea !important;
-    color: white !important;
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4) !important;
-    transform: scale(1.1);
-}
-
-#issueModal .step-wizard-item.active .step-wizard-icon i {
-    color: white !important;
-}
-
-#issueModal .step-wizard-item.completed .step-wizard-icon {
-    background: #28a745 !important;
-    border-color: #28a745 !important;
-    color: white !important;
-    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3) !important;
-}
-
-#issueModal .step-wizard-item.completed .step-wizard-icon i {
-    display: none !important;
-}
-
-#issueModal .step-wizard-item.completed .step-wizard-icon::after {
-    content: '\2713' !important;
-    position: absolute;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-}
-
-#issueModal .step-wizard-label {
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    color: #6c757d !important;
-    text-align: center !important;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    margin-top: 0.25rem;
-}
-
-#issueModal .step-wizard-item.active .step-wizard-label {
-    color: #667eea !important;
-    font-weight: 600 !important;
-}
-
-#issueModal .step-wizard-item.completed .step-wizard-label {
-    color: #28a745 !important;
-    font-weight: 500 !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    #issueModal .step-wizard-item {
-        max-width: 150px;
-    }
-    
-    #issueModal .step-wizard-icon {
-        width: 40px !important;
-        height: 40px !important;
-        font-size: 1rem !important;
-    }
-    
-    #issueModal .step-wizard-label {
-        font-size: 0.75rem !important;
-    }
-}
-
-.step-content {
-    display: block;
-    animation: fadeIn 0.3s ease;
-}
+/* Progress Nav Wizard Styling (from fullkit) - already in _nav.scss */
 
 .step-content.d-none {
     display: none !important;
@@ -679,6 +531,9 @@ if (typeof Dropzone === 'undefined') {
         console.log('openPhotoUploadModal placeholder called with ID:', issueId);
     };
 </script>
+
+<!-- Form Wizard JavaScript (for progress-nav steps) -->
+<script src="{{ URL::asset('build/js/pages/form-wizard.init.js') }}"></script>
 
 <!-- Issues JavaScript -->
 @include('blocks.tabs.edit.issues.scripts')

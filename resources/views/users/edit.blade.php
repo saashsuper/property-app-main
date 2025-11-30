@@ -107,9 +107,19 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-                            
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="avatar" class="form-label">@lang('translation.avatar')</label>
+                                @if($user->avatar)
+                                    <div class="mb-2">
+                                        <label class="form-label text-muted small d-block">@lang('translation.current-avatar')</label>
+                                        <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="rounded-circle border" width="80" height="80" style="object-fit: cover;">
+                                    </div>
+                                @endif
                                 <input type="file" class="form-control @error('avatar') is-invalid @enderror" 
                                        id="avatar" name="avatar" accept="image/*">
                                 <div class="form-text">@lang('translation.upload-avatar')</div>
@@ -119,19 +129,6 @@
                             </div>
                         </div>
                     </div>
-
-                    @if($user->avatar)
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">@lang('translation.current-avatar')</label>
-                                    <div>
-                                        <img src="{{ asset('storage/' . $user->avatar) }}" alt="{{ $user->name }}" class="rounded-circle" width="100" height="100">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
 
                     <div class="row">
                         <div class="col-12">
@@ -150,6 +147,8 @@
         </div>
     </div>
 </div>
+@endsection
+
 @section('script')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -162,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show/hide contract company for Contractor Admin and Contractor User
         if (typeName === 'Contractor Admin' || typeName === 'Contractor User') {
-            contractCompanyWrapper.style.display = '';
+            contractCompanyWrapper.style.display = 'block';
         } else {
             contractCompanyWrapper.style.display = 'none';
             const contractCompanySelect = document.getElementById('contract_company_id');
@@ -170,9 +169,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    userTypeSelect.addEventListener('change', toggleContractCompanyField);
-    // Initialize on page load
-    toggleContractCompanyField();
+    if (userTypeSelect) {
+        userTypeSelect.addEventListener('change', toggleContractCompanyField);
+        // Initialize on page load
+        toggleContractCompanyField();
+    }
 });
 </script>
 @endsection

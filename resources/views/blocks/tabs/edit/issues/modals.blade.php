@@ -6,7 +6,7 @@
                 <h5 class="modal-title" id="issueModalLabel" style="color: white !important; padding-bottom: 15px;">Create Issue</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
             </div>
-            <form id="issueForm" method="POST" action="{{ route('block-issues.store') }}" enctype="multipart/form-data">
+            <form id="issueForm" class="form-steps" method="POST" action="{{ route('block-issues.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="block_id" value="{{ $block->id }}">
                 <div class="modal-body">
@@ -16,26 +16,24 @@
                         <span class="message-text"></span>
                     </div>
                     
-                    <!-- Step Indicator -->
-                    <div class="step-wizard mb-4">
-                        <ul class="step-wizard-list">
-                            <li class="step-wizard-item active" data-step="1">
-                                <span class="step-wizard-icon">
-                                    <i class="ph-file-text"></i>
-                                </span>
-                                <span class="step-wizard-label">Issue Details</span>
+                    <!-- Step Indicator (Progress Nav Steps style from fullkit) -->
+                    <div id="custom-progress-bar" class="progress-nav mb-4">
+                        <div class="progress" style="height: 1px;">
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <ul class="nav nav-pills progress-bar-tab custom-nav" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill active" data-progressbar="custom-progress-bar" id="pills-issue-details-tab" data-bs-toggle="pill" data-bs-target="#pills-issue-details" type="button" role="tab" aria-controls="pills-issue-details" aria-selected="true">1</button>
                             </li>
-                            <li class="step-wizard-item" data-step="2">
-                                <span class="step-wizard-icon">
-                                    <i class="ph-images"></i>
-                                </span>
-                                <span class="step-wizard-label">Upload Images</span>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link rounded-pill" data-progressbar="custom-progress-bar" id="pills-upload-images-tab" data-bs-toggle="pill" data-bs-target="#pills-upload-images" type="button" role="tab" aria-controls="pills-upload-images" aria-selected="false" disabled>2</button>
                             </li>
                         </ul>
                     </div>
-                    
-                    <!-- Step 1: Issue Details -->
-                    <div class="step-content" id="step1" data-step="1">
+
+                    <div class="tab-content">
+                        <!-- Step 1: Issue Details -->
+                        <div class="tab-pane fade show active" id="pills-issue-details" role="tabpanel" aria-labelledby="pills-issue-details-tab">
                         <div class="row">
                             <!-- Full Width Form Fields -->
                             <div class="col-12">
@@ -54,6 +52,7 @@
                                             <input type="hidden" id="issue_block_unit_id_hidden" name="block_unit_id" value="">
                                         </div>
                                     </div>
+                                    <input type="hidden" id="created_issue_id" name="created_issue_id" value="">
                                     <div class="col-md-4 mb-3">
                                         <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
                                         <select class="form-select" id="contact_method_id" name="contact_method_id" required>
@@ -127,10 +126,11 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Step 2: Image Upload -->
-                    <div class="step-content d-none" id="step2" data-step="2">
+                        </div>
+                        <!-- end tab pane -->
+
+                        <!-- Step 2: Image Upload -->
+                        <div class="tab-pane fade" id="pills-upload-images" role="tabpanel" aria-labelledby="pills-upload-images-tab">
                         <div class="row">
                             <div class="col-12">
                                 <label class="form-label fw-semibold mb-3">Upload Images <span class="text-muted">(Optional)</span></label>
@@ -149,20 +149,33 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
+                        <!-- end tab pane -->
                     </div>
+                    <!-- end tab content -->
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" id="prevStepBtn" style="display: none;">
-                        <i class="ph-arrow-left me-1"></i> Previous
+                <!-- Modal Footer - Step 1 buttons -->
+                <div class="modal-footer" id="step1Footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success btn-label" id="createIssueAndUploadBtn">
+                        <i class="ph-check label-icon align-middle fs-lg me-2"></i>Create Issue and Upload Images
+                    </button>
+                </div>
+                <!-- Modal Footer - Step 2 buttons -->
+                <div class="modal-footer d-none" id="step2Footer">
+                    <button type="button" class="btn btn-link text-decoration-none btn-label previestab" data-previous="pills-issue-details-tab">
+                        <i class="ph-arrow-left-line label-icon align-middle fs-lg me-2"></i>Back to Issue Details
                     </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="ph-x me-1"></i> Cancel
                     </button>
-                    <button type="button" class="btn btn-primary" id="nextStepBtn">
-                        <i class="ph-arrow-right me-1"></i> Next
+                    <button type="button" class="btn btn-secondary btn-label" id="skipUploadBtn" data-bs-dismiss="modal">
+                        <i class="ph-check me-1"></i>Skip & Close
                     </button>
-                    <button type="submit" class="btn btn-primary d-none" id="issueSubmitBtn">
-                        <i class="ph-check me-1"></i> Create Issue
+                    <button type="button" class="btn btn-success btn-label" id="uploadImagesBtn">
+                        <i class="ph-cloud-upload me-1"></i>Upload Images
                     </button>
                 </div>
             </form>
