@@ -236,8 +236,12 @@ class BlockIssueController extends Controller
             $q->where('name', 'Contractor Admin'); 
         })->orderBy('name')->get();
         
-        // Load contract companies for work order modal
+        // Load contract companies for work order modal (using Contractor model as it's what BlockWorkOrder uses)
         $contractors = \App\Models\Contractor::orderBy('name')
+            ->get();
+        
+        // Also load ContractCompany for consistency (in case we need to switch)
+        $contractCompanies = \App\Models\ContractCompany::orderBy('company_name')
             ->get();
         
         // Load property managers for in-house work orders
@@ -253,7 +257,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors', 'propertyManagers'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors', 'contractCompanies', 'propertyManagers'));
     }
 
     /**

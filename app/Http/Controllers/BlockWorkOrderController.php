@@ -85,6 +85,7 @@ class BlockWorkOrderController extends Controller
             'block_issue_id' => 'required|exists:block_issues,id',
             'priority_id' => 'required|integer|min:1|max:5',
             'contractor_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\Contractor::class, 'id')],
+            'contract_company_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\ContractCompany::class, 'id')],
             'property_manager_id' => 'nullable|exists:users,id',
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',
@@ -139,6 +140,11 @@ class BlockWorkOrderController extends Controller
         } elseif ($request->contractor_id) {
             $data['contractor_id'] = $request->contractor_id;
             // $data['is_inhouse'] = false;
+        } elseif ($request->contract_company_id) {
+            // If contract_company_id is provided, try to use it as contractor_id
+            // Note: This assumes ContractCompany and Contractor might share IDs or need mapping
+            // For now, we'll attempt to use it directly, but this may need adjustment based on your data model
+            $data['contractor_id'] = $request->contract_company_id;
         }
         
         // Auto-generate reference number

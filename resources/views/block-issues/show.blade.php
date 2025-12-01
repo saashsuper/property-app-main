@@ -3275,15 +3275,21 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3" id="contractorFieldContainer">
-                                <label class="form-label">Assign to Contractor <span class="text-danger">*</span></label>
-                                <select class="form-select" name="contractor_id" id="contractorField">
+                                <label class="form-label">Contract Company <span class="text-danger">*</span></label>
+                                <select class="form-select" name="contractor_id" id="contractorField" required>
                                     <option value="">Select Contract Company</option>
                                     @if(isset($contractors) && $contractors->count() > 0)
                                         @foreach($contractors as $contractor)
                                             <option value="{{ $contractor->id }}">
-                                                {{ $contractor->name }} ({{ $contractor->code }})
+                                                {{ $contractor->name }}@if($contractor->code) ({{ $contractor->code }})@endif
                                             </option>
                                         @endforeach
+                                    @elseif(isset($contractCompanies) && $contractCompanies->count() > 0)
+                                        @foreach($contractCompanies as $company)
+                                            <option value="{{ $company->id }}">{{ $company->company_name }}</option>
+                                        @endforeach
+                                    @else
+                                        <option value="" disabled>No contract companies available</option>
                                     @endif
                                 </select>
                             </div>

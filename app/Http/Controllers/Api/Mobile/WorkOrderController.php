@@ -46,6 +46,7 @@ class WorkOrderController extends Controller
     public function myWorkOrders(Request $request): JsonResponse
     {
         $user = $request->user();
+        $user->load(['userType', 'contractCompany']);
         $perPage = $request->input('per_page', 20);
         $status = $request->input('status');
 
@@ -55,7 +56,36 @@ class WorkOrderController extends Controller
             'priority',
             'contractor',
             'images',
-        ])->where('contractor_id', $user->id);
+        ]);
+
+        // Check if user is Contractor Admin
+        $isContractorAdmin = $user->userType && $user->userType->name === 'Contractor Admin';
+        
+        if ($isContractorAdmin && $user->contract_company_id) {
+            // For Contractor Admin: show all work orders for users in the same contract company
+            // Get all user IDs from the same contract company
+            $companyUserIds = \App\Models\User::where('contract_company_id', $user->contract_company_id)
+                ->pluck('id')
+                ->toArray();
+            
+            if (!empty($companyUserIds)) {
+                // Filter work orders where:
+                // 1. contractor_id is in the list of company user IDs, OR
+                // 2. work order has team members from the same company
+                $query->where(function($q) use ($companyUserIds) {
+                    $q->whereIn('contractor_id', $companyUserIds)
+                      ->orWhereHas('teamMembers', function($teamQuery) use ($companyUserIds) {
+                          $teamQuery->whereIn('user_id', $companyUserIds);
+                      });
+                });
+            } else {
+                // No other users in company, only show work orders assigned to this user
+                $query->where('contractor_id', $user->id);
+            }
+        } else {
+            // For regular users: only show work orders assigned to them
+            $query->where('contractor_id', $user->id);
+        }
 
         if ($status) {
             $query->where('status', $status);

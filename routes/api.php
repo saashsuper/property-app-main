@@ -77,10 +77,41 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
     Route::prefix('work-orders')->group(function () {
         // Get work orders assigned to current user (contractor)
         Route::get('/my-work-orders', function (\Illuminate\Http\Request $request) {
-            $workOrders = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus'])
-                ->where('contractor_id', $request->user()->id)
-                ->latest()
-                ->paginate(20);
+            $user = $request->user();
+            $user->load(['userType', 'contractCompany']);
+            
+            $query = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus']);
+            
+            // Check if user is Contractor Admin
+            $isContractorAdmin = $user->userType && $user->userType->name === 'Contractor Admin';
+            
+            if ($isContractorAdmin && $user->contract_company_id) {
+                // For Contractor Admin: show all work orders for users in the same contract company
+                // Get all user IDs from the same contract company
+                $companyUserIds = \App\Models\User::where('contract_company_id', $user->contract_company_id)
+                    ->pluck('id')
+                    ->toArray();
+                
+                if (!empty($companyUserIds)) {
+                    // Filter work orders where:
+                    // 1. contractor_id is in the list of company user IDs, OR
+                    // 2. work order has team members from the same company
+                    $query->where(function($q) use ($companyUserIds) {
+                        $q->whereIn('contractor_id', $companyUserIds)
+                          ->orWhereHas('teamMembers', function($teamQuery) use ($companyUserIds) {
+                              $teamQuery->whereIn('user_id', $companyUserIds);
+                          });
+                    });
+                } else {
+                    // No other users in company, only show work orders assigned to this user
+                    $query->where('contractor_id', $user->id);
+                }
+            } else {
+                // For regular users: only show work orders assigned to them
+                $query->where('contractor_id', $user->id);
+            }
+            
+            $workOrders = $query->latest()->paginate(20);
             return response()->json($workOrders);
         });
         
