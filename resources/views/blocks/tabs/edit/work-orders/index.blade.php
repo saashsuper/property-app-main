@@ -127,9 +127,9 @@
                                         <a href="{{ route('block-work-orders.show', $workOrder) }}" class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="ph-eye"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-outline-warning" onclick="editWorkOrder({{ $workOrder->id }})" title="Edit Work Order">
+                                        <a href="{{ route('block-work-orders.edit', $workOrder) }}" class="btn btn-sm btn-outline-warning" title="Edit Work Order">
                                             <i class="ph-pencil"></i>
-                                        </button>
+                                        </a>
                                         <button class="btn btn-sm btn-outline-danger" onclick="workOrderShowDeleteConfirmation({{ $workOrder->id }}, {
                                             ref_no: '#{{ $workOrder->ref_no }}',
                                             title: '{{ Str::limit($workOrder->issue ?? 'N/A', 50) }}',

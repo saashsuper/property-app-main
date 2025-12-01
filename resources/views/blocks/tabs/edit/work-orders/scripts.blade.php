@@ -1,6 +1,35 @@
 <script>
 (function() {
     let workOrdersDT = null;
+    
+    // Fetch work order function (similar to fetchInspection in inspection modal)
+    function fetchWorkOrder(workOrderId) {
+        if (!workOrderId) {
+            return;
+        }
+
+        fetch(`/block-work-orders/${workOrderId}`, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(resp => resp.json())
+            .then(data => {
+                if (!data.success) {
+                    showToast('danger', data.message || 'Failed to load work order details.');
+                    return;
+                }
+                populateEditModal(data.data);
+            })
+            .catch(error => {
+                console.error('Work order fetch error', error);
+                showToast('danger', 'Error fetching work order details.');
+            });
+    }
+    
+    // Expose fetchWorkOrder globally for backwards compatibility
+    window.editWorkOrder = fetchWorkOrder;
 
     const PRIORITY_BADGES = {
         1: '<span class="badge bg-success">Low</span>',
@@ -21,32 +50,46 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-        initializeDataTable();
-        bindFormHandlers();
-        bindModalEvents();
+        console.log('Work orders scripts: DOMContentLoaded');
         
-        // Debounced trigger to avoid duplicate refreshes
-        let workOrdersRefreshTimer = null;
-        function triggerWorkOrdersRefresh() {
-            clearTimeout(workOrdersRefreshTimer);
-            workOrdersRefreshTimer = setTimeout(function() {
-                if (!$.fn.DataTable.isDataTable('#workOrdersTable')) {
-                    initializeDataTable();
-                }
-                if (typeof window.refreshWorkOrdersTable === 'function') {
-                    window.refreshWorkOrdersTable();
-                }
-            }, 50);
-        }
+        try {
+            initializeDataTable();
+            bindFormHandlers();
+            bindModalEvents();
+            
+            // Verify modal exists
+            const createModal = document.getElementById('createWorkOrderModal');
+            if (createModal) {
+                console.log('Create work order modal found in DOM');
+            } else {
+                console.error('Create work order modal NOT found in DOM');
+            }
+            
+            // Debounced trigger to avoid duplicate refreshes
+            let workOrdersRefreshTimer = null;
+            function triggerWorkOrdersRefresh() {
+                clearTimeout(workOrdersRefreshTimer);
+                workOrdersRefreshTimer = setTimeout(function() {
+                    if (!$.fn.DataTable.isDataTable('#workOrdersTable')) {
+                        initializeDataTable();
+                    }
+                    if (typeof window.refreshWorkOrdersTable === 'function') {
+                        window.refreshWorkOrdersTable();
+                    }
+                }, 50);
+            }
 
-        // Listen for Bootstrap tab shown event to refresh data when work-orders tab becomes active
-        $(document).on('shown.bs.tab', '#work-orders-tab', function(e) {
-            triggerWorkOrdersRefresh();
-        });
+            // Listen for Bootstrap tab shown event to refresh data when work-orders tab becomes active
+            $(document).on('shown.bs.tab', '#work-orders-tab', function(e) {
+                triggerWorkOrdersRefresh();
+            });
 
-        // If Work Orders tab is already active on page load, refresh once to ensure data is loaded
-        if ($('#work-orders').hasClass('show') && $('#work-orders').hasClass('active')) {
-            triggerWorkOrdersRefresh();
+            // If Work Orders tab is already active on page load, refresh once to ensure data is loaded
+            if ($('#work-orders').hasClass('show') && $('#work-orders').hasClass('active')) {
+                triggerWorkOrdersRefresh();
+            }
+        } catch (error) {
+            console.error('Error initializing work orders:', error);
         }
     });
 
@@ -132,7 +175,8 @@
         }
 
         workOrdersDT.on('draw', function() {
-            window.workOrderAttachEditHandlers();
+            // Re-attach edit handlers after DataTable redraws
+            attachEditHandlers();
         });
     }
 
@@ -142,48 +186,51 @@
 
         if (createForm) {
             createForm.addEventListener('submit', handleCreateWorkOrderSubmit);
+            console.log('Create work order form handler attached');
+        } else {
+            console.error('Create work order form not found');
         }
+        
         if (editForm) {
             editForm.addEventListener('submit', handleEditWorkOrderSubmit);
+            console.log('Edit work order form handler attached');
+        } else {
+            console.warn('Edit work order form not found (may not be loaded yet)');
         }
+        
         window.workOrderAttachEditHandlers = attachEditHandlers;
         attachEditHandlers();
     }
-
-    // Unit autocomplete instance
-    let unitAutoComplete = null;
-    let isInitializingAutoComplete = false;
 
     function bindModalEvents() {
         const createModal = document.getElementById('createWorkOrderModal');
         const editModal = document.getElementById('editWorkOrderModal');
 
         if (createModal) {
+            console.log('Create work order modal found, attaching events');
+            
             createModal.addEventListener('show.bs.modal', () => {
+                console.log('Create work order modal opening');
                 const msg = document.getElementById('createWorkOrderMessage');
                 if (msg) msg.innerHTML = '';
                 
                 // Reset unit and issue selects
-                const unitInput = document.getElementById('work_order_unit_search');
-                const unitHidden = document.getElementById('work_order_unit_id_hidden');
+                const unitSelect = document.getElementById('work_order_unit_id');
                 const issueSelect = document.getElementById('block_issue_id_select');
                 
-                if (unitInput) {
-                    unitInput.value = '';
-                }
-                if (unitHidden) {
-                    unitHidden.value = '';
-                }
-                if (issueSelect) {
-                    issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
-                    issueSelect.disabled = true;
+                if (unitSelect) {
+                    unitSelect.value = '';
+                    console.log('Unit select reset');
+                } else {
+                    console.error('Unit select not found');
                 }
                 
-                // Refresh units dropdown with latest data (like create issue popup)
-                // Use longer delay to ensure modal and library are ready
-                setTimeout(() => {
-                    refreshUnitsDropdown();
-                }, 300);
+                if (issueSelect) {
+                    issueSelect.value = '';
+                    console.log('Issue select reset');
+                } else {
+                    console.error('Issue select not found');
+                }
             });
 
             createModal.addEventListener('hidden.bs.modal', () => {
@@ -194,267 +241,49 @@
                 }
                 const msg = document.getElementById('createWorkOrderMessage');
                 if (msg) msg.innerHTML = '';
-                
-                // Cleanup autocomplete
-                if (unitAutoComplete) {
-                    try {
-                        unitAutoComplete.unInit();
-                    } catch (e) {
-                        console.warn('Error destroying autocomplete:', e);
+            });
+            
+            // Handle unit selection change for create modal
+            const unitSelect = document.getElementById('work_order_unit_id');
+            if (unitSelect) {
+                unitSelect.addEventListener('change', function() {
+                    const unitId = this.value;
+                    const selectedOption = this.options[this.selectedIndex];
+                    const buildingId = selectedOption ? selectedOption.getAttribute('data-building-id') : '';
+                    
+                    // Update hidden fields
+                    const blockUnitIdField = document.getElementById('work_order_block_unit_id');
+                    const blockBuildingIdField = document.getElementById('work_order_block_building_id');
+                    
+                    if (blockUnitIdField) {
+                        blockUnitIdField.value = unitId;
                     }
-                    unitAutoComplete = null;
-                }
-                
-                // Remove any existing autocomplete list elements from DOM
-                const existingLists = document.querySelectorAll('[id^="autoComplete_list"]');
-                existingLists.forEach(list => {
-                    list.remove();
+                    if (blockBuildingIdField && buildingId) {
+                        blockBuildingIdField.value = buildingId;
+                    }
                 });
-                
-                isInitializingAutoComplete = false;
-            });
-        }
-    }
-    
-    /**
-     * Refresh units dropdown with latest data from database
-     * 
-     * Fetches units for the current block and initializes AutoComplete.js
-     * Similar to how it's done in the create issue popup
-     */
-    function refreshUnitsDropdown() {
-        const blockId = window.blockId || $('input[name="block_id"]').val() || document.getElementById('work_order_block_id')?.value;
-        
-        if (!blockId) {
-            console.error('Block ID not found. Please ensure you are on a block edit page.');
-            const unitInput = document.getElementById('work_order_unit_search');
-            if (unitInput) {
-                unitInput.disabled = true;
-                unitInput.placeholder = 'Block ID not found';
             }
-            return;
-        }
-        
-        // Set block_id in hidden field
-        const blockIdField = document.getElementById('work_order_block_id');
-        if (blockIdField) {
-            blockIdField.value = blockId;
-        }
-        
-        // Show loading state for units input
-        const $unitsInput = $('#work_order_unit_search');
-        const $unitsHidden = $('#work_order_unit_id_hidden');
-        
-        // Set loading state
-        $unitsInput.val('Loading units...').prop('disabled', true);
-        
-        // Fetch fresh units data using jQuery AJAX (like create issue popup)
-        $.ajax({
-            url: `/block-units/block/${blockId}`,
-            type: 'GET',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                console.log('Units API response:', response);
-                let unitsData = [];
-                
-                if (response.success && response.data && response.data.length > 0) {
-                    unitsData = response.data.map(function(unit) {
-                        const labelParts = [];
-                        if (unit.unit_code) {
-                            labelParts.push(unit.unit_code);
-                        }
-                        if (unit.unit_name && unit.unit_name !== unit.unit_code) {
-                            labelParts.push(unit.unit_name);
-                        }
-                        const label = labelParts.length > 0 ? labelParts.join(' - ') : `Unit #${unit.id}`;
-                        const searchTokens = [unit.unit_code, unit.unit_name]
-                            .filter(Boolean)
-                            .join(' ')
-                            .toLowerCase();
-                        
-                        return {
-                            value: unit.id,
-                            label: label,
-                            unit_code: unit.unit_code,
-                            unit_name: unit.unit_name,
-                            block_building_id: unit.block_building_id,
-                            searchValue: searchTokens
-                        };
-                    });
-                    console.log('Mapped units data:', unitsData);
-                } else {
-                    console.warn('No units found in response');
-                }
-                
-                $unitsInput.val('').prop('disabled', false);
-                
-                // Initialize or refresh AutoComplete.js
-                initializeUnitAutoComplete(unitsData);
-            },
-            error: function(xhr, status, error) {
-                console.error('Error fetching units:', error);
-                console.error('XHR:', xhr);
-                $unitsInput.val('Error loading units').prop('disabled', false);
-            }
-        });
-    }
-    
-    /**
-     * Initialize AutoComplete.js for the units dropdown
-     * 
-     * Creates a searchable autocomplete with keyboard navigation
-     * Similar to how it's done in the create issue popup
-     * 
-     * @param {Array} unitsData - Array of unit objects for autocomplete with value, label, searchValue properties
-     */
-    function initializeUnitAutoComplete(unitsData) {
-        // Prevent multiple simultaneous initializations
-        if (isInitializingAutoComplete) {
-            console.warn('AutoComplete initialization already in progress, skipping...');
-            return;
-        }
-        
-        isInitializingAutoComplete = true;
-        
-        const unitsInput = document.getElementById('work_order_unit_search');
-        const unitsHidden = document.getElementById('work_order_unit_id_hidden');
-        
-        console.log('initializeUnitAutoComplete called with data:', unitsData);
-        
-        const escapeRegExp = (string) => string ? string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
-        
-        const uniqueUnits = Array.from(
-            new Map(
-                (Array.isArray(unitsData) ? unitsData : [])
-                    .filter(unit => unit && typeof unit.value !== 'undefined' && unit.value !== null)
-                    .map(unit => [unit.value, unit])
-            ).values()
-        );
-        
-        console.log('Unique units data for autocomplete:', uniqueUnits);
-        console.log('unitsInput element:', unitsInput);
-        
-        if (!unitsInput) {
-            console.error('Unit input element not found!');
-            isInitializingAutoComplete = false;
-            return;
-        }
-        
-        // Destroy existing AutoComplete instance if it exists
-        if (unitAutoComplete) {
-            console.log('Destroying existing AutoComplete instance');
-            try {
-                unitAutoComplete.unInit();
-            } catch (e) {
-                console.warn('Error destroying autocomplete:', e);
-            }
-            unitAutoComplete = null;
-        }
-        
-        // Remove any existing autocomplete list elements from DOM
-        const existingLists = document.querySelectorAll('[id^="autoComplete_list"]');
-        existingLists.forEach(list => {
-            console.log('Removing existing autocomplete list:', list.id);
-            list.remove();
-        });
-        
-        // Check if AutoComplete is available
-        if (typeof autoComplete === 'undefined') {
-            console.error('AutoComplete library is not loaded!');
-            isInitializingAutoComplete = false;
-            return;
-        }
-        
-        console.log('Initializing AutoComplete with', uniqueUnits.length, 'units');
-        
-        // Initialize new AutoComplete instance
-        try {
-            unitAutoComplete = new autoComplete({
-                selector: () => document.getElementById("work_order_unit_search"),
-                placeHolder: "Search for units...",
-                data: {
-                    src: uniqueUnits,
-                    keys: ["searchValue"]
-                },
-                resultItem: {
-                    highlight: false,
-                    element: (item, data) => {
-                        const label = data.value.label || '';
-                        const query = (data.query || '').trim();
-                        
-                        if (!query) {
-                            item.innerHTML = label;
-                            return;
-                        }
-                        
-                        const regex = new RegExp(escapeRegExp(query), 'ig');
-                        const highlighted = label.replace(
-                            regex,
-                            match => `<span class="text-danger fw-semibold">${match}</span>`
-                        );
-                        
-                        item.innerHTML = highlighted;
-                    }
-                },
-                events: {
-                    input: {
-                        selection: (event) => {
-                            console.log('AutoComplete selection event:', event.detail);
-                            const selection = event.detail.selection;
-                            console.log('Selection object:', selection);
-                            console.log('Selection value:', selection.value);
-                            
-                            // The selection.value contains the actual unit data
-                            const selectedUnit = selection.value;
-                            console.log('Selected unit:', selectedUnit);
-                            
-                            if (selectedUnit && selectedUnit.value) {
-                                // Update the visible input with the selected label
-                                if (unitsInput) {
-                                    unitsInput.value = selectedUnit.label;
-                                }
-                                // Update the hidden input with the selected value (unit ID)
-                                if (unitsHidden) {
-                                    unitsHidden.value = selectedUnit.value;
-                                }
-                                
-                                // Set block_unit_id hidden field
-                                const blockUnitIdField = document.getElementById('work_order_block_unit_id');
-                                if (blockUnitIdField) {
-                                    blockUnitIdField.value = selectedUnit.value;
-                                }
-                                
-                                // Set block_building_id if available
-                                const blockBuildingIdField = document.getElementById('work_order_block_building_id');
-                                if (blockBuildingIdField && selectedUnit.block_building_id) {
-                                    blockBuildingIdField.value = selectedUnit.block_building_id;
-                                }
-                                
-                                // Load issues for selected unit
-                                loadIssuesForUnit(selectedUnit.value);
-                            } else {
-                                console.log('No unit found for selection:', selection);
-                            }
-                        }
-                    }
-                },
-                threshold: 1,
-                debounce: 300,
-                searchEngine: function (query, record) {
-                    if (!record) return 0;
-                    return record.toLowerCase().includes(query.toLowerCase()) ? 1 : 0;
-                },
-                maxResults: 10
-            });
             
-            console.log('AutoComplete successfully initialized');
-            isInitializingAutoComplete = false;
-            
-        } catch (error) {
-            console.error('Error initializing AutoComplete.js:', error);
-            isInitializingAutoComplete = false;
+            // Handle unit selection change for edit modal
+            const editUnitSelect = document.getElementById('edit_work_order_unit_id');
+            if (editUnitSelect) {
+                editUnitSelect.addEventListener('change', function() {
+                    const unitId = this.value;
+                    const selectedOption = this.options[this.selectedIndex];
+                    const buildingId = selectedOption ? selectedOption.getAttribute('data-building-id') : '';
+                    
+                    // Update hidden fields
+                    const blockUnitIdField = document.getElementById('edit_work_order_block_unit_id');
+                    const blockBuildingIdField = document.getElementById('edit_work_order_block_building_id');
+                    
+                    if (blockUnitIdField) {
+                        blockUnitIdField.value = unitId;
+                    }
+                    if (blockBuildingIdField && buildingId) {
+                        blockBuildingIdField.value = buildingId;
+                    }
+                });
+            }
         }
     }
     
@@ -498,41 +327,25 @@
 
         if (editModal) {
             editModal.addEventListener('show.bs.modal', () => {
+                // Clear any previous messages
                 const msg = document.getElementById('editWorkOrderMessage');
-                if (msg) msg.innerHTML = '';
+                if (msg) {
+                    msg.innerHTML = '';
+                    msg.classList.add('d-none');
+                }
             });
 
-            editModal.addEventListener('hide.bs.modal', (event) => {
-                // Prevent backdrop from being removed if there are other modals
-                const openModals = document.querySelectorAll('.modal.show');
-                // Allow Bootstrap to handle backdrop normally
-            });
-
-            editModal.addEventListener('hidden.bs.modal', (event) => {
+            editModal.addEventListener('hidden.bs.modal', () => {
                 const form = document.getElementById('editWorkOrderForm');
                 if (form) {
                     form.reset();
                     form.classList.remove('was-validated');
                 }
                 const msg = document.getElementById('editWorkOrderMessage');
-                if (msg) msg.innerHTML = '';
-                
-                // Ensure proper cleanup - check for other open modals
-                setTimeout(() => {
-                    const openModals = document.querySelectorAll('.modal.show');
-                    const backdrops = document.querySelectorAll('.modal-backdrop');
-                    
-                    // If no modals are open, clean up any remaining backdrop
-                    if (openModals.length === 0) {
-                        backdrops.forEach(backdrop => backdrop.remove());
-                        // Ensure body is properly restored
-                        if (!document.querySelector('.modal.show')) {
-                            document.body.classList.remove('modal-open');
-                            document.body.style.overflow = '';
-                            document.body.style.paddingRight = '';
-                        }
-                    }
-                }, 150);
+                if (msg) {
+                    msg.innerHTML = '';
+                    msg.classList.add('d-none');
+                }
             });
         }
     }
@@ -576,16 +389,20 @@
     }
 
     function attachEditHandlers() {
-        document.querySelectorAll('.btn-outline-warning').forEach(button => {
-            if (button.title === 'Edit Work Order' && !button.dataset.bound) {
+        // Use event delegation for edit buttons (like inspection modal)
+        document.querySelectorAll('.edit-work-order').forEach(button => {
+            if (!button.dataset.bound) {
                 button.dataset.bound = 'true';
                 button.addEventListener('click', function() {
-                    const workOrderId = this.getAttribute('onclick').match(/\d+/)[0];
-                    editWorkOrder(workOrderId);
+                    const workOrderId = this.getAttribute('data-work-order-id');
+                    if (workOrderId) {
+                        fetchWorkOrder(workOrderId);
+                    }
                 });
             }
         });
 
+        // Keep delete handlers as they are
         document.querySelectorAll('.btn-outline-danger').forEach(button => {
             if (button.title === 'Delete Work Order' && !button.dataset.bound) {
                 button.dataset.bound = 'true';
@@ -677,14 +494,32 @@
         // Remove ref_no from create form since it's auto-generated at backend
         if (form.id === 'createWorkOrderForm') {
             delete data.ref_no;
-            // Ensure block_id and block_issue_id are included from hidden fields
-            const blockId = document.getElementById('work_order_block_id');
-            const blockIssueId = document.getElementById('work_order_block_issue_id');
-            if (blockId && blockId.value) {
-                data.block_id = blockId.value;
+            
+            // Get block_id from window or hidden field
+            const blockId = window.blockId || document.getElementById('work_order_block_id')?.value;
+            if (blockId) {
+                data.block_id = blockId;
             }
-            if (blockIssueId && blockIssueId.value) {
-                data.block_issue_id = blockIssueId.value;
+            
+            // Get block_issue_id from the select dropdown
+            const blockIssueIdSelect = document.getElementById('block_issue_id_select');
+            if (blockIssueIdSelect && blockIssueIdSelect.value) {
+                data.block_issue_id = blockIssueIdSelect.value;
+            }
+            
+            // Get block_unit_id from the select dropdown or hidden field
+            const blockUnitIdSelect = document.getElementById('work_order_unit_id');
+            const blockUnitIdHidden = document.getElementById('work_order_block_unit_id');
+            if (blockUnitIdSelect && blockUnitIdSelect.value) {
+                data.block_unit_id = blockUnitIdSelect.value;
+            } else if (blockUnitIdHidden && blockUnitIdHidden.value) {
+                data.block_unit_id = blockUnitIdHidden.value;
+            }
+            
+            // Get block_building_id from hidden field
+            const blockBuildingIdField = document.getElementById('work_order_block_building_id');
+            if (blockBuildingIdField && blockBuildingIdField.value) {
+                data.block_building_id = blockBuildingIdField.value;
             }
         }
         return data;
@@ -829,9 +664,9 @@
                                 <a href="/block-work-orders/${workOrder.id}" class="btn btn-sm btn-outline-primary" title="View">
                                     <i class="ph-eye"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline-warning" onclick="editWorkOrder(${workOrder.id})" title="Edit Work Order">
+                                <a href="/block-work-orders/${workOrder.id}/edit" class="btn btn-sm btn-outline-warning" title="Edit Work Order">
                                     <i class="ph-pencil"></i>
-                                </button>
+                                </a>
                                 <button class="btn btn-sm btn-outline-danger" onclick="workOrderShowDeleteConfirmation(${workOrder.id}, {
                                     ref_no: '#${workOrder.ref_no}',
                                     title: '${issueText.replace(/'/g, "\\'")}',
@@ -859,50 +694,52 @@
         window.location.href = `/block-work-orders/${workOrderId}`;
     }
 
-    function editWorkOrder(workOrderId) {
-        fetch(`/block-work-orders/${workOrderId}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-            .then(resp => resp.json())
-            .then(data => {
-                if (!data.success) {
-                    showToast('danger', data.message || 'Failed to load work order details.');
-                    return;
-                }
-                populateEditModal(data.data);
-            })
-            .catch(error => {
-                console.error('Work order fetch error', error);
-                showToast('danger', 'Error fetching work order details.');
-            });
-    }
-
     function populateEditModal(workOrder) {
         if (!workOrder) return;
 
-        document.getElementById('editWorkOrderForm').action = `/block-work-orders/${workOrder.id}`;
-        setValue('edit_block_issue_id', workOrder.block_issue_id);
-        setValue('edit_ref_no', workOrder.ref_no);
+        const form = document.getElementById('editWorkOrderForm');
+        if (!form) {
+            console.error('Edit work order form not found');
+            return;
+        }
+
+        form.action = `/block-work-orders/${workOrder.id}`;
+        
+        // Set unit and issue
+        setValue('edit_work_order_unit_id', workOrder.block_unit_id);
+        setValue('edit_block_issue_id_select', workOrder.block_issue_id);
+        
+        // Update hidden fields for unit and building
+        const blockUnitIdField = document.getElementById('edit_work_order_block_unit_id');
+        const blockBuildingIdField = document.getElementById('edit_work_order_block_building_id');
+        const unitSelect = document.getElementById('edit_work_order_unit_id');
+        
+        if (blockUnitIdField) {
+            blockUnitIdField.value = workOrder.block_unit_id || '';
+        }
+        
+        // Get building ID from the selected unit option
+        if (unitSelect && workOrder.block_unit_id) {
+            // Wait a moment for the select to update, then get the building ID
+            setTimeout(() => {
+                const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+                if (selectedOption && blockBuildingIdField) {
+                    const buildingId = selectedOption.getAttribute('data-building-id') || '';
+                    blockBuildingIdField.value = buildingId;
+                }
+            }, 50);
+        }
+        
+        // Set priority and status
         setValue('edit_priority_id', workOrder.priority_id);
         setValue('edit_status', workOrder.status);
-        setValue('edit_block_unit_id', workOrder.block_unit_id);
-        setValue('edit_block_building_id', workOrder.block_building_id);
-        setValue('edit_contractor_id', workOrder.contractor_id);
-        setValue('edit_repair_category_id', workOrder.repair_category_id);
-        setValue('edit_issue', workOrder.issue);
+        
+        // Set contact information
         setValue('edit_contact_name', workOrder.contact_name);
         setValue('edit_contact_mobile', workOrder.contact_mobile);
         setValue('edit_contact_email', workOrder.contact_email);
-        setValue('edit_note_for_access', workOrder.note_for_access);
-        setValue('edit_comment', workOrder.comment);
-
+        
         // Handle datetime fields
-        if (workOrder.issued_date_time) {
-            setValue('edit_issued_date_time', formatDateTimeForInput(workOrder.issued_date_time));
-        }
         if (workOrder.preferred_start_date_time) {
             setValue('edit_preferred_start_date_time', formatDateTimeForInput(workOrder.preferred_start_date_time));
         }
@@ -912,15 +749,23 @@
         if (workOrder.deadline_date) {
             setValue('edit_deadline_date', formatDateForInput(workOrder.deadline_date));
         }
+        
+        // Set comments
+        setValue('edit_comment', workOrder.comment);
 
+        // Show modal (like inspection modal)
         const modalElement = document.getElementById('editWorkOrderModal');
-        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement, {
-            backdrop: true,
-            keyboard: true,
-            focus: true
-        });
+        if (!modalElement) {
+            console.error('Edit work order modal not found');
+            return;
+        }
+        
+        const modal = new bootstrap.Modal(modalElement);
         modal.show();
     }
+    
+    // Expose populateEditModal to global scope
+    window.populateEditModal = populateEditModal;
 
     function setValue(id, value) {
         const el = document.getElementById(id);
@@ -1161,12 +1006,11 @@
             });
     }
 
-    // Expose functions globally
+    // Expose functions globally - editWorkOrder is already exposed above
     window.workOrderShowDeleteConfirmation = workOrderShowDeleteConfirmation;
     window.workOrderAttachEditHandlers = attachEditHandlers;
     window.deleteWorkOrder = deleteWorkOrder;
     window.viewWorkOrder = viewWorkOrder;
-    window.editWorkOrder = editWorkOrder;
 
 })();
 </script>
