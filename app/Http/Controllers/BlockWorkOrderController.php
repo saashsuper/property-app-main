@@ -95,8 +95,8 @@ class BlockWorkOrderController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // Check if this is an AJAX request
-            if ($request->ajax()) {
+            // Check if this is an AJAX request (for modal submissions from block edit page)
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -197,13 +197,13 @@ class BlockWorkOrderController extends Controller
             );
         }
 
-        // Check if this is an AJAX request
-        if ($request->ajax()) {
+        // Check if this is an AJAX request (for modal submissions from block edit page)
+        if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Block work order created successfully!',
-                'work_order_id' => $workOrder->id,
-                'redirect_url' => route('block-work-orders.index')
+                'work_order_id' => $workOrder->id
+                // No redirect_url - let JavaScript handle the refresh
             ]);
         }
 
@@ -290,8 +290,8 @@ class BlockWorkOrderController extends Controller
         ]);
 
         if ($validator->fails()) {
-            // Check if this is an AJAX request
-            if ($request->ajax()) {
+            // Check if this is an AJAX request (for modal submissions from block edit page)
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -388,18 +388,16 @@ class BlockWorkOrderController extends Controller
      */
     public function destroy(BlockWorkOrder $blockWorkOrder)
     {
-        // Delete associated images
-        foreach ($blockWorkOrder->images as $image) {
-            Storage::delete('public/' . $image->image_path . '/' . $image->image_name);
-            $image->delete();
-        }
-
-        // Delete PDF if exists
-        if ($blockWorkOrder->pdf_path && $blockWorkOrder->pdf_name) {
-            Storage::delete('public/' . $blockWorkOrder->pdf_path . '/' . $blockWorkOrder->pdf_name);
-        }
-
+        // Soft delete the work order (matches inspection pattern)
         $blockWorkOrder->delete();
+
+        // Check if request expects JSON (AJAX request)
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order deleted successfully!'
+            ]);
+        }
 
         return redirect()->route('block-work-orders.index')
             ->with('success', 'Block work order deleted successfully!');

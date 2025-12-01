@@ -2,6 +2,23 @@
 (function() {
     let workOrdersDT = null;
     
+    // Expose refresh functions immediately so they're available for inline scripts
+    // These will be properly defined later, but we create placeholders now
+    window.refreshTable = window.refreshTable || function() {
+        console.warn('refreshTable not yet initialized, will retry...');
+        setTimeout(() => {
+            if (typeof window.refreshTable === 'function' && window.refreshTable.toString().includes('workOrdersDT')) {
+                window.refreshTable();
+            } else if (typeof window.refreshWorkOrdersTable === 'function') {
+                window.refreshWorkOrdersTable();
+            }
+        }, 100);
+    };
+    
+    window.refreshWorkOrdersTable = window.refreshWorkOrdersTable || function() {
+        console.warn('refreshWorkOrdersTable not yet initialized');
+    };
+    
     // Fetch work order function (similar to fetchInspection in inspection modal)
     function fetchWorkOrder(workOrderId) {
         if (!workOrderId) {
@@ -63,6 +80,13 @@
                 console.log('Create work order modal found in DOM');
             } else {
                 console.error('Create work order modal NOT found in DOM');
+            }
+            
+            const deleteModal = document.getElementById('deleteWorkOrderModal');
+            if (deleteModal) {
+                console.log('Delete work order modal found in DOM');
+            } else {
+                console.error('Delete work order modal NOT found in DOM');
             }
             
             // Debounced trigger to avoid duplicate refreshes
@@ -177,6 +201,7 @@
         workOrdersDT.on('draw', function() {
             // Re-attach edit handlers after DataTable redraws
             attachEditHandlers();
+            // Delete handlers use event delegation, so no need to re-attach
         });
     }
 
@@ -401,39 +426,15 @@
                 });
             }
         });
-
-        // Keep delete handlers as they are
-        document.querySelectorAll('.btn-outline-danger').forEach(button => {
-            if (button.title === 'Delete Work Order' && !button.dataset.bound) {
-                button.dataset.bound = 'true';
-                button.addEventListener('click', function() {
-                    const onclickAttr = this.getAttribute('onclick');
-                    const match = onclickAttr.match(/workOrderShowDeleteConfirmation\((\d+),/);
-                    if (match) {
-                        const workOrderId = match[1];
-                        const row = this.closest('tr');
-                        const refNo = row.querySelector('td:nth-child(1)').textContent.trim();
-                        const issue = row.querySelector('td:nth-child(3)').textContent.trim();
-                        const priority = row.querySelector('td:nth-child(4) .badge').textContent.trim();
-                        const status = row.querySelector('td:nth-child(5) .badge').textContent.trim();
-                        const issuedBy = row.querySelector('td:nth-child(8)').textContent.split('\n')[1]?.trim() || row.querySelector('td:nth-child(8)').textContent.trim();
-                        
-                        workOrderShowDeleteConfirmation(workOrderId, {
-                            ref_no: refNo,
-                            title: issue,
-                            priority: priority,
-                            status: status,
-                            created_date: issuedBy
-                        });
-                    }
-                });
-            }
-        });
     }
+    
 
     function handleCreateWorkOrderSubmit(evt) {
         evt.preventDefault();
+        evt.stopPropagation();
         const form = evt.currentTarget;
+        
+        console.log('Create work order form submitted via AJAX', form.action);
 
         const payload = buildPayload(form);
 
@@ -441,11 +442,30 @@
 
         submitForm(form.action, 'POST', payload, {
             onSuccess: msg => {
-                showToast('success', msg || 'Work order created successfully.');
-                bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-                refreshTable();
+                console.log('Work order created successfully, refreshing table');
+                // Hide modal first
+                const modalElement = form.closest('.modal');
+                if (modalElement) {
+                    const modal = bootstrap.Modal.getInstance(modalElement);
+                    if (modal) {
+                        modal.hide();
+                    }
+                }
+                // Reset form
+                form.reset();
+                // Clear any error messages
+                const msgContainer = document.getElementById('createWorkOrderMessage');
+                if (msgContainer) {
+                    msgContainer.innerHTML = '';
+                }
+                // Refresh table and stay on same tab (matches inspection pattern)
+                setTimeout(() => {
+                    refreshTable();
+                }, 300);
+                // No success message - just silently refresh
             },
             onError: msg => {
+                console.error('Work order creation error:', msg);
                 const container = document.getElementById('createWorkOrderMessage');
                 if (container) {
                     container.innerHTML = `<div class="alert alert-danger mb-0">${msg}</div>`;
@@ -455,6 +475,8 @@
             },
             onComplete: () => setLoading(form.querySelector('button[type="submit"]'), false)
         });
+        
+        return false; // Prevent any default form submission
     }
 
     function handleEditWorkOrderSubmit(evt) {
@@ -473,9 +495,11 @@
 
         submitForm(form.action, 'PUT', payload, {
             onSuccess: msg => {
-                showToast('success', msg || 'Work order updated successfully.');
+                // Hide modal first
                 bootstrap.Modal.getInstance(form.closest('.modal')).hide();
+                // Refresh table and stay on same tab (matches inspection pattern)
                 refreshTable();
+                // No success message - just silently refresh
             },
             onError: msg => {
                 const container = document.getElementById('editWorkOrderMessage');
@@ -547,21 +571,49 @@
             method,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
-            body: formData
+            body: formData,
+            redirect: 'manual' // Prevent automatic redirect following
         })
-            .then(resp => resp.json())
+            .then(resp => {
+                console.log('Response status:', resp.status, 'Content-Type:', resp.headers.get('content-type'));
+                
+                // Check if response is JSON
+                const contentType = resp.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return resp.json();
+                } else if (resp.status >= 300 && resp.status < 400) {
+                    // This is a redirect response - we should not follow it
+                    console.warn('Redirect response received, ignoring it');
+                    throw new Error('Server attempted to redirect. This should not happen for AJAX requests.');
+                } else {
+                    // If not JSON, it might be HTML or something else
+                    console.warn('Non-JSON response received:', contentType);
+                    return resp.text().then(text => {
+                        console.error('Response body:', text.substring(0, 200));
+                        throw new Error('Server returned non-JSON response');
+                    });
+                }
+            })
             .then(payload => {
+                console.log('Response payload:', payload);
                 if (payload.success) {
                     onSuccess && onSuccess(payload.message);
                 } else {
-                    onError && onError(payload.message || 'Request failed.');
+                    // Handle validation errors
+                    if (payload.errors) {
+                        const errorMessages = Object.values(payload.errors).flat().join(', ');
+                        onError && onError(errorMessages || payload.message || 'Validation failed.');
+                    } else {
+                        onError && onError(payload.message || 'Request failed.');
+                    }
                 }
             })
             .catch(error => {
                 console.error('Work order submit error', error);
-                onError && onError('Unexpected error. Please try again.');
+                onError && onError(error.message || 'Unexpected error. Please try again.');
             })
             .finally(() => {
                 onComplete && onComplete();
@@ -569,12 +621,20 @@
     }
 
     function refreshTable() {
+        console.log('refreshTable called, workOrdersDT:', workOrdersDT);
         if (workOrdersDT) {
+            console.log('Calling refreshWorkOrdersTable');
             refreshWorkOrdersTable();
         } else {
-            setTimeout(() => {
-                location.reload();
-            }, 1500);
+            console.log('DataTable not initialized, checking if table exists...');
+            if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
+                workOrdersDT = $('#workOrdersTable').DataTable();
+                console.log('DataTable found and assigned, calling refreshWorkOrdersTable');
+                refreshWorkOrdersTable();
+            } else {
+                console.log('DataTable not found, returning');
+                return;
+            }
         }
     }
 
@@ -587,15 +647,28 @@
      * @global
      */
     window.refreshWorkOrdersTable = function() {
+        console.log('refreshWorkOrdersTable called, workOrdersDT:', workOrdersDT);
+        
+        // Try to get the DataTable if it's not available
         if (!workOrdersDT) {
-            return;
+            console.log('DataTable not available, trying to get it...');
+            if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
+                workOrdersDT = $('#workOrdersTable').DataTable();
+                console.log('DataTable found and assigned');
+            } else {
+                console.log('DataTable not found, returning');
+                return;
+            }
         }
         
         const blockId = window.blockId || $('input[name="block_id"]').val();
+        console.log('Block ID:', blockId);
         if (!blockId) {
+            console.log('No block ID found, returning');
             return;
         }
         
+        console.log('Making AJAX request to:', `/block-work-orders/block/${blockId}`);
         $.ajax({
             url: `/block-work-orders/block/${blockId}`,
             method: 'GET',
@@ -647,6 +720,11 @@
                         const blockIssue = workOrder.block_issue || workOrder.blockIssue;
                         const issueTextRaw = (blockIssue && blockIssue.issue) ? blockIssue.issue : (workOrder.issue || null);
                         const issueText = issueTextRaw ? (issueTextRaw.length > 50 ? issueTextRaw.substring(0, 50) + '...' : issueTextRaw) : '<span class="text-muted">N/A</span>';
+                        const issueTextForData = issueTextRaw ? (issueTextRaw.length > 50 ? issueTextRaw.substring(0, 50) : issueTextRaw) : 'N/A';
+                        
+                        // Get priority and status text
+                        const priorityText = workOrder.priority_id == 1 ? 'Low' : (workOrder.priority_id == 2 ? 'Normal' : (workOrder.priority_id == 3 ? 'High' : (workOrder.priority_id == 4 ? 'Urgent' : (workOrder.priority_id == 5 ? 'Critical' : 'Unknown'))));
+                        const statusText = workOrder.status == 1 ? 'Pending' : (workOrder.status == 2 ? 'In Progress' : (workOrder.status == 3 ? 'Completed' : (workOrder.status == 4 ? 'Cancelled' : 'On Hold')));
                         
                         // Ref No link
                         const refNoLink = `<a href="/block-work-orders/${workOrder.id}" class="text-decoration-none"><strong>#${workOrder.ref_no}</strong></a>`;
@@ -667,24 +745,31 @@
                                 <a href="/block-work-orders/${workOrder.id}/edit" class="btn btn-sm btn-outline-warning" title="Edit Work Order">
                                     <i class="ph-pencil"></i>
                                 </a>
-                                <button class="btn btn-sm btn-outline-danger" onclick="workOrderShowDeleteConfirmation(${workOrder.id}, {
-                                    ref_no: '#${workOrder.ref_no}',
-                                    title: '${issueText.replace(/'/g, "\\'")}',
-                                    priority: '${workOrder.priority_id == 1 ? 'Low' : (workOrder.priority_id == 2 ? 'Normal' : (workOrder.priority_id == 3 ? 'High' : (workOrder.priority_id == 4 ? 'Urgent' : (workOrder.priority_id == 5 ? 'Critical' : 'Unknown'))))}',
-                                    status: '${workOrder.status == 1 ? 'Pending' : (workOrder.status == 2 ? 'In Progress' : (workOrder.status == 3 ? 'Completed' : (workOrder.status == 4 ? 'Cancelled' : 'On Hold')))}',
-                                    created_date: '${createdDate}'
-                                })" title="Delete Work Order">
+                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                        onclick="event.preventDefault(); event.stopPropagation(); workOrderShowDeleteConfirmation(${workOrder.id}, {
+                                            ref_no: '${workOrder.ref_no}',
+                                            title: ${JSON.stringify(issueTextForData)},
+                                            priority: ${JSON.stringify(priorityText)},
+                                            status: ${JSON.stringify(statusText)},
+                                            created_date: ${JSON.stringify(createdDate)}
+                                        }); return false;"
+                                        title="Delete Work Order">
                                     <i class="ph-trash"></i>
                                 </button>
                             </div>`
                         ]);
                     });
                     
+                    console.log('Drawing DataTable with', data.data.length, 'rows');
                     workOrdersDT.draw();
+                    console.log('DataTable refresh completed');
+                } else {
+                    console.log('API returned success: false');
                 }
             },
             error: function(xhr, status, error) {
                 console.error('Error fetching work orders:', error);
+                console.error('Response:', xhr.responseText);
             }
         });
     };
@@ -955,34 +1040,17 @@
         // Note for access field removed - using single comments field instead
     }
 
-    // Delete confirmation function
-    function workOrderShowDeleteConfirmation(workOrderId, workOrderData) {
-        const detailsList = document.getElementById('deleteWorkOrderDetails');
-        if (detailsList) {
-            detailsList.innerHTML = `
-                <li><strong>Work Order #:</strong> ${workOrderData.ref_no}</li>
-                <li><strong>Title:</strong> ${workOrderData.title}</li>
-                <li><strong>Priority:</strong> ${workOrderData.priority}</li>
-                <li><strong>Status:</strong> ${workOrderData.status}</li>
-                <li><strong>Created Date:</strong> ${workOrderData.created_date}</li>
-            `;
-        }
-
-        $('#confirmDeleteWorkOrderBtn').off('click').on('click', function() {
-            deleteWorkOrder(workOrderId);
-        });
-
-        $('#deleteWorkOrderModal').modal('show');
-    }
-
     function deleteWorkOrder(workOrderId) {
-        const $confirmBtn = $('#confirmDeleteWorkOrderBtn');
-        const originalText = $confirmBtn.html();
-        $confirmBtn.html('<i class="ph-spinner-gap me-1 ph-spin"></i>Deleting...').prop('disabled', true);
+        if (!workOrderId) return;
+
+        const $btn = $('#confirmDeleteWorkOrderBtn');
+        const original = $btn.html();
+        $btn.html('<i class="ph-spinner-gap me-1 ph-spin"></i>Deleting…').prop('disabled', true);
 
         fetch(`/block-work-orders/${workOrderId}`, {
             method: 'DELETE',
             headers: {
+                Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
@@ -990,26 +1058,108 @@
             .then(resp => resp.json())
             .then(data => {
                 if (data.success) {
-                    showToast('success', data.message || 'Work order deleted successfully.');
-                    $('#deleteWorkOrderModal').modal('hide');
+                    // Hide modal first (matches inspection pattern)
+                    bootstrap.Modal.getInstance(document.getElementById('deleteWorkOrderModal')).hide();
+                    // Refresh table (matches inspection pattern exactly)
                     refreshTable();
                 } else {
-                    showToast('danger', data.message || 'Failed to delete work order.');
+                    // Only show error toast for failures
+                    if (typeof showToast === 'function') {
+                        showToast('danger', data.message || 'Failed to delete work order.');
+                    }
                 }
             })
             .catch(error => {
-                console.error('Delete work order error', error);
-                showToast('danger', 'Error deleting work order.');
+                console.error('Work order delete error', error);
+                // Only show error toast if needed
+                if (typeof showToast === 'function') {
+                    showToast('danger', 'Error deleting work order.');
+                }
             })
             .finally(() => {
-                $confirmBtn.html(originalText).prop('disabled', false);
+                $btn.html(original).prop('disabled', false);
             });
     }
 
+    // Full implementation - override the inline version (matches inspection pattern)
+    window.workOrderShowDeleteConfirmation = function(workOrderId, details) {
+        console.log('workOrderShowDeleteConfirmation (IIFE) called', workOrderId, details);
+        
+        const container = document.getElementById('deleteWorkOrderDetails');
+        if (!container) {
+            console.error('deleteWorkOrderDetails container not found');
+            return;
+        }
+        
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-5">Reference:</div>
+                <div class="col-7"><strong>#${details.ref_no || 'N/A'}</strong></div>
+            </div>
+            <div class="row">
+                <div class="col-5">Title:</div>
+                <div class="col-7">${details.title || 'N/A'}</div>
+            </div>
+            <div class="row">
+                <div class="col-5">Priority:</div>
+                <div class="col-7">${details.priority || 'N/A'}</div>
+            </div>
+            <div class="row">
+                <div class="col-5">Status:</div>
+                <div class="col-7">${details.status || 'N/A'}</div>
+            </div>
+            <div class="row">
+                <div class="col-5">Created Date:</div>
+                <div class="col-7">${details.created_date || 'N/A'}</div>
+            </div>`;
+
+        const confirmBtn = document.getElementById('confirmDeleteWorkOrderBtn');
+        if (!confirmBtn) {
+            console.error('confirmDeleteWorkOrderBtn not found');
+            return;
+        }
+        
+        // Remove existing handlers and add new one (matches inspection pattern)
+        $('#confirmDeleteWorkOrderBtn').off('click').on('click', () => deleteWorkOrder(workOrderId));
+        
+        const modalElement = document.getElementById('deleteWorkOrderModal');
+        if (!modalElement) {
+            console.error('deleteWorkOrderModal not found');
+            return;
+        }
+        
+        // Show modal using Bootstrap 5 (matches inspection pattern)
+        try {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            console.log('Delete modal shown');
+        } catch (error) {
+            console.error('Error showing modal:', error);
+        }
+    };
+
     // Expose functions globally - editWorkOrder is already exposed above
-    window.workOrderShowDeleteConfirmation = workOrderShowDeleteConfirmation;
-    window.workOrderAttachEditHandlers = attachEditHandlers;
+    // deleteWorkOrder and workOrderShowDeleteConfirmation are already defined in inline script
+    // but we override them here to ensure they have access to refreshTable and showToast
+    // IMPORTANT: This must override the inline version to ensure refreshTable is available
     window.deleteWorkOrder = deleteWorkOrder;
+    // Override the placeholder functions with the real implementations
+    window.refreshTable = refreshTable;
+    window.refreshWorkOrdersTable = refreshWorkOrdersTable;
+    
+    // Log to confirm functions are exposed
+    console.log('Work orders IIFE functions exposed:', {
+        deleteWorkOrder: typeof window.deleteWorkOrder,
+        refreshTable: typeof window.refreshTable,
+        refreshWorkOrdersTable: typeof window.refreshWorkOrdersTable,
+        hasRefreshTable: window.deleteWorkOrder.toString().includes('refreshTable')
+    });
+    
+    // Verify the deleteWorkOrder function has access to refreshTable
+    if (!window.deleteWorkOrder.toString().includes('refreshTable')) {
+        console.error('WARNING: deleteWorkOrder does not have access to refreshTable!');
+    }
+    window.workOrderAttachEditHandlers = attachEditHandlers;
     window.viewWorkOrder = viewWorkOrder;
 
 })();

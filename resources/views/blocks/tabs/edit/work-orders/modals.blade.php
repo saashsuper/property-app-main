@@ -316,18 +316,27 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteWorkOrderModalLabel">Delete Work Order</h5>
+                <h5 class="modal-title" id="deleteWorkOrderModalLabel">
+                    <i class="ph-warning me-2"></i>Confirm Delete
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete this work order?</p>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="flex-shrink-0">
+                        <i class="ph-warning-circle text-danger" style="font-size: 2rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-1">Are you sure you want to delete this work order?</h6>
+                        <p class="text-muted mb-0">This action cannot be undone. The work order record will be permanently removed.</p>
+                    </div>
+                </div>
                 <div class="alert alert-warning">
                     <strong>Work Order Details:</strong>
-                    <ul class="mb-0 mt-2" id="deleteWorkOrderDetails">
+                    <div id="deleteWorkOrderDetails" class="mt-2">
                         <!-- Details will be populated by JavaScript -->
-                    </ul>
+                    </div>
                 </div>
-                <p class="text-danger"><strong>This action cannot be undone.</strong></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
