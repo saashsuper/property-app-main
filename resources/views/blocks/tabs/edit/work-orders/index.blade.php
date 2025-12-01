@@ -144,7 +144,7 @@
                         <i class="ph-printer"></i>
                     </a>
                 </div>
-                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#createWorkOrderModal">
+                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#workOrderModal">
                     <i class="ph-plus align-bottom me-1"></i> Create Work Order
                 </button>
             </div>
@@ -243,9 +243,9 @@
                                         <a href="{{ route('block-work-orders.show', $workOrder) }}" class="btn btn-sm btn-outline-primary" title="View">
                                             <i class="ph-eye"></i>
                                         </a>
-                                        <a href="{{ route('block-work-orders.edit', $workOrder) }}" class="btn btn-sm btn-outline-warning" title="Edit Work Order">
+                                        <button type="button" class="btn btn-sm btn-outline-warning edit-work-order" data-work-order-id="{{ $workOrder->id }}" title="Edit Work Order">
                                             <i class="ph-pencil"></i>
-                                        </a>
+                                        </button>
                                         <button type="button" class="btn btn-sm btn-outline-danger"
                                                 onclick="event.preventDefault(); event.stopPropagation(); workOrderShowDeleteConfirmation({{ $workOrder->id }}, {
                                                     ref_no: '{{ $workOrder->ref_no }}',

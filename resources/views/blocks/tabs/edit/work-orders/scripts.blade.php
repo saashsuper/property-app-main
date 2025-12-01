@@ -1,7 +1,7 @@
 <script>
 (function() {
     let workOrdersDT = null;
-    
+
     // Expose refresh functions immediately so they're available for inline scripts
     // These will be properly defined later, but we create placeholders now
     window.refreshTable = window.refreshTable || function() {
@@ -21,27 +21,47 @@
     
     // Fetch work order function (similar to fetchInspection in inspection modal)
     function fetchWorkOrder(workOrderId) {
+        console.log('fetchWorkOrder called with ID:', workOrderId);
+        
         if (!workOrderId) {
+            console.error('No work order ID provided');
             return;
         }
 
+        console.log('Fetching work order from:', `/block-work-orders/${workOrderId}`);
+        
         fetch(`/block-work-orders/${workOrderId}`, {
             headers: {
                 Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
             }
         })
-            .then(resp => resp.json())
+            .then(resp => {
+                console.log('Fetch response status:', resp.status);
+                if (!resp.ok) {
+                    throw new Error(`HTTP error! status: ${resp.status}`);
+                }
+                return resp.json();
+            })
             .then(data => {
+                console.log('Work order fetch response:', data);
                 if (!data.success) {
+                    console.error('Fetch returned success: false', data.message);
                     showToast('danger', data.message || 'Failed to load work order details.');
                     return;
                 }
+                if (!data.data) {
+                    console.error('No work order data in response');
+                    showToast('danger', 'No work order data received.');
+                    return;
+                }
+                console.log('Populating edit modal with work order data:', data.data);
                 populateEditModal(data.data);
             })
             .catch(error => {
                 console.error('Work order fetch error', error);
-                showToast('danger', 'Error fetching work order details.');
+                showToast('danger', 'Error fetching work order details: ' + error.message);
             });
     }
     
@@ -70,16 +90,16 @@
         console.log('Work orders scripts: DOMContentLoaded');
         
         try {
-            initializeDataTable();
-            bindFormHandlers();
-            bindModalEvents();
+        initializeDataTable();
+        bindFormHandlers();
+        bindModalEvents();
             
             // Verify modal exists
-            const createModal = document.getElementById('createWorkOrderModal');
-            if (createModal) {
-                console.log('Create work order modal found in DOM');
+            const workOrderModal = document.getElementById('workOrderModal');
+            if (workOrderModal) {
+                console.log('Work order modal found in DOM');
             } else {
-                console.error('Create work order modal NOT found in DOM');
+                console.error('Work order modal NOT found in DOM');
             }
             
             const deleteModal = document.getElementById('deleteWorkOrderModal');
@@ -88,29 +108,29 @@
             } else {
                 console.error('Delete work order modal NOT found in DOM');
             }
-            
-            // Debounced trigger to avoid duplicate refreshes
-            let workOrdersRefreshTimer = null;
-            function triggerWorkOrdersRefresh() {
-                clearTimeout(workOrdersRefreshTimer);
-                workOrdersRefreshTimer = setTimeout(function() {
-                    if (!$.fn.DataTable.isDataTable('#workOrdersTable')) {
-                        initializeDataTable();
-                    }
-                    if (typeof window.refreshWorkOrdersTable === 'function') {
-                        window.refreshWorkOrdersTable();
-                    }
-                }, 50);
-            }
+        
+        // Debounced trigger to avoid duplicate refreshes
+        let workOrdersRefreshTimer = null;
+        function triggerWorkOrdersRefresh() {
+            clearTimeout(workOrdersRefreshTimer);
+            workOrdersRefreshTimer = setTimeout(function() {
+                if (!$.fn.DataTable.isDataTable('#workOrdersTable')) {
+                    initializeDataTable();
+                }
+                if (typeof window.refreshWorkOrdersTable === 'function') {
+                    window.refreshWorkOrdersTable();
+                }
+            }, 50);
+        }
 
-            // Listen for Bootstrap tab shown event to refresh data when work-orders tab becomes active
-            $(document).on('shown.bs.tab', '#work-orders-tab', function(e) {
-                triggerWorkOrdersRefresh();
-            });
+        // Listen for Bootstrap tab shown event to refresh data when work-orders tab becomes active
+        $(document).on('shown.bs.tab', '#work-orders-tab', function(e) {
+            triggerWorkOrdersRefresh();
+        });
 
-            // If Work Orders tab is already active on page load, refresh once to ensure data is loaded
-            if ($('#work-orders').hasClass('show') && $('#work-orders').hasClass('active')) {
-                triggerWorkOrdersRefresh();
+        // If Work Orders tab is already active on page load, refresh once to ensure data is loaded
+        if ($('#work-orders').hasClass('show') && $('#work-orders').hasClass('active')) {
+            triggerWorkOrdersRefresh();
             }
         } catch (error) {
             console.error('Error initializing work orders:', error);
@@ -206,69 +226,224 @@
     }
 
     function bindFormHandlers() {
-        const createForm = document.getElementById('createWorkOrderForm');
-        const editForm = document.getElementById('editWorkOrderForm');
+        const workOrderForm = document.getElementById('workOrderForm');
 
-        if (createForm) {
-            createForm.addEventListener('submit', handleCreateWorkOrderSubmit);
-            console.log('Create work order form handler attached');
+        if (workOrderForm) {
+            workOrderForm.addEventListener('submit', handleWorkOrderSubmit);
+            console.log('Work order form handler attached');
         } else {
-            console.error('Create work order form not found');
-        }
-        
-        if (editForm) {
-            editForm.addEventListener('submit', handleEditWorkOrderSubmit);
-            console.log('Edit work order form handler attached');
-        } else {
-            console.warn('Edit work order form not found (may not be loaded yet)');
+            console.error('Work order form not found');
         }
         
         window.workOrderAttachEditHandlers = attachEditHandlers;
         attachEditHandlers();
     }
 
-    function bindModalEvents() {
-        const createModal = document.getElementById('createWorkOrderModal');
-        const editModal = document.getElementById('editWorkOrderModal');
-
-        if (createModal) {
-            console.log('Create work order modal found, attaching events');
+    // Handle Work Order Type toggle
+    function setupWorkOrderTypeToggle() {
+        let workOrderTypeSelect = document.getElementById('work_order_type');
+        const contractCompanyContainer = document.getElementById('contractCompanyFieldContainer');
+        const propertyManagerContainer = document.getElementById('propertyManagerFieldContainer');
+        const contractCompanyField = document.getElementById('work_order_contract_company_id');
+        const propertyManagerField = document.getElementById('work_order_property_manager_id');
+        
+        if (!workOrderTypeSelect) {
+            console.error('Work Order Type select not found');
+            return;
+        }
+        
+        // Remove any existing event listeners by cloning the element
+        const newSelect = workOrderTypeSelect.cloneNode(true);
+        workOrderTypeSelect.parentNode.replaceChild(newSelect, workOrderTypeSelect);
+        workOrderTypeSelect = document.getElementById('work_order_type');
+        
+        function toggleFields() {
+            const selectedType = workOrderTypeSelect.value;
+            console.log('Toggle fields called, selected type:', selectedType);
             
-            createModal.addEventListener('show.bs.modal', () => {
-                console.log('Create work order modal opening');
-                const msg = document.getElementById('createWorkOrderMessage');
-                if (msg) msg.innerHTML = '';
-                
-                // Reset unit and issue selects
-                const unitSelect = document.getElementById('work_order_unit_id');
-                const issueSelect = document.getElementById('block_issue_id_select');
-                
-                if (unitSelect) {
-                    unitSelect.value = '';
-                    console.log('Unit select reset');
+            if (selectedType === 'inhouse') {
+                console.log('Showing Property Manager, hiding Contract Company');
+                // Show Property Manager dropdown, hide Contract Company dropdown
+                if (propertyManagerContainer) {
+                    propertyManagerContainer.removeAttribute('style');
+                    propertyManagerContainer.style.setProperty('display', 'block', 'important');
+                    propertyManagerContainer.classList.remove('d-none');
+                    console.log('Property Manager container displayed');
                 } else {
-                    console.error('Unit select not found');
+                    console.error('Property Manager container not found');
+                }
+                if (contractCompanyContainer) {
+                    contractCompanyContainer.style.setProperty('display', 'none', 'important');
+                    contractCompanyContainer.classList.add('d-none');
+                    console.log('Contract Company container hidden');
+                } else {
+                    console.error('Contract Company container not found');
                 }
                 
-                if (issueSelect) {
-                    issueSelect.value = '';
-                    console.log('Issue select reset');
+                // Enable Property Manager field (make it required) and disable Contract Company field
+                if (propertyManagerField) {
+                    propertyManagerField.required = true;
+                    propertyManagerField.disabled = false;
+                    propertyManagerField.setAttribute('required', 'required');
+                    propertyManagerField.removeAttribute('disabled');
+                }
+                if (contractCompanyField) {
+                    contractCompanyField.required = false;
+                    contractCompanyField.disabled = true;
+                    contractCompanyField.value = '';
+                    contractCompanyField.removeAttribute('required');
+                }
+            } else {
+                console.log('Showing Contract Company, hiding Property Manager');
+                // Show Contract Company dropdown, hide Property Manager dropdown
+                if (contractCompanyContainer) {
+                    contractCompanyContainer.removeAttribute('style');
+                    contractCompanyContainer.style.setProperty('display', 'block', 'important');
+                    contractCompanyContainer.classList.remove('d-none');
+                    console.log('Contract Company container displayed');
                 } else {
-                    console.error('Issue select not found');
+                    console.error('Contract Company container not found');
+                }
+                if (propertyManagerContainer) {
+                    propertyManagerContainer.style.setProperty('display', 'none', 'important');
+                    propertyManagerContainer.classList.add('d-none');
+                    console.log('Property Manager container hidden');
+                } else {
+                    console.error('Property Manager container not found');
+                }
+                
+                // Enable Contract Company field (make it required) and disable Property Manager field
+                if (contractCompanyField) {
+                    contractCompanyField.required = true;
+                    contractCompanyField.disabled = false;
+                    contractCompanyField.setAttribute('required', 'required');
+                    contractCompanyField.removeAttribute('disabled');
+                }
+                if (propertyManagerField) {
+                    propertyManagerField.required = false;
+                    propertyManagerField.disabled = true;
+                    propertyManagerField.value = '';
+                    propertyManagerField.removeAttribute('required');
+                }
+            }
+        }
+        
+        // Set initial state based on current selection
+        toggleFields();
+        
+        // Listen for changes
+        workOrderTypeSelect.addEventListener('change', function() {
+            console.log('Work order type changed to:', this.value);
+            toggleFields();
+        });
+    }
+
+    function bindModalEvents() {
+        const workOrderModal = document.getElementById('workOrderModal');
+
+        if (workOrderModal) {
+            console.log('Work order modal found, attaching events');
+            
+            // Track if modal is in edit mode
+            let isEditMode = false;
+            
+            workOrderModal.addEventListener('show.bs.modal', () => {
+                console.log('Work order modal opening');
+                const msg = document.getElementById('workOrderMessage');
+                if (msg) {
+                    msg.innerHTML = '';
+                    msg.classList.add('d-none');
+                }
+                
+                // Check if we're in edit mode by checking if form action contains an ID
+                const form = document.getElementById('workOrderForm');
+                isEditMode = form && form.action.includes('/block-work-orders/') && form.action.match(/\d+$/);
+                
+                if (!isEditMode) {
+                    // Reset to create mode
+                    console.log('Resetting to create mode');
+                    const workOrderType = document.getElementById('work_order_type');
+                    if (workOrderType) {
+                        workOrderType.value = 'outsource';
+                    }
+                    
+                    // Setup work order type toggle - this will set initial state
+                    setupWorkOrderTypeToggle();
+                    
+                    // Reset form
+                if (form) {
+                        form.action = '{{ route("block-work-orders.store") }}';
+                        const methodInput = document.getElementById('work_order_method');
+                        if (methodInput) {
+                            methodInput.value = 'POST';
+                        }
+                        
+                        // Update modal title and submit button
+                        const modalLabel = document.getElementById('workOrderModalLabel');
+                        const submitBtn = document.getElementById('workOrderSubmitBtn');
+                        if (modalLabel) {
+                            modalLabel.textContent = 'Create Work Order';
+                        }
+                        if (submitBtn) {
+                            submitBtn.innerHTML = '<i class="ph-check me-1"></i> Create Work Order';
+                        }
+                    }
+                    
+                    // Reset unit and issue selects
+                    const unitSelect = document.getElementById('work_order_unit_id');
+                    const issueSelect = document.getElementById('block_issue_id_select');
+                    
+                    if (unitSelect) {
+                        unitSelect.value = '';
+                    }
+                    if (issueSelect) {
+                        issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+                        issueSelect.disabled = true;
+                    }
+                } else {
+                    // Edit mode - setup toggle in case it's needed
+                    setupWorkOrderTypeToggle();
                 }
             });
 
-            createModal.addEventListener('hidden.bs.modal', () => {
-                const form = document.getElementById('createWorkOrderForm');
+            workOrderModal.addEventListener('hidden.bs.modal', () => {
+                const form = document.getElementById('workOrderForm');
                 if (form) {
                     form.reset();
                     form.classList.remove('was-validated');
+                    
+                    // Reset form action to store route
+                    if (window.routes && window.routes.workOrders && window.routes.workOrders.store) {
+                        form.action = window.routes.workOrders.store;
+                    } else {
+                        form.action = '/block-work-orders';
+                    }
+                    
+                    const methodInput = document.getElementById('work_order_method');
+                    if (methodInput) {
+                        methodInput.value = 'POST';
+                    }
                 }
-                const msg = document.getElementById('createWorkOrderMessage');
-                if (msg) msg.innerHTML = '';
+                const msg = document.getElementById('workOrderMessage');
+                if (msg) {
+                    msg.innerHTML = '';
+                    msg.classList.add('d-none');
+                }
+                
+                // Reset modal title and submit button
+                const modalLabel = document.getElementById('workOrderModalLabel');
+                const submitBtn = document.getElementById('workOrderSubmitBtn');
+                if (modalLabel) {
+                    modalLabel.textContent = 'Create Work Order';
+                }
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i class="ph-check me-1"></i> Create Work Order';
+                }
+                
+                isEditMode = false;
             });
             
-            // Handle unit selection change for create modal
+            // Handle unit selection change
             const unitSelect = document.getElementById('work_order_unit_id');
             if (unitSelect) {
                 unitSelect.addEventListener('change', function() {
@@ -286,35 +461,47 @@
                     if (blockBuildingIdField && buildingId) {
                         blockBuildingIdField.value = buildingId;
                     }
+                    
+                    // Load issues for the selected unit
+                    if (unitId) {
+                        loadIssuesForUnit(unitId);
+                    } else {
+                        const issueSelect = document.getElementById('block_issue_id_select');
+                        const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+                        if (issueSelect) {
+                            issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+                            issueSelect.disabled = true;
+                        }
+                        if (blockIssueIdHidden) {
+                            blockIssueIdHidden.value = '';
+                        }
+                    }
                 });
             }
             
-            // Handle unit selection change for edit modal
-            const editUnitSelect = document.getElementById('edit_work_order_unit_id');
-            if (editUnitSelect) {
-                editUnitSelect.addEventListener('change', function() {
-                    const unitId = this.value;
-                    const selectedOption = this.options[this.selectedIndex];
-                    const buildingId = selectedOption ? selectedOption.getAttribute('data-building-id') : '';
-                    
-                    // Update hidden fields
-                    const blockUnitIdField = document.getElementById('edit_work_order_block_unit_id');
-                    const blockBuildingIdField = document.getElementById('edit_work_order_block_building_id');
-                    
-                    if (blockUnitIdField) {
-                        blockUnitIdField.value = unitId;
+            // Handle issue selection change - update hidden field
+            const issueSelect = document.getElementById('block_issue_id_select');
+            if (issueSelect) {
+                issueSelect.addEventListener('change', function() {
+                    const issueId = this.value;
+                    const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+                    if (blockIssueIdHidden) {
+                        blockIssueIdHidden.value = issueId || '';
                     }
-                    if (blockBuildingIdField && buildingId) {
-                        blockBuildingIdField.value = buildingId;
-                    }
+                    console.log('Issue selected, hidden field updated:', issueId);
                 });
             }
         }
     }
     
-    function loadIssuesForUnit(unitId) {
+    function loadIssuesForUnit(unitId, callback) {
         const issueSelect = document.getElementById('block_issue_id_select');
-        if (!issueSelect) return;
+        if (!issueSelect) {
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+            return;
+        }
         
         // Show loading state
         issueSelect.disabled = true;
@@ -342,107 +529,134 @@
                 issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
                 issueSelect.disabled = true;
             }
-        })
-        .catch(error => {
-            console.error('Error loading issues:', error);
-            issueSelect.innerHTML = '<option value="">Error loading issues</option>';
-            issueSelect.disabled = true;
-        });
-    }
-
-        if (editModal) {
-            editModal.addEventListener('show.bs.modal', () => {
-                // Clear any previous messages
-                const msg = document.getElementById('editWorkOrderMessage');
-                if (msg) {
-                    msg.innerHTML = '';
-                    msg.classList.add('d-none');
-                }
-            });
-
-            editModal.addEventListener('hidden.bs.modal', () => {
-                const form = document.getElementById('editWorkOrderForm');
-                if (form) {
-                    form.reset();
-                    form.classList.remove('was-validated');
-                }
-                const msg = document.getElementById('editWorkOrderMessage');
-                if (msg) {
-                    msg.innerHTML = '';
-                    msg.classList.add('d-none');
-                }
-            });
-        }
-    }
-    
-    function loadIssuesForUnit(unitId) {
-        const issueSelect = document.getElementById('block_issue_id_select');
-        if (!issueSelect) return;
-        
-        // Show loading state
-        issueSelect.disabled = true;
-        issueSelect.innerHTML = '<option value="">Loading issues...</option>';
-        
-        // Fetch issues for the unit
-        fetch(`/api/block-unit-active-issues?unit_id=${unitId}`, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.data && data.data.length > 0) {
-                issueSelect.innerHTML = '<option value="">Select Issue</option>';
-                data.data.forEach(issue => {
-                    const option = document.createElement('option');
-                    option.value = issue.id;
-                    option.textContent = `${issue.ref_no} - ${issue.issue}`;
-                    issueSelect.appendChild(option);
-                });
-                issueSelect.disabled = false;
-            } else {
-                issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
-                issueSelect.disabled = true;
+            
+            // Execute callback if provided
+            if (callback && typeof callback === 'function') {
+                callback();
             }
         })
         .catch(error => {
             console.error('Error loading issues:', error);
             issueSelect.innerHTML = '<option value="">Error loading issues</option>';
             issueSelect.disabled = true;
+            
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
         });
     }
 
     function attachEditHandlers() {
+        console.log('attachEditHandlers called');
         // Use event delegation for edit buttons (like inspection modal)
-        document.querySelectorAll('.edit-work-order').forEach(button => {
+        const editButtons = document.querySelectorAll('.edit-work-order');
+        console.log('Found edit buttons:', editButtons.length);
+        
+        editButtons.forEach(button => {
             if (!button.dataset.bound) {
                 button.dataset.bound = 'true';
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
                     const workOrderId = this.getAttribute('data-work-order-id');
+                    console.log('Edit button clicked, work order ID:', workOrderId);
+                    
                     if (workOrderId) {
                         fetchWorkOrder(workOrderId);
-                    }
+                } else {
+                        console.error('No work order ID found on edit button');
+                        showToast('danger', 'Work order ID not found.');
+                }
                 });
+                console.log('Attached click handler to edit button:', button);
             }
         });
     }
-    
 
-    function handleCreateWorkOrderSubmit(evt) {
+
+    function handleWorkOrderSubmit(evt) {
         evt.preventDefault();
         evt.stopPropagation();
         const form = evt.currentTarget;
         
-        console.log('Create work order form submitted via AJAX', form.action);
+        if (!form.checkValidity()) {
+            evt.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
 
+        // Determine if this is create or edit mode
+        const methodInput = document.getElementById('work_order_method');
+        const isEditMode = methodInput && methodInput.value === 'PUT';
+        const method = isEditMode ? 'PUT' : 'POST';
+        const action = isEditMode ? form.action : form.action;
+        
+        console.log(`${isEditMode ? 'Edit' : 'Create'} work order form submitted via AJAX`, form.action);
+
+        // Get required fields directly from DOM BEFORE building payload
+        const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+        const prioritySelect = document.getElementById('work_order_priority_id');
+        
+        console.log('=== BEFORE BUILDING PAYLOAD ===');
+        console.log('block_issue_id from DOM (hidden field):', blockIssueIdHidden?.value);
+        console.log('priority_id from DOM (select):', prioritySelect?.value);
+        console.log('block_issue_id field exists?', !!blockIssueIdHidden);
+        console.log('priority_id field exists?', !!prioritySelect);
+        
+        if (!blockIssueIdHidden?.value) {
+            console.error('❌ CRITICAL: block_issue_id is empty in hidden field!');
+        }
+        if (!prioritySelect?.value) {
+            console.error('❌ CRITICAL: priority_id is empty in select!');
+        }
+        
         const payload = buildPayload(form);
+        
+        // Log the payload for debugging
+        console.log('=== PAYLOAD BUILT ===');
+        console.log('Full payload:', payload);
+        console.log('block_issue_id in payload:', payload.block_issue_id);
+        console.log('priority_id in payload:', payload.priority_id);
+        
+        // FORCE include required fields if missing (safety net)
+        if (!payload.block_issue_id) {
+            console.error('❌ block_issue_id missing from payload, forcing from DOM...');
+            if (blockIssueIdHidden?.value) {
+                payload.block_issue_id = blockIssueIdHidden.value;
+                console.log('✓ Forced block_issue_id into payload:', payload.block_issue_id);
+            } else {
+                console.error('❌ Cannot force block_issue_id - DOM field is empty!');
+            }
+        }
+        if (!payload.priority_id) {
+            console.error('❌ priority_id missing from payload, forcing from DOM...');
+            if (prioritySelect?.value) {
+                payload.priority_id = prioritySelect.value;
+                console.log('✓ Forced priority_id into payload:', payload.priority_id);
+            } else {
+                console.error('❌ Cannot force priority_id - DOM field is empty!');
+            }
+        }
+        
+        // Final validation before submission
+        if (!payload.block_issue_id || !payload.priority_id) {
+            console.error('❌ REQUIRED FIELDS MISSING - ABORTING SUBMISSION');
+            console.error('block_issue_id:', payload.block_issue_id || 'MISSING');
+            console.error('priority_id:', payload.priority_id || 'MISSING');
+            showToast('danger', 'Required fields are missing. Please refresh and try again.');
+            setLoading(submitBtn, false);
+            return false;
+        }
+        
+        console.log('✓ All required fields present, proceeding with submission');
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        setLoading(submitBtn, true, isEditMode ? 'Updating...' : 'Creating...');
 
-        setLoading(form.querySelector('button[type="submit"]'), true, 'Creating...');
-
-        submitForm(form.action, 'POST', payload, {
+        submitForm(action, method, payload, {
             onSuccess: msg => {
-                console.log('Work order created successfully, refreshing table');
+                console.log(`Work order ${isEditMode ? 'updated' : 'created'} successfully, refreshing table`);
                 // Hide modal first
                 const modalElement = form.closest('.modal');
                 if (modalElement) {
@@ -454,103 +668,168 @@
                 // Reset form
                 form.reset();
                 // Clear any error messages
-                const msgContainer = document.getElementById('createWorkOrderMessage');
+                const msgContainer = document.getElementById('workOrderMessage');
                 if (msgContainer) {
                     msgContainer.innerHTML = '';
+                    msgContainer.classList.add('d-none');
                 }
                 // Refresh table and stay on same tab (matches inspection pattern)
                 setTimeout(() => {
-                    refreshTable();
+                refreshTable();
                 }, 300);
                 // No success message - just silently refresh
             },
             onError: msg => {
-                console.error('Work order creation error:', msg);
-                const container = document.getElementById('createWorkOrderMessage');
+                console.error(`Work order ${isEditMode ? 'update' : 'creation'} error:`, msg);
+                const container = document.getElementById('workOrderMessage');
                 if (container) {
                     container.innerHTML = `<div class="alert alert-danger mb-0">${msg}</div>`;
+                    container.classList.remove('d-none');
                 } else {
                     showToast('danger', msg);
                 }
             },
-            onComplete: () => setLoading(form.querySelector('button[type="submit"]'), false)
+            onComplete: () => setLoading(submitBtn, false)
         });
         
         return false; // Prevent any default form submission
     }
 
-    function handleEditWorkOrderSubmit(evt) {
-        evt.preventDefault();
-        const form = evt.currentTarget;
-        if (!form.checkValidity()) {
-            evt.stopPropagation();
-            form.classList.add('was-validated');
-            return;
-        }
-
-        const id = form.action.split('/').pop();
-        const payload = buildPayload(form);
-
-        setLoading(form.querySelector('button[type="submit"]'), true, 'Updating...');
-
-        submitForm(form.action, 'PUT', payload, {
-            onSuccess: msg => {
-                // Hide modal first
-                bootstrap.Modal.getInstance(form.closest('.modal')).hide();
-                // Refresh table and stay on same tab (matches inspection pattern)
-                refreshTable();
-                // No success message - just silently refresh
-            },
-            onError: msg => {
-                const container = document.getElementById('editWorkOrderMessage');
-                if (container) {
-                    container.innerHTML = `<div class="alert alert-danger mb-0">${msg}</div>`;
-                } else {
-                    showToast('danger', msg);
-                }
-            },
-            onComplete: () => setLoading(form.querySelector('button[type="submit"]'), false)
-        });
-    }
-
     function buildPayload(form) {
-        const data = Object.fromEntries(new FormData(form));
-        // Remove ref_no from create form since it's auto-generated at backend
-        if (form.id === 'createWorkOrderForm') {
-            delete data.ref_no;
-            
-            // Get block_id from window or hidden field
-            const blockId = window.blockId || document.getElementById('work_order_block_id')?.value;
-            if (blockId) {
-                data.block_id = blockId;
-            }
-            
-            // Get block_issue_id from the select dropdown
-            const blockIssueIdSelect = document.getElementById('block_issue_id_select');
-            if (blockIssueIdSelect && blockIssueIdSelect.value) {
-                data.block_issue_id = blockIssueIdSelect.value;
-            }
-            
-            // Get block_unit_id from the select dropdown or hidden field
-            const blockUnitIdSelect = document.getElementById('work_order_unit_id');
-            const blockUnitIdHidden = document.getElementById('work_order_block_unit_id');
-            if (blockUnitIdSelect && blockUnitIdSelect.value) {
-                data.block_unit_id = blockUnitIdSelect.value;
-            } else if (blockUnitIdHidden && blockUnitIdHidden.value) {
-                data.block_unit_id = blockUnitIdHidden.value;
-            }
-            
-            // Get block_building_id from hidden field
-            const blockBuildingIdField = document.getElementById('work_order_block_building_id');
-            if (blockBuildingIdField && blockBuildingIdField.value) {
-                data.block_building_id = blockBuildingIdField.value;
+        // Start with empty object - don't rely on FormData which may miss disabled/empty fields
+        const data = {};
+        
+        // REQUIRED: Get block_issue_id - ALWAYS get directly from DOM
+        const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+        const blockIssueIdSelect = document.getElementById('block_issue_id_select');
+        
+        // Always try to get from hidden field first (more reliable)
+        if (blockIssueIdHidden && blockIssueIdHidden.value) {
+            data.block_issue_id = blockIssueIdHidden.value;
+        } else if (blockIssueIdSelect && blockIssueIdSelect.value) {
+            data.block_issue_id = blockIssueIdSelect.value;
+            // Also update hidden field for consistency
+            if (blockIssueIdHidden) {
+                blockIssueIdHidden.value = blockIssueIdSelect.value;
             }
         }
+        
+        // REQUIRED: Get priority_id - ALWAYS get directly from DOM
+        const prioritySelect = document.getElementById('work_order_priority_id');
+        if (prioritySelect && prioritySelect.value) {
+            data.priority_id = prioritySelect.value;
+        }
+        
+        // Get block_id from window or hidden field
+        const blockId = window.blockId || document.getElementById('work_order_block_id')?.value;
+        if (blockId) {
+            data.block_id = blockId;
+        }
+        
+        // Get status
+        const statusSelect = document.getElementById('work_order_status');
+        if (statusSelect && statusSelect.value) {
+            data.status = statusSelect.value;
+        }
+        
+        // Get other fields from FormData for everything else
+        const formData = Object.fromEntries(new FormData(form));
+        
+        // Merge formData into data, but don't overwrite our DOM values
+        Object.keys(formData).forEach(key => {
+            if (key !== 'block_issue_id' && key !== 'priority_id') {
+                // Only add non-empty values (except for required fields we already set)
+                if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+                    data[key] = formData[key];
+                }
+            }
+        });
+        
+        // Remove ref_no since it's auto-generated at backend
+            delete data.ref_no;
+        
+        // Validate required fields before submission and log for debugging
+        if (!data.block_issue_id) {
+            console.error('❌ block_issue_id is missing from payload. Hidden field value:', blockIssueIdHidden?.value, 'Select value:', blockIssueIdSelect?.value);
+        } else {
+            console.log('✓ block_issue_id included in payload:', data.block_issue_id);
+        }
+        if (!data.priority_id) {
+            console.error('❌ priority_id is missing from payload. Select value:', prioritySelect?.value);
+        } else {
+            console.log('✓ priority_id included in payload:', data.priority_id);
+        }
+        
+        // Get block_unit_id from the select dropdown or hidden field
+        const blockUnitIdSelect = document.getElementById('work_order_unit_id');
+        const blockUnitIdHidden = document.getElementById('work_order_block_unit_id');
+        if (blockUnitIdSelect && blockUnitIdSelect.value) {
+            data.block_unit_id = blockUnitIdSelect.value;
+        } else if (blockUnitIdHidden && blockUnitIdHidden.value) {
+            data.block_unit_id = blockUnitIdHidden.value;
+        }
+        
+        // Get block_building_id from hidden field
+        const blockBuildingIdField = document.getElementById('work_order_block_building_id');
+        if (blockBuildingIdField && blockBuildingIdField.value) {
+            data.block_building_id = blockBuildingIdField.value;
+        }
+        
+        // Handle work_order_type to determine contract_company_id vs property_manager_id
+        const workOrderType = document.getElementById('work_order_type')?.value;
+        if (workOrderType === 'inhouse') {
+            // For inhouse, use property_manager_id
+            const propertyManagerSelect = document.getElementById('work_order_property_manager_id');
+            if (propertyManagerSelect && propertyManagerSelect.value) {
+                data.property_manager_id = propertyManagerSelect.value;
+            }
+            delete data.contract_company_id;
+        } else {
+            // For outsource, use contract_company_id
+            const contractCompanySelect = document.getElementById('work_order_contract_company_id');
+            if (contractCompanySelect && contractCompanySelect.value) {
+                data.contract_company_id = contractCompanySelect.value;
+            }
+            delete data.property_manager_id;
+        }
+        
         return data;
     }
 
     function submitForm(url, method, data, { onSuccess, onError, onComplete }) {
         const formData = new FormData();
+        
+        // Log what we're about to send
+        console.log('=== BUILDING FORMDATA ===');
+        console.log('Data object keys:', Object.keys(data));
+        console.log('block_issue_id in data:', data.block_issue_id);
+        console.log('priority_id in data:', data.priority_id);
+        
+        // CRITICAL: Ensure required fields are ALWAYS in FormData, even if missing from data object
+        const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+        const blockIssueIdSelect = document.getElementById('block_issue_id_select');
+        const prioritySelect = document.getElementById('work_order_priority_id');
+        
+        // Get block_issue_id from DOM if not in data
+        if (!data.block_issue_id) {
+            if (blockIssueIdHidden && blockIssueIdHidden.value) {
+                data.block_issue_id = blockIssueIdHidden.value;
+                console.log('✓ Added block_issue_id from hidden field to data:', data.block_issue_id);
+            } else if (blockIssueIdSelect && blockIssueIdSelect.value) {
+                data.block_issue_id = blockIssueIdSelect.value;
+                console.log('✓ Added block_issue_id from select to data:', data.block_issue_id);
+            }
+        }
+        
+        // Get priority_id from DOM if not in data
+        if (!data.priority_id) {
+            if (prioritySelect && prioritySelect.value) {
+                data.priority_id = prioritySelect.value;
+                console.log('✓ Added priority_id from DOM to data:', data.priority_id);
+            }
+        }
+        
+        // Now build FormData
         Object.keys(data).forEach(key => {
             if (data[key] !== null && data[key] !== undefined) {
                 if (key === 'images' && Array.isArray(data[key])) {
@@ -566,6 +845,71 @@
                 }
             }
         });
+        
+        // CRITICAL: Explicitly add required fields - read directly from DOM as final fallback
+        let finalBlockIssueId = data.block_issue_id;
+        let finalPriorityId = data.priority_id;
+        
+        // Final DOM read as absolute fallback
+        if (!finalBlockIssueId) {
+            const hiddenField = document.getElementById('work_order_block_issue_id');
+            const selectField = document.getElementById('block_issue_id_select');
+            if (hiddenField && hiddenField.value) {
+                finalBlockIssueId = hiddenField.value;
+                console.log('⚠️ Fallback: Got block_issue_id from hidden field:', finalBlockIssueId);
+            } else if (selectField && selectField.value) {
+                finalBlockIssueId = selectField.value;
+                console.log('⚠️ Fallback: Got block_issue_id from select:', finalBlockIssueId);
+            }
+        }
+        
+        if (!finalPriorityId) {
+            const priorityField = document.getElementById('work_order_priority_id');
+            if (priorityField && priorityField.value) {
+                finalPriorityId = priorityField.value;
+                console.log('⚠️ Fallback: Got priority_id from DOM:', finalPriorityId);
+            }
+        }
+        
+        // CRITICAL: Only set these fields if we have actual values
+        if (finalBlockIssueId) {
+            formData.set('block_issue_id', finalBlockIssueId);
+            console.log('✓ FINAL: Set block_issue_id in FormData:', finalBlockIssueId);
+        } else {
+            console.error('❌ CRITICAL ERROR: block_issue_id is still missing after all fallbacks!');
+            console.error('Hidden field value:', blockIssueIdHidden?.value);
+            console.error('Select field value:', blockIssueIdSelect?.value);
+            console.error('Data object block_issue_id:', data.block_issue_id);
+        }
+        
+        if (finalPriorityId) {
+            formData.set('priority_id', finalPriorityId);
+            console.log('✓ FINAL: Set priority_id in FormData:', finalPriorityId);
+        } else {
+            console.error('❌ CRITICAL ERROR: priority_id is still missing after all fallbacks!');
+            console.error('Priority select value:', prioritySelect?.value);
+            console.error('Data object priority_id:', data.priority_id);
+        }
+        
+        // Final verification before sending
+        const finalCheckBlockIssueId = formData.get('block_issue_id');
+        const finalCheckPriorityId = formData.get('priority_id');
+        console.log('✓ FINAL FormData verification - block_issue_id:', finalCheckBlockIssueId, 'priority_id:', finalCheckPriorityId);
+        
+        if (!finalCheckBlockIssueId || !finalCheckPriorityId) {
+            console.error('❌ ABORTING SUBMISSION - Required fields missing from FormData!');
+            onError && onError('Required fields are missing. Please check the console for details.');
+            onComplete && onComplete();
+            return;
+        }
+        
+        // Log FormData contents for debugging
+        console.log('=== FORMDATA CONTENTS ===');
+        for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+        console.log('block_issue_id in FormData:', formData.get('block_issue_id'));
+        console.log('priority_id in FormData:', formData.get('priority_id'));
 
         fetch(url, {
             method,
@@ -606,8 +950,8 @@
                     if (payload.errors) {
                         const errorMessages = Object.values(payload.errors).flat().join(', ');
                         onError && onError(errorMessages || payload.message || 'Validation failed.');
-                    } else {
-                        onError && onError(payload.message || 'Request failed.');
+                } else {
+                    onError && onError(payload.message || 'Request failed.');
                     }
                 }
             })
@@ -657,7 +1001,7 @@
                 console.log('DataTable found and assigned');
             } else {
                 console.log('DataTable not found, returning');
-                return;
+            return;
             }
         }
         
@@ -742,9 +1086,9 @@
                                 <a href="/block-work-orders/${workOrder.id}" class="btn btn-sm btn-outline-primary" title="View">
                                     <i class="ph-eye"></i>
                                 </a>
-                                <a href="/block-work-orders/${workOrder.id}/edit" class="btn btn-sm btn-outline-warning" title="Edit Work Order">
+                                <button type="button" class="btn btn-sm btn-outline-warning edit-work-order" data-work-order-id="${workOrder.id}" title="Edit Work Order">
                                     <i class="ph-pencil"></i>
-                                </a>
+                                </button>
                                 <button type="button" class="btn btn-sm btn-outline-danger"
                                         onclick="event.preventDefault(); event.stopPropagation(); workOrderShowDeleteConfirmation(${workOrder.id}, {
                                             ref_no: '${workOrder.ref_no}',
@@ -780,73 +1124,203 @@
     }
 
     function populateEditModal(workOrder) {
-        if (!workOrder) return;
-
-        const form = document.getElementById('editWorkOrderForm');
-        if (!form) {
-            console.error('Edit work order form not found');
+        console.log('populateEditModal called with workOrder:', workOrder);
+        
+        if (!workOrder) {
+            console.error('No work order data provided');
             return;
         }
 
-        form.action = `/block-work-orders/${workOrder.id}`;
-        
-        // Set unit and issue
-        setValue('edit_work_order_unit_id', workOrder.block_unit_id);
-        setValue('edit_block_issue_id_select', workOrder.block_issue_id);
-        
-        // Update hidden fields for unit and building
-        const blockUnitIdField = document.getElementById('edit_work_order_block_unit_id');
-        const blockBuildingIdField = document.getElementById('edit_work_order_block_building_id');
-        const unitSelect = document.getElementById('edit_work_order_unit_id');
-        
-        if (blockUnitIdField) {
-            blockUnitIdField.value = workOrder.block_unit_id || '';
-        }
-        
-        // Get building ID from the selected unit option
-        if (unitSelect && workOrder.block_unit_id) {
-            // Wait a moment for the select to update, then get the building ID
-            setTimeout(() => {
-                const selectedOption = unitSelect.options[unitSelect.selectedIndex];
-                if (selectedOption && blockBuildingIdField) {
-                    const buildingId = selectedOption.getAttribute('data-building-id') || '';
-                    blockBuildingIdField.value = buildingId;
+        const form = document.getElementById('workOrderForm');
+        if (!form) {
+            console.error('Work order form not found');
+                    return;
                 }
-            }, 50);
+
+        console.log('Populating form for work order ID:', workOrder.id);
+        
+        // Set form to edit mode
+        form.action = `/block-work-orders/${workOrder.id}`;
+        const methodInput = document.getElementById('work_order_method');
+        if (methodInput) {
+            methodInput.value = 'PUT';
         }
         
-        // Set priority and status
-        setValue('edit_priority_id', workOrder.priority_id);
-        setValue('edit_status', workOrder.status);
+        // Update modal title and submit button
+        const modalLabel = document.getElementById('workOrderModalLabel');
+        const submitBtn = document.getElementById('workOrderSubmitBtn');
+        if (modalLabel) {
+            modalLabel.textContent = 'Edit Work Order';
+        }
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="ph-check me-1"></i> Update Work Order';
+        }
         
-        // Set contact information
-        setValue('edit_contact_name', workOrder.contact_name);
-        setValue('edit_contact_mobile', workOrder.contact_mobile);
-        setValue('edit_contact_email', workOrder.contact_email);
+        // Set block ID
+        setValue('work_order_block_id', workOrder.block_id);
+        
+        // Set priority and status FIRST - these are required fields
+        if (workOrder.priority_id) {
+            setValue('work_order_priority_id', workOrder.priority_id);
+            console.log('✓ Set priority_id to:', workOrder.priority_id);
+            
+            // Verify it was set
+            const priorityCheck = document.getElementById('work_order_priority_id');
+            console.log('✓ Verified priority_id in DOM:', priorityCheck?.value);
+        } else {
+            console.error('❌ workOrder.priority_id is missing!', workOrder);
+        }
+        if (workOrder.status) {
+            setValue('work_order_status', workOrder.status);
+            console.log('Set status to:', workOrder.status);
+        }
+        
+        // Set block_issue_id in hidden field IMMEDIATELY (required field)
+        const blockIssueIdField = document.getElementById('work_order_block_issue_id');
+        if (!blockIssueIdField) {
+            console.error('❌ Hidden field work_order_block_issue_id NOT FOUND in DOM!');
+        } else if (!workOrder.block_issue_id) {
+            console.error('❌ workOrder.block_issue_id is missing!', workOrder);
+        } else {
+            blockIssueIdField.value = workOrder.block_issue_id;
+            console.log('✓ Set block_issue_id (hidden) to:', workOrder.block_issue_id);
+            console.log('✓ Hidden field name attribute:', blockIssueIdField.getAttribute('name'));
+            console.log('✓ Hidden field value after setting:', blockIssueIdField.value);
+            
+            // Double-check it's set
+            setTimeout(() => {
+                const verifyValue = document.getElementById('work_order_block_issue_id')?.value;
+                console.log('✓ Verification - block_issue_id after 100ms:', verifyValue);
+            }, 100);
+        }
+        
+        // Set work order type and contract company/property manager
+        if (workOrder.is_property_manager === true || workOrder.is_property_manager === 1) {
+            setValue('work_order_type', 'inhouse');
+            setTimeout(() => {
+                setupWorkOrderTypeToggle();
+                setValue('work_order_property_manager_id', workOrder.property_manager_id || workOrder.contractor_id || '');
+            }, 100);
+        } else {
+            setValue('work_order_type', 'outsource');
+            setTimeout(() => {
+                setupWorkOrderTypeToggle();
+                setValue('work_order_contract_company_id', workOrder.contract_company_id || '');
+            }, 100);
+        }
+        
+        // Set unit - this will trigger the change event which loads issues
+        const unitSelect = document.getElementById('work_order_unit_id');
+        if (unitSelect && workOrder.block_unit_id) {
+            unitSelect.value = workOrder.block_unit_id;
+            
+            // Update hidden fields for unit and building
+            const blockUnitIdField = document.getElementById('work_order_block_unit_id');
+            const blockBuildingIdField = document.getElementById('work_order_block_building_id');
+            
+            if (blockUnitIdField) {
+                blockUnitIdField.value = workOrder.block_unit_id;
+            }
+            
+            // Get building ID from the selected unit option
+            const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+            if (selectedOption && blockBuildingIdField) {
+                const buildingId = selectedOption.getAttribute('data-building-id') || workOrder.block_building_id || '';
+                blockBuildingIdField.value = buildingId;
+                console.log('Set building ID:', buildingId);
+            }
+            
+            // Load issues for the selected unit and set the issue after loading
+            loadIssuesForUnit(workOrder.block_unit_id, () => {
+                // After issues are loaded, set the selected issue
+                setTimeout(() => {
+                    const issueSelect = document.getElementById('block_issue_id_select');
+                    const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+                    
+                    if (issueSelect && workOrder.block_issue_id) {
+                        issueSelect.value = workOrder.block_issue_id;
+                        
+                        // Ensure the select is enabled
+                        issueSelect.disabled = false;
+                        
+                        // Ensure hidden field is still set (refresh it)
+                        if (blockIssueIdHidden) {
+                            blockIssueIdHidden.value = workOrder.block_issue_id;
+                            console.log('Confirmed block_issue_id (hidden) is set to:', workOrder.block_issue_id);
+                        }
+                    }
+                }, 200); // Increased timeout to ensure issues are fully loaded
+            });
+        } else {
+            // If no unit, the hidden field is already set above
+            console.log('No unit ID, block_issue_id hidden field should already be set');
+        }
         
         // Handle datetime fields
         if (workOrder.preferred_start_date_time) {
-            setValue('edit_preferred_start_date_time', formatDateTimeForInput(workOrder.preferred_start_date_time));
+            setValue('work_order_preferred_start', formatDateTimeForInput(workOrder.preferred_start_date_time));
         }
         if (workOrder.preferred_end_date_time) {
-            setValue('edit_preferred_end_date_time', formatDateTimeForInput(workOrder.preferred_end_date_time));
+            setValue('work_order_preferred_end', formatDateTimeForInput(workOrder.preferred_end_date_time));
         }
         if (workOrder.deadline_date) {
-            setValue('edit_deadline_date', formatDateForInput(workOrder.deadline_date));
+            setValue('work_order_deadline', formatDateForInput(workOrder.deadline_date));
         }
-        
-        // Set comments
-        setValue('edit_comment', workOrder.comment);
 
-        // Show modal (like inspection modal)
-        const modalElement = document.getElementById('editWorkOrderModal');
+        // Set comments
+        setValue('work_order_comment', workOrder.comment || '');
+
+        // Clear any error messages
+        const messageContainer = document.getElementById('workOrderMessage');
+        if (messageContainer) {
+            messageContainer.innerHTML = '';
+            messageContainer.classList.add('d-none');
+        }
+
+        // Show modal
+        const modalElement = document.getElementById('workOrderModal');
         if (!modalElement) {
-            console.error('Edit work order modal not found');
+            console.error('Work order modal not found');
+            showToast('danger', 'Work order modal not found. Please refresh the page.');
             return;
         }
         
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
+        console.log('Showing work order modal in edit mode');
+        try {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+            
+            // Verify values are set before showing modal
+            const blockIssueCheck = document.getElementById('work_order_block_issue_id')?.value;
+            const priorityCheck = document.getElementById('work_order_priority_id')?.value;
+            console.log('Before modal show - block_issue_id:', blockIssueCheck, 'priority_id:', priorityCheck);
+            
+            modal.show();
+            console.log('Modal shown successfully');
+            
+            // Verify values are still set after modal is shown (in case event handlers cleared them)
+            setTimeout(() => {
+                const blockIssueAfter = document.getElementById('work_order_block_issue_id')?.value;
+                const priorityAfter = document.getElementById('work_order_priority_id')?.value;
+                console.log('After modal show (500ms) - block_issue_id:', blockIssueAfter, 'priority_id:', priorityAfter);
+                
+                // If values were cleared, restore them
+                if (!blockIssueAfter && workOrder.block_issue_id) {
+                    const blockIssueField = document.getElementById('work_order_block_issue_id');
+                    if (blockIssueField) {
+                        blockIssueField.value = workOrder.block_issue_id;
+                        console.log('⚠️ Restored block_issue_id after modal show:', workOrder.block_issue_id);
+                    }
+                }
+                if (!priorityAfter && workOrder.priority_id) {
+                    setValue('work_order_priority_id', workOrder.priority_id);
+                    console.log('⚠️ Restored priority_id after modal show:', workOrder.priority_id);
+                }
+            }, 500);
+            
+        } catch (error) {
+            console.error('Error showing modal:', error);
+            showToast('danger', 'Error opening modal. Please refresh the page.');
+        }
     }
     
     // Expose populateEditModal to global scope
@@ -937,7 +1411,7 @@
         const issueSelect = document.getElementById('block_issue_id_select');
         
         if (issueSelect) {
-            issueSelect.addEventListener('change', function() {
+        issueSelect.addEventListener('change', function() {
                 const issueId = this.value;
                 
                 if (!issueId) {
@@ -955,7 +1429,7 @@
                 .then(data => {
                     if (data.success && data.data) {
                         populateWorkOrderFormFromIssue(data.data);
-                    } else {
+            } else {
                         showToast('danger', 'Failed to load issue details. Please try again.');
                     }
                 })
@@ -995,22 +1469,6 @@
         }
         
         // Issue description field removed - using single comments field instead
-        
-        // Populate contact information
-        const contactNameField = document.getElementById('work_order_contact_name');
-        if (contactNameField && issue.contact_name) {
-            contactNameField.value = issue.contact_name;
-        }
-        
-        const contactMobileField = document.getElementById('work_order_contact_mobile');
-        if (contactMobileField && issue.contact_mobile) {
-            contactMobileField.value = issue.contact_mobile;
-        }
-        
-        const contactEmailField = document.getElementById('work_order_contact_email');
-        if (contactEmailField && issue.contact_email) {
-            contactEmailField.value = issue.contact_email;
-        }
         
         // Populate preferred start/end dates
         const preferredStartField = document.getElementById('work_order_preferred_start');
@@ -1065,7 +1523,7 @@
                 } else {
                     // Only show error toast for failures
                     if (typeof showToast === 'function') {
-                        showToast('danger', data.message || 'Failed to delete work order.');
+                    showToast('danger', data.message || 'Failed to delete work order.');
                     }
                 }
             })
@@ -1073,7 +1531,7 @@
                 console.error('Work order delete error', error);
                 // Only show error toast if needed
                 if (typeof showToast === 'function') {
-                    showToast('danger', 'Error deleting work order.');
+                showToast('danger', 'Error deleting work order.');
                 }
             })
             .finally(() => {

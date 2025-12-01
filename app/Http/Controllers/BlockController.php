@@ -17,6 +17,7 @@ use App\Models\BlockImage;
 use Illuminate\Support\Facades\Storage;
 use App\Models\JobStatus;
 use App\Models\IssueType;
+use App\Models\ContractCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -326,6 +327,10 @@ class BlockController extends Controller
         $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         $issueTypes = \App\Models\IssueType::orderBy('name')->get();
+        $contractCompanies = \App\Models\ContractCompany::orderBy('company_name')->get();
+        $propertyManagers = \App\Models\User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->with('userType')->orderBy('name')->get();
         
         return view('blocks.show', compact(
             'block',
@@ -340,6 +345,8 @@ class BlockController extends Controller
             'users',
             'contractTypes',
             'contractors',
+            'contractCompanies',
+            'propertyManagers',
             'contactMethods',
             'jobReasons',
             'jobStatuses',
@@ -433,6 +440,7 @@ class BlockController extends Controller
         $contractors = \App\Models\User::whereHas('userType', function($q) { 
             $q->whereIn('name', ['Contractor Admin', 'Contractor User']); 
         })->orderBy('name')->get();
+        $contractCompanies = \App\Models\ContractCompany::orderBy('company_name')->get();
         $contactMethods = \App\Models\ContactMethod::orderBy('name')->get();
         $jobReasons = \App\Models\JobReason::orderBy('name')->get();
         $jobStatuses = \App\Models\JobStatus::orderBy('name')->get();
@@ -467,6 +475,7 @@ class BlockController extends Controller
             'siteVisitUsers',
             'contractTypes',
             'contractors',
+            'contractCompanies',
             'contactMethods',
             'jobReasons',
             'jobStatuses',
