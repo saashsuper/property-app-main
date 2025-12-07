@@ -327,6 +327,9 @@ class BlockController extends Controller
         $issueStatuses = \App\Models\IssueStatus::ordered()->get();
         $priorities = \App\Models\Priority::ordered()->get();
         $issueTypes = \App\Models\IssueType::orderBy('name')->get();
+        // For work orders, use Contractors (from 1_contractors table) not ContractCompanies
+        // because work orders store contractor_id which points to 1_contractors table
+        $contractors = \App\Models\Contractor::orderBy('name')->get();
         $contractCompanies = \App\Models\ContractCompany::orderBy('company_name')->get();
         $propertyManagers = \App\Models\User::whereHas('userType', function($query) {
             $query->where('name', 'Property manager');
@@ -345,7 +348,7 @@ class BlockController extends Controller
             'users',
             'contractTypes',
             'contractors',
-            'contractCompanies',
+            'contractCompanies', // Keep for other uses
             'propertyManagers',
             'contactMethods',
             'jobReasons',
