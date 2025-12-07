@@ -285,6 +285,9 @@ class BlockWorkOrderController extends Controller
             'block_issue_id' => 'required|exists:block_issues,id',
             'priority_id' => 'required|integer|min:1|max:5',
             'contractor_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\Contractor::class, 'id')],
+            // contract_company_id comes from ContractCompany model (contract_companies table)
+            // This matches what the dropdown uses
+            'contract_company_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\ContractCompany::class, 'id')],
             'property_manager_id' => 'nullable|exists:users,id',
             'preferred_start_date_time' => 'nullable|date',
             'preferred_end_date_time' => 'nullable|date',
@@ -329,10 +332,14 @@ class BlockWorkOrderController extends Controller
         ];
         
         // Handle contractor or property manager assignment
-        if ($request->property_manager_id) {
+        // Priority: property_manager_id > contractor_id > contract_company_id
+        if ($request->filled('property_manager_id')) {
             $data['contractor_id'] = $request->property_manager_id;
-        } elseif ($request->contractor_id) {
+        } elseif ($request->filled('contractor_id')) {
             $data['contractor_id'] = $request->contractor_id;
+        } elseif ($request->filled('contract_company_id')) {
+            // If contract_company_id is provided, use it as contractor_id
+            $data['contractor_id'] = $request->contract_company_id;
         }
         
         // Update status if provided

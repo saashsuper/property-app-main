@@ -657,6 +657,11 @@
         submitForm(action, method, payload, {
             onSuccess: msg => {
                 console.log(`Work order ${isEditMode ? 'updated' : 'created'} successfully, refreshing table`);
+                
+                // Show success message
+                const successMessage = msg || `Work order ${isEditMode ? 'updated' : 'created'} successfully!`;
+                showToast('success', successMessage);
+                
                 // Hide modal first
                 const modalElement = form.closest('.modal');
                 if (modalElement) {
@@ -677,7 +682,6 @@
                 setTimeout(() => {
                 refreshTable();
                 }, 300);
-                // No success message - just silently refresh
             },
             onError: msg => {
                 console.error(`Work order ${isEditMode ? 'update' : 'creation'} error:`, msg);
@@ -799,8 +803,19 @@
     function submitForm(url, method, data, { onSuccess, onError, onComplete }) {
         const formData = new FormData();
         
+        // CRITICAL: Laravel requires method spoofing for PUT/PATCH/DELETE with FormData
+        // Always use POST and add _method field
+        const actualMethod = method === 'PUT' || method === 'PATCH' || method === 'DELETE' ? 'POST' : method;
+        if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+            formData.append('_method', method);
+        }
+        
+        // Add CSRF token
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+        
         // Log what we're about to send
         console.log('=== BUILDING FORMDATA ===');
+        console.log('Original method:', method, 'Actual method:', actualMethod);
         console.log('Data object keys:', Object.keys(data));
         console.log('block_issue_id in data:', data.block_issue_id);
         console.log('priority_id in data:', data.priority_id);
@@ -829,9 +844,13 @@
             }
         }
         
-        // Now build FormData
+        // Now build FormData - skip _method and _token as they're already added
         Object.keys(data).forEach(key => {
-            if (data[key] !== null && data[key] !== undefined) {
+            if (key === '_method' || key === '_token') {
+                return; // Skip these as they're handled explicitly
+            }
+            
+            if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
                 if (key === 'images' && Array.isArray(data[key])) {
                     data[key].forEach(file => {
                         if (file instanceof File) {
@@ -871,8 +890,10 @@
             }
         }
         
-        // CRITICAL: Only set these fields if we have actual values
-        if (finalBlockIssueId) {
+        // CRITICAL: Explicitly set required fields - delete any existing entries first to avoid duplicates
+        if (finalBlockIssueId && finalBlockIssueId !== '0' && finalBlockIssueId !== '') {
+            // Delete any existing entry first
+            formData.delete('block_issue_id');
             formData.set('block_issue_id', finalBlockIssueId);
             console.log('✓ FINAL: Set block_issue_id in FormData:', finalBlockIssueId);
         } else {
@@ -882,7 +903,9 @@
             console.error('Data object block_issue_id:', data.block_issue_id);
         }
         
-        if (finalPriorityId) {
+        if (finalPriorityId && finalPriorityId !== '0' && finalPriorityId !== '') {
+            // Delete any existing entry first
+            formData.delete('priority_id');
             formData.set('priority_id', finalPriorityId);
             console.log('✓ FINAL: Set priority_id in FormData:', finalPriorityId);
         } else {
@@ -912,7 +935,7 @@
         console.log('priority_id in FormData:', formData.get('priority_id'));
 
         fetch(url, {
-            method,
+            method: actualMethod, // Use POST for PUT/PATCH/DELETE (method spoofing)
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
