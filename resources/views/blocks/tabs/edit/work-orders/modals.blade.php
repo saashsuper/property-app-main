@@ -36,11 +36,7 @@
                                 <label for="work_order_contract_company_id" class="form-label">Contract Company <span class="text-danger">*</span></label>
                                 <select class="form-select" id="work_order_contract_company_id" name="contract_company_id" required>
                                     <option value="">Select Contract Company</option>
-                                    @if(isset($contractors) && $contractors->count() > 0)
-                                        @foreach($contractors as $contractor)
-                                            <option value="{{ $contractor->id }}">{{ $contractor->name }}@if($contractor->code) ({{ $contractor->code }})@endif</option>
-                                        @endforeach
-                                    @elseif(isset($contractCompanies) && $contractCompanies->count() > 0)
+                                    @if(isset($contractCompanies) && $contractCompanies->count() > 0)
                                         @foreach($contractCompanies as $company)
                                             <option value="{{ $company->id }}">{{ $company->company_name }}</option>
                                         @endforeach

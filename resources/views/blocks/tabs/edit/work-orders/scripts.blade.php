@@ -5,6 +5,7 @@
     // Expose refresh functions immediately so they're available for inline scripts
     // These will be properly defined later, but we create placeholders now
     window.refreshTable = window.refreshTable || function() {
+        console.warn('refreshTable not yet initialized, will retry...');
         setTimeout(() => {
             if (typeof window.refreshTable === 'function' && window.refreshTable.toString().includes('workOrdersDT')) {
                 window.refreshTable();
@@ -15,15 +16,19 @@
     };
     
     window.refreshWorkOrdersTable = window.refreshWorkOrdersTable || function() {
+        console.warn('refreshWorkOrdersTable not yet initialized');
     };
     
     // Fetch work order function (similar to fetchInspection in inspection modal)
     function fetchWorkOrder(workOrderId) {
+        console.log('fetchWorkOrder called with ID:', workOrderId);
         
         if (!workOrderId) {
+            console.error('No work order ID provided');
             return;
         }
 
+        console.log('Fetching work order from:', `/block-work-orders/${workOrderId}`);
         
         fetch(`/block-work-orders/${workOrderId}`, {
             headers: {
@@ -33,23 +38,29 @@
             }
         })
             .then(resp => {
+                console.log('Fetch response status:', resp.status);
                 if (!resp.ok) {
                     throw new Error(`HTTP error! status: ${resp.status}`);
                 }
                 return resp.json();
             })
             .then(data => {
+                console.log('Work order fetch response:', data);
                 if (!data.success) {
+                    console.error('Fetch returned success: false', data.message);
                     showToast('danger', data.message || 'Failed to load work order details.');
                     return;
                 }
                 if (!data.data) {
+                    console.error('No work order data in response');
                     showToast('danger', 'No work order data received.');
                     return;
                 }
+                console.log('Populating edit modal with work order data:', data.data);
                 populateEditModal(data.data);
             })
             .catch(error => {
+                console.error('Work order fetch error', error);
                 showToast('danger', 'Error fetching work order details: ' + error.message);
             });
     }
@@ -76,6 +87,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
+        console.log('Work orders scripts: DOMContentLoaded');
         
         try {
         initializeDataTable();
@@ -85,12 +97,16 @@
             // Verify modal exists
             const workOrderModal = document.getElementById('workOrderModal');
             if (workOrderModal) {
+                console.log('Work order modal found in DOM');
             } else {
+                console.error('Work order modal NOT found in DOM');
             }
             
             const deleteModal = document.getElementById('deleteWorkOrderModal');
             if (deleteModal) {
+                console.log('Delete work order modal found in DOM');
             } else {
+                console.error('Delete work order modal NOT found in DOM');
             }
         
         // Debounced trigger to avoid duplicate refreshes
@@ -117,6 +133,7 @@
             triggerWorkOrdersRefresh();
             }
         } catch (error) {
+            console.error('Error initializing work orders:', error);
         }
     });
 
@@ -213,7 +230,9 @@
 
         if (workOrderForm) {
             workOrderForm.addEventListener('submit', handleWorkOrderSubmit);
+            console.log('Work order form handler attached');
         } else {
+            console.error('Work order form not found');
         }
         
         window.workOrderAttachEditHandlers = attachEditHandlers;
@@ -229,6 +248,7 @@
         const propertyManagerField = document.getElementById('work_order_property_manager_id');
         
         if (!workOrderTypeSelect) {
+            console.error('Work Order Type select not found');
             return;
         }
         
@@ -239,19 +259,25 @@
         
         function toggleFields() {
             const selectedType = workOrderTypeSelect.value;
+            console.log('Toggle fields called, selected type:', selectedType);
             
             if (selectedType === 'inhouse') {
+                console.log('Showing Property Manager, hiding Contract Company');
                 // Show Property Manager dropdown, hide Contract Company dropdown
                 if (propertyManagerContainer) {
                     propertyManagerContainer.removeAttribute('style');
                     propertyManagerContainer.style.setProperty('display', 'block', 'important');
                     propertyManagerContainer.classList.remove('d-none');
+                    console.log('Property Manager container displayed');
                 } else {
+                    console.error('Property Manager container not found');
                 }
                 if (contractCompanyContainer) {
                     contractCompanyContainer.style.setProperty('display', 'none', 'important');
                     contractCompanyContainer.classList.add('d-none');
+                    console.log('Contract Company container hidden');
                 } else {
+                    console.error('Contract Company container not found');
                 }
                 
                 // Enable Property Manager field (make it required) and disable Contract Company field
@@ -268,17 +294,22 @@
                     contractCompanyField.removeAttribute('required');
                 }
             } else {
+                console.log('Showing Contract Company, hiding Property Manager');
                 // Show Contract Company dropdown, hide Property Manager dropdown
                 if (contractCompanyContainer) {
                     contractCompanyContainer.removeAttribute('style');
                     contractCompanyContainer.style.setProperty('display', 'block', 'important');
                     contractCompanyContainer.classList.remove('d-none');
+                    console.log('Contract Company container displayed');
                 } else {
+                    console.error('Contract Company container not found');
                 }
                 if (propertyManagerContainer) {
                     propertyManagerContainer.style.setProperty('display', 'none', 'important');
                     propertyManagerContainer.classList.add('d-none');
+                    console.log('Property Manager container hidden');
                 } else {
+                    console.error('Property Manager container not found');
                 }
                 
                 // Enable Contract Company field (make it required) and disable Property Manager field
@@ -302,6 +333,7 @@
         
         // Listen for changes
         workOrderTypeSelect.addEventListener('change', function() {
+            console.log('Work order type changed to:', this.value);
             toggleFields();
         });
     }
@@ -310,11 +342,13 @@
         const workOrderModal = document.getElementById('workOrderModal');
 
         if (workOrderModal) {
+            console.log('Work order modal found, attaching events');
             
             // Track if modal is in edit mode
             let isEditMode = false;
             
             workOrderModal.addEventListener('show.bs.modal', () => {
+                console.log('Work order modal opening');
                 const msg = document.getElementById('workOrderMessage');
                 if (msg) {
                     msg.innerHTML = '';
@@ -327,6 +361,7 @@
                 
                 if (!isEditMode) {
                     // Reset to create mode
+                    console.log('Resetting to create mode');
                     const workOrderType = document.getElementById('work_order_type');
                     if (workOrderType) {
                         workOrderType.value = 'outsource';
@@ -453,6 +488,7 @@
                     if (blockIssueIdHidden) {
                         blockIssueIdHidden.value = issueId || '';
                     }
+                    console.log('Issue selected, hidden field updated:', issueId);
                 });
             }
         }
@@ -500,6 +536,7 @@
             }
         })
         .catch(error => {
+            console.error('Error loading issues:', error);
             issueSelect.innerHTML = '<option value="">Error loading issues</option>';
             issueSelect.disabled = true;
             
@@ -510,8 +547,10 @@
     }
 
     function attachEditHandlers() {
+        console.log('attachEditHandlers called');
         // Use event delegation for edit buttons (like inspection modal)
         const editButtons = document.querySelectorAll('.edit-work-order');
+        console.log('Found edit buttons:', editButtons.length);
         
         editButtons.forEach(button => {
             if (!button.dataset.bound) {
@@ -521,13 +560,16 @@
                     e.stopPropagation();
                     
                     const workOrderId = this.getAttribute('data-work-order-id');
+                    console.log('Edit button clicked, work order ID:', workOrderId);
                     
                     if (workOrderId) {
                         fetchWorkOrder(workOrderId);
                 } else {
+                        console.error('No work order ID found on edit button');
                         showToast('danger', 'Work order ID not found.');
                 }
                 });
+                console.log('Attached click handler to edit button:', button);
             }
         });
     }
@@ -550,50 +592,71 @@
         const method = isEditMode ? 'PUT' : 'POST';
         const action = isEditMode ? form.action : form.action;
         
+        console.log(`${isEditMode ? 'Edit' : 'Create'} work order form submitted via AJAX`, form.action);
 
         // Get required fields directly from DOM BEFORE building payload
         const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
         const prioritySelect = document.getElementById('work_order_priority_id');
         
-:', blockIssueIdHidden?.value);
-:', prioritySelect?.value);
+        console.log('=== BEFORE BUILDING PAYLOAD ===');
+        console.log('block_issue_id from DOM (hidden field):', blockIssueIdHidden?.value);
+        console.log('priority_id from DOM (select):', prioritySelect?.value);
+        console.log('block_issue_id field exists?', !!blockIssueIdHidden);
+        console.log('priority_id field exists?', !!prioritySelect);
         
         if (!blockIssueIdHidden?.value) {
+            console.error('❌ CRITICAL: block_issue_id is empty in hidden field!');
         }
         if (!prioritySelect?.value) {
+            console.error('❌ CRITICAL: priority_id is empty in select!');
         }
         
         const payload = buildPayload(form);
         
         // Log the payload for debugging
+        console.log('=== PAYLOAD BUILT ===');
+        console.log('Full payload:', payload);
+        console.log('block_issue_id in payload:', payload.block_issue_id);
+        console.log('priority_id in payload:', payload.priority_id);
         
         // FORCE include required fields if missing (safety net)
         if (!payload.block_issue_id) {
+            console.error('❌ block_issue_id missing from payload, forcing from DOM...');
             if (blockIssueIdHidden?.value) {
                 payload.block_issue_id = blockIssueIdHidden.value;
+                console.log('✓ Forced block_issue_id into payload:', payload.block_issue_id);
             } else {
+                console.error('❌ Cannot force block_issue_id - DOM field is empty!');
             }
         }
         if (!payload.priority_id) {
+            console.error('❌ priority_id missing from payload, forcing from DOM...');
             if (prioritySelect?.value) {
                 payload.priority_id = prioritySelect.value;
+                console.log('✓ Forced priority_id into payload:', payload.priority_id);
             } else {
+                console.error('❌ Cannot force priority_id - DOM field is empty!');
             }
         }
         
         // Final validation before submission
         if (!payload.block_issue_id || !payload.priority_id) {
+            console.error('❌ REQUIRED FIELDS MISSING - ABORTING SUBMISSION');
+            console.error('block_issue_id:', payload.block_issue_id || 'MISSING');
+            console.error('priority_id:', payload.priority_id || 'MISSING');
             showToast('danger', 'Required fields are missing. Please refresh and try again.');
             setLoading(submitBtn, false);
             return false;
         }
         
+        console.log('✓ All required fields present, proceeding with submission');
         
         const submitBtn = form.querySelector('button[type="submit"]');
         setLoading(submitBtn, true, isEditMode ? 'Updating...' : 'Creating...');
 
         submitForm(action, method, payload, {
             onSuccess: msg => {
+                console.log(`Work order ${isEditMode ? 'updated' : 'created'} successfully, refreshing table`);
                 // Hide modal first
                 const modalElement = form.closest('.modal');
                 if (modalElement) {
@@ -617,6 +680,7 @@
                 // No success message - just silently refresh
             },
             onError: msg => {
+                console.error(`Work order ${isEditMode ? 'update' : 'creation'} error:`, msg);
                 const container = document.getElementById('workOrderMessage');
                 if (container) {
                     container.innerHTML = `<div class="alert alert-danger mb-0">${msg}</div>`;
@@ -686,10 +750,14 @@
         
         // Validate required fields before submission and log for debugging
         if (!data.block_issue_id) {
+            console.error('❌ block_issue_id is missing from payload. Hidden field value:', blockIssueIdHidden?.value, 'Select value:', blockIssueIdSelect?.value);
         } else {
+            console.log('✓ block_issue_id included in payload:', data.block_issue_id);
         }
         if (!data.priority_id) {
+            console.error('❌ priority_id is missing from payload. Select value:', prioritySelect?.value);
         } else {
+            console.log('✓ priority_id included in payload:', data.priority_id);
         }
         
         // Get block_unit_id from the select dropdown or hidden field
@@ -732,7 +800,10 @@
         const formData = new FormData();
         
         // Log what we're about to send
-);
+        console.log('=== BUILDING FORMDATA ===');
+        console.log('Data object keys:', Object.keys(data));
+        console.log('block_issue_id in data:', data.block_issue_id);
+        console.log('priority_id in data:', data.priority_id);
         
         // CRITICAL: Ensure required fields are ALWAYS in FormData, even if missing from data object
         const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
@@ -743,8 +814,10 @@
         if (!data.block_issue_id) {
             if (blockIssueIdHidden && blockIssueIdHidden.value) {
                 data.block_issue_id = blockIssueIdHidden.value;
+                console.log('✓ Added block_issue_id from hidden field to data:', data.block_issue_id);
             } else if (blockIssueIdSelect && blockIssueIdSelect.value) {
                 data.block_issue_id = blockIssueIdSelect.value;
+                console.log('✓ Added block_issue_id from select to data:', data.block_issue_id);
             }
         }
         
@@ -752,6 +825,7 @@
         if (!data.priority_id) {
             if (prioritySelect && prioritySelect.value) {
                 data.priority_id = prioritySelect.value;
+                console.log('✓ Added priority_id from DOM to data:', data.priority_id);
             }
         }
         
@@ -782,8 +856,10 @@
             const selectField = document.getElementById('block_issue_id_select');
             if (hiddenField && hiddenField.value) {
                 finalBlockIssueId = hiddenField.value;
+                console.log('⚠️ Fallback: Got block_issue_id from hidden field:', finalBlockIssueId);
             } else if (selectField && selectField.value) {
                 finalBlockIssueId = selectField.value;
+                console.log('⚠️ Fallback: Got block_issue_id from select:', finalBlockIssueId);
             }
         }
         
@@ -791,35 +867,49 @@
             const priorityField = document.getElementById('work_order_priority_id');
             if (priorityField && priorityField.value) {
                 finalPriorityId = priorityField.value;
+                console.log('⚠️ Fallback: Got priority_id from DOM:', finalPriorityId);
             }
         }
         
         // CRITICAL: Only set these fields if we have actual values
         if (finalBlockIssueId) {
             formData.set('block_issue_id', finalBlockIssueId);
+            console.log('✓ FINAL: Set block_issue_id in FormData:', finalBlockIssueId);
         } else {
+            console.error('❌ CRITICAL ERROR: block_issue_id is still missing after all fallbacks!');
+            console.error('Hidden field value:', blockIssueIdHidden?.value);
+            console.error('Select field value:', blockIssueIdSelect?.value);
+            console.error('Data object block_issue_id:', data.block_issue_id);
         }
         
         if (finalPriorityId) {
             formData.set('priority_id', finalPriorityId);
+            console.log('✓ FINAL: Set priority_id in FormData:', finalPriorityId);
         } else {
+            console.error('❌ CRITICAL ERROR: priority_id is still missing after all fallbacks!');
+            console.error('Priority select value:', prioritySelect?.value);
+            console.error('Data object priority_id:', data.priority_id);
         }
         
         // Final verification before sending
         const finalCheckBlockIssueId = formData.get('block_issue_id');
         const finalCheckPriorityId = formData.get('priority_id');
+        console.log('✓ FINAL FormData verification - block_issue_id:', finalCheckBlockIssueId, 'priority_id:', finalCheckPriorityId);
         
         if (!finalCheckBlockIssueId || !finalCheckPriorityId) {
+            console.error('❌ ABORTING SUBMISSION - Required fields missing from FormData!');
             onError && onError('Required fields are missing. Please check the console for details.');
             onComplete && onComplete();
             return;
         }
         
         // Log FormData contents for debugging
+        console.log('=== FORMDATA CONTENTS ===');
         for (let pair of formData.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
         }
-);
-);
+        console.log('block_issue_id in FormData:', formData.get('block_issue_id'));
+        console.log('priority_id in FormData:', formData.get('priority_id'));
 
         fetch(url, {
             method,
@@ -832,7 +922,7 @@
             redirect: 'manual' // Prevent automatic redirect following
         })
             .then(resp => {
-);
+                console.log('Response status:', resp.status, 'Content-Type:', resp.headers.get('content-type'));
                 
                 // Check if response is JSON
                 const contentType = resp.headers.get('content-type');
@@ -840,16 +930,19 @@
                     return resp.json();
                 } else if (resp.status >= 300 && resp.status < 400) {
                     // This is a redirect response - we should not follow it
+                    console.warn('Redirect response received, ignoring it');
                     throw new Error('Server attempted to redirect. This should not happen for AJAX requests.');
                 } else {
                     // If not JSON, it might be HTML or something else
+                    console.warn('Non-JSON response received:', contentType);
                     return resp.text().then(text => {
-);
+                        console.error('Response body:', text.substring(0, 200));
                         throw new Error('Server returned non-JSON response');
                     });
                 }
             })
             .then(payload => {
+                console.log('Response payload:', payload);
                 if (payload.success) {
                     onSuccess && onSuccess(payload.message);
                 } else {
@@ -863,6 +956,7 @@
                 }
             })
             .catch(error => {
+                console.error('Work order submit error', error);
                 onError && onError(error.message || 'Unexpected error. Please try again.');
             })
             .finally(() => {
@@ -871,13 +965,18 @@
     }
 
     function refreshTable() {
+        console.log('refreshTable called, workOrdersDT:', workOrdersDT);
         if (workOrdersDT) {
+            console.log('Calling refreshWorkOrdersTable');
             refreshWorkOrdersTable();
         } else {
+            console.log('DataTable not initialized, checking if table exists...');
             if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
                 workOrdersDT = $('#workOrdersTable').DataTable();
+                console.log('DataTable found and assigned, calling refreshWorkOrdersTable');
                 refreshWorkOrdersTable();
             } else {
+                console.log('DataTable not found, returning');
                 return;
             }
         }
@@ -892,21 +991,28 @@
      * @global
      */
     window.refreshWorkOrdersTable = function() {
+        console.log('refreshWorkOrdersTable called, workOrdersDT:', workOrdersDT);
         
         // Try to get the DataTable if it's not available
         if (!workOrdersDT) {
+            console.log('DataTable not available, trying to get it...');
             if ($.fn.DataTable.isDataTable('#workOrdersTable')) {
                 workOrdersDT = $('#workOrdersTable').DataTable();
+                console.log('DataTable found and assigned');
             } else {
+                console.log('DataTable not found, returning');
             return;
             }
         }
         
         const blockId = window.blockId || $('input[name="block_id"]').val();
+        console.log('Block ID:', blockId);
         if (!blockId) {
+            console.log('No block ID found, returning');
             return;
         }
         
+        console.log('Making AJAX request to:', `/block-work-orders/block/${blockId}`);
         $.ajax({
             url: `/block-work-orders/block/${blockId}`,
             method: 'GET',
@@ -998,11 +1104,16 @@
                         ]);
                     });
                     
+                    console.log('Drawing DataTable with', data.data.length, 'rows');
                     workOrdersDT.draw();
+                    console.log('DataTable refresh completed');
                 } else {
+                    console.log('API returned success: false');
                 }
             },
             error: function(xhr, status, error) {
+                console.error('Error fetching work orders:', error);
+                console.error('Response:', xhr.responseText);
             }
         });
     };
@@ -1013,16 +1124,20 @@
     }
 
     function populateEditModal(workOrder) {
+        console.log('populateEditModal called with workOrder:', workOrder);
         
         if (!workOrder) {
+            console.error('No work order data provided');
             return;
         }
 
         const form = document.getElementById('workOrderForm');
         if (!form) {
+            console.error('Work order form not found');
                     return;
                 }
 
+        console.log('Populating form for work order ID:', workOrder.id);
         
         // Set form to edit mode
         form.action = `/block-work-orders/${workOrder.id}`;
@@ -1047,27 +1162,35 @@
         // Set priority and status FIRST - these are required fields
         if (workOrder.priority_id) {
             setValue('work_order_priority_id', workOrder.priority_id);
+            console.log('✓ Set priority_id to:', workOrder.priority_id);
             
             // Verify it was set
             const priorityCheck = document.getElementById('work_order_priority_id');
+            console.log('✓ Verified priority_id in DOM:', priorityCheck?.value);
         } else {
+            console.error('❌ workOrder.priority_id is missing!', workOrder);
         }
         if (workOrder.status) {
             setValue('work_order_status', workOrder.status);
+            console.log('Set status to:', workOrder.status);
         }
         
         // Set block_issue_id in hidden field IMMEDIATELY (required field)
         const blockIssueIdField = document.getElementById('work_order_block_issue_id');
         if (!blockIssueIdField) {
+            console.error('❌ Hidden field work_order_block_issue_id NOT FOUND in DOM!');
         } else if (!workOrder.block_issue_id) {
+            console.error('❌ workOrder.block_issue_id is missing!', workOrder);
         } else {
             blockIssueIdField.value = workOrder.block_issue_id;
-to:', workOrder.block_issue_id);
-);
+            console.log('✓ Set block_issue_id (hidden) to:', workOrder.block_issue_id);
+            console.log('✓ Hidden field name attribute:', blockIssueIdField.getAttribute('name'));
+            console.log('✓ Hidden field value after setting:', blockIssueIdField.value);
             
             // Double-check it's set
             setTimeout(() => {
                 const verifyValue = document.getElementById('work_order_block_issue_id')?.value;
+                console.log('✓ Verification - block_issue_id after 100ms:', verifyValue);
             }, 100);
         }
         
@@ -1104,6 +1227,7 @@ to:', workOrder.block_issue_id);
             if (selectedOption && blockBuildingIdField) {
                 const buildingId = selectedOption.getAttribute('data-building-id') || workOrder.block_building_id || '';
                 blockBuildingIdField.value = buildingId;
+                console.log('Set building ID:', buildingId);
             }
             
             // Load issues for the selected unit and set the issue after loading
@@ -1122,13 +1246,14 @@ to:', workOrder.block_issue_id);
                         // Ensure hidden field is still set (refresh it)
                         if (blockIssueIdHidden) {
                             blockIssueIdHidden.value = workOrder.block_issue_id;
-is set to:', workOrder.block_issue_id);
+                            console.log('Confirmed block_issue_id (hidden) is set to:', workOrder.block_issue_id);
                         }
                     }
                 }, 200); // Increased timeout to ensure issues are fully loaded
             });
         } else {
             // If no unit, the hidden field is already set above
+            console.log('No unit ID, block_issue_id hidden field should already be set');
         }
         
         // Handle datetime fields
@@ -1155,38 +1280,45 @@ is set to:', workOrder.block_issue_id);
         // Show modal
         const modalElement = document.getElementById('workOrderModal');
         if (!modalElement) {
+            console.error('Work order modal not found');
             showToast('danger', 'Work order modal not found. Please refresh the page.');
             return;
         }
         
+        console.log('Showing work order modal in edit mode');
         try {
             const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
             
             // Verify values are set before showing modal
             const blockIssueCheck = document.getElementById('work_order_block_issue_id')?.value;
             const priorityCheck = document.getElementById('work_order_priority_id')?.value;
+            console.log('Before modal show - block_issue_id:', blockIssueCheck, 'priority_id:', priorityCheck);
             
             modal.show();
+            console.log('Modal shown successfully');
             
             // Verify values are still set after modal is shown (in case event handlers cleared them)
             setTimeout(() => {
                 const blockIssueAfter = document.getElementById('work_order_block_issue_id')?.value;
                 const priorityAfter = document.getElementById('work_order_priority_id')?.value;
-- block_issue_id:', blockIssueAfter, 'priority_id:', priorityAfter);
+                console.log('After modal show (500ms) - block_issue_id:', blockIssueAfter, 'priority_id:', priorityAfter);
                 
                 // If values were cleared, restore them
                 if (!blockIssueAfter && workOrder.block_issue_id) {
                     const blockIssueField = document.getElementById('work_order_block_issue_id');
                     if (blockIssueField) {
                         blockIssueField.value = workOrder.block_issue_id;
+                        console.log('⚠️ Restored block_issue_id after modal show:', workOrder.block_issue_id);
                     }
                 }
                 if (!priorityAfter && workOrder.priority_id) {
                     setValue('work_order_priority_id', workOrder.priority_id);
+                    console.log('⚠️ Restored priority_id after modal show:', workOrder.priority_id);
                 }
             }, 500);
             
         } catch (error) {
+            console.error('Error showing modal:', error);
             showToast('danger', 'Error opening modal. Please refresh the page.');
         }
     }
@@ -1302,6 +1434,7 @@ is set to:', workOrder.block_issue_id);
                     }
                 })
                 .catch(error => {
+                    console.error('Error fetching issue details:', error);
                     showToast('danger', 'Error loading issue details. Please try again.');
                 });
             });
@@ -1395,6 +1528,7 @@ is set to:', workOrder.block_issue_id);
                 }
             })
             .catch(error => {
+                console.error('Work order delete error', error);
                 // Only show error toast if needed
                 if (typeof showToast === 'function') {
                 showToast('danger', 'Error deleting work order.');
@@ -1407,10 +1541,11 @@ is set to:', workOrder.block_issue_id);
 
     // Full implementation - override the inline version (matches inspection pattern)
     window.workOrderShowDeleteConfirmation = function(workOrderId, details) {
-called', workOrderId, details);
+        console.log('workOrderShowDeleteConfirmation (IIFE) called', workOrderId, details);
         
         const container = document.getElementById('deleteWorkOrderDetails');
         if (!container) {
+            console.error('deleteWorkOrderDetails container not found');
             return;
         }
         
@@ -1438,6 +1573,7 @@ called', workOrderId, details);
 
         const confirmBtn = document.getElementById('confirmDeleteWorkOrderBtn');
         if (!confirmBtn) {
+            console.error('confirmDeleteWorkOrderBtn not found');
             return;
         }
         
@@ -1446,6 +1582,7 @@ called', workOrderId, details);
         
         const modalElement = document.getElementById('deleteWorkOrderModal');
         if (!modalElement) {
+            console.error('deleteWorkOrderModal not found');
             return;
         }
         
@@ -1453,7 +1590,9 @@ called', workOrderId, details);
         try {
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
+            console.log('Delete modal shown');
         } catch (error) {
+            console.error('Error showing modal:', error);
         }
     };
 
@@ -1466,9 +1605,17 @@ called', workOrderId, details);
     window.refreshTable = refreshTable;
     window.refreshWorkOrdersTable = refreshWorkOrdersTable;
     
+    // Log to confirm functions are exposed
+    console.log('Work orders IIFE functions exposed:', {
+        deleteWorkOrder: typeof window.deleteWorkOrder,
+        refreshTable: typeof window.refreshTable,
+        refreshWorkOrdersTable: typeof window.refreshWorkOrdersTable,
+        hasRefreshTable: window.deleteWorkOrder.toString().includes('refreshTable')
+    });
     
     // Verify the deleteWorkOrder function has access to refreshTable
     if (!window.deleteWorkOrder.toString().includes('refreshTable')) {
+        console.error('WARNING: deleteWorkOrder does not have access to refreshTable!');
     }
     window.workOrderAttachEditHandlers = attachEditHandlers;
     window.viewWorkOrder = viewWorkOrder;
