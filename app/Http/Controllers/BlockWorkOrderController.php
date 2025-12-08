@@ -249,9 +249,24 @@ class BlockWorkOrderController extends Controller
         
         // Return JSON data for AJAX requests (edit modal)
         if ($request->ajax() || $request->wantsJson() || $request->header('Accept') === 'application/json') {
+            $data = $blockWorkOrder->toArray();
+            
+            // Explicitly add contract_company_id and property_manager_id for edit modal
+            // When outsource: contractor_id is the contract_company_id
+            // When inhouse: contractor_id is the property_manager_id
+            if (!$isPropertyManager && $blockWorkOrder->contractor_id) {
+                // It's a contract company (outsource)
+                $data['contract_company_id'] = $blockWorkOrder->contractor_id;
+                $data['property_manager_id'] = null;
+            } else if ($isPropertyManager && $blockWorkOrder->contractor_id) {
+                // It's a property manager (inhouse)
+                $data['property_manager_id'] = $blockWorkOrder->contractor_id;
+                $data['contract_company_id'] = null;
+            }
+            
             return response()->json([
                 'success' => true,
-                'data' => array_merge($blockWorkOrder->toArray(), [
+                'data' => array_merge($data, [
                     'is_property_manager' => $isPropertyManager
                 ])
             ]);

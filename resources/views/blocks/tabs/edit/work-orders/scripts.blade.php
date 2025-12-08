@@ -240,7 +240,7 @@
     }
 
     // Handle Work Order Type toggle
-    function setupWorkOrderTypeToggle() {
+    function setupWorkOrderTypeToggle(preserveValue = false) {
         let workOrderTypeSelect = document.getElementById('work_order_type');
         const contractCompanyContainer = document.getElementById('contractCompanyFieldContainer');
         const propertyManagerContainer = document.getElementById('propertyManagerFieldContainer');
@@ -252,10 +252,18 @@
             return;
         }
         
+        // Preserve the current value if requested (for edit mode)
+        const currentValue = preserveValue ? workOrderTypeSelect.value : null;
+        
         // Remove any existing event listeners by cloning the element
         const newSelect = workOrderTypeSelect.cloneNode(true);
         workOrderTypeSelect.parentNode.replaceChild(newSelect, workOrderTypeSelect);
         workOrderTypeSelect = document.getElementById('work_order_type');
+        
+        // Restore the value if it was preserved
+        if (preserveValue && currentValue) {
+            workOrderTypeSelect.value = currentValue;
+        }
         
         function toggleFields() {
             const selectedType = workOrderTypeSelect.value;
@@ -263,21 +271,27 @@
             
             if (selectedType === 'inhouse') {
                 console.log('Showing Property Manager, hiding Contract Company');
-                // Show Property Manager dropdown, hide Contract Company dropdown
+                // Hide Contract Company dropdown FIRST
+                if (contractCompanyContainer) {
+                    contractCompanyContainer.style.setProperty('display', 'none', 'important');
+                    contractCompanyContainer.style.setProperty('visibility', 'hidden', 'important');
+                    contractCompanyContainer.classList.add('d-none');
+                    contractCompanyContainer.setAttribute('hidden', 'hidden');
+                    console.log('Contract Company container hidden');
+                } else {
+                    console.error('Contract Company container not found');
+                }
+                
+                // Show Property Manager dropdown
                 if (propertyManagerContainer) {
                     propertyManagerContainer.removeAttribute('style');
+                    propertyManagerContainer.removeAttribute('hidden');
                     propertyManagerContainer.style.setProperty('display', 'block', 'important');
+                    propertyManagerContainer.style.setProperty('visibility', 'visible', 'important');
                     propertyManagerContainer.classList.remove('d-none');
                     console.log('Property Manager container displayed');
                 } else {
                     console.error('Property Manager container not found');
-                }
-                if (contractCompanyContainer) {
-                    contractCompanyContainer.style.setProperty('display', 'none', 'important');
-                    contractCompanyContainer.classList.add('d-none');
-                    console.log('Contract Company container hidden');
-                } else {
-                    console.error('Contract Company container not found');
                 }
                 
                 // Enable Property Manager field (make it required) and disable Contract Company field
@@ -290,26 +304,35 @@
                 if (contractCompanyField) {
                     contractCompanyField.required = false;
                     contractCompanyField.disabled = true;
-                    contractCompanyField.value = '';
+                    // Only clear value if not preserving (create mode)
+                    if (!preserveValue) {
+                        contractCompanyField.value = '';
+                    }
                     contractCompanyField.removeAttribute('required');
                 }
             } else {
                 console.log('Showing Contract Company, hiding Property Manager');
-                // Show Contract Company dropdown, hide Property Manager dropdown
+                // Hide Property Manager dropdown FIRST
+                if (propertyManagerContainer) {
+                    propertyManagerContainer.style.setProperty('display', 'none', 'important');
+                    propertyManagerContainer.style.setProperty('visibility', 'hidden', 'important');
+                    propertyManagerContainer.classList.add('d-none');
+                    propertyManagerContainer.setAttribute('hidden', 'hidden');
+                    console.log('Property Manager container hidden');
+                } else {
+                    console.error('Property Manager container not found');
+                }
+                
+                // Show Contract Company dropdown
                 if (contractCompanyContainer) {
                     contractCompanyContainer.removeAttribute('style');
+                    contractCompanyContainer.removeAttribute('hidden');
                     contractCompanyContainer.style.setProperty('display', 'block', 'important');
+                    contractCompanyContainer.style.setProperty('visibility', 'visible', 'important');
                     contractCompanyContainer.classList.remove('d-none');
                     console.log('Contract Company container displayed');
                 } else {
                     console.error('Contract Company container not found');
-                }
-                if (propertyManagerContainer) {
-                    propertyManagerContainer.style.setProperty('display', 'none', 'important');
-                    propertyManagerContainer.classList.add('d-none');
-                    console.log('Property Manager container hidden');
-                } else {
-                    console.error('Property Manager container not found');
                 }
                 
                 // Enable Contract Company field (make it required) and disable Property Manager field
@@ -322,7 +345,10 @@
                 if (propertyManagerField) {
                     propertyManagerField.required = false;
                     propertyManagerField.disabled = true;
-                    propertyManagerField.value = '';
+                    // Only clear value if not preserving (create mode)
+                    if (!preserveValue) {
+                        propertyManagerField.value = '';
+                    }
                     propertyManagerField.removeAttribute('required');
                 }
             }
@@ -401,8 +427,8 @@
                         issueSelect.disabled = true;
                     }
                 } else {
-                    // Edit mode - setup toggle in case it's needed
-                    setupWorkOrderTypeToggle();
+                    // Edit mode - setup toggle in case it's needed (preserve values)
+                    setupWorkOrderTypeToggle(true);
                 }
             });
 
@@ -1218,19 +1244,67 @@
         }
         
         // Set work order type and contract company/property manager
-        if (workOrder.is_property_manager === true || workOrder.is_property_manager === 1) {
-            setValue('work_order_type', 'inhouse');
-            setTimeout(() => {
-                setupWorkOrderTypeToggle();
-                setValue('work_order_property_manager_id', workOrder.property_manager_id || workOrder.contractor_id || '');
-            }, 100);
-        } else {
-            setValue('work_order_type', 'outsource');
-            setTimeout(() => {
-                setupWorkOrderTypeToggle();
-                setValue('work_order_contract_company_id', workOrder.contract_company_id || '');
-            }, 100);
+        // Determine work order type and get the contractor ID value
+        const isInHouse = workOrder.is_property_manager === true || workOrder.is_property_manager === 1;
+        const contractorId = workOrder.contractor_id || workOrder.contract_company_id || workOrder.property_manager_id || '';
+        
+        // Get contract_company_id from relationship if available
+        // When outsource, contractor_id IS the contract_company_id
+        let contractCompanyId = '';
+        if (!isInHouse && contractorId) {
+            contractCompanyId = String(contractorId);
+        } else if (workOrder.contract_company_id) {
+            contractCompanyId = String(workOrder.contract_company_id);
+        } else if (workOrder.contract_company && workOrder.contract_company.id) {
+            contractCompanyId = String(workOrder.contract_company.id);
         }
+        
+        // Get property manager ID (contractor_id when inhouse)
+        // When inhouse, contractor_id IS the property_manager_id
+        let propertyManagerId = '';
+        if (isInHouse && contractorId) {
+            propertyManagerId = String(contractorId);
+        } else if (workOrder.property_manager_id) {
+            propertyManagerId = String(workOrder.property_manager_id);
+        }
+        
+        console.log('Work order type determination:', {
+            isInHouse,
+            contractorId,
+            contractCompanyId,
+            propertyManagerId,
+            workOrderData: workOrder
+        });
+        
+        // Set work order type first - ensure it's set before toggle
+        const workOrderTypeValue = isInHouse ? 'inhouse' : 'outsource';
+        const workOrderTypeField = document.getElementById('work_order_type');
+        if (workOrderTypeField) {
+            workOrderTypeField.value = workOrderTypeValue;
+            console.log('✓ Set work_order_type to:', workOrderTypeValue);
+        }
+        
+        // Setup toggle with preserveValue=true for edit mode, and set value after toggle completes
+        setTimeout(() => {
+            // Pass preserveValue=true to prevent clearing values during toggle
+            setupWorkOrderTypeToggle(true);
+            
+            // Set the appropriate value after toggle has enabled the field
+            setTimeout(() => {
+                if (isInHouse) {
+                    setDropdownValue('work_order_property_manager_id', propertyManagerId, 'propertyManagerFieldContainer');
+                } else {
+                    setDropdownValue('work_order_contract_company_id', contractCompanyId, 'contractCompanyFieldContainer');
+                }
+                
+                // Verify work order type is still set correctly
+                const typeCheck = document.getElementById('work_order_type');
+                if (typeCheck && typeCheck.value !== workOrderTypeValue) {
+                    console.warn('Work order type was reset, restoring to:', workOrderTypeValue);
+                    typeCheck.value = workOrderTypeValue;
+                }
+            }, 150); // Increased delay to ensure toggle has fully completed
+        }, 50);
         
         // Set unit - this will trigger the change event which loads issues
         const unitSelect = document.getElementById('work_order_unit_id');
@@ -1320,6 +1394,67 @@
             modal.show();
             console.log('Modal shown successfully');
             
+            // Verify and fix work order type and container visibility immediately
+            setTimeout(() => {
+                const workOrderTypeField = document.getElementById('work_order_type');
+                const expectedType = isInHouse ? 'inhouse' : 'outsource';
+                
+                // Ensure work order type is set correctly
+                if (workOrderTypeField && workOrderTypeField.value !== expectedType) {
+                    console.warn('Work order type mismatch, correcting:', workOrderTypeField.value, '->', expectedType);
+                    workOrderTypeField.value = expectedType;
+                    // Re-run toggle to fix containers
+                    setupWorkOrderTypeToggle(true);
+                }
+                
+                // Force correct container visibility
+                const contractCompanyContainer = document.getElementById('contractCompanyFieldContainer');
+                const propertyManagerContainer = document.getElementById('propertyManagerFieldContainer');
+                
+                if (isInHouse) {
+                    // Should show Property Manager, hide Contract Company
+                    if (contractCompanyContainer) {
+                        contractCompanyContainer.style.display = 'none';
+                        contractCompanyContainer.style.visibility = 'hidden';
+                        contractCompanyContainer.classList.add('d-none');
+                    }
+                    if (propertyManagerContainer) {
+                        propertyManagerContainer.style.display = 'block';
+                        propertyManagerContainer.style.visibility = 'visible';
+                        propertyManagerContainer.classList.remove('d-none');
+                    }
+                } else {
+                    // Should show Contract Company, hide Property Manager
+                    if (propertyManagerContainer) {
+                        propertyManagerContainer.style.display = 'none';
+                        propertyManagerContainer.style.visibility = 'hidden';
+                        propertyManagerContainer.classList.add('d-none');
+                    }
+                    if (contractCompanyContainer) {
+                        contractCompanyContainer.style.display = 'block';
+                        contractCompanyContainer.style.visibility = 'visible';
+                        contractCompanyContainer.classList.remove('d-none');
+                    }
+                }
+            }, 100);
+            
+            // Additional attempt to set dropdown values after modal is fully visible
+            // This is a fallback in case the previous attempts didn't work
+            setTimeout(() => {
+                const workOrderType = document.getElementById('work_order_type')?.value;
+                if (workOrderType === 'inhouse') {
+                    const currentValue = document.getElementById('work_order_property_manager_id')?.value;
+                    if (!currentValue || currentValue === '') {
+                        setDropdownValue('work_order_property_manager_id', propertyManagerId, 'propertyManagerFieldContainer');
+                    }
+                } else if (workOrderType === 'outsource') {
+                    const currentValue = document.getElementById('work_order_contract_company_id')?.value;
+                    if (!currentValue || currentValue === '') {
+                        setDropdownValue('work_order_contract_company_id', contractCompanyId, 'contractCompanyFieldContainer');
+                    }
+                }
+            }, 300);
+            
             // Verify values are still set after modal is shown (in case event handlers cleared them)
             setTimeout(() => {
                 const blockIssueAfter = document.getElementById('work_order_block_issue_id')?.value;
@@ -1338,6 +1473,22 @@
                     setValue('work_order_priority_id', workOrder.priority_id);
                     console.log('⚠️ Restored priority_id after modal show:', workOrder.priority_id);
                 }
+                
+                // Verify contract company/property manager values are set
+                const isInHouseCheck = document.getElementById('work_order_type')?.value === 'inhouse';
+                if (isInHouseCheck) {
+                    const propertyManagerValue = document.getElementById('work_order_property_manager_id')?.value;
+                    console.log('After modal show - property_manager_id:', propertyManagerValue, 'Expected:', propertyManagerId);
+                    if (!propertyManagerValue || propertyManagerValue === '') {
+                        setDropdownValue('work_order_property_manager_id', propertyManagerId, 'propertyManagerFieldContainer');
+                    }
+                } else {
+                    const contractCompanyValue = document.getElementById('work_order_contract_company_id')?.value;
+                    console.log('After modal show - contract_company_id:', contractCompanyValue, 'Expected:', contractCompanyId);
+                    if (!contractCompanyValue || contractCompanyValue === '') {
+                        setDropdownValue('work_order_contract_company_id', contractCompanyId, 'contractCompanyFieldContainer');
+                    }
+                }
             }, 500);
             
         } catch (error) {
@@ -1352,6 +1503,67 @@
     function setValue(id, value) {
         const el = document.getElementById(id);
         if (el) el.value = value || '';
+    }
+    
+    /**
+     * Helper function to set dropdown value with validation
+     * @param {string} fieldId - The ID of the select field
+     * @param {string} value - The value to set (will be converted to string)
+     * @param {string} containerId - The ID of the container (optional, for visibility check)
+     * @returns {boolean} - Returns true if value was set successfully
+     */
+    function setDropdownValue(fieldId, value, containerId = null) {
+        if (!value || value === '0' || value === '') {
+            console.warn(`Cannot set ${fieldId} - invalid value:`, value);
+            return false;
+        }
+        
+        const field = document.getElementById(fieldId);
+        if (!field) {
+            console.error(`Field ${fieldId} not found`);
+            return false;
+        }
+        
+        // Ensure field is enabled
+        if (field.disabled) {
+            field.disabled = false;
+        }
+        
+        // Ensure container is visible if provided
+        if (containerId) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                if (container.style.display === 'none' || container.classList.contains('d-none')) {
+                    container.style.display = 'block';
+                    container.classList.remove('d-none');
+                }
+            }
+        }
+        
+        // Convert value to string
+        const stringValue = String(value);
+        
+        // Check if the option exists in the dropdown
+        const optionExists = Array.from(field.options).some(opt => opt.value === stringValue);
+        if (!optionExists) {
+            console.warn(`Option with value ${stringValue} not found in ${fieldId}`);
+            console.log('Available options:', Array.from(field.options).map(opt => ({ value: opt.value, text: opt.text })));
+            return false;
+        }
+        
+        // Set the value
+        field.value = stringValue;
+        console.log(`✓ Set ${fieldId} to:`, stringValue);
+        
+        // Verify it was set
+        if (field.value !== stringValue) {
+            console.error(`Failed to set ${fieldId} - value mismatch. Expected: ${stringValue}, Got: ${field.value}`);
+            return false;
+        }
+        
+        // Trigger change event
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
     }
 
     function formatDateTimeForInput(dateTimeString) {
