@@ -1,6 +1,6 @@
 <!-- Issue Modal (Add/Edit) -->
 <div class="modal fade" id="issueModal" tabindex="-1" aria-labelledby="issueModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" style="max-width: 95vw;">
+    <div class="modal-dialog modal-lg" style="max-width: 900px;">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
                 <h5 class="modal-title" id="issueModalLabel" style="color: white !important; padding-bottom: 15px;">Create Issue</h5>
@@ -133,19 +133,56 @@
                         <div class="tab-pane fade" id="pills-upload-images" role="tabpanel" aria-labelledby="pills-upload-images-tab">
                         <div class="row">
                             <div class="col-12">
-                                <label class="form-label fw-semibold mb-3">Upload Images <span class="text-muted">(Optional)</span></label>
-                                <div id="issueImageDropzone" class="dropzone">
-                                    <div class="dz-message text-center py-5">
-                                        <div class="mb-3 text-primary">
-                                            <i class="ph-cloud-arrow-up" style="font-size: 3rem;"></i>
+                                <!-- Issue Info Summary (Similar to photo upload modal) -->
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <div class="card border-0 shadow-sm issue-upload-summary">
+                                            <div class="card-body py-3 px-3 px-lg-4">
+                                                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                                                    <div>
+                                                        <p class="text-muted mb-1 small text-uppercase">Issue</p>
+                                                        <h5 class="mb-1" id="step2IssueTitle">Issue Details</h5>
+                                                        <div class="text-secondary small">
+                                                            Unit: <span class="fw-semibold" id="step2IssueUnit">--</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex flex-wrap gap-2 issue-upload-badges text-nowrap">
+                                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary fw-semibold" id="step2IssueType">Type: --</span>
+                                                        <span id="step2IssuePriority"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <h5 class="fw-semibold mb-2">Drag &amp; drop images here</h5>
-                                        <p class="text-muted mb-0">or click to browse your files</p>
-                                        <p class="text-muted small mt-2">Supported formats: JPG, PNG, GIF (Max 10MB per file)</p>
                                     </div>
                                 </div>
-                                <div id="issueImagePreview" class="mt-3 row g-2">
-                                    <!-- Uploaded images preview will appear here -->
+                                
+                                <!-- Dropzone Container -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-muted text-uppercase small">Upload Images <span class="text-danger">*</span></label>
+                                    <div id="issueImageDropzone" class="dropzone">
+                                        <div class="dz-message text-center py-4">
+                                            <div class="mb-2 text-primary">
+                                                <i class="ph-cloud-arrow-up fs-1"></i>
+                                            </div>
+                                            <h5 class="fw-semibold mb-1">Drag &amp; drop images here</h5>
+                                            <p class="text-muted mb-0 small">or click to browse your files</p>
+                                        </div>
+                                    </div>
+                                    <div id="issueImagePreview" class="mt-2 row g-2">
+                                        <!-- New images preview will appear here -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Existing Photos Section -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-muted text-uppercase small mb-2">Existing Photos</label>
+                                    <div id="existingIssuePhotos" class="row g-2">
+                                        <!-- Existing photos will be loaded here -->
+                                    </div>
+                                    <div id="noExistingPhotos" class="text-center text-muted py-4" style="display: none;">
+                                        <i class="ph-images" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                                        <p class="small mt-2 mb-0">No existing photos</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -163,7 +200,7 @@
                         <i class="ph-check label-icon align-middle fs-lg me-2"></i>Create Issue and Upload Images
                     </button>
                 </div>
-                <!-- Modal Footer - Step 2 buttons -->
+                <!-- Modal Footer - Step 2 buttons (Create Mode) -->
                 <div class="modal-footer d-none" id="step2Footer">
                     <button type="button" class="btn btn-link text-decoration-none btn-label previestab" data-previous="pills-issue-details-tab">
                         <i class="ph-arrow-left-line label-icon align-middle fs-lg me-2"></i>Back to Issue Details
@@ -178,10 +215,22 @@
                         <i class="ph-cloud-upload me-1"></i>Upload Images
                     </button>
                 </div>
+                <!-- Modal Footer - Step 2 buttons (Edit Mode) -->
+                <div class="modal-footer d-none" id="step2FooterEdit">
+                    <button type="button" class="btn btn-link text-decoration-none btn-label previestab" data-previous="pills-issue-details-tab">
+                        <i class="ph-arrow-left-line label-icon align-middle fs-lg me-2"></i>Back to Issue Details
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-success btn-label" id="updateIssueAndImagesBtn">
+                        <i class="ph-check label-icon align-middle fs-lg me-2"></i>Update Issue
+                    </button>
+                </div>
             </form>
             
             <!-- Open Issues in Same Unit Table -->
-            <div class="modal-body border-top">
+            <div class="modal-body border-top" id="openIssuesInSameUnitSection">
                 <div class="card border">
                     <div class="card-header d-flex justify-content-between align-items-center py-2 bg-light">
                         <h6 class="mb-0">Open Issues in Same Unit</h6>

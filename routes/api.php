@@ -141,9 +141,124 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             return response()->json($workOrder);
         });
         
+        // Accept work order
+        Route::post('/{id}/accept', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Check if already accepted or rejected
+            if ($workOrder->acceptance_status === 'accepted') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Work order has already been accepted'
+                ], 422);
+            }
+            
+            if ($workOrder->acceptance_status === 'rejected') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Work order has already been rejected. Cannot accept a rejected work order.'
+                ], 422);
+            }
+            
+            // Update acceptance status
+            $workOrder->acceptance_status = 'accepted';
+            $workOrder->updated_by = $request->user()->id;
+            $workOrder->save();
+            
+            // Reload with relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'notes.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order accepted successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
+        // Reject work order
+        Route::post('/{id}/reject', function (\Illuminate\Http\Request $request, $id) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Validate rejection reason
+            $request->validate([
+                'reason' => 'required|string|max:1000',
+            ]);
+            
+            // Check if already accepted or rejected
+            if ($workOrder->acceptance_status === 'rejected') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Work order has already been rejected'
+                ], 422);
+            }
+            
+            if ($workOrder->acceptance_status === 'accepted') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Work order has already been accepted. Cannot reject an accepted work order.'
+                ], 422);
+            }
+            
+            // Update acceptance status
+            $workOrder->acceptance_status = 'rejected';
+            $workOrder->updated_by = $request->user()->id;
+            $workOrder->save();
+            
+            // Create a note with rejection reason
+            \App\Models\BlockWorkOrderNote::create([
+                'block_work_order_id' => $workOrder->id,
+                'note' => 'Rejection Reason: ' . $request->reason,
+                'note_type' => 'rejection_reason',
+                'created_by' => $request->user()->id,
+            ]);
+            
+            // Reload with relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'notes.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order rejected successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
         // Start work order (update status to "In Progress")
         Route::post('/{id}/start', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            
+            // Check if work order has been accepted
+            if ($workOrder->acceptance_status !== 'accepted') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Work order must be accepted before it can be started'
+                ], 422);
+            }
             
             // Get "In Progress" job status
             $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
@@ -755,9 +870,9 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 }
             }
             
-            // Get all users from same contract company (Contractor Users) excluding existing team members
+            // Get all users from same contract company (Contractor Users and Contractor Admin) excluding existing team members
             $availableUsers = \App\Models\User::whereHas('userType', function($q) {
-                $q->where('name', 'Contractor User');
+                $q->whereIn('name', ['Contractor User', 'Contractor Admin']);
             })
             ->where('contract_company_id', $user->contract_company_id)
             ->where('is_active', true)
@@ -820,8 +935,10 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 ], 403);
             }
             
-            // Check if user is already in team (as contractor or in team table)
-            if ($workOrder->contractor_id == $newUserId) {
+            // Check if user is already in team table
+            // Allow contractor admin to add themselves even if they're the primary contractor
+            // (They can be both the primary contractor AND in the team table)
+            if ($workOrder->contractor_id == $newUserId && $newUserId !== $user->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'This user is already the primary contractor',
@@ -838,6 +955,9 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                     'message' => 'This user is already in the team',
                 ], 422);
             }
+            
+            // Allow contractor admin to add themselves even if they're the primary contractor
+            // (This allows them to be in both roles)
             
             // Add team member
             $teamMember = \App\Models\BlockWorkOrderTeam::create([
@@ -957,13 +1077,16 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 ], 404);
             }
             
-            // Cannot remove lead members (primary contractor/admin)
-            if ($teamMember->is_lead) {
+            // Cannot remove lead members (primary contractor/admin) unless it's the current user removing themselves
+            if ($teamMember->is_lead && $teamMember->user_id !== $user->id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Cannot remove primary team members',
                 ], 403);
             }
+            
+            // Allow contractor admin to remove themselves even if they're a lead
+            // (This allows them to remove themselves from the team table even if they're the primary contractor)
             
             // Verify team member is from same contract company
             $teamMemberUser = \App\Models\User::find($teamMember->user_id);

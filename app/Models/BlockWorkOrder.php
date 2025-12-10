@@ -33,6 +33,7 @@ class BlockWorkOrder extends Model
         'deadline_date',
         'issued_by',
         'status',
+        'acceptance_status',
         'ref_no',
         'repair_category_id',
         'issue',

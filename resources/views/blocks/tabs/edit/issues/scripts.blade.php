@@ -282,6 +282,12 @@ $(document).ready(function() {
      * @param {number} unitId - The ID of the selected unit
      */
     function loadActiveIssuesForUnit(unitId) {
+        // Don't load issues if in edit mode (section should be hidden)
+        const isEditMode = $('#editing_issue_id').length > 0;
+        if (isEditMode) {
+            return;
+        }
+        
         if (!unitId) {
             // Clear table if no unit selected
             $('#openIssuesTableBody').html(`
@@ -437,21 +443,52 @@ $(document).ready(function() {
                     if (data.success) {
                         // Use appropriate success message based on operation
                         const finalSuccessMessage = isEdit ? 'Issue updated successfully!' : successMessage;
-                        showMessage(messageId, 'success', finalSuccessMessage);
-                        $form[0].reset();
                         
-                        // Clear dropzone files
-                        if (issueDropzone) {
-                            issueDropzone.removeAllFiles();
+                        // In edit mode, if we're in Step 1, proceed to Step 2
+                        if (isEdit && $('#pills-issue-details').hasClass('active')) {
+                            // Store issue ID for Step 2
+                            const issueId = $('#editing_issue_id').val() || $form.attr('action').split('/').pop();
+                            if (!$('#editing_issue_id').length) {
+                                $form.append(`<input type="hidden" id="editing_issue_id" name="editing_issue_id" value="${issueId}">`);
+                            }
+                            
+                            // Update progress bar
+                            const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+                            if (progressBar) {
+                                progressBar.style.width = '100%';
+                            }
+                            
+                            // Enable and switch to Step 2
+                            const step2Tab = document.getElementById('pills-upload-images-tab');
+                            if (step2Tab) {
+                                step2Tab.disabled = false;
+                                step2Tab.click();
+                            }
+                            
+                            // Show edit mode Step 2 footer
+                            $('#step1Footer').addClass('d-none');
+                            $('#step2Footer').addClass('d-none');
+                            $('#step2FooterEdit').removeClass('d-none');
+                            
+                            showMessage(messageId, 'success', 'Issue details updated! You can now manage photos.');
+                        } else {
+                            // In create mode Step 2 or edit mode Step 2 - close modal
+                            showMessage(messageId, 'success', finalSuccessMessage);
+                            $form[0].reset();
+                            
+                            // Clear dropzone files
+                            if (issueDropzone) {
+                                issueDropzone.removeAllFiles();
+                            }
+                            
+                            // Reset step form
+                            resetStepForm();
+                            
+                            setTimeout(function() {
+                                $('#' + modalId).modal('hide');
+                                refreshBlockIssuesTable();
+                            }, 800);
                         }
-                        
-                        // Reset step form
-                        resetStepForm();
-                        
-                        setTimeout(function() {
-                            $('#' + modalId).modal('hide');
-                            refreshBlockIssuesTable();
-                        }, 800);
                     } else {
                         showMessage(messageId, 'danger', (data && data.message) || errorMessage);
                     }
@@ -515,6 +552,9 @@ $(document).ready(function() {
             $form.find('input[name="_method"]').remove(); // Remove PUT method for add
             $form[0].reset(); // Reset form
             
+            // Show "Open Issues in Same Unit" section in create mode
+            $('#openIssuesInSameUnitSection').show();
+            
             // Show step form for add mode
             $('.step-wizard').show();
             resetStepForm();
@@ -560,9 +600,8 @@ $(document).ready(function() {
                     const $modalLabel = $('#issueModalLabel');
                     const $submitBtn = $('#issueSubmitBtn');
                     
-                    // Update modal for edit mode
+                    // Update modal for edit mode - use 2-step process
                     $modalLabel.text('Edit Issue');
-                    $submitBtn.html('<i class="ph-check me-1"></i> Update');
                     $form.attr('action', window.routes?.blockIssues?.update?.replace(':id', id) || `/block-issues/${id}`);
                     
                     // Add PUT method for edit
@@ -570,13 +609,41 @@ $(document).ready(function() {
                         $form.append('<input type="hidden" name="_method" value="PUT">');
                     }
                     
-                    // Hide step form for edit mode - show all fields at once
-                    $('.step-wizard').hide();
-                    $('.step-content').removeClass('d-none');
-                    $('#step1, #step2').removeClass('d-none');
-                    // Reset form wizard state
-                    resetStepForm();
-                    $('#issueSubmitBtn').removeClass('d-none');
+                    // Store editing issue ID
+                    $form.append(`<input type="hidden" id="editing_issue_id" name="editing_issue_id" value="${id}">`);
+                    
+                    // Hide "Open Issues in Same Unit" section in edit mode
+                    $('#openIssuesInSameUnitSection').hide();
+                    
+                    // Show step wizard for edit mode (2-step process)
+                    $('#custom-progress-bar').show();
+                    $('.nav-pills.progress-bar-tab').show();
+                    
+                    // Enable Step 2 tab for edit mode
+                    const step2Tab = document.getElementById('pills-upload-images-tab');
+                    if (step2Tab) {
+                        step2Tab.disabled = false;
+                    }
+                    
+                    // Reset to Step 1, but keep editing_issue_id
+                    const firstTab = document.getElementById('pills-issue-details-tab');
+                    if (firstTab) {
+                        firstTab.click();
+                    }
+                    
+                    // Reset progress bar
+                    const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+                    if (progressBar) {
+                        progressBar.style.width = '0%';
+                    }
+                    
+                    // Show Step 1 footer
+                    $('#step1Footer').removeClass('d-none');
+                    $('#step2Footer').addClass('d-none');
+                    $('#step2FooterEdit').addClass('d-none');
+                    
+                    // Update Step 1 footer button for edit mode
+                    $('#createIssueAndUploadBtn').html('<i class="ph-check label-icon align-middle fs-lg me-2"></i>Update Issue Details');
                     
                     // Initialize modal first
                     initializeModal('issueModal');
@@ -585,21 +652,59 @@ $(document).ready(function() {
                     $modal.modal('show');
                     
                     // Populate form fields after modal is shown
-                    $modal.on('shown.bs.modal', function() {
-                        // Refresh units dropdown with the current unit selected
-                        refreshUnitsDropdownForEdit(issue.block_unit_id);
+                    $modal.off('shown.bs.modal.edit').on('shown.bs.modal.edit', function() {
+                        // Ensure section stays hidden in edit mode
+                        $('#openIssuesInSameUnitSection').hide();
                         
+                        // Set flag to prevent handlers from overwriting during initialization
+                        isInitializingEditMode = true;
+                        
+                        // Populate form fields first (before setting unit)
                         $('#contact_method_id').val(issue.contact_method_id);
-                        $('#assigned_to').val(issue.assigned_to.id).trigger('change');
                         $('#issue_type').val(issue.issue_type);
                         $('#priority_id').val(issue.priority_id);
                         $('#issue').val(issue.issue);
                         $('#contact_details').val(issue.contact_details);
                         $('#issue_details').val(issue.issue_details);
                         
+                        // Refresh units dropdown with the current unit selected
+                        // This will trigger unit selection and fetch unit contact details
+                        refreshUnitsDropdownForEdit(issue.block_unit_id);
+                        
+                        // After unit is set, ALWAYS fetch unit contact details for default_contact_details
+                        // Unit contact details are the source of truth in all scenarios
+                        // The checkbox will be automatically checked by getUnitContactDetails
+                        // Wait a bit for unit dropdown to be ready
+                        setTimeout(function() {
+                            const unitId = $('#issue_block_unit_id_hidden').val();
+                            if (unitId) {
+                                // ALWAYS use unit contact details for default_contact_details
+                                // This will also check the checkbox automatically
+                                getUnitContactDetails(unitId);
+                            } else {
+                                // No unit - uncheck checkbox and clear default contact details
+                                $('#use_default_contact').prop('checked', false);
+                                $('#default_contact_details').val('');
+                                $('#use_default_contact').trigger('change');
+                            }
+                            
+                            // Now set assigned_to (this won't overwrite unit contact details due to handler logic)
+                            $('#assigned_to').val(issue.assigned_to.id).trigger('change');
+                            
+                            // Clear flag after handlers have run
+                            setTimeout(function() {
+                                isInitializingEditMode = false;
+                            }, 500);
+                        }, 300);
+                        
                         // Remove the event listener to prevent multiple triggers
-                        $modal.off('shown.bs.modal');
+                        $modal.off('shown.bs.modal.edit');
                     });
+                    
+                    // Trigger the modal shown event if modal is already visible
+                    if ($modal.hasClass('show')) {
+                        $modal.trigger('shown.bs.modal.edit');
+                    }
                 } else {
                     showMessage('issueMessage', 'danger', 'Error loading issue data');
                 }
@@ -636,6 +741,9 @@ $(document).ready(function() {
     /** @var {Dropzone} issueDropzone - Dropzone instance for image uploads */
     let issueDropzone = null;
     
+    /** @var {boolean} isInitializingEditMode - Flag to prevent handlers from overwriting during edit initialization */
+    let isInitializingEditMode = false;
+    
     /**
      * Reset step form to initial state
      */
@@ -646,9 +754,12 @@ $(document).ready(function() {
             firstTab.click();
         }
         
-        // Disable step 2 tab until issue is created
+        // Check if in edit mode
+        const isEditMode = $('#issueForm').find('input[name="_method"]').val() === 'PUT';
+        
+        // Disable step 2 tab until issue is created (not in edit mode)
         const step2Tab = document.getElementById('pills-upload-images-tab');
-        if (step2Tab) {
+        if (step2Tab && !isEditMode) {
             step2Tab.disabled = true;
         }
         
@@ -661,9 +772,23 @@ $(document).ready(function() {
         // Reset footer buttons
         $('#step1Footer').removeClass('d-none');
         $('#step2Footer').addClass('d-none');
+        $('#step2FooterEdit').addClass('d-none');
         
-        // Clear created issue ID
+        // Reset Step 1 button text for create mode
+        if (!isEditMode) {
+            $('#createIssueAndUploadBtn').html('<i class="ph-check label-icon align-middle fs-lg me-2"></i>Create Issue and Upload Images');
+        }
+        
+        // Show "Open Issues in Same Unit" section (will be hidden in edit mode)
+        $('#openIssuesInSameUnitSection').show();
+        
+        // Clear created/editing issue ID
         $('#created_issue_id').val('');
+        $('#editing_issue_id').remove();
+        
+        // Clear existing photos display
+        $('#existingIssuePhotos').html('');
+        $('#noExistingPhotos').hide();
         
         // Destroy existing dropzone if it exists
         if (issueDropzone) {
@@ -740,9 +865,33 @@ $(document).ready(function() {
             return;
         }
         
-        // Destroy existing instance if any
+        // Disable auto discover to prevent conflicts
+        Dropzone.autoDiscover = false;
+        
+        // Get the dropzone element
+        const dropzoneElement = document.getElementById('issueImageDropzone');
+        if (!dropzoneElement) {
+            console.error('Dropzone element not found');
+            return;
+        }
+        
+        // Destroy existing instance if any (check both variable and element)
         if (issueDropzone) {
-            issueDropzone.destroy();
+            try {
+                issueDropzone.destroy();
+            } catch (e) {
+                console.warn('Error destroying dropzone from variable:', e);
+            }
+            issueDropzone = null;
+        }
+        
+        // Check if element already has a Dropzone instance attached
+        if (dropzoneElement.dropzone) {
+            try {
+                dropzoneElement.dropzone.destroy();
+            } catch (e) {
+                console.warn('Error destroying dropzone from element:', e);
+            }
         }
         
         // Initialize Dropzone
@@ -755,6 +904,7 @@ $(document).ready(function() {
             maxFilesize: 10, // 10MB
             acceptedFiles: 'image/*',
             addRemoveLinks: true,
+            clickable: true, // Explicitly enable clicking
             dictDefaultMessage: '',
             dictRemoveFile: 'Remove',
             dictCancelUpload: 'Cancel',
@@ -789,8 +939,15 @@ $(document).ready(function() {
             init: function() {
                 const dropzoneInstance = this;
                 
-                // Clear preview container on initialization
+                // Clear preview container on initialization (only new files)
                 $('#issueImagePreview').html('');
+                
+                // Ensure the dropzone element is enabled and clickable
+                const element = this.element;
+                if (element) {
+                    element.style.pointerEvents = 'auto';
+                    element.style.cursor = 'pointer';
+                }
                 
                 // Handle file addition
                 this.on('addedfile', function(file) {
@@ -811,7 +968,7 @@ $(document).ready(function() {
     }
     
     // Step navigation button handlers
-    // Handle "Create Issue and Upload Images" button click
+    // Handle "Create Issue and Upload Images" / "Update Issue Details" button click
     $(document).on('click', '#createIssueAndUploadBtn', function(e) {
         e.preventDefault();
         
@@ -825,13 +982,17 @@ $(document).ready(function() {
         const $form = $('#issueForm');
         const messageId = 'issueMessage';
         
+        // Detect if this is edit mode
+        const isEditMode = $form.find('input[name="_method"]').val() === 'PUT';
+        const loadingText = isEditMode ? 'Updating...' : 'Creating Issue...';
+        
         // Disable button and show loading
-        $btn.html('<i class="ph-spinner-gap ph-spin label-icon align-middle fs-lg me-2"></i>Creating Issue...').prop('disabled', true);
+        $btn.html(`<i class="ph-spinner-gap ph-spin label-icon align-middle fs-lg me-2"></i>${loadingText}`).prop('disabled', true);
         
         // Create FormData with only step 1 fields (no images yet)
         const formData = new FormData($form[0]);
         
-        // Submit to create the issue
+        // Submit to create or update the issue
         $.ajax({
             url: $form.attr('action'),
             method: 'POST',
@@ -842,29 +1003,92 @@ $(document).ready(function() {
                 'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
             },
             success: function(data) {
-                if (data.success && data.data && data.data.id) {
-                    // Issue created successfully, store the issue ID
-                    const issueId = data.data.id;
-                    $('#created_issue_id').val(issueId);
-                    
-                    // Show success message
-                    showMessage(messageId, 'success', 'Issue created successfully! Now you can upload images.');
-                    
-                    // Enable step 2 tab and navigate to it
-                    const step2Tab = document.getElementById('pills-upload-images-tab');
-                    if (step2Tab) {
-                        step2Tab.disabled = false;
+                if (data.success) {
+                    if (isEditMode) {
+                        // Edit mode - response format: {"success":true,"message":"Block issue updated successfully!"}
+                        // Extract issue ID from form action URL or use existing editing_issue_id
+                        let issueId = $('#editing_issue_id').val();
+                        if (!issueId) {
+                            const actionUrl = $form.attr('action');
+                            // Extract ID from URL like /block-issues/123 or /block-issues/123/
+                            const urlParts = actionUrl.split('/').filter(part => part && !isNaN(part));
+                            if (urlParts.length > 0) {
+                                issueId = urlParts[urlParts.length - 1];
+                            }
+                        }
                         
-                        // Switch footer buttons
+                        // Ensure editing_issue_id exists and is set correctly
+                        if (!issueId) {
+                            showMessage(messageId, 'danger', 'Error: Could not determine issue ID. Please try again.');
+                            $btn.html(originalText).prop('disabled', false);
+                            return;
+                        }
+                        
+                        if (!$('#editing_issue_id').length) {
+                            $form.append(`<input type="hidden" id="editing_issue_id" name="editing_issue_id" value="${issueId}">`);
+                        } else {
+                            $('#editing_issue_id').val(issueId);
+                        }
+                        
+                        // Update progress bar
+                        const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+                        if (progressBar) {
+                            progressBar.style.width = '100%';
+                        }
+                        
+                        // Enable Step 2 tab
+                        const step2Tab = document.getElementById('pills-upload-images-tab');
+                        if (step2Tab) {
+                            step2Tab.disabled = false;
+                        }
+                        
+                        // Switch footer buttons BEFORE navigation
                         $('#step1Footer').addClass('d-none');
-                        $('#step2Footer').removeClass('d-none');
+                        $('#step2Footer').addClass('d-none');
+                        $('#step2FooterEdit').removeClass('d-none');
                         
+                        // Show success message
+                        const successMsg = data.message || 'Issue details updated! You can now manage photos.';
+                        showMessage(messageId, 'success', successMsg);
+                        
+                        // Navigate to Step 2 after a short delay
                         setTimeout(function() {
-                            step2Tab.click();
-                        }, 500);
+                            if (step2Tab) {
+                                step2Tab.click();
+                            }
+                        }, 300);
+                    } else {
+                        // Create mode - response format: {"success":true,"data":{"id":123}}
+                        if (data.data && data.data.id) {
+                            // Issue created successfully, store the issue ID
+                            const issueId = data.data.id;
+                            $('#created_issue_id').val(issueId);
+                            
+                            // Show success message
+                            showMessage(messageId, 'success', 'Issue created successfully! Now you can upload images.');
+                            
+                            // Enable step 2 tab and navigate to it
+                            const step2Tab = document.getElementById('pills-upload-images-tab');
+                            if (step2Tab) {
+                                step2Tab.disabled = false;
+                                
+                                // Switch footer buttons
+                                $('#step1Footer').addClass('d-none');
+                                $('#step2Footer').removeClass('d-none');
+                                
+                                setTimeout(function() {
+                                    step2Tab.click();
+                                }, 500);
+                            }
+                        } else {
+                            showMessage(messageId, 'danger', 'Error creating issue. Please try again.');
+                            $btn.html(originalText).prop('disabled', false);
+                        }
                     }
                 } else {
-                    showMessage(messageId, 'danger', 'Error creating issue. Please try again.');
+                    // Success is false
+                    const errorMsg = isEditMode ? 'Error updating issue. Please try again.' : 'Error creating issue. Please try again.';
+                    showMessage(messageId, 'danger', (data && data.message) || errorMsg);
                     $btn.html(originalText).prop('disabled', false);
                 }
             },
@@ -889,62 +1113,220 @@ $(document).ready(function() {
                     }
                     showMessage(messageId, 'danger', 'Please correct the errors and try again.');
                 } else {
-                    showMessage(messageId, 'danger', 'Error creating issue. Please try again.');
+                    const errorMsg = isEditMode ? 'Error updating issue. Please try again.' : 'Error creating issue. Please try again.';
+                    showMessage(messageId, 'danger', errorMsg);
                 }
                 $btn.html(originalText).prop('disabled', false);
             }
         });
     });
     
-    // Prevent direct navigation to step 2 before issue is created
+    // Prevent direct navigation to step 2 before issue is created/updated
     $(document).on('show.bs.tab', '#pills-upload-images-tab', function(e) {
-        const issueId = $('#created_issue_id').val();
-        if (!issueId) {
+        const issueId = $('#created_issue_id').val() || $('#editing_issue_id').val();
+        const isEditMode = $('#issueForm').find('input[name="_method"]').val() === 'PUT';
+        
+        // In edit mode, allow navigation (editing_issue_id should exist)
+        // In create mode, require created_issue_id
+        if (!isEditMode && !issueId) {
             e.preventDefault();
             showMessage('issueMessage', 'warning', 'Please create the issue first before uploading images.');
+            return false;
+        }
+        
+        // For edit mode, ensure editing_issue_id exists
+        if (isEditMode && !issueId) {
+            e.preventDefault();
+            showMessage('issueMessage', 'warning', 'Please update the issue details first before managing photos.');
             return false;
         }
     });
     
     // Switch footer buttons based on active tab and issue creation status
     $(document).on('shown.bs.tab', 'button[data-bs-toggle="pill"]', function(e) {
-        const issueId = $('#created_issue_id').val();
+        const issueId = $('#created_issue_id').val() || $('#editing_issue_id').val();
         const targetId = $(e.target).attr('data-bs-target');
+        const isEditMode = $('#issueForm').find('input[name="_method"]').val() === 'PUT';
         
-        // Once issue is created, always show step 2 footer
-        if (issueId) {
-            $('#step1Footer').addClass('d-none');
-            $('#step2Footer').removeClass('d-none');
-        } else {
-            // Issue not created yet - show step 1 footer
-            if (targetId === '#pills-issue-details') {
-                $('#step1Footer').removeClass('d-none');
-                $('#step2Footer').addClass('d-none');
-            } else {
-                $('#step1Footer').addClass('d-none');
-                $('#step2Footer').addClass('d-none');
+        // Step 2 is active
+        if (targetId === '#pills-upload-images') {
+            // Update progress bar to 100%
+            const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '100%';
             }
+            
+            // Hide Step 1 footer, show appropriate Step 2 footer
+            $('#step1Footer').addClass('d-none');
+            if (isEditMode) {
+                $('#step2Footer').addClass('d-none');
+                $('#step2FooterEdit').removeClass('d-none');
+            } else {
+                $('#step2Footer').removeClass('d-none');
+                $('#step2FooterEdit').addClass('d-none');
+            }
+        } else if (targetId === '#pills-issue-details') {
+            // Step 1 is active
+            // Update progress bar to 0%
+            const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+            if (progressBar) {
+                progressBar.style.width = '0%';
+            }
+            
+            // Show Step 1 footer, hide Step 2 footers
+            $('#step1Footer').removeClass('d-none');
+            $('#step2Footer').addClass('d-none');
+            $('#step2FooterEdit').addClass('d-none');
         }
     });
     
     // Initialize dropzone when upload images tab is shown
     $(document).on('shown.bs.tab', '#pills-upload-images-tab', function() {
-        // Only initialize if issue has been created
-        const issueId = $('#created_issue_id').val();
-        if (!issueId) {
+        const issueId = $('#created_issue_id').val() || $('#editing_issue_id').val();
+        const isEditMode = $('#issueForm').find('input[name="_method"]').val() === 'PUT';
+        
+        // In create mode, check if issue has been created
+        if (!isEditMode && !issueId) {
             // Issue not created yet, go back to step 1
             showMessage('issueMessage', 'warning', 'Please create the issue first.');
             document.getElementById('pills-issue-details-tab').click();
             return;
         }
         
-        // Initialize dropzone if not already initialized
-        if (!issueDropzone) {
+        // Populate issue summary in Step 2
+        populateStep2IssueSummary();
+        
+        // Wait a bit for the DOM to be ready, then initialize dropzone
+        // Always re-initialize to ensure it's fresh and properly attached
+        setTimeout(function() {
             initializeIssueDropzone();
+            
+            // Load existing photos if issueId is available (both create and edit modes)
+            if (issueId) {
+                loadExistingIssuePhotos(issueId);
+            }
+        }, 100);
+    });
+    
+    /**
+     * Populate issue summary card in Step 2
+     */
+    function populateStep2IssueSummary() {
+        // Get form values
+        const issueTitle = $('#issue').val() || 'Issue Details';
+        const unitDisplay = $('#issue_block_unit_id').val() || 'Not selected';
+        const issueType = $('#issue_type').val() || '';
+        const priorityId = $('#priority_id').val() || '2';
+        
+        // Set issue title
+        $('#step2IssueTitle').text(issueTitle);
+        
+        // Set unit
+        $('#step2IssueUnit').text(unitDisplay);
+        
+        // Set issue type
+        if (issueType) {
+            const typeDisplay = issueType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            $('#step2IssueType').text(`Type: ${typeDisplay}`);
+        } else {
+            $('#step2IssueType').text('Type: --');
+        }
+        
+        // Set priority badge
+        const priorityMap = {
+            '1': { text: 'Low', class: 'bg-secondary' },
+            '2': { text: 'Normal', class: 'bg-info' },
+            '3': { text: 'High', class: 'bg-warning' },
+            '4': { text: 'Urgent', class: 'bg-danger' },
+            '5': { text: 'Critical', class: 'bg-dark' }
+        };
+        
+        const priority = priorityMap[priorityId] || priorityMap['2'];
+        $('#step2IssuePriority').html(`<span class="badge ${priority.class} text-white">${priority.text}</span>`);
+    }
+    
+    // Handle "Update Issue" button click in step 2 (edit mode)
+    $(document).on('click', '#updateIssueAndImagesBtn', function(e) {
+        e.preventDefault();
+        
+        const issueId = $('#editing_issue_id').val();
+        if (!issueId) {
+            showMessage('issueMessage', 'danger', 'Issue ID not found.');
+            return;
+        }
+        
+        const $btn = $(this);
+        const originalText = $btn.html();
+        const messageId = 'issueMessage';
+        
+        // Disable button and show loading
+        $btn.html('<i class="ph-spinner-gap ph-spin me-1"></i>Updating...').prop('disabled', true);
+        
+        // Create FormData with images from dropzone
+        const formData = new FormData();
+        if (issueDropzone && issueDropzone.files.length > 0) {
+            issueDropzone.files.forEach(function(file, index) {
+                formData.append('images[]', file);
+            });
+        }
+        
+        // Upload new images if any
+        if (formData.has('images[]')) {
+            $.ajax({
+                url: `/block-issues/${issueId}/photos`,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(data) {
+                    if (data.success) {
+                        showMessage(messageId, 'success', 'Issue and images updated successfully!');
+                        
+                        // Clear dropzone files
+                        if (issueDropzone) {
+                            issueDropzone.removeAllFiles();
+                        }
+                        
+                        // Reset step form
+                        resetStepForm();
+                        
+                        // Close modal and refresh table
+                        setTimeout(function() {
+                            $('#issueModal').modal('hide');
+                            refreshBlockIssuesTable();
+                        }, 1000);
+                    } else {
+                        showMessage(messageId, 'danger', 'Error uploading images. Issue details were updated.');
+                        $btn.html(originalText).prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMessage = 'Error uploading images. Issue details were updated.';
+                    if (xhr.status === 422) {
+                        const errors = xhr.responseJSON.errors;
+                        if (errors && errors.images) {
+                            errorMessage = errors.images[0];
+                        }
+                    }
+                    showMessage(messageId, 'danger', errorMessage);
+                    $btn.html(originalText).prop('disabled', false);
+                }
+            });
+        } else {
+            // No new images, just close
+            showMessage(messageId, 'success', 'Issue updated successfully!');
+            resetStepForm();
+            setTimeout(function() {
+                $('#issueModal').modal('hide');
+                refreshBlockIssuesTable();
+            }, 800);
         }
     });
     
-    // Handle "Upload Images" button click in step 2
+    // Handle "Upload Images" button click in step 2 (create mode)
     $(document).on('click', '#uploadImagesBtn', function(e) {
         e.preventDefault();
         
@@ -1022,6 +1404,122 @@ $(document).ready(function() {
         // Refresh table to show the newly created issue
         refreshBlockIssuesTable();
     });
+    
+    /**
+     * Load existing photos for an issue in Step 2
+     * 
+     * @param {number} issueId - The ID of the issue
+     */
+    function loadExistingIssuePhotos(issueId) {
+        if (!issueId) {
+            $('#existingIssuePhotos').html('');
+            $('#noExistingPhotos').show();
+            return;
+        }
+        
+        $.ajax({
+            url: `/api/block-issues/${issueId}/photos`,
+            method: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                if (data.success && data.data && data.data.length > 0) {
+                    displayExistingIssuePhotos(data.data);
+                    $('#noExistingPhotos').hide();
+                } else {
+                    $('#existingIssuePhotos').html('');
+                    $('#noExistingPhotos').show();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading existing photos:', error);
+                $('#existingIssuePhotos').html('');
+                $('#noExistingPhotos').show();
+            }
+        });
+    }
+    
+    /**
+     * Displays existing photos in Step 2 with remove icons
+     * 
+     * @param {Array} photos - Array of photo objects
+     */
+    function displayExistingIssuePhotos(photos) {
+        const container = $('#existingIssuePhotos');
+        container.empty();
+        
+        photos.forEach(function(photo, index) {
+            const photoPath = photo.image_path ? `${photo.image_path}/${photo.image_name}` : photo.image_name;
+            const photoUrl = `/storage/${photoPath}`;
+            
+            const photoHtml = `
+                <div class="col-6 col-md-4 col-lg-3 mb-3" data-photo-id="${photo.id}">
+                    <div class="card border-0 shadow-sm position-relative" style="height: 100%; border-radius: 12px; overflow: hidden;">
+                        <div class="position-relative" style="height: 150px; overflow: hidden; background: #f8f9fa;">
+                            <img src="${photoUrl}" 
+                                 class="w-100 h-100" 
+                                 style="object-fit: cover; cursor: pointer; transition: transform 0.3s ease;"
+                                 alt="Photo ${index + 1}"
+                                 onclick="window.open('${photoUrl}', '_blank')"
+                                 onmouseover="this.style.transform='scale(1.05)'"
+                                 onmouseout="this.style.transform='scale(1)'">
+                            <button type="button" 
+                                    class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 shadow" 
+                                    onclick="removeExistingIssuePhoto(${photo.id}, '${photo.image_name.replace(/'/g, "\\'")}')" 
+                                    title="Remove Photo"
+                                    style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(220, 53, 69, 0.9); border: none;">
+                                <i class="ph-x" style="font-size: 16px; color: white;"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-2">
+                            <small class="text-muted d-block text-truncate" style="font-size: 0.75rem; font-weight: 500;" title="${photo.image_name}">
+                                ${photo.image_name.length > 25 ? photo.image_name.substring(0, 25) + '...' : photo.image_name}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.append(photoHtml);
+        });
+    }
+    
+    /**
+     * Removes an existing photo from an issue
+     * 
+     * @param {number} photoId - The ID of the photo to remove
+     * @param {string} photoName - The name of the photo (for confirmation)
+     */
+    window.removeExistingIssuePhoto = function(photoId, photoName) {
+        if (!confirm(`Are you sure you want to remove "${photoName}"?`)) {
+            return;
+        }
+        
+        const issueId = $('#editing_issue_id').val() || $('#created_issue_id').val();
+        if (!issueId) {
+            showMessage('issueMessage', 'danger', 'Issue ID not found.');
+            return;
+        }
+        
+        $.ajax({
+            url: `/api/block-issue-photos/${photoId}`,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': window.csrfToken || $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(data) {
+                if (data.success) {
+                    showMessage('issueMessage', 'success', 'Photo removed successfully.');
+                    // Reload existing photos
+                    loadExistingIssuePhotos(issueId);
+                } else {
+                    showMessage('issueMessage', 'danger', 'Error removing photo.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error removing photo:', error);
+                showMessage('issueMessage', 'danger', 'Error removing photo. Please try again.');
+            }
+        });
+    };
     
     // Reset form when modal is closed
     $('#issueModal').on('hidden.bs.modal', function() {
@@ -1792,13 +2290,17 @@ $(document).ready(function() {
                                 console.log('Calling getUnitContactDetails with unit ID:', selectedUnit.value);
                                 getUnitContactDetails(selectedUnit.value);
                                 
-                                console.log('Calling fetchUnitIssues with unit ID:', selectedUnit.value);
-                                // Fetch and display issues for the selected unit
-                                fetchUnitIssues(selectedUnit.value);
-                                
-                                console.log('Calling loadActiveIssuesForUnit with unit ID:', selectedUnit.value);
-                                // Load active issues for the modal table
-                                loadActiveIssuesForUnit(selectedUnit.value);
+                                // Check if we're in edit mode
+                                const isEditMode = $('#editing_issue_id').length > 0;
+                                if (!isEditMode) {
+                                    console.log('Calling fetchUnitIssues with unit ID:', selectedUnit.value);
+                                    // Fetch and display issues for the selected unit
+                                    fetchUnitIssues(selectedUnit.value);
+                                    
+                                    console.log('Calling loadActiveIssuesForUnit with unit ID:', selectedUnit.value);
+                                    // Load active issues for the modal table
+                                    loadActiveIssuesForUnit(selectedUnit.value);
+                                }
                             } else {
                                 console.log('No unit found for selection:', selection);
                             }
@@ -1968,9 +2470,24 @@ $(document).ready(function() {
     
     /**
      * Get user details and populate default contact details
+     * NOTE: This is ONLY used as fallback when NO unit is selected
+     * Unit contact details ALWAYS take priority in ALL scenarios
      */
     function getUserDetails(userId) {
         if (!userId) return;
+        
+        // NEVER overwrite if unit is selected - unit contact details take priority
+        const unitId = $('#issue_block_unit_id_hidden').val();
+        if (unitId) {
+            // Unit is selected - don't use property manager details
+            // Unit contact details should already be set
+            return;
+        }
+        
+        // Don't overwrite if we're initializing edit mode
+        if (isInitializingEditMode) {
+            return;
+        }
         
         $.ajax({
             url: `/api/users/${userId}`,
@@ -1982,6 +2499,14 @@ $(document).ready(function() {
             },
             success: function(data) {
                 if (data.success && data.data) {
+                    // Double-check unit wasn't selected while request was in flight
+                    const currentUnitId = $('#issue_block_unit_id_hidden').val();
+                    if (currentUnitId) {
+                        // Unit was selected - use unit details instead
+                        getUnitContactDetails(currentUnitId);
+                        return;
+                    }
+                    
                     const user = data.data;
                     let contactDetails = '';
                     
@@ -1996,7 +2521,7 @@ $(document).ready(function() {
                         contactDetails += contactDetails ? `\nAddress: ${user.address}` : `Address: ${user.address}`;
                     }
                     
-                    // Update default contact details field
+                    // Update default contact details field (only if no unit selected)
                     $('#default_contact_details').val(contactDetails);
                 }
             },
@@ -2008,14 +2533,14 @@ $(document).ready(function() {
     
     /**
      * Get unit contact details and populate default contact details
+     * ALWAYS populates from unit - unit contact details take priority in ALL scenarios
+     * This is the source of truth for default contact details
      */
     function getUnitContactDetails(unitId) {
         if (!unitId) return;
         
-        // Only populate if use_default_contact is checked
-        if (!$('#use_default_contact').is(':checked')) {
-            return;
-        }
+        // Always populate from unit when unit is selected (unit is always the source)
+        // Don't check checkbox state - unit details should always be available
         
         $.ajax({
             url: '/api/block-unit-contact-details',
@@ -2033,8 +2558,9 @@ $(document).ready(function() {
                     const unit = data.data;
                     
                     // Use the formatted contact_details string from the API
+                    let contactDetailsValue = '';
                     if (unit.contact_details) {
-                        $('#default_contact_details').val(unit.contact_details);
+                        contactDetailsValue = unit.contact_details;
                     } else {
                         // Fallback: build contact details string if API doesn't provide formatted string
                         let contactDetails = '';
@@ -2050,8 +2576,16 @@ $(document).ready(function() {
                         if (unit.owners_name) {
                             contactDetails += contactDetails ? `\nOwner: ${unit.owners_name}` : `Owner: ${unit.owners_name}`;
                         }
-                        $('#default_contact_details').val(contactDetails);
+                        contactDetailsValue = contactDetails;
                     }
+                    
+                    // Always populate default contact details from unit when unit is selected
+                    // This is the source of truth - checkbox should always be checked when unit is selected
+                    $('#default_contact_details').val(contactDetailsValue || '');
+                    // Always check the checkbox since we're using unit contact details
+                    $('#use_default_contact').prop('checked', true);
+                    // Trigger change to set readonly state
+                    $('#use_default_contact').trigger('change');
                 }
             },
             error: function(xhr, status, error) {
@@ -2158,13 +2692,22 @@ $(document).ready(function() {
     });
     
     // Handle assigned_to change to populate default contact details
-    // Note: Unit contact details take priority over property manager
+    // Note: Unit contact details ALWAYS take priority over property manager
     $('#assigned_to').on('change', function() {
         const userId = $(this).val();
         if (userId && $('#use_default_contact').is(':checked')) {
-            // Only populate from property manager if no unit is selected
+            // Don't overwrite if we're initializing edit mode
+            if (isInitializingEditMode) {
+                return;
+            }
+            
+            // Always prioritize unit contact details over property manager
             const unitId = $('#issue_block_unit_id_hidden').val();
-            if (!unitId) {
+            if (unitId) {
+                // Unit is selected - use unit contact details (don't use property manager)
+                getUnitContactDetails(unitId);
+            } else {
+                // No unit selected - fallback to property manager
                 getUserDetails(userId);
             }
         }
@@ -2174,15 +2717,18 @@ $(document).ready(function() {
     $('#use_default_contact').on('change', function() {
         if (this.checked) {
             $('#default_contact_details').prop('readonly', true).addClass('bg-light');
-            // Prioritize unit contact details over property manager
-            const unitId = $('#issue_block_unit_id_hidden').val();
-            if (unitId) {
-                getUnitContactDetails(unitId);
-            } else {
-                // Fallback to property manager if no unit selected
-                const userId = $('#assigned_to').val();
-                if (userId) {
-                    getUserDetails(userId);
+            // Don't overwrite if we're initializing edit mode
+            if (!isInitializingEditMode) {
+                // Prioritize unit contact details over property manager
+                const unitId = $('#issue_block_unit_id_hidden').val();
+                if (unitId) {
+                    getUnitContactDetails(unitId);
+                } else {
+                    // Fallback to property manager if no unit selected
+                    const userId = $('#assigned_to').val();
+                    if (userId) {
+                        getUserDetails(userId);
+                    }
                 }
             }
         } else {
@@ -2400,15 +2946,13 @@ $(document).ready(function() {
             }
         }
         
-        // Set up modal for edit mode
+        // Set up modal for edit mode - use 2-step process
         const $modal = $('#issueModal');
         const $modalLabel = $('#issueModalLabel');
         const $form = $('#issueForm');
-        const $submitBtn = $('#issueSubmitBtn');
         
         // Configure modal for edit mode
         $modalLabel.text('Edit Issue');
-        $submitBtn.html('<i class="ph-check me-1"></i> Update');
         $form.attr('action', window.routes?.blockIssues?.update?.replace(':id', issue.id) || `/block-issues/${issue.id}`);
         
         // Add PUT method for edit
@@ -2416,31 +2960,107 @@ $(document).ready(function() {
             $form.append('<input type="hidden" name="_method" value="PUT">');
         }
         
+        // Store editing issue ID
+        if (!$('#editing_issue_id').length) {
+            $form.append(`<input type="hidden" id="editing_issue_id" name="editing_issue_id" value="${issue.id}">`);
+        } else {
+            $('#editing_issue_id').val(issue.id);
+        }
+        
+        // Hide "Open Issues in Same Unit" section in edit mode
+        $('#openIssuesInSameUnitSection').hide();
+        
+        // Show step wizard for edit mode (2-step process)
+        $('#custom-progress-bar').show();
+        $('.nav-pills.progress-bar-tab').show();
+        
+        // Enable Step 2 tab for edit mode
+        const step2Tab = document.getElementById('pills-upload-images-tab');
+        if (step2Tab) {
+            step2Tab.disabled = false;
+        }
+        
+        // Reset to Step 1
+        const firstTab = document.getElementById('pills-issue-details-tab');
+        if (firstTab) {
+            firstTab.click();
+        }
+        
+        // Reset progress bar
+        const progressBar = document.querySelector('#custom-progress-bar .progress-bar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+        
+        // Show Step 1 footer with edit button text
+        $('#step1Footer').removeClass('d-none');
+        $('#step2Footer').addClass('d-none');
+        $('#step2FooterEdit').addClass('d-none');
+        $('#createIssueAndUploadBtn').html('<i class="ph-check label-icon align-middle fs-lg me-2"></i>Update Issue Details');
+        
         // Clear any previous messages
         clearMessage('issueMessage');
         
-        // Refresh units dropdown with the current unit selected
-        refreshUnitsDropdownForEdit(issue.block_unit_id);
+        // Initialize modal
+        initializeModal('issueModal');
         
-        // Populate all form fields with existing data
-        $('#contact_method_id').val(issue.contact_method_id || '');
-        $('#assigned_to').val(issue.assigned_to?.id || issue.assigned_to || '').trigger('change');
-        $('#issue_type').val(issue.issue_type || '');
-        $('#priority_id').val(issue.priority_id || '');
-        $('#issue').val(issue.issue || '');
-        $('#contact_details').val(issue.contact_details || '');
-        $('#issue_details').val(issue.issue_details || '');
-        $('#default_contact_details').val(issue.default_contact_details || '');
+        // Show the modal
+        $modal.modal('show');
         
-        // Handle use_default_contact checkbox
-        if (issue.default_contact_details && issue.default_contact_details.trim() !== '') {
-            $('#use_default_contact').prop('checked', true);
-        } else {
-            $('#use_default_contact').prop('checked', false);
+        // Populate form fields after modal is shown
+        $modal.off('shown.bs.modal.editActive').on('shown.bs.modal.editActive', function() {
+            // Ensure section stays hidden in edit mode
+            $('#openIssuesInSameUnitSection').hide();
+            
+            // Set flag to prevent handlers from overwriting during initialization
+            isInitializingEditMode = true;
+            
+            // Populate form fields first (before setting unit)
+            $('#contact_method_id').val(issue.contact_method_id || '');
+            $('#issue_type').val(issue.issue_type || '');
+            $('#priority_id').val(issue.priority_id || '');
+            $('#issue').val(issue.issue || '');
+            $('#contact_details').val(issue.contact_details || '');
+            $('#issue_details').val(issue.issue_details || '');
+            
+            // Refresh units dropdown with the current unit selected
+            // This will trigger unit selection and fetch unit contact details
+            refreshUnitsDropdownForEdit(issue.block_unit_id);
+            
+            // After unit is set, ALWAYS fetch unit contact details for default_contact_details
+            // Unit contact details are the source of truth in all scenarios
+            // The checkbox will be automatically checked by getUnitContactDetails
+            // Wait a bit for unit dropdown to be ready
+            setTimeout(function() {
+                const unitId = $('#issue_block_unit_id_hidden').val();
+                if (unitId) {
+                    // ALWAYS use unit contact details for default_contact_details
+                    // This will also check the checkbox automatically
+                    getUnitContactDetails(unitId);
+                } else {
+                    // No unit - uncheck checkbox and clear default contact details
+                    $('#use_default_contact').prop('checked', false);
+                    $('#default_contact_details').val('');
+                    $('#use_default_contact').trigger('change');
+                }
+                
+                // Now set assigned_to (this won't overwrite unit contact details due to handler logic)
+                $('#assigned_to').val(issue.assigned_to?.id || issue.assigned_to || '').trigger('change');
+                
+                // Clear flag after handlers have run
+                setTimeout(function() {
+                    isInitializingEditMode = false;
+                }, 500);
+            }, 300);
+            
+            // Remove the event listener to prevent multiple triggers
+            $modal.off('shown.bs.modal.editActive');
+        });
+        
+        // Trigger the modal shown event if modal is already visible
+        if ($modal.hasClass('show')) {
+            $modal.trigger('shown.bs.modal.editActive');
         }
-        
-        // Trigger change event to update dependent fields
-        $('#use_default_contact').trigger('change');
     };
     
     // ========================================
@@ -2448,13 +3068,18 @@ $(document).ready(function() {
     // ========================================
     
     // Handle unit selection change to load active issues and populate contact details
+    // Unit contact details ALWAYS take priority - always fetch from unit when unit is selected
     $('#issue_block_unit_id_hidden').on('change', function() {
         const unitId = $(this).val();
         if (unitId) {
-            // Populate contact details from unit
+            // ALWAYS populate contact details from unit (unit is the source of truth)
+            // This will overwrite any property manager details
             getUnitContactDetails(unitId);
-            // Load active issues for the unit
-            loadActiveIssuesForUnit(unitId);
+            // Load active issues for the unit only if NOT in edit mode
+            const isEditMode = $('#editing_issue_id').length > 0;
+            if (!isEditMode) {
+                loadActiveIssuesForUnit(unitId);
+            }
         }
     });
     

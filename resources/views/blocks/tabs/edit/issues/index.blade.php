@@ -385,6 +385,69 @@
     transition: all 0.3s ease;
 }
 
+/* Step 2 Dropzone - Styled like photo upload modal */
+#issueImageDropzone.dropzone {
+    min-height: 96px !important;
+    border: 2px dashed rgba(102, 126, 234, 0.45) !important;
+    border-radius: 12px !important;
+    background: #f8f9ff !important;
+    transition: all 0.25s ease-in-out;
+    padding: 15px 8px !important;
+}
+
+#issueImageDropzone.dropzone:hover,
+#issueImageDropzone.dropzone.dz-drag-hover {
+    border-color: #667eea !important;
+    background: #eef1ff !important;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15) !important;
+}
+
+#issueImageDropzone .dz-message {
+    padding: 15px 8px !important;
+    margin: 0 !important;
+    text-align: center !important;
+    color: #4b5563 !important;
+}
+
+#issueImageDropzone .dz-message h5 {
+    margin: 6px 0 3px 0 !important;
+    font-size: 0.9rem !important;
+    color: #1f2937 !important;
+}
+
+#issueImageDropzone .dz-message p {
+    margin: 0 !important;
+    font-size: 0.75rem !important;
+    line-height: 1.3 !important;
+}
+
+/* Issue Upload Summary Card (Step 2) */
+.issue-upload-summary {
+    background: linear-gradient(135deg, rgba(102,126,234,0.08), rgba(118,75,162,0.08));
+    border-radius: 14px;
+}
+
+.issue-upload-summary h5 {
+    font-weight: 600;
+    color: #111827;
+}
+
+.issue-upload-summary .issue-upload-badges .badge {
+    font-size: 0.75rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    background: #f1f5f9;
+    color: #334155;
+}
+
+#step2IssuePriority .badge {
+    border-radius: 999px;
+    font-size: 0.75rem;
+    padding: 0.45rem 0.7rem;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+}
+
 .dropzone:hover {
     border-color: #667eea;
     background: #f0f2ff;
