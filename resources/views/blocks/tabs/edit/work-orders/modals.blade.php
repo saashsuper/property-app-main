@@ -68,9 +68,9 @@
                         </div>
                     </div>
                     
-                    <!-- Row 2: Unit, Issue, Status -->
+                    <!-- Row 2: Unit, Issue -->
                     <div class="row mb-3">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="work_order_unit_id" class="form-label">Select Unit <span class="text-danger">*</span></label>
                             <select class="form-select" id="work_order_unit_id" name="work_order_unit_id" required>
                                 <option value="">Select Unit</option>
@@ -88,26 +88,17 @@
                             <small class="text-muted">Select a unit from the block</small>
                         </div>
                         
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label for="block_issue_id_select" class="form-label">Select Issue <span class="text-danger">*</span></label>
                             <select class="form-select" id="block_issue_id_select" name="block_issue_id" required disabled>
                                 <option value="">Select a unit first to see issues</option>
                             </select>
                             <small class="text-muted">Select an issue from the selected unit</small>
                         </div>
-                        
-                        <div class="col-md-4 mb-3">
-                            <label for="work_order_status" class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select" id="work_order_status" name="status" required>
-                                <option value="">Select Status</option>
-                                <option value="1" selected>Pending</option>
-                                <option value="2">In Progress</option>
-                                <option value="3">Completed</option>
-                                <option value="4">Cancelled</option>
-                                <option value="5">On Hold</option>
-                            </select>
-                        </div>
                     </div>
+                    
+                    <!-- Hidden field for status (auto-managed by backend) -->
+                    <input type="hidden" id="work_order_status" name="status" value="1">
 
                     <div id="workOrderFormFields">
                         <!-- Row 3: Scheduling -->
@@ -188,3 +179,4 @@
         </div>
     </div>
 </div>
+

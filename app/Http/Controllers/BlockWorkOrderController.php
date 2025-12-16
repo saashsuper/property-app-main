@@ -71,8 +71,14 @@ class BlockWorkOrderController extends Controller
         $blockIssues = BlockIssue::with('block')->orderBy('created_at', 'desc')->get();
         $blockUnits = BlockUnit::with('block')->orderBy('unit_name')->get();
         $blockBuildings = BlockBuilding::with('block')->orderBy('name')->get();
+        
+        // Load contract companies and property managers for work order type selection
+        $contractCompanies = \App\Models\ContractCompany::orderBy('company_name')->get();
+        $propertyManagers = \App\Models\User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->orderBy('name')->get();
 
-        return view('block-work-orders.create', compact('blocks', 'blockIssues', 'blockUnits', 'blockBuildings'));
+        return view('block-work-orders.create', compact('blocks', 'blockIssues', 'blockUnits', 'blockBuildings', 'contractCompanies', 'propertyManagers'));
     }
 
     /**
@@ -285,9 +291,15 @@ class BlockWorkOrderController extends Controller
         $blockUnits = BlockUnit::with('block')->orderBy('unit_name')->get();
         $blockBuildings = BlockBuilding::with('block')->orderBy('name')->get();
         
-        $blockWorkOrder->load('images');
+        // Load contract companies and property managers for work order type selection
+        $contractCompanies = \App\Models\ContractCompany::orderBy('company_name')->get();
+        $propertyManagers = \App\Models\User::whereHas('userType', function($query) {
+            $query->where('name', 'Property manager');
+        })->orderBy('name')->get();
         
-        return view('block-work-orders.edit', compact('blockWorkOrder', 'blocks', 'blockIssues', 'blockUnits', 'blockBuildings'));
+        $blockWorkOrder->load(['images', 'contractor.userType']);
+        
+        return view('block-work-orders.edit', compact('blockWorkOrder', 'blocks', 'blockIssues', 'blockUnits', 'blockBuildings', 'contractCompanies', 'propertyManagers'));
     }
 
     /**
@@ -357,10 +369,9 @@ class BlockWorkOrderController extends Controller
             $data['contractor_id'] = $request->contract_company_id;
         }
         
-        // Update status if provided
-        if ($request->has('status')) {
-            $data['status'] = $request->status;
-        }
+        // Status is not editable by users - preserve existing status
+        // Status changes should be done through specific actions/workflows, not direct form edits
+        // The status field in the form is hidden and will not be submitted
 
         // Handle PDF upload
         if ($request->hasFile('pdf')) {
@@ -502,5 +513,107 @@ class BlockWorkOrderController extends Controller
         
         // Format: WO-202509-001
         return sprintf('%s-%s%s-%03d', $prefix, $year, $month, $newNumber);
+    }
+
+    /**
+     * Reassign rejected work order to another contractor admin
+     */
+    public function reassign(Request $request, BlockWorkOrder $blockWorkOrder)
+    {
+        $user = Auth::user();
+        
+        // Check if work order is rejected
+        if ($blockWorkOrder->acceptance_status !== 'rejected') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only rejected work orders can be reassigned.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Only rejected work orders can be reassigned.');
+        }
+
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'contractor_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()
+                ->withErrors($validator)
+                ->with('error', 'Invalid contractor selected.');
+        }
+
+        // Verify the new contractor is a Contractor Admin
+        $newContractor = \App\Models\User::with('userType')->find($request->contractor_id);
+        if (!$newContractor || !$newContractor->userType || $newContractor->userType->name !== 'Contractor Admin') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selected user must be a Contractor Admin.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Selected user must be a Contractor Admin.');
+        }
+
+        // Store old contractor info before updating
+        $oldContractorId = $blockWorkOrder->contractor_id;
+        $oldContractor = $oldContractorId ? \App\Models\User::find($oldContractorId) : null;
+        $oldContractorName = $oldContractor ? $oldContractor->name : 'N/A';
+
+        // Update the work order
+        $blockWorkOrder->update([
+            'contractor_id' => $request->contractor_id,
+            'acceptance_status' => 'pending', // Reset to pending for new contractor
+            'updated_by' => $user->id,
+        ]);
+
+        // Create a note about the reassignment
+        \App\Models\BlockWorkOrderNote::create([
+            'block_work_order_id' => $blockWorkOrder->id,
+            'note' => "Work order reassigned from {$oldContractorName} (ID: {$oldContractorId}) to {$newContractor->name} (ID: {$request->contractor_id})",
+            'note_type' => 'reassignment',
+            'created_by' => $user->id,
+        ]);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order reassigned successfully!',
+                'data' => $blockWorkOrder->fresh()
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Work order reassigned successfully!');
+    }
+
+    /**
+     * Get all contractor admins for reassignment dropdown
+     */
+    public function getContractorAdmins(Request $request)
+    {
+        $contractorAdmins = \App\Models\User::whereHas('userType', function($query) {
+            $query->where('name', 'Contractor Admin');
+        })
+        ->where('is_active', true)
+        ->with('userType')
+        ->orderBy('name')
+        ->get(['id', 'name', 'email']);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'data' => $contractorAdmins
+            ]);
+        }
+
+        return $contractorAdmins;
     }
 }

@@ -141,114 +141,13 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             return response()->json($workOrder);
         });
         
-        // Accept work order
-        Route::post('/{id}/accept', function (\Illuminate\Http\Request $request, $id) {
-            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
-            
-            // Check if already accepted or rejected
-            if ($workOrder->acceptance_status === 'accepted') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Work order has already been accepted'
-                ], 422);
-            }
-            
-            if ($workOrder->acceptance_status === 'rejected') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Work order has already been rejected. Cannot accept a rejected work order.'
-                ], 422);
-            }
-            
-            // Update acceptance status
-            $workOrder->acceptance_status = 'accepted';
-            $workOrder->updated_by = $request->user()->id;
-            $workOrder->save();
-            
-            // Reload with relationships
-            $workOrder->load([
-                'blockUnit',
-                'blockBuilding',
-                'block',
-                'blockIssue',
-                'priority',
-                'jobStatus',
-                'images.creator',
-                'notes.creator',
-                'contractor',
-                'issuedBy',
-                'creator',
-                'updater'
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Work order accepted successfully',
-                'data' => $workOrder
-            ]);
-        });
+        // Accept work order (uses controller method)
+        Route::post('/{id}/accept', [\App\Http\Controllers\BlockWorkOrderController::class, 'accept']);
         
-        // Reject work order
-        Route::post('/{id}/reject', function (\Illuminate\Http\Request $request, $id) {
-            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
-            
-            // Validate rejection reason
-            $request->validate([
-                'reason' => 'required|string|max:1000',
-            ]);
-            
-            // Check if already accepted or rejected
-            if ($workOrder->acceptance_status === 'rejected') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Work order has already been rejected'
-                ], 422);
-            }
-            
-            if ($workOrder->acceptance_status === 'accepted') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Work order has already been accepted. Cannot reject an accepted work order.'
-                ], 422);
-            }
-            
-            // Update acceptance status
-            $workOrder->acceptance_status = 'rejected';
-            $workOrder->updated_by = $request->user()->id;
-            $workOrder->save();
-            
-            // Create a note with rejection reason
-            \App\Models\BlockWorkOrderNote::create([
-                'block_work_order_id' => $workOrder->id,
-                'note' => 'Rejection Reason: ' . $request->reason,
-                'note_type' => 'rejection_reason',
-                'created_by' => $request->user()->id,
-            ]);
-            
-            // Reload with relationships
-            $workOrder->load([
-                'blockUnit',
-                'blockBuilding',
-                'block',
-                'blockIssue',
-                'priority',
-                'jobStatus',
-                'images.creator',
-                'notes.creator',
-                'contractor',
-                'issuedBy',
-                'creator',
-                'updater'
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Work order rejected successfully',
-                'data' => $workOrder
-            ]);
-        });
+        // Reject work order (uses controller method)
+        Route::post('/{id}/reject', [\App\Http\Controllers\BlockWorkOrderController::class, 'reject']);
         
-        // Start work order (update status to "In Progress")
+        // Start work order (update status to "In Progress" - status 2)
         Route::post('/{id}/start', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
             
@@ -256,22 +155,12 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             if ($workOrder->acceptance_status !== 'accepted') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Work order must be accepted before it can be started'
+                    'message' => 'Work order must be accepted before it can be started. Current status: ' . ($workOrder->acceptance_status ?? 'pending')
                 ], 422);
             }
             
-            // Get "In Progress" job status
-            $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
-            
-            if (!$inProgressStatus) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'In Progress status not found'
-                ], 404);
-            }
-            
-            // Update status to "In Progress"
-            $workOrder->status = $inProgressStatus->id;
+            // Update status to "In Progress" (status = 2)
+            $workOrder->status = 2; // In Progress
             $workOrder->updated_by = $request->user()->id;
             $workOrder->save();
             
