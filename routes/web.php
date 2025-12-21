@@ -96,6 +96,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('api/block-work-orders', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrders'])->name('api.block-work-orders');
     Route::get('api/block-work-orders/{blockWorkOrder}', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrder'])->name('api.block-work-orders.show');
     Route::get('block-work-orders/block/{blockId}', [App\Http\Controllers\BlockWorkOrderController::class, 'getWorkOrdersByBlock'])->name('block-work-orders.by-block');
+    Route::post('block-work-orders/{blockWorkOrder}/reassign', [App\Http\Controllers\BlockWorkOrderController::class, 'reassign'])->name('block-work-orders.reassign');
+    Route::post('block-work-orders/{blockWorkOrder}/accept', [App\Http\Controllers\BlockWorkOrderController::class, 'accept'])->name('block-work-orders.accept');
+    Route::post('block-work-orders/{blockWorkOrder}/reject', [App\Http\Controllers\BlockWorkOrderController::class, 'reject'])->name('block-work-orders.reject');
+    Route::get('block-work-orders/{blockWorkOrder}/download-work-docket', [App\Http\Controllers\BlockWorkOrderController::class, 'downloadWorkDocket'])->name('block-work-orders.download-work-docket');
+    Route::get('api/block-work-orders/contractor-admins', [App\Http\Controllers\BlockWorkOrderController::class, 'getContractorAdmins'])->name('api.block-work-orders.contractor-admins');
     
     // Site Visits (Block Visits)
     Route::resource('block-visits', App\Http\Controllers\BlockVisitController::class);

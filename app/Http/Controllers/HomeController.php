@@ -53,6 +53,28 @@ class HomeController extends Controller
 
     public function root()
     {
+        // #region agent log
+        $request = request();
+        $logData = [
+            'sessionId' => 'debug-session',
+            'runId' => 'run1',
+            'hypothesisId' => 'A,C,E',
+            'location' => 'HomeController.php:54',
+            'message' => 'Root route handler called',
+            'data' => [
+                'host' => $request->getHost(),
+                'method' => $request->getMethod(),
+                'path' => $request->path(),
+                'fullUrl' => $request->fullUrl(),
+                'auth' => Auth::check(),
+                'user' => Auth::check() ? Auth::id() : null,
+            ],
+            'timestamp' => (int)(microtime(true) * 1000),
+        ];
+        $logPath = storage_path('logs/debug.log');
+        @file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+        // #endregion
+        
         // Use DashboardController to get proper statistics
         $dashboardController = new \App\Http\Controllers\DashboardController();
         return $dashboardController->index();

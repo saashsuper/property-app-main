@@ -19,9 +19,23 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => array_filter([
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+        'https://localhost:5173',
+        'https://proman.ddev.site:8443',
+        env('APP_URL'),
+        env('PWA_URL', 'http://localhost:5173'),
+        // Add production PWA URL if needed
+        env('PWA_PRODUCTION_URL'),
+    ]),
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^https?:\/\/localhost:\d+$/',
+        '/^https?:\/\/127\.0\.0\.1:\d+$/',
+    ],
 
     'allowed_headers' => ['*'],
 
@@ -29,6 +43,8 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    // Set to false since we're using Bearer tokens, not cookies
+    // When true, allowed_origins cannot use patterns and must be explicit
+    'supports_credentials' => false,
 
 ];

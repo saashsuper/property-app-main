@@ -283,45 +283,24 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             ]);
         });
         
-        // Complete work order (update status to "Completed")
-        Route::post('/{id}/complete', function (\Illuminate\Http\Request $request, $id) {
+        // Complete work order (update status to "Completed" and generate work docket)
+        Route::post('/{id}/complete', [\App\Http\Controllers\Api\Mobile\WorkOrderController::class, 'complete']);
+        
+        // Download work docket PDF
+        Route::get('/{id}/download-docket', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
             
-            // Get "Completed" job status
-            $completedStatus = \App\Models\JobStatus::where('name', 'Completed')->first();
+            $workDocketService = new \App\Services\WorkDocketService();
+            $response = $workDocketService->downloadWorkDocket($workOrder);
             
-            if (!$completedStatus) {
+            if (!$response) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Completed status not found'
+                    'message' => 'Work docket PDF not found. Please ensure the work order is completed.'
                 ], 404);
             }
             
-            // Update status to "Completed"
-            $workOrder->status = $completedStatus->id;
-            $workOrder->updated_by = $request->user()->id;
-            $workOrder->save();
-            
-            // Reload with relationships
-            $workOrder->load([
-                'blockUnit',
-                'blockBuilding',
-                'block',
-                'blockIssue',
-                'priority',
-                'jobStatus',
-                'images',
-                'contractor',
-                'issuedBy',
-                'creator',
-                'updater'
-            ]);
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Work order completed successfully',
-                'data' => $workOrder
-            ]);
+            return $response;
         });
         
         // Upload photos for work order

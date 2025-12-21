@@ -993,7 +993,9 @@
                                         @foreach ($workOrders as $workOrder)
                                             <tr>
                                                 <td>
-                                                    <span class="badge bg-primary">{{ $workOrder->ref_no }}</span>
+                                                    <a href="{{ route('block-work-orders.show', $workOrder->id) }}" class="text-decoration-none">
+                                                        <span class="badge bg-primary">{{ $workOrder->ref_no }}</span>
+                                                    </a>
                                                 </td>
                                                 <td>
                                                     @if($workOrder->contractCompany)

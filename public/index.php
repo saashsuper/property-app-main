@@ -48,8 +48,29 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 
 $kernel = $app->make(Kernel::class);
 
-$response = $kernel->handle(
-    $request = Request::capture()
-)->send();
+$request = Request::capture();
+
+// #region agent log
+$logData = [
+    'sessionId' => 'debug-session',
+    'runId' => 'run1',
+    'hypothesisId' => 'A,C,E',
+    'location' => 'index.php:51',
+    'message' => 'Laravel entry point hit',
+    'data' => [
+        'host' => $request->getHost(),
+        'method' => $request->getMethod(),
+        'path' => $request->path(),
+        'fullUrl' => $request->fullUrl(),
+        'server' => $request->server('SERVER_SOFTWARE') ?? 'unknown',
+        'remoteAddr' => $request->ip(),
+    ],
+    'timestamp' => (int)(microtime(true) * 1000),
+];
+$logPath = __DIR__ . '/../storage/logs/debug.log';
+@file_put_contents($logPath, json_encode($logData) . "\n", FILE_APPEND);
+// #endregion
+
+$response = $kernel->handle($request)->send();
 
 $kernel->terminate($request, $response);

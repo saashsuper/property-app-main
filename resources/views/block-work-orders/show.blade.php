@@ -427,21 +427,49 @@
                             </div>
                         </div>
 
-                        <!-- PDF Document -->
+                        <!-- Work Docket PDF -->
                         @if($blockWorkOrder->pdf_name)
                         <div class="row mt-3">
                             <div class="col-12">
                                 <div class="card border">
-                                    <div class="card-header bg-light">
-                                        <h5 class="card-title mb-0">PDF Document</h5>
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">
+                                            <i class="ph-file-pdf me-2"></i>Work Docket
+                                        </h5>
+                                        <a href="{{ route('block-work-orders.download-work-docket', $blockWorkOrder) }}" 
+                                           class="btn btn-sm btn-primary" 
+                                           title="Download Work Docket">
+                                            <i class="ph-download me-1"></i> Download
+                                        </a>
                                     </div>
                                     <div class="card-body">
                                         <div class="alert alert-info mb-0">
-                                                                                            <i class="ph-file-pdf me-2"></i>
+                                            <i class="ph-file-pdf me-2"></i>
                                             <a href="{{ $blockWorkOrder->pdf_url }}" target="_blank" class="alert-link">
                                                 {{ $blockWorkOrder->pdf_name }}
                                             </a>
                                             <small class="text-muted ms-2">(Click to view)</small>
+                                        </div>
+                                        <p class="text-muted mt-2 mb-0">
+                                            <small>This work docket was automatically generated when the work order was marked as completed.</small>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @elseif($blockWorkOrder->status == 3)
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card border">
+                                    <div class="card-header bg-light">
+                                        <h5 class="card-title mb-0">
+                                            <i class="ph-file-pdf me-2"></i>Work Docket
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-warning mb-0">
+                                            <i class="ph-warning me-2"></i>
+                                            Work docket PDF is not available. The work order is completed but the PDF may not have been generated yet.
                                         </div>
                                     </div>
                                 </div>

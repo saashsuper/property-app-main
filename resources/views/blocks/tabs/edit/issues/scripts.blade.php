@@ -473,8 +473,8 @@ $(document).ready(function() {
                             showMessage(messageId, 'success', 'Issue details updated! You can now manage photos.');
                         } else {
                             // In create mode Step 2 or edit mode Step 2 - close modal
-                            showMessage(messageId, 'success', finalSuccessMessage);
-                            $form[0].reset();
+                        showMessage(messageId, 'success', finalSuccessMessage);
+                        $form[0].reset();
                             
                             // Clear dropzone files
                             if (issueDropzone) {
@@ -483,11 +483,11 @@ $(document).ready(function() {
                             
                             // Reset step form
                             resetStepForm();
-                            
-                            setTimeout(function() {
-                                $('#' + modalId).modal('hide');
-                                refreshBlockIssuesTable();
-                            }, 800);
+                        
+                        setTimeout(function() {
+                            $('#' + modalId).modal('hide');
+                            refreshBlockIssuesTable();
+                        }, 800);
                         }
                     } else {
                         showMessage(messageId, 'danger', (data && data.message) || errorMessage);
@@ -2293,13 +2293,13 @@ $(document).ready(function() {
                                 // Check if we're in edit mode
                                 const isEditMode = $('#editing_issue_id').length > 0;
                                 if (!isEditMode) {
-                                    console.log('Calling fetchUnitIssues with unit ID:', selectedUnit.value);
-                                    // Fetch and display issues for the selected unit
-                                    fetchUnitIssues(selectedUnit.value);
-                                    
-                                    console.log('Calling loadActiveIssuesForUnit with unit ID:', selectedUnit.value);
-                                    // Load active issues for the modal table
-                                    loadActiveIssuesForUnit(selectedUnit.value);
+                                console.log('Calling fetchUnitIssues with unit ID:', selectedUnit.value);
+                                // Fetch and display issues for the selected unit
+                                fetchUnitIssues(selectedUnit.value);
+                                
+                                console.log('Calling loadActiveIssuesForUnit with unit ID:', selectedUnit.value);
+                                // Load active issues for the modal table
+                                loadActiveIssuesForUnit(selectedUnit.value);
                                 }
                             } else {
                                 console.log('No unit found for selection:', selection);
@@ -2719,15 +2719,15 @@ $(document).ready(function() {
             $('#default_contact_details').prop('readonly', true).addClass('bg-light');
             // Don't overwrite if we're initializing edit mode
             if (!isInitializingEditMode) {
-                // Prioritize unit contact details over property manager
-                const unitId = $('#issue_block_unit_id_hidden').val();
-                if (unitId) {
-                    getUnitContactDetails(unitId);
-                } else {
-                    // Fallback to property manager if no unit selected
-                    const userId = $('#assigned_to').val();
-                    if (userId) {
-                        getUserDetails(userId);
+            // Prioritize unit contact details over property manager
+            const unitId = $('#issue_block_unit_id_hidden').val();
+            if (unitId) {
+                getUnitContactDetails(unitId);
+            } else {
+                // Fallback to property manager if no unit selected
+                const userId = $('#assigned_to').val();
+                if (userId) {
+                    getUserDetails(userId);
                     }
                 }
             }
@@ -3016,12 +3016,12 @@ $(document).ready(function() {
             isInitializingEditMode = true;
             
             // Populate form fields first (before setting unit)
-            $('#contact_method_id').val(issue.contact_method_id || '');
-            $('#issue_type').val(issue.issue_type || '');
-            $('#priority_id').val(issue.priority_id || '');
-            $('#issue').val(issue.issue || '');
-            $('#contact_details').val(issue.contact_details || '');
-            $('#issue_details').val(issue.issue_details || '');
+        $('#contact_method_id').val(issue.contact_method_id || '');
+        $('#issue_type').val(issue.issue_type || '');
+        $('#priority_id').val(issue.priority_id || '');
+        $('#issue').val(issue.issue || '');
+        $('#contact_details').val(issue.contact_details || '');
+        $('#issue_details').val(issue.issue_details || '');
             
             // Refresh units dropdown with the current unit selected
             // This will trigger unit selection and fetch unit contact details
@@ -3037,9 +3037,9 @@ $(document).ready(function() {
                     // ALWAYS use unit contact details for default_contact_details
                     // This will also check the checkbox automatically
                     getUnitContactDetails(unitId);
-                } else {
+        } else {
                     // No unit - uncheck checkbox and clear default contact details
-                    $('#use_default_contact').prop('checked', false);
+            $('#use_default_contact').prop('checked', false);
                     $('#default_contact_details').val('');
                     $('#use_default_contact').trigger('change');
                 }
@@ -3078,7 +3078,7 @@ $(document).ready(function() {
             // Load active issues for the unit only if NOT in edit mode
             const isEditMode = $('#editing_issue_id').length > 0;
             if (!isEditMode) {
-                loadActiveIssuesForUnit(unitId);
+            loadActiveIssuesForUnit(unitId);
             }
         }
     });

@@ -17,7 +17,15 @@ web_environment:
   - DB_DATABASE=db
   - DB_USERNAME=db
   - DB_PASSWORD=db
+  - DUSK_DRIVER_URL=http://localhost:9515
+hooks:
+    post-start:
+        - exec: "php artisan dusk:chrome-driver || true"
 corepack_enable: false
+
+# Router ports - using alternative ports to avoid conflict with host Apache on port 80
+router_http_port: "8080"
+router_https_port: "8443"
 
 # Key features of DDEV's config.yaml:
 

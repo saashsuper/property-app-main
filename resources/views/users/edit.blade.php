@@ -48,24 +48,36 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="password" class="form-label">@lang('translation.new-password')</label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                       id="password" name="password" pattern="(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}" 
-                                       title="Password must be at least 8 characters and include one uppercase and one special character">
+                                <div class="position-relative auth-pass-inputgroup">
+                                    <input type="password" class="form-control password-input pe-5 @error('password') is-invalid @enderror" 
+                                           id="password" name="password" pattern="(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}" 
+                                           title="Password must be at least 8 characters and include one uppercase and one special character">
+                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" 
+                                            type="button" id="password-addon">
+                                        <i class="ph-eye align-middle"></i>
+                                    </button>
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 <div class="form-text">Password must be at least 8 characters and include at least one uppercase letter and one special character. @lang('translation.leave-blank-to-keep-current')</div>
-                                @error('password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
                         
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="password_confirmation" class="form-label">@lang('translation.confirm-password')</label>
-                                <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" 
-                                       id="password_confirmation" name="password_confirmation">
-                                @error('password_confirmation')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <div class="position-relative auth-pass-inputgroup">
+                                    <input type="password" class="form-control password-input pe-5 @error('password_confirmation') is-invalid @enderror" 
+                                           id="password_confirmation" name="password_confirmation">
+                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon" 
+                                            type="button" id="password-confirmation-addon">
+                                        <i class="ph-eye align-middle"></i>
+                                    </button>
+                                    @error('password_confirmation')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -152,6 +164,29 @@
 @section('script')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Enhanced password visibility toggle with icon switching
+    document.querySelectorAll('.auth-pass-inputgroup .password-addon').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const inputGroup = this.closest('.auth-pass-inputgroup');
+            const passwordInput = inputGroup.querySelector('.password-input');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                if (icon) {
+                    icon.classList.remove('ph-eye');
+                    icon.classList.add('ph-eye-slash');
+                }
+            } else {
+                passwordInput.type = 'password';
+                if (icon) {
+                    icon.classList.remove('ph-eye-slash');
+                    icon.classList.add('ph-eye');
+                }
+            }
+        });
+    });
+
     const userTypeSelect = document.getElementById('user_type_id');
     const contractCompanyWrapper = document.getElementById('contract-company-wrapper');
 

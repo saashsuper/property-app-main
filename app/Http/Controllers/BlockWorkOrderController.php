@@ -9,6 +9,7 @@ use App\Models\BlockIssue;
 use App\Models\BlockUnit;
 use App\Models\BlockBuilding;
 use App\Models\IssueLog;
+use App\Services\WorkDocketService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -369,9 +370,14 @@ class BlockWorkOrderController extends Controller
             $data['contractor_id'] = $request->contract_company_id;
         }
         
-        // Status is not editable by users - preserve existing status
-        // Status changes should be done through specific actions/workflows, not direct form edits
-        // The status field in the form is hidden and will not be submitted
+        // Handle status update if provided
+        $oldStatus = $blockWorkOrder->status;
+        if ($request->filled('status')) {
+            $data['status'] = $request->status;
+        }
+        
+        // Check if work order is being completed
+        $isCompleting = ($oldStatus != 3 && isset($data['status']) && $data['status'] == 3);
 
         // Handle PDF upload
         if ($request->hasFile('pdf')) {
@@ -409,12 +415,25 @@ class BlockWorkOrderController extends Controller
 
         $blockWorkOrder->update($data);
 
+        // Generate work docket PDF when work order is completed
+        if ($isCompleting) {
+            try {
+                $workDocketService = new WorkDocketService();
+                $workDocketService->generateWorkDocket($blockWorkOrder->fresh());
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate work docket on update', [
+                    'work_order_id' => $blockWorkOrder->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         // Check if this is an AJAX request
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => 'Work order updated successfully!',
-                'data' => $blockWorkOrder
+                'data' => $blockWorkOrder->fresh()
             ]);
         }
 
@@ -615,5 +634,21 @@ class BlockWorkOrderController extends Controller
         }
 
         return $contractorAdmins;
+    }
+
+    /**
+     * Download work docket PDF
+     */
+    public function downloadWorkDocket(BlockWorkOrder $blockWorkOrder)
+    {
+        $workDocketService = new WorkDocketService();
+        $response = $workDocketService->downloadWorkDocket($blockWorkOrder);
+
+        if (!$response) {
+            return redirect()->back()
+                ->with('error', 'Work docket PDF not found. Please ensure the work order is completed.');
+        }
+
+        return $response;
     }
 }

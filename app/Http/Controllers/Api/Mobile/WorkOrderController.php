@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Mobile;
 use App\Http\Controllers\Controller;
 use App\Models\BlockWorkOrder;
 use App\Models\BlockWorkOrderImage;
+use App\Services\WorkDocketService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
@@ -131,11 +132,27 @@ class WorkOrderController extends Controller
             'comment' => 'nullable|string',
         ]);
 
+        $oldStatus = $workOrder->status;
+        $isCompleting = ($oldStatus != 3 && $request->status == 3);
+
         $workOrder->update([
             'status' => $request->status,
             'comment' => $request->comment ?? $workOrder->comment,
             'updated_by' => Auth::id(),
         ]);
+
+        // Generate work docket PDF when work order is completed
+        if ($isCompleting) {
+            try {
+                $workDocketService = new WorkDocketService();
+                $workDocketService->generateWorkDocket($workOrder->fresh());
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate work docket on status update', [
+                    'work_order_id' => $workOrder->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -222,22 +239,66 @@ class WorkOrderController extends Controller
     /**
      * Mark work order as complete
      */
-    public function complete(Request $request, BlockWorkOrder $workOrder): JsonResponse
+    public function complete(Request $request, $id): JsonResponse
     {
         $request->validate([
             'comment' => 'nullable|string',
         ]);
 
-        $workOrder->update([
-            'status' => 3, // Completed
-            'comment' => $request->comment ?? $workOrder->comment,
-            'updated_by' => Auth::id(),
+        // Find work order explicitly like resume/pause do
+        $workOrder = BlockWorkOrder::findOrFail($id);
+
+        // Get "Completed" job status
+        $completedStatus = \App\Models\JobStatus::where('name', 'Completed')->first();
+        
+        if (!$completedStatus) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Completed status not found'
+            ], 404);
+        }
+
+        $wasAlreadyCompleted = $workOrder->status == $completedStatus->id;
+
+        // Update status to "Completed" (exact same pattern as resume/pause)
+        $workOrder->status = $completedStatus->id;
+        $workOrder->updated_by = $request->user()->id;
+        $workOrder->save();
+
+        // Generate work docket PDF when work order is completed (only if not already completed)
+        if (!$wasAlreadyCompleted) {
+            try {
+                $workDocketService = new WorkDocketService();
+                // Reload fresh instance for work docket generation
+                $freshWorkOrder = $workOrder->fresh();
+                $workDocketService->generateWorkDocket($freshWorkOrder);
+            } catch (\Exception $e) {
+                \Log::error('Failed to generate work docket on completion', [
+                    'work_order_id' => $workOrder->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Reload with relationships (exact same pattern as resume/pause)
+        $workOrder->load([
+            'blockUnit',
+            'blockBuilding',
+            'block',
+            'blockIssue',
+            'priority',
+            'jobStatus',
+            'images',
+            'contractor',
+            'issuedBy',
+            'creator',
+            'updater'
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Work order marked as completed',
-            'data' => $workOrder->fresh(['block', 'blockUnit', 'priority', 'contractor', 'images']),
+            'data' => $workOrder,
         ]);
     }
 
