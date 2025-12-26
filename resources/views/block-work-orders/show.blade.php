@@ -1556,7 +1556,7 @@
             
             workOrderPhotoDropzone = new Dropzone("#workOrderPhotoDropzone", {
                 url: "#", // Disabled initially, set dynamically on upload
-                paramName: "photos[]",
+                paramName: "photos",
                 uploadMultiple: true,
                 parallelUploads: 6,
                 maxFiles: 6, // Maximum 6 photos allowed
@@ -1585,10 +1585,20 @@
                         showWorkOrderPhotoMessage('info', 'Photos added to preview. Click "Upload Photos" to save them.');
                     });
                     
-                    // Handle sending (when upload starts)
+                    // Handle sending (when upload starts) - for each file
                     this.on("sending", function(file, xhr, formData) {
                         console.log('Sending file:', file.name);
                         console.log('Upload URL:', dz.options.url);
+                        console.log('CSRF Token:', apiToken);
+                        // Ensure CSRF token is in formData for Laravel
+                        formData.append('_token', apiToken);
+                    });
+                    
+                    // Handle sending multiple files
+                    this.on("sendingmultiple", function(files, xhr, formData) {
+                        console.log('Sending multiple files:', files.length);
+                        // Ensure CSRF token is in formData for Laravel
+                        formData.append('_token', apiToken);
                     });
                     
                     // Handle successful upload
