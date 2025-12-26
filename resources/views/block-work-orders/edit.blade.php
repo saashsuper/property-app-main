@@ -32,17 +32,42 @@
                         <h4 class="card-title">Edit Block Work Order: {{ $blockWorkOrder->ref_no }}</h4>
                     </div>
                     <div class="card-body">
+                        @php
+                            $isCompleted = $blockWorkOrder->status == 3;
+                            $isAdmin = auth()->user()->isAdmin();
+                        @endphp
+                        
+                        @if($isCompleted && !$isAdmin)
+                            <div class="alert alert-warning">
+                                <i class="ph-warning me-2"></i>
+                                This work order has been completed and cannot be edited.
+                            </div>
+                        @elseif($isCompleted && $isAdmin)
+                            <div class="alert alert-info">
+                                <i class="ph-info me-2"></i>
+                                <strong>Admin Edit Mode:</strong> You can update photos and notes for this completed work order. You can also regenerate the work docket after making changes.
+                            </div>
+                        @endif
+                        
                         <form action="{{ route('block-work-orders.update', $blockWorkOrder) }}" method="POST" enctype="multipart/form-data" id="workOrderForm">
                             @csrf
                             @method('PUT')
                             
                             <div id="workOrderMessage" class="alert d-none mb-3" role="alert"></div>
                             
+                            @if($isCompleted && $isAdmin)
+                                <input type="hidden" name="regenerate_docket" id="regenerate_docket" value="0">
+                            @endif
+                            
+                            @if($isCompleted && $isAdmin)
+                                <!-- For completed work orders, only show photos and notes -->
+                                <!-- Skip most fields, show only comment and images -->
+                            @else
                             <!-- Row 1: Work Order Type, Contractor Assignment, Priority -->
                             <div class="row mb-3">
                                 <div class="col-md-4 mb-3">
                                     <label for="work_order_type" class="form-label">Work Order Type <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('work_order_type') is-invalid @enderror" id="work_order_type" name="work_order_type" required>
+                                    <select class="form-select @error('work_order_type') is-invalid @enderror" id="work_order_type" name="work_order_type" required @if($isCompleted && $isAdmin) disabled @endif>
                                         @php
                                             // Determine default work order type from existing contractor
                                             $defaultType = 'outsource';
@@ -219,19 +244,39 @@
                                         @enderror
                                     </div>
                                 </div>
+                            @endif
 
                             <!-- Row 4: Comments -->
                             <div class="row mb-3">
                                 <div class="col-md-12 mb-3">
-                                    <label for="comment" class="form-label">Comments</label>
+                                    <label for="comment" class="form-label">Comments / Notes</label>
                                     <textarea class="form-control @error('comment') is-invalid @enderror" 
-                                              id="comment" name="comment" rows="4" placeholder="Enter comments...">{{ old('comment', $blockWorkOrder->comment) }}</textarea>
+                                              id="comment" name="comment" rows="4" placeholder="Enter comments or notes...">{{ old('comment', $blockWorkOrder->comment) }}</textarea>
                                     @error('comment')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                    @if($isCompleted && $isAdmin)
+                                        <div class="form-text">You can update notes for this completed work order.</div>
+                                    @endif
                                 </div>
                             </div>
-
+                            
+                            @if($isCompleted && $isAdmin)
+                            <!-- Regenerate Work Docket Option -->
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="regenerate_docket_checkbox" name="regenerate_docket_checkbox">
+                                        <label class="form-check-label" for="regenerate_docket_checkbox">
+                                            <strong>Regenerate Work Docket</strong> - Check this box to regenerate the work docket PDF after saving changes. The old PDF will be replaced.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            
+                            @if($isCompleted && $isAdmin)
+                            @else
                             <!-- Hidden fields for contact information (auto-populated from issue) -->
                             <input type="hidden" id="contact_name" name="contact_name" value="{{ $blockWorkOrder->contact_name }}">
                             <input type="hidden" id="contact_mobile" name="contact_mobile" value="{{ $blockWorkOrder->contact_mobile }}">
@@ -270,6 +315,7 @@
 
                             <!-- File Uploads -->
                             <div class="row">
+                                @if(!($isCompleted && $isAdmin))
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <h5 class="mb-3">PDF Document</h5>
@@ -282,8 +328,9 @@
                                         @enderror
                                     </div>
                                 </div>
+                                @endif
 
-                                <div class="col-md-6">
+                                <div class="{{ !($isCompleted && $isAdmin) ? 'col-md-6' : 'col-md-12' }}">
                                     <div class="mb-3">
                                         <h5 class="mb-3">Images</h5>
                                         <label for="images" class="form-label">Upload Additional Images</label>
@@ -293,9 +340,15 @@
                                         @error('images.*')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
+                                        @if($isCompleted && $isAdmin)
+                                            <div class="form-text text-info">
+                                                <i class="ph-info me-1"></i>You can add more photos to this completed work order.
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
                             <!-- Submit Buttons -->
                             <div class="d-flex justify-content-end gap-2">
@@ -525,6 +578,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Form submission handler
     document.getElementById('workOrderForm').addEventListener('submit', function(e) {
+        @if($isCompleted && $isAdmin)
+        // For completed work orders, handle regenerate docket checkbox
+        const regenerateCheckbox = document.getElementById('regenerate_docket_checkbox');
+        const regenerateInput = document.getElementById('regenerate_docket');
+        if (regenerateCheckbox && regenerateInput) {
+            regenerateInput.value = regenerateCheckbox.checked ? '1' : '0';
+        }
+        @else
         // Validate work order type assignment
         const selectedType = workOrderTypeSelect.value;
         if (selectedType === 'inhouse' && !propertyManagerSelect.value) {
@@ -536,6 +597,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Please select a Contract Company');
             return false;
         }
+        @endif
     });
 });
 </script>

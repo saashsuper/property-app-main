@@ -190,6 +190,14 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Get the logs for the work order.
+     */
+    public function logs()
+    {
+        return $this->hasMany(BlockWorkOrderLog::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
      * Scope a query to only include active work orders.
      */
     public function scopeActive($query)

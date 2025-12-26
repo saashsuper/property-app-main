@@ -259,11 +259,54 @@ class WorkOrderController extends Controller
         }
 
         $wasAlreadyCompleted = $workOrder->status == $completedStatus->id;
+        
+        // Get old status for logging
+        $oldStatus = $workOrder->status;
+        $statusLabels = [
+            1 => 'Pending',
+            2 => 'In Progress',
+            3 => 'Completed',
+            4 => 'Cancelled',
+            5 => 'On Hold'
+        ];
+        $oldStatusText = $statusLabels[$oldStatus] ?? 'Unknown';
 
         // Update status to "Completed" (exact same pattern as resume/pause)
         $workOrder->status = $completedStatus->id;
         $workOrder->updated_by = $request->user()->id;
+        
+        // Update comment if provided
+        if ($request->filled('comment')) {
+            $workOrder->comment = $request->comment;
+        }
+        
         $workOrder->save();
+
+        // Log status change
+        \App\Models\BlockWorkOrderLog::createLog(
+            $workOrder->id,
+            'completed',
+            'Work order completed' . ($request->filled('comment') ? ' with comment' : ''),
+            [
+                'field_name' => 'status',
+                'old_value' => $oldStatusText,
+                'new_value' => 'Completed',
+                'user_id' => $request->user()->id,
+            ]
+        );
+        
+        // Log comment if provided
+        if ($request->filled('comment')) {
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'comment_added',
+                'Comment added upon completion',
+                [
+                    'field_name' => 'comment',
+                    'user_id' => $request->user()->id,
+                ]
+            );
+        }
 
         // Generate work docket PDF when work order is completed (only if not already completed)
         if (!$wasAlreadyCompleted) {
@@ -272,6 +315,16 @@ class WorkOrderController extends Controller
                 // Reload fresh instance for work docket generation
                 $freshWorkOrder = $workOrder->fresh();
                 $workDocketService->generateWorkDocket($freshWorkOrder);
+                
+                // Log work docket generation
+                \App\Models\BlockWorkOrderLog::createLog(
+                    $workOrder->id,
+                    'work_docket_generated',
+                    'Work docket PDF generated',
+                    [
+                        'user_id' => $request->user()->id,
+                    ]
+                );
             } catch (\Exception $e) {
                 \Log::error('Failed to generate work docket on completion', [
                     'work_order_id' => $workOrder->id,

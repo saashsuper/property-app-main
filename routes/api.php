@@ -206,10 +206,34 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 ], 404);
             }
             
+            // Get old status for logging
+            $oldStatus = $workOrder->status;
+            $statusLabels = [
+                1 => 'Pending',
+                2 => 'In Progress',
+                3 => 'Completed',
+                4 => 'Cancelled',
+                5 => 'On Hold'
+            ];
+            $oldStatusText = $statusLabels[$oldStatus] ?? 'Unknown';
+            
             // Update status to "On Hold"
             $workOrder->status = $onHoldStatus->id;
             $workOrder->updated_by = $request->user()->id;
             $workOrder->save();
+            
+            // Log status change
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'paused',
+                "Work order paused. Reason: {$request->reason}",
+                [
+                    'field_name' => 'status',
+                    'old_value' => $oldStatusText,
+                    'new_value' => 'On Hold',
+                    'user_id' => $request->user()->id,
+                ]
+            );
             
             // Create a note with pause reason
             \App\Models\BlockWorkOrderNote::create([
@@ -256,10 +280,34 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 ], 404);
             }
             
+            // Get old status for logging
+            $oldStatus = $workOrder->status;
+            $statusLabels = [
+                1 => 'Pending',
+                2 => 'In Progress',
+                3 => 'Completed',
+                4 => 'Cancelled',
+                5 => 'On Hold'
+            ];
+            $oldStatusText = $statusLabels[$oldStatus] ?? 'Unknown';
+            
             // Update status to "In Progress"
             $workOrder->status = $inProgressStatus->id;
             $workOrder->updated_by = $request->user()->id;
             $workOrder->save();
+            
+            // Log status change
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'resumed',
+                'Work order resumed - status changed to In Progress',
+                [
+                    'field_name' => 'status',
+                    'old_value' => $oldStatusText,
+                    'new_value' => 'In Progress',
+                    'user_id' => $request->user()->id,
+                ]
+            );
             
             // Reload with relationships
             $workOrder->load([
@@ -306,6 +354,19 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         // Upload photos for work order
         Route::post('/{id}/photos', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if job is completed - allow admins to upload photos
+            $workOrder->load('jobStatus');
+            if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
+                $user->load('userType');
+                if (!$user->userType || !in_array($user->userType->name, ['Admin', 'Super Admin'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot upload photos to a completed work order',
+                    ], 403);
+                }
+            }
             
             // Check current photo count
             $currentPhotoCount = $workOrder->images()->count();
@@ -328,6 +389,7 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             }
             
             $uploadedPhotos = [];
+            $photosCount = count($photos);
             
             foreach ($photos as $photo) {
                 $imagePath = 'work-orders/' . $workOrder->id;
@@ -351,6 +413,18 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                     'image_name' => $imageName,
                 ];
             }
+            
+            // Log photo upload
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'attachment_added',
+                "{$photosCount} photo(s) uploaded",
+                [
+                    'field_name' => 'images',
+                    'new_value' => $photosCount,
+                    'user_id' => $request->user()->id,
+                ]
+            );
             
             // Reload work order with all relationships
             $workOrder->load([
@@ -379,13 +453,17 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
             $user = $request->user();
             
-            // Check if job is completed
+            // Check if job is completed - allow admins to delete photos
             $workOrder->load('jobStatus');
             if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete photos from a completed work order',
-                ], 403);
+                // Allow admins to delete photos from completed work orders
+                $user->load('userType');
+                if (!$user->userType || !in_array($user->userType->name, ['Admin', 'Super Admin'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot delete photos from a completed work order',
+                    ], 403);
+                }
             }
             
             // Find the photo
@@ -443,6 +521,18 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             // Delete database record
             $photo->delete();
             
+            // Log photo deletion
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'attachment_deleted',
+                'Photo deleted',
+                [
+                    'field_name' => 'images',
+                    'related_id' => $photoId,
+                    'user_id' => $request->user()->id,
+                ]
+            );
+            
             // Reload work order with all relationships
             $workOrder->load([
                 'blockUnit',
@@ -469,13 +559,18 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         Route::post('/{id}/notes', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
             
-            // Check if job is completed
+            // Check if job is completed - allow admins to add notes
             $workOrder->load('jobStatus');
             if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot add notes to a completed work order',
-                ], 403);
+                // Allow admins to add notes to completed work orders
+                $user = $request->user();
+                $user->load('userType');
+                if (!$user->userType || !in_array($user->userType->name, ['Admin', 'Super Admin'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot add notes to a completed work order',
+                    ], 403);
+                }
             }
             
             $request->validate([
@@ -488,6 +583,18 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'note' => $request->note,
                 'created_by' => $request->user()->id,
             ]);
+            
+            // Log note addition
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'comment_added',
+                'Note added to work order',
+                [
+                    'field_name' => 'notes',
+                    'related_id' => $note->id,
+                    'user_id' => $request->user()->id,
+                ]
+            );
             
             // Reload work order with all relationships
             $workOrder->load([
@@ -512,18 +619,94 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             ]);
         });
         
+        // Update note in work order
+        Route::put('/{id}/notes/{noteId}', function (\Illuminate\Http\Request $request, $id, $noteId) {
+            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            
+            // Check if job is completed - allow admins to update notes
+            $workOrder->load('jobStatus');
+            if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
+                $user->load('userType');
+                if (!$user->userType || !in_array($user->userType->name, ['Admin', 'Super Admin'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot update notes in a completed work order',
+                    ], 403);
+                }
+            }
+            
+            $request->validate([
+                'note' => 'required|string|max:5000',
+            ]);
+            
+            // Find the note
+            $note = \App\Models\BlockWorkOrderNote::where('id', $noteId)
+                ->where('block_work_order_id', $workOrder->id)
+                ->first();
+            
+            if (!$note) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Note not found',
+                ], 404);
+            }
+            
+            // Update note
+            $note->note = $request->note;
+            $note->save();
+            
+            // Log note update
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'comment_updated',
+                'Note updated',
+                [
+                    'field_name' => 'notes',
+                    'related_id' => $note->id,
+                    'user_id' => $user->id,
+                ]
+            );
+            
+            // Reload work order with all relationships
+            $workOrder->load([
+                'blockUnit',
+                'blockBuilding',
+                'block',
+                'blockIssue',
+                'priority',
+                'jobStatus',
+                'images.creator',
+                'notes.creator',
+                'contractor',
+                'issuedBy',
+                'creator',
+                'updater'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Note updated successfully',
+                'data' => $workOrder
+            ]);
+        });
+        
         // Delete note from work order
         Route::delete('/{id}/notes/{noteId}', function (\Illuminate\Http\Request $request, $id, $noteId) {
             $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
             $user = $request->user();
             
-            // Check if job is completed
+            // Check if job is completed - allow admins to delete notes
             $workOrder->load('jobStatus');
             if ($workOrder->jobStatus && $workOrder->jobStatus->name === 'Completed') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot delete notes from a completed work order',
-                ], 403);
+                // Allow admins to delete notes from completed work orders
+                $user->load('userType');
+                if (!$user->userType || !in_array($user->userType->name, ['Admin', 'Super Admin'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Cannot delete notes from a completed work order',
+                    ], 403);
+                }
             }
             
             // Find the note
@@ -540,26 +723,27 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             
             // Check permissions: 
             // 1. User can delete if they created it
-            // 2. Contractor Admin can delete any note from their team's work orders
+            // 2. Admin/Super Admin can delete any note (especially from completed work orders)
+            // 3. Contractor Admin can delete any note from their team's work orders
             $canDelete = false;
+            $user->load('userType');
             
             if ($note->created_by === $user->id) {
                 // User created this note
                 $canDelete = true;
-            } else {
-                // Check if user is Contractor Admin and this work order belongs to their team
-                $user->load('userType');
-                if ($user->userType && $user->userType->name === 'Contractor Admin') {
-                    // Check if work order's contractor is in the same contract company
-                    if ($workOrder->contractor_id) {
-                        $workOrderContractor = \App\Models\User::find($workOrder->contractor_id);
-                        if ($workOrderContractor) {
-                            $workOrderContractor->load('contractCompany');
-                            $user->load('contractCompany');
-                            // Check if they're in the same contract company
-                            if ($workOrderContractor->contract_company_id === $user->contract_company_id) {
-                                $canDelete = true;
-                            }
+            } elseif ($user->userType && in_array($user->userType->name, ['Admin', 'Super Admin'])) {
+                // Admin can delete any note
+                $canDelete = true;
+            } elseif ($user->userType && $user->userType->name === 'Contractor Admin') {
+                // Check if work order's contractor is in the same contract company
+                if ($workOrder->contractor_id) {
+                    $workOrderContractor = \App\Models\User::find($workOrder->contractor_id);
+                    if ($workOrderContractor) {
+                        $workOrderContractor->load('contractCompany');
+                        $user->load('contractCompany');
+                        // Check if they're in the same contract company
+                        if ($workOrderContractor->contract_company_id === $user->contract_company_id) {
+                            $canDelete = true;
                         }
                     }
                 }
@@ -574,6 +758,18 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             
             // Delete note
             $note->delete();
+            
+            // Log note deletion
+            \App\Models\BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'comment_updated',
+                'Note deleted from work order',
+                [
+                    'field_name' => 'notes',
+                    'related_id' => $noteId,
+                    'user_id' => $request->user()->id,
+                ]
+            );
             
             // Reload work order with all relationships
             $workOrder->load([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlockWorkOrder;
 use App\Models\BlockWorkOrderImage;
+use App\Models\BlockWorkOrderLog;
 use App\Models\Block;
 use App\Models\BlockIssue;
 use App\Models\BlockUnit;
@@ -178,8 +179,19 @@ class BlockWorkOrderController extends Controller
         }
 
         $workOrder = BlockWorkOrder::create($data);
+        
+        // Log work order creation
+        BlockWorkOrderLog::createLog(
+            $workOrder->id,
+            'created',
+            'Work order created',
+            [
+                'user_id' => Auth::id(),
+            ]
+        );
 
         // Handle image uploads
+        $imagesCount = 0;
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
@@ -193,7 +205,22 @@ class BlockWorkOrderController extends Controller
                     'image_path' => $imagePath,
                     's3_status' => 0,
                 ]);
+                $imagesCount++;
             }
+        }
+        
+        // Log image uploads if any
+        if ($imagesCount > 0) {
+            BlockWorkOrderLog::createLog(
+                $workOrder->id,
+                'attachment_added',
+                "{$imagesCount} photo(s) uploaded during creation",
+                [
+                    'field_name' => 'images',
+                    'new_value' => $imagesCount,
+                    'user_id' => Auth::id(),
+                ]
+            );
         }
 
         // Create issue log entry
@@ -231,6 +258,7 @@ class BlockWorkOrderController extends Controller
     {
         $blockWorkOrder->load([
             'block', 
+            'block.blockType',
             'blockIssue.priority', 
             'blockIssue.issueStatus', 
             'blockIssue.issueType', 
@@ -243,9 +271,14 @@ class BlockWorkOrderController extends Controller
             'blockBuilding', 
             'issuedBy', 
             'creator', 
+            'updater',
             'images', 
+            'notes.creator',
             'contractCompany', 
-            'contractor.userType'
+            'contractor',
+            'contractor.userType',
+            'priority',
+            'logs.user'
         ]);
         
         // Determine if contractor is a property manager (for backward compatibility)
@@ -308,23 +341,48 @@ class BlockWorkOrderController extends Controller
      */
     public function update(Request $request, BlockWorkOrder $blockWorkOrder)
     {
+        $isCompleted = $blockWorkOrder->status == 3;
+        $isAdmin = auth()->user()->isAdmin();
+        
+        // If completed and not admin, prevent editing
+        if ($isCompleted && !$isAdmin) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Completed work orders cannot be edited.',
+                ], 403);
+            }
+            return redirect()->back()
+                ->with('error', 'Completed work orders cannot be edited.');
+        }
+        
         // Simplified validation for AJAX requests from issue details page
-        $validator = Validator::make($request->all(), [
-            'block_issue_id' => 'required|exists:block_issues,id',
-            'priority_id' => 'required|integer|min:1|max:5',
-            'contractor_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\Contractor::class, 'id')],
-            // contract_company_id comes from ContractCompany model (contract_companies table)
-            // This matches what the dropdown uses
-            'contract_company_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\ContractCompany::class, 'id')],
-            'property_manager_id' => 'nullable|exists:users,id',
-            'preferred_start_date_time' => 'nullable|date',
-            'preferred_end_date_time' => 'nullable|date',
-            'deadline_date' => 'nullable|date',
-            'comment' => 'nullable|string',
-            'status' => 'nullable|integer|min:1|max:5',
+        $validationRules = [
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'pdf' => 'nullable|mimes:pdf|max:10240',
-        ]);
+            'comment' => 'nullable|string',
+        ];
+        
+        // For completed work orders, only allow editing photos, notes, and regenerate docket
+        if ($isCompleted && $isAdmin) {
+            // Only allow comment (notes) and images for completed work orders
+            $validationRules['regenerate_docket'] = 'nullable|boolean';
+        } else {
+            // Full validation for non-completed work orders
+            $validationRules = array_merge($validationRules, [
+                'block_issue_id' => 'required|exists:block_issues,id',
+                'priority_id' => 'required|integer|min:1|max:5',
+                'contractor_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\Contractor::class, 'id')],
+                'contract_company_id' => ['nullable', \Illuminate\Validation\Rule::exists(\App\Models\ContractCompany::class, 'id')],
+                'property_manager_id' => 'nullable|exists:users,id',
+                'preferred_start_date_time' => 'nullable|date',
+                'preferred_end_date_time' => 'nullable|date',
+                'deadline_date' => 'nullable|date',
+                'status' => 'nullable|integer|min:1|max:5',
+            ]);
+        }
+        
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             // Check if this is an AJAX request (for modal submissions from block edit page)
@@ -341,43 +399,59 @@ class BlockWorkOrderController extends Controller
                 ->withInput();
         }
 
-        // Fetch the issue with related data from database
-        $issue = \App\Models\BlockIssue::with(['block', 'blockUnit', 'blockBuilding'])
-            ->findOrFail($request->block_issue_id);
+        // For completed work orders, only update comment and images
+        if ($isCompleted && $isAdmin) {
+            $data = [
+                'updated_by' => Auth::id(),
+            ];
+            
+            // Update comment if provided
+            if ($request->filled('comment')) {
+                $data['comment'] = $request->comment;
+            }
+            
+            $oldStatus = $blockWorkOrder->status;
+            $isCompleting = false;
+        } else {
+            // Full update for non-completed work orders
+            // Fetch the issue with related data from database
+            $issue = \App\Models\BlockIssue::with(['block', 'blockUnit', 'blockBuilding'])
+                ->findOrFail($request->block_issue_id);
 
-        // Populate data from issue (single source of truth)
-        $data = [
-            'block_id' => $issue->block_id,
-            'block_issue_id' => $issue->id,
-            'block_unit_id' => $issue->block_unit_id,
-            'block_building_id' => $issue->block_building_id,
-            'priority_id' => $request->priority_id,
-            'preferred_start_date_time' => $request->preferred_start_date_time,
-            'preferred_end_date_time' => $request->preferred_end_date_time,
-            'deadline_date' => $request->deadline_date,
-            'comment' => $request->comment,
-            'updated_by' => Auth::id(),
-        ];
-        
-        // Handle contractor or property manager assignment
-        // Priority: property_manager_id > contractor_id > contract_company_id
-        if ($request->filled('property_manager_id')) {
-            $data['contractor_id'] = $request->property_manager_id;
-        } elseif ($request->filled('contractor_id')) {
-            $data['contractor_id'] = $request->contractor_id;
-        } elseif ($request->filled('contract_company_id')) {
-            // If contract_company_id is provided, use it as contractor_id
-            $data['contractor_id'] = $request->contract_company_id;
+            // Populate data from issue (single source of truth)
+            $data = [
+                'block_id' => $issue->block_id,
+                'block_issue_id' => $issue->id,
+                'block_unit_id' => $issue->block_unit_id,
+                'block_building_id' => $issue->block_building_id,
+                'priority_id' => $request->priority_id,
+                'preferred_start_date_time' => $request->preferred_start_date_time,
+                'preferred_end_date_time' => $request->preferred_end_date_time,
+                'deadline_date' => $request->deadline_date,
+                'comment' => $request->comment,
+                'updated_by' => Auth::id(),
+            ];
+            
+            // Handle contractor or property manager assignment
+            // Priority: property_manager_id > contractor_id > contract_company_id
+            if ($request->filled('property_manager_id')) {
+                $data['contractor_id'] = $request->property_manager_id;
+            } elseif ($request->filled('contractor_id')) {
+                $data['contractor_id'] = $request->contractor_id;
+            } elseif ($request->filled('contract_company_id')) {
+                // If contract_company_id is provided, use it as contractor_id
+                $data['contractor_id'] = $request->contract_company_id;
+            }
+            
+            // Handle status update if provided
+            $oldStatus = $blockWorkOrder->status;
+            if ($request->filled('status')) {
+                $data['status'] = $request->status;
+            }
+            
+            // Check if work order is being completed
+            $isCompleting = ($oldStatus != 3 && isset($data['status']) && $data['status'] == 3);
         }
-        
-        // Handle status update if provided
-        $oldStatus = $blockWorkOrder->status;
-        if ($request->filled('status')) {
-            $data['status'] = $request->status;
-        }
-        
-        // Check if work order is being completed
-        $isCompleting = ($oldStatus != 3 && isset($data['status']) && $data['status'] == 3);
 
         // Handle PDF upload
         if ($request->hasFile('pdf')) {
@@ -396,7 +470,15 @@ class BlockWorkOrderController extends Controller
             $data['pdf_name'] = $pdfName;
         }
 
+        // Track changes for logging (capture OLD values BEFORE update)
+        $oldStatus = $blockWorkOrder->status;
+        $oldPriority = $blockWorkOrder->priority_id;
+        $hasStatusChange = isset($data['status']) && $oldStatus != $data['status'];
+        $hasPriorityChange = isset($data['priority_id']) && $oldPriority != $data['priority_id'];
+        $hasCommentChange = isset($data['comment']) && $blockWorkOrder->comment != $data['comment'];
+        
         // Handle image uploads
+        $imagesCount = 0;
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $imageName = time() . '_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
@@ -410,16 +492,134 @@ class BlockWorkOrderController extends Controller
                     'image_path' => $imagePath,
                     's3_status' => 0,
                 ]);
+                $imagesCount++;
             }
         }
 
         $blockWorkOrder->update($data);
+        
+        // Log changes
+        $userId = Auth::id();
+        
+        // Log status change
+        if ($hasStatusChange) {
+            $statusLabels = [
+                1 => 'Pending',
+                2 => 'In Progress',
+                3 => 'Completed',
+                4 => 'Cancelled',
+                5 => 'On Hold'
+            ];
+            $oldStatusText = $statusLabels[$oldStatus] ?? 'Unknown';
+            $newStatusText = $statusLabels[$data['status']] ?? 'Unknown';
+            
+            BlockWorkOrderLog::createLog(
+                $blockWorkOrder->id,
+                'status_changed',
+                "Status changed from {$oldStatusText} to {$newStatusText}",
+                [
+                    'field_name' => 'status',
+                    'old_value' => $oldStatusText,
+                    'new_value' => $newStatusText,
+                    'user_id' => $userId,
+                ]
+            );
+        }
+        
+        // Log priority change
+        if ($hasPriorityChange) {
+            $priorityLabels = [
+                1 => 'Low',
+                2 => 'Normal',
+                3 => 'High',
+                4 => 'Urgent',
+                5 => 'Critical'
+            ];
+            $oldPriorityText = $priorityLabels[$oldPriority] ?? 'Unknown';
+            $newPriorityText = $priorityLabels[$data['priority_id']] ?? 'Unknown';
+            
+            BlockWorkOrderLog::createLog(
+                $blockWorkOrder->id,
+                'priority_changed',
+                "Priority changed from {$oldPriorityText} to {$newPriorityText}",
+                [
+                    'field_name' => 'priority_id',
+                    'old_value' => $oldPriorityText,
+                    'new_value' => $newPriorityText,
+                    'user_id' => $userId,
+                ]
+            );
+        }
+        
+        // Log comment/notes update
+        if ($hasCommentChange && !empty($data['comment'])) {
+            BlockWorkOrderLog::createLog(
+                $blockWorkOrder->id,
+                'comment_added',
+                'Notes/comments updated',
+                [
+                    'field_name' => 'comment',
+                    'user_id' => $userId,
+                ]
+            );
+        }
+        
+        // Log photo uploads
+        if ($imagesCount > 0) {
+            BlockWorkOrderLog::createLog(
+                $blockWorkOrder->id,
+                'attachment_added',
+                "{$imagesCount} photo(s) uploaded",
+                [
+                    'field_name' => 'images',
+                    'new_value' => $imagesCount,
+                    'user_id' => $userId,
+                ]
+            );
+        }
+        
+        // Log general update if no specific changes were logged
+        if (!$hasStatusChange && !$hasPriorityChange && !$hasCommentChange && $imagesCount == 0) {
+            BlockWorkOrderLog::createLog(
+                $blockWorkOrder->id,
+                'updated',
+                'Work order details updated',
+                [
+                    'user_id' => $userId,
+                ]
+            );
+        }
 
-        // Generate work docket PDF when work order is completed
+        // Generate or regenerate work docket PDF
+        $shouldRegenerate = false;
+        $isRegenerating = false;
+        
         if ($isCompleting) {
+            // Generate work docket when work order is completed
+            $shouldRegenerate = true;
+        } elseif ($isCompleted && $isAdmin && $request->filled('regenerate_docket') && $request->regenerate_docket) {
+            // Regenerate work docket for completed work order if admin requests it
+            $shouldRegenerate = true;
+            $isRegenerating = true;
+        }
+        
+        if ($shouldRegenerate) {
             try {
                 $workDocketService = new WorkDocketService();
                 $workDocketService->generateWorkDocket($blockWorkOrder->fresh());
+                
+                // Log the generation/regeneration
+                $logType = $isRegenerating ? 'work_docket_regenerated' : 'work_docket_generated';
+                $logDescription = $isRegenerating 
+                    ? 'Work docket regenerated by admin after editing' 
+                    : 'Work docket generated upon completion';
+                    
+                BlockWorkOrderLog::createLog(
+                    $blockWorkOrder->id,
+                    $logType,
+                    $logDescription,
+                    ['user_id' => Auth::id()]
+                );
             } catch (\Exception $e) {
                 \Log::error('Failed to generate work docket on update', [
                     'work_order_id' => $blockWorkOrder->id,
@@ -650,5 +850,299 @@ class BlockWorkOrderController extends Controller
         }
 
         return $response;
+    }
+
+    /**
+     * Upload photos for completed work order (admin only)
+     */
+    public function uploadPhotos(Request $request, BlockWorkOrder $blockWorkOrder)
+    {
+        // Check if work order is completed and user is admin
+        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        $request->validate([
+            'photos.*' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+        ]);
+
+        $currentPhotoCount = $blockWorkOrder->images()->count();
+        $photos = $request->file('photos');
+        $totalPhotos = $currentPhotoCount + count($photos);
+
+        // Check if adding these photos would exceed the limit of 6
+        if ($totalPhotos > 6) {
+            $allowed = 6 - $currentPhotoCount;
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Maximum 6 photos allowed. You can add {$allowed} more photo(s).",
+                ], 422);
+            }
+            return redirect()->back()->with('error', "Maximum 6 photos allowed. You can add {$allowed} more photo(s).");
+        }
+
+        $photosCount = count($photos);
+        foreach ($photos as $photo) {
+            $imagePath = 'work-orders/' . $blockWorkOrder->id;
+            $imageName = time() . '_' . uniqid() . '.' . $photo->getClientOriginalExtension();
+            
+            $photo->storeAs('public/' . $imagePath, $imageName);
+            
+            BlockWorkOrderImage::create([
+                'block_work_order_id' => $blockWorkOrder->id,
+                'image_path' => $imagePath,
+                'image_name' => $imageName,
+                's3_status' => 0,
+                'created_by' => auth()->id(),
+            ]);
+        }
+
+        // Log photo upload
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'attachment_added',
+            "{$photosCount} photo(s) uploaded",
+            [
+                'field_name' => 'images',
+                'new_value' => $photosCount,
+                'user_id' => auth()->id(),
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $blockWorkOrder->load('images');
+            return response()->json([
+                'success' => true,
+                'message' => 'Photos uploaded successfully',
+                'data' => $blockWorkOrder
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Photos uploaded successfully');
+    }
+
+    /**
+     * Delete photo from completed work order (admin only)
+     */
+    public function deletePhoto(Request $request, BlockWorkOrder $blockWorkOrder, BlockWorkOrderImage $photo)
+    {
+        // Check if work order is completed and user is admin
+        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        // Verify photo belongs to work order
+        if ($photo->block_work_order_id != $blockWorkOrder->id) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Photo not found',
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Photo not found');
+        }
+
+        // Delete file from storage
+        $filePath = 'public/' . $photo->image_path . '/' . $photo->image_name;
+        if (Storage::exists($filePath)) {
+            Storage::delete($filePath);
+        }
+
+        $photoId = $photo->id;
+        $photo->delete();
+
+        // Log photo deletion
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'attachment_deleted',
+            'Photo deleted',
+            [
+                'field_name' => 'images',
+                'related_id' => $photoId,
+                'user_id' => auth()->id(),
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Photo deleted successfully',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Photo deleted successfully');
+    }
+
+    /**
+     * Add note to completed work order (admin only)
+     */
+    public function addNote(Request $request, BlockWorkOrder $blockWorkOrder)
+    {
+        // Check if work order is completed and user is admin
+        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        $request->validate([
+            'note' => 'required|string|max:5000',
+        ]);
+
+        $note = \App\Models\BlockWorkOrderNote::create([
+            'block_work_order_id' => $blockWorkOrder->id,
+            'note' => $request->note,
+            'created_by' => auth()->id(),
+        ]);
+
+        // Log note addition
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'comment_added',
+            'Note added to work order',
+            [
+                'field_name' => 'notes',
+                'related_id' => $note->id,
+                'user_id' => auth()->id(),
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $blockWorkOrder->load('notes.creator');
+            return response()->json([
+                'success' => true,
+                'message' => 'Note added successfully',
+                'data' => $blockWorkOrder
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Note added successfully');
+    }
+
+    /**
+     * Update note in completed work order (admin only)
+     */
+    public function updateNote(Request $request, BlockWorkOrder $blockWorkOrder, \App\Models\BlockWorkOrderNote $note)
+    {
+        // Check if work order is completed and user is admin
+        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        // Verify note belongs to work order
+        if ($note->block_work_order_id != $blockWorkOrder->id) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Note not found',
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Note not found');
+        }
+
+        $request->validate([
+            'note' => 'required|string|max:5000',
+        ]);
+
+        $note->note = $request->note;
+        $note->save();
+
+        // Log note update
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'comment_updated',
+            'Note updated',
+            [
+                'field_name' => 'notes',
+                'related_id' => $note->id,
+                'user_id' => auth()->id(),
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            $blockWorkOrder->load('notes.creator');
+            return response()->json([
+                'success' => true,
+                'message' => 'Note updated successfully',
+                'data' => $blockWorkOrder
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Note updated successfully');
+    }
+
+    /**
+     * Delete note from completed work order (admin only)
+     */
+    public function deleteNote(Request $request, BlockWorkOrder $blockWorkOrder, \App\Models\BlockWorkOrderNote $note)
+    {
+        // Check if work order is completed and user is admin
+        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Unauthorized');
+        }
+
+        // Verify note belongs to work order
+        if ($note->block_work_order_id != $blockWorkOrder->id) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Note not found',
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Note not found');
+        }
+
+        $noteId = $note->id;
+        $note->delete();
+
+        // Log note deletion
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'comment_updated',
+            'Note deleted from work order',
+            [
+                'field_name' => 'notes',
+                'related_id' => $noteId,
+                'user_id' => auth()->id(),
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Note deleted successfully',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Note deleted successfully');
     }
 }

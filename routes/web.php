@@ -100,6 +100,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('block-work-orders/{blockWorkOrder}/accept', [App\Http\Controllers\BlockWorkOrderController::class, 'accept'])->name('block-work-orders.accept');
     Route::post('block-work-orders/{blockWorkOrder}/reject', [App\Http\Controllers\BlockWorkOrderController::class, 'reject'])->name('block-work-orders.reject');
     Route::get('block-work-orders/{blockWorkOrder}/download-work-docket', [App\Http\Controllers\BlockWorkOrderController::class, 'downloadWorkDocket'])->name('block-work-orders.download-work-docket');
+    Route::post('block-work-orders/{blockWorkOrder}/regenerate-docket', [App\Http\Controllers\BlockWorkOrderController::class, 'regenerateDocket'])->name('block-work-orders.regenerate-docket');
+    
+    // Block Work Order Photos (for completed work orders - admin only)
+    Route::post('block-work-orders/{blockWorkOrder}/photos', [App\Http\Controllers\BlockWorkOrderController::class, 'uploadPhotos'])->name('block-work-orders.upload-photos');
+    Route::delete('block-work-orders/{blockWorkOrder}/photos/{photo}', [App\Http\Controllers\BlockWorkOrderController::class, 'deletePhoto'])->name('block-work-orders.delete-photo');
+    
+    // Block Work Order Notes (for completed work orders - admin only)
+    Route::post('block-work-orders/{blockWorkOrder}/notes', [App\Http\Controllers\BlockWorkOrderController::class, 'addNote'])->name('block-work-orders.add-note');
+    Route::put('block-work-orders/{blockWorkOrder}/notes/{note}', [App\Http\Controllers\BlockWorkOrderController::class, 'updateNote'])->name('block-work-orders.update-note');
+    Route::delete('block-work-orders/{blockWorkOrder}/notes/{note}', [App\Http\Controllers\BlockWorkOrderController::class, 'deleteNote'])->name('block-work-orders.delete-note');
+    
     Route::get('api/block-work-orders/contractor-admins', [App\Http\Controllers\BlockWorkOrderController::class, 'getContractorAdmins'])->name('api.block-work-orders.contractor-admins');
     
     // Site Visits (Block Visits)

@@ -51,6 +51,14 @@ class WorkDocketService
             $pdf->setPaper('a4', 'portrait');
             $pdf->setOption('enable-local-file-access', true);
 
+            // Delete old PDF if it exists (for regeneration)
+            if ($workOrder->pdf_path && $workOrder->pdf_name) {
+                $oldFullPath = storage_path('app/public/' . $workOrder->pdf_path . '/' . $workOrder->pdf_name);
+                if (file_exists($oldFullPath)) {
+                    Storage::delete('public/' . $workOrder->pdf_path . '/' . $workOrder->pdf_name);
+                }
+            }
+
             // Generate unique filename
             $pdfName = 'work-docket-' . $workOrder->ref_no . '-' . now()->format('Y-m-d-His') . '.pdf';
             $pdfPath = 'work-orders/dockets';
