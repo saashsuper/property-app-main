@@ -1601,6 +1601,16 @@
                         formData.append('_token', apiToken);
                     });
                     
+                    // Handle upload progress
+                    this.on("uploadprogress", function(file, progress, bytesSent) {
+                        console.log('Upload progress:', progress + '%');
+                    });
+                    
+                    // Handle total upload progress for multiple files
+                    this.on("totaluploadprogress", function(progress, totalBytes, totalBytesSent) {
+                        console.log('Total upload progress:', progress + '%');
+                    });
+                    
                     // Handle successful upload
                     this.on("successmultiple", function(files, response) {
                         console.log('Upload success:', response);
