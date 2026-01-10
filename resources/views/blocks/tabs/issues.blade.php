@@ -48,8 +48,9 @@
                                             <i class="ph-pencil"></i>
                                         </a>
                                         @php
-                                            $hasWorkOrders = $issue->workOrders()->count() > 0;
-                                            $workOrdersCount = $issue->workOrders()->count();
+                                            // Use the hasWorkOrders() method which is more efficient
+                                            $hasWorkOrders = $issue->hasWorkOrders();
+                                            $workOrdersCount = $issue->workOrders ? $issue->workOrders->count() : $issue->workOrders()->count();
                                             $actionText = $hasWorkOrders ? 'Archive' : 'Delete';
                                             $actionIcon = $hasWorkOrders ? 'ph-archive' : 'ph-trash';
                                             $actionColor = $hasWorkOrders ? 'warning' : 'danger';
@@ -61,7 +62,7 @@
                                                     has_work_orders: {{ $hasWorkOrders ? 'true' : 'false' }},
                                                     work_orders_count: {{ $workOrdersCount }}
                                                 })">
-                                            <i class="{{ $actionIcon }}"></i>
+                                            <i class="{{ $actionIcon }}"></i> {{ $actionText }}
                                         </button>
                                     </div>
                                 </td>

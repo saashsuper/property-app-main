@@ -394,7 +394,7 @@ class BlockController extends Controller
             'buildings',
             'units.unitType',
             'contractors',
-            'issues',
+            'issues.workOrders', // Eager load workOrders relationship for archive/delete logic
             'blockVisits.team.user',
             'blockVisits.createdByUser',
         ]);
