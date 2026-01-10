@@ -259,14 +259,28 @@ $(document).ready(function() {
                             <button class="btn btn-sm btn-outline-primary" onclick="editUnit(${unit.id})" title="Edit Unit">
                                 <i class="ph-pencil"></i>
                             </button> 
-                            <button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation(${unit.id}, {
-                                unit_code: '${(unit.unit_code || 'N/A').replace(/'/g, "\\'")}',
-                                unit_name: '${(unit.unit_name || 'N/A').replace(/'/g, "\\'")}',
-                                owners_name: '${(unit.owners_name || 'N/A').replace(/'/g, "\\'")}',
-                                unit_type: { name: '${(unit.unit_type?.name || 'N/A').replace(/'/g, "\\'")}' }
-                            })" title="Delete Unit">
-                                <i class="ph-trash"></i>
-                            </button>`
+                            ${unit.has_issues ? 
+                                `<button class="btn btn-sm btn-outline-warning" onclick="unitShowDeleteConfirmation(${unit.id}, {
+                                    unit_code: '${(unit.unit_code || 'N/A').replace(/'/g, "\\'")}',
+                                    unit_name: '${(unit.unit_name || 'N/A').replace(/'/g, "\\'")}',
+                                    owners_name: '${(unit.owners_name || 'N/A').replace(/'/g, "\\'")}',
+                                    unit_type: { name: '${(unit.unit_type?.name || 'N/A').replace(/'/g, "\\'")}' },
+                                    has_issues: true,
+                                    issues_count: ${unit.issues_count || 0}
+                                })" title="Archive Unit">
+                                    <i class="ph-archive"></i>
+                                </button>` :
+                                `<button class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation(${unit.id}, {
+                                    unit_code: '${(unit.unit_code || 'N/A').replace(/'/g, "\\'")}',
+                                    unit_name: '${(unit.unit_name || 'N/A').replace(/'/g, "\\'")}',
+                                    owners_name: '${(unit.owners_name || 'N/A').replace(/'/g, "\\'")}',
+                                    unit_type: { name: '${(unit.unit_type?.name || 'N/A').replace(/'/g, "\\'")}' },
+                                    has_issues: false,
+                                    issues_count: 0
+                                })" title="Delete Unit">
+                                    <i class="ph-trash"></i>
+                                </button>`
+                            }`
                         ]);
                     });
                     
@@ -764,7 +778,7 @@ function unitDeleteUnit(unitId) {
     // Show loading state
     const $confirmBtn = $('#confirmDeleteUnitBtn');
     const originalText = $confirmBtn.html();
-    $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
+    $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Processing...').prop('disabled', true);
     
     $.ajax({
         url: `/block-units/${unitId}`,
@@ -777,8 +791,9 @@ function unitDeleteUnit(unitId) {
             // Hide the modal
             $('#deleteUnitModal').modal('hide');
             
-            // Show success message
-            showMessage('unitMessage', 'success', 'Unit deleted successfully');
+            // Show success message from response
+            const message = response.message || 'Unit action completed successfully';
+            showMessage('unitMessage', 'success', message);
             
             // Close modal and refresh table after delay (same as add/edit)
             setTimeout(function() {

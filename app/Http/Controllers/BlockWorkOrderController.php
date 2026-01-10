@@ -24,7 +24,7 @@ class BlockWorkOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit'])->active();
+        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit', 'notes', 'logs', 'images', 'teamMembers'])->active();
 
         // Search functionality
         if ($request->filled('search')) {
@@ -129,7 +129,8 @@ class BlockWorkOrderController extends Controller
             'block_unit_id' => $issue->block_unit_id,
             'block_building_id' => $issue->block_building_id,
             'priority_id' => $request->priority_id ?? $issue->priority_id,
-            'status' => $request->status ?? 1, // Default to Pending
+            'status' => $request->status ?? 1, // Default to Pending (Assigned state)
+            'archive_status' => BlockWorkOrder::STATUS_ACTIVE, // Set default archive status to active
             'issue' => $request->issue ?? $issue->issue,
             'contact_name' => $request->contact_name ?? $issue->contact_name,
             'contact_mobile' => $request->contact_mobile ?? $issue->contact_mobile,
@@ -278,7 +279,8 @@ class BlockWorkOrderController extends Controller
             'contractor',
             'contractor.userType',
             'priority',
-            'logs.user'
+            'logs.user',
+            'teamMembers' // Needed for hasBeenUpdated check
         ]);
         
         // Determine if contractor is a property manager (for backward compatibility)
@@ -312,7 +314,8 @@ class BlockWorkOrderController extends Controller
             ]);
         }
         
-        return view('block-work-orders.show', compact('blockWorkOrder'));
+        $hasBeenUpdated = $blockWorkOrder->hasBeenUpdated();
+        return view('block-work-orders.show', compact('blockWorkOrder', 'hasBeenUpdated'));
     }
 
     /**
@@ -644,21 +647,53 @@ class BlockWorkOrderController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    /**
+     * Remove the specified resource from storage.
+     * 
+     * If work order has been updated (accepted, status changed, has notes/logs/images/team members),
+     * it will be archived. If work order is still in assigned state with no updates, it will be permanently deleted.
+     */
     public function destroy(BlockWorkOrder $blockWorkOrder)
     {
-        // Soft delete the work order (matches inspection pattern)
-        $blockWorkOrder->delete();
+        // Check if work order has been updated
+        if ($blockWorkOrder->hasBeenUpdated()) {
+            // Work order has been updated - only archive it
+            $blockWorkOrder->archive();
 
-        // Check if request expects JSON (AJAX request)
-        if (request()->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Work order deleted successfully!'
-            ]);
+            $message = 'Work order has been archived because it has been updated (accepted, status changed, or has notes/logs/images/team members).';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            
+            return redirect()->route('block-work-orders.index')
+                ->with('success', $message);
+        } else {
+            // Work order is still in assigned state with no updates - permanently delete
+            // Delete associated images first
+            foreach ($blockWorkOrder->images as $image) {
+                if ($image->image_path && $image->image_name) {
+                    Storage::delete('public/' . $image->image_path . '/' . $image->image_name);
+                }
+                $image->delete();
+            }
+            
+            // Delete PDF if exists
+            if ($blockWorkOrder->pdf_path && $blockWorkOrder->pdf_name) {
+                Storage::delete('public/' . $blockWorkOrder->pdf_path . '/' . $blockWorkOrder->pdf_name);
+            }
+            
+            $blockWorkOrder->forceDelete();
+
+            $message = 'Work order permanently deleted successfully!';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            
+            return redirect()->route('block-work-orders.index')
+                ->with('success', $message);
         }
-
-        return redirect()->route('block-work-orders.index')
-            ->with('success', 'Block work order deleted successfully!');
     }
 
     /**
@@ -695,11 +730,16 @@ class BlockWorkOrderController extends Controller
      */
     public function getWorkOrdersByBlock($blockId)
     {
-        $workOrders = BlockWorkOrder::with(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy'])
+        $workOrders = BlockWorkOrder::with(['block', 'blockIssue', 'blockUnit', 'blockBuilding', 'issuedBy', 'notes', 'logs', 'images', 'teamMembers'])
             ->where('block_id', $blockId)
             ->active()
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($workOrder) {
+                $workOrderArray = $workOrder->toArray();
+                $workOrderArray['has_been_updated'] = $workOrder->hasBeenUpdated();
+                return $workOrderArray;
+            });
 
         return response()->json([
             'success' => true,

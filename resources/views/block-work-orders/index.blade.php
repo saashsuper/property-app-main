@@ -163,11 +163,18 @@
                                                 <a href="{{ route('block-work-orders.edit', $workOrder) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                     <i class="ph-pencil"></i>
                                                 </a>
-                                                <form action="{{ route('block-work-orders.destroy', $workOrder) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this work order?')">
+                                                @php
+                                                    $hasBeenUpdated = $workOrder->hasBeenUpdated();
+                                                    $actionText = $hasBeenUpdated ? 'Archive' : 'Delete';
+                                                    $actionIcon = $hasBeenUpdated ? 'ph-archive' : 'ph-trash';
+                                                    $actionColor = $hasBeenUpdated ? 'warning' : 'danger';
+                                                @endphp
+                                                <form action="{{ route('block-work-orders.destroy', $workOrder) }}" method="POST" class="d-inline" 
+                                                      onsubmit="return confirm('Are you sure you want to {{ strtolower($actionText) }} this work order?');">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                        <i class="ph-trash"></i>
+                                                    <button type="submit" class="btn btn-sm btn-outline-{{ $actionColor }}" title="{{ $actionText }}">
+                                                        <i class="{{ $actionIcon }}"></i> {{ $actionText }}
                                                     </button>
                                                 </form>
                                                 @endif

@@ -236,7 +236,24 @@
                                                     </div>
                                                     </div>
                             <div class="col-md-6 text-md-end">
-                                <div class="d-flex flex-column align-items-md-end">
+                                <div class="d-flex flex-column align-items-md-end gap-2">
+                                    @php
+                                        $hasBeenUpdated = $hasBeenUpdated ?? $blockWorkOrder->hasBeenUpdated();
+                                        $actionText = $hasBeenUpdated ? 'Archive' : 'Delete';
+                                        $actionIcon = $hasBeenUpdated ? 'ph-archive' : 'ph-trash';
+                                        $actionColor = $hasBeenUpdated ? 'warning' : 'danger';
+                                    @endphp
+                                    @if(!auth()->user()->hasType('Contractor Admin'))
+                                    <button type="button" class="btn btn-{{ $actionColor }} btn-sm text-white" onclick="showDeleteWorkOrderModal({{ $blockWorkOrder->id }}, {
+                                        ref_no: '{{ addslashes($blockWorkOrder->ref_no) }}',
+                                        issue: '{{ addslashes($blockWorkOrder->issue ?? 'N/A') }}',
+                                        has_been_updated: {{ json_encode($hasBeenUpdated) }},
+                                        acceptance_status: '{{ $blockWorkOrder->acceptance_status ?? 'pending' }}',
+                                        status_text: '{{ $blockWorkOrder->status_text }}'
+                                    })" title="{{ $actionText }} Work Order">
+                                        <i class="{{ $actionIcon }} me-2"></i>{{ $actionText }} Work Order
+                                    </button>
+                                    @endif
                                     <div class="mb-2">
                                         <i class="ph-calendar text-white-50 me-2"></i>
                                         <span class="text-white-50">Created: {{ $blockWorkOrder->created_at ? $blockWorkOrder->created_at->format('d M, Y') : 'N/A' }}</span>
@@ -1917,5 +1934,160 @@
         });
         @endif
     @endadmin
+
+    @if(!auth()->user()->hasType('Contractor Admin'))
+    <!-- Delete/Archive Confirmation Modal -->
+    <div class="modal fade" id="deleteWorkOrderModal" tabindex="-1" aria-labelledby="deleteWorkOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" id="deleteWorkOrderModalHeader">
+                    <h5 class="modal-title" id="deleteWorkOrderModalLabel">
+                        <i class="ph-warning me-2"></i>Confirm Action
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="deleteWorkOrderModalMessage">
+                        <!-- Message will be populated by JavaScript -->
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Work Order Details:</strong>
+                        <div id="deleteWorkOrderDetails" class="mt-2">
+                            <!-- Details will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteWorkOrderBtn">
+                        <i class="ph-trash me-1"></i> Yes, Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.showDeleteWorkOrderModal = function(workOrderId, workOrderData) {
+            workOrderToDelete = workOrderId;
+            
+            const isArchived = workOrderData.has_been_updated;
+            const actionText = isArchived ? 'Archive' : 'Delete';
+            const actionIcon = isArchived ? 'ph-archive' : 'ph-trash';
+            const actionColor = isArchived ? 'warning' : 'danger';
+
+            $('#deleteWorkOrderModalHeader').removeClass('bg-danger bg-warning').addClass(`bg-${actionColor} text-white`);
+            $('#deleteWorkOrderModalLabel').html(`<i class="ph-warning text-white me-2"></i>Confirm ${actionText} Work Order`);
+
+            let messageHtml = `<p>Are you sure you want to ${actionText.toLowerCase()} work order <strong>${workOrderData.ref_no || 'N/A'}</strong>?</p>`;
+            if (isArchived) {
+                messageHtml += `
+                    <div class="alert alert-warning mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This work order has been updated (accepted, status changed, or has notes/logs/images/team members).
+                        <strong>The work order will be archived</strong> and can be restored later. The associated data will remain in the database.
+                    </div>`;
+            } else {
+                messageHtml += `
+                    <div class="alert alert-danger mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This work order is still in assigned state with no updates. <strong>This action will permanently delete the work order</strong> and cannot be undone.
+                    </div>`;
+            }
+            $('#deleteWorkOrderModalMessage').html(messageHtml);
+
+            const detailsHtml = `
+                <div class="row">
+                    <div class="col-6"><strong>Reference No:</strong></div>
+                    <div class="col-6">${workOrderData.ref_no || 'N/A'}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Issue:</strong></div>
+                    <div class="col-6">${workOrderData.issue || 'N/A'}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Status:</strong></div>
+                    <div class="col-6">${workOrderData.status_text || 'N/A'}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Acceptance Status:</strong></div>
+                    <div class="col-6">${workOrderData.acceptance_status || 'pending'}</div>
+                </div>
+            `;
+            $('#deleteWorkOrderDetails').html(detailsHtml);
+            
+            $('#confirmDeleteWorkOrderBtn').removeClass('btn-danger btn-warning').addClass(`btn-${actionColor}`).html(`<i class="${actionIcon} me-1"></i>Yes, ${actionText} Work Order`);
+            $('#confirmDeleteWorkOrderBtn').off('click').on('click', function() {
+                deleteWorkOrder();
+            });
+            $('#deleteWorkOrderModal').modal('show');
+        };
+
+        function deleteWorkOrder() {
+            if (!workOrderToDelete) {
+                return;
+            }
+            
+            const $confirmBtn = $('#confirmDeleteWorkOrderBtn');
+            const originalText = $confirmBtn.html();
+            $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Processing...').prop('disabled', true);
+            
+            $.ajax({
+                url: `/block-work-orders/${workOrderToDelete}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    $('#deleteWorkOrderModal').modal('hide');
+                    
+                    if (response && response.success) {
+                        const alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="ph-check-circle me-2"></i>
+                                ${response.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        $('.page-content').prepend(alertHtml);
+                        
+                        setTimeout(function() {
+                            window.location.href = '{{ route("block-work-orders.index") }}';
+                        }, 1500);
+                    } else {
+                        const alertHtml = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="ph-warning me-2"></i>
+                                ${response.message || 'Error processing work order action.'}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        $('.page-content').prepend(alertHtml);
+                        $confirmBtn.html(originalText).prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#deleteWorkOrderModal').modal('hide');
+                    let errorMessage = 'Error processing work order action. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    const alertHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="ph-warning me-2"></i>
+                            ${errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    $('.page-content').prepend(alertHtml);
+                    $confirmBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+    </script>
+    @endif
 </script>
 @endsection 

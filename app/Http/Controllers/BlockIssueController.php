@@ -26,7 +26,7 @@ class BlockIssueController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus', 'blockUnit']);
+        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus', 'blockUnit', 'workOrders']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -141,6 +141,7 @@ class BlockIssueController extends Controller
                 'issue_type' => $request->issue_type,
                 'priority_id' => $request->priority_id,
                 'issue_status_id' => 1, // Default to 'Open' status
+                'status' => BlockIssue::STATUS_ACTIVE, // Set default archive status to active
                 'contact_details' => $request->contact_details,
                 'contact_method_id' => $request->contact_method_id_hidden ?: $request->contact_method_id,
                 'issue_details' => $request->issue_details,
@@ -249,6 +250,10 @@ class BlockIssueController extends Controller
             $q->where('name', 'Property manager'); 
         })->orderBy('name')->get();
         
+        // Check if issue has any work orders (for archive/delete logic)
+        $hasWorkOrders = $blockIssue->hasWorkOrders();
+        $workOrdersCount = $blockIssue->workOrders()->count();
+        
         // Return JSON data for AJAX requests (edit modal)
         if (request()->ajax()) {
             return response()->json([
@@ -257,7 +262,7 @@ class BlockIssueController extends Controller
             ]);
         }
         
-        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors', 'contractCompanies', 'propertyManagers'));
+        return view('block-issues.show', compact('blockIssue', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'actions', 'users', 'contractors', 'contractCompanies', 'propertyManagers', 'hasWorkOrders', 'workOrdersCount'));
     }
 
     /**
@@ -380,15 +385,58 @@ class BlockIssueController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    /**
+     * Remove the specified resource from storage.
+     * 
+     * If issue has no work orders, it will be permanently deleted.
+     * If issue has work orders, it will be archived (soft deleted with archived status).
+     */
     public function destroy(BlockIssue $blockIssue)
     {
         try {
-            $blockIssue->delete();
-            return redirect()->route('block-issues.index')
-                ->with('success', 'Block issue deleted successfully!');
+            // Check if issue has any related work orders
+            if ($blockIssue->hasWorkOrders()) {
+                // Issue has work orders - only archive it
+                $blockIssue->archive();
+
+                $message = 'Issue has been archived because it contains related work orders.';
+                
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => $message]);
+                }
+                
+                return redirect()->route('block-issues.index')
+                    ->with('success', $message);
+            } else {
+                // Issue has no work orders - permanently delete
+                // Delete associated images first
+                foreach ($blockIssue->images as $image) {
+                    if ($image->image_path && $image->image_name) {
+                        Storage::delete('public/' . $image->image_path . '/' . $image->image_name);
+                    }
+                    $image->delete();
+                }
+                
+                $blockIssue->forceDelete();
+
+                $message = 'Issue permanently deleted successfully!';
+                
+                if (request()->ajax() || request()->wantsJson()) {
+                    return response()->json(['success' => true, 'message' => $message]);
+                }
+                
+                return redirect()->route('block-issues.index')
+                    ->with('success', $message);
+            }
         } catch (\Exception $e) {
+            $errorMessage = 'Failed to delete issue. It may be referenced by other records.';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMessage], 500);
+            }
+            
             return redirect()->route('block-issues.index')
-                ->with('error', 'Failed to delete block issue. It may be referenced by other records.');
+                ->with('error', $errorMessage);
         }
     }
 
@@ -397,7 +445,8 @@ class BlockIssueController extends Controller
      */
     public function getBlockIssues(Request $request)
     {
-        $blockIssues = BlockIssue::with(['block', 'blockUnit', 'priority', 'issueStatus', 'assignedTo'])
+        $blockIssues = BlockIssue::with(['block', 'blockUnit', 'priority', 'issueStatus', 'assignedTo', 'workOrders'])
+            ->active() // Only get active issues
             ->orderBy('created_at', 'desc');
             
         if($request->has('block_id')){

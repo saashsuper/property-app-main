@@ -85,6 +85,7 @@ class BlockController extends Controller
         $data['user_id'] = Auth::id();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
+        $data['status'] = Block::STATUS_ACTIVE; // Set default status to active
         
         // Map new field names to existing database columns
         $data['address1'] = $request->block_address;
@@ -293,7 +294,7 @@ class BlockController extends Controller
      */
     public function show(Block $block)
     {
-        $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues', 'images.uploader']);
+        $block->load(['blockType', 'user', 'creator', 'buildings', 'units', 'contractors', 'issues.workOrders', 'images.uploader']);
         
         // Load additional data needed for the view
         $blockInformation = $block->blockInformation()->with(['informationType', 'creator', 'updater'])->get();
@@ -526,20 +527,43 @@ class BlockController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * If block has no related entities, it will be permanently deleted.
+     * If block has related entities, it will be archived (soft deleted with archived status).
      */
     public function destroy(Block $block)
     {
-        // Delete image if exists
-        if ($block->image_path && $block->image_name) {
-            Storage::delete('public/' . $block->image_path . '/' . $block->image_name);
+        // Check if block has any related entities
+        if ($block->hasRelatedEntities()) {
+            // Block has related entities - only archive it
+            // Delete image if exists
+            if ($block->image_path && $block->image_name) {
+                Storage::delete('public/' . $block->image_path . '/' . $block->image_name);
+            }
+
+            $block->archive();
+
+            return redirect()->route('blocks.index')
+                ->with('success', 'Block has been archived because it contains related data (units, buildings, issues, work orders, etc.).');
+        } else {
+            // Block has no related entities - permanently delete
+            // Delete image if exists
+            if ($block->image_path && $block->image_name) {
+                Storage::delete('public/' . $block->image_path . '/' . $block->image_name);
+            }
+
+            // Delete block images if any
+            foreach ($block->images as $image) {
+                if ($image->image_path && $image->image_name) {
+                    Storage::delete('public/' . $image->image_path . '/' . $image->image_name);
+                }
+            }
+
+            $block->forceDelete();
+
+            return redirect()->route('blocks.index')
+                ->with('success', 'Block permanently deleted successfully!');
         }
-
-        $block->deleted_by = Auth::id();
-        $block->save();
-        $block->delete();
-
-        return redirect()->route('blocks.index')
-            ->with('success', 'Block deleted successfully!');
     }
 
     /**

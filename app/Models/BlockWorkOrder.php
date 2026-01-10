@@ -10,6 +10,10 @@ class BlockWorkOrder extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Archive status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -32,7 +36,8 @@ class BlockWorkOrder extends Model
         'preferred_end_date_time',
         'deadline_date',
         'issued_by',
-        'status',
+        'status', // Job status (integer) - kept for backward compatibility
+        'archive_status', // Archive status: 'active' or 'archived' (string)
         'acceptance_status',
         'ref_no',
         'repair_category_id',
@@ -46,6 +51,7 @@ class BlockWorkOrder extends Model
         'is_mobile',
         'created_by',
         'updated_by',
+        'deleted_by',
     ];
 
     /**
@@ -67,13 +73,14 @@ class BlockWorkOrder extends Model
         'preferred_end_date_time' => 'datetime',
         'deadline_date' => 'date',
         'issued_by' => 'integer',
-        'status' => 'integer',
+        'status' => 'integer', // Job status (job_status_id)
         'repair_category_id' => 'integer',
         'block_visit_id' => 'integer',
         'block_inspection_id' => 'integer',
         'is_mobile' => 'boolean',
         'created_by' => 'integer',
         'updated_by' => 'integer',
+        'deleted_by' => 'integer',
     ];
 
     /**
@@ -198,11 +205,92 @@ class BlockWorkOrder extends Model
     }
 
     /**
-     * Scope a query to only include active work orders.
+     * Scope a query to only include active work orders (not deleted and archive_status is active or null).
      */
     public function scopeActive($query)
     {
-        return $query->whereNull('deleted_at');
+        return $query->whereNull('deleted_at')
+                    ->where(function($q) {
+                        $q->where('archive_status', self::STATUS_ACTIVE)
+                          ->orWhereNull('archive_status'); // Handle existing records without archive_status
+                    });
+    }
+
+    /**
+     * Scope a query to only include archived work orders.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('archive_status', self::STATUS_ARCHIVED);
+    }
+
+    /**
+     * Check if work order has been updated (accepted or status changed from assigned).
+     * Returns true if work order has been updated and should only be archived.
+     */
+    public function hasBeenUpdated(): bool
+    {
+        // Check if acceptance_status is 'accepted' (work order has been accepted)
+        if ($this->acceptance_status === 'accepted') {
+            return true;
+        }
+
+        // Check if status is not 1 (assigned/pending state) - work order has been updated
+        // Status 1 = Pending/Assigned, any other status means it's been updated
+        if ($this->status !== 1) {
+            return true;
+        }
+
+        // Check if work order has notes, logs, images, or team members (has been updated)
+        if ($this->notes()->count() > 0 || 
+            $this->logs()->count() > 0 || 
+            $this->images()->count() > 0 || 
+            $this->teamMembers()->count() > 0) {
+            return true;
+        }
+
+        // Check if work order has been updated (created_at != updated_at)
+        if ($this->created_at && $this->updated_at && 
+            $this->created_at->ne($this->updated_at)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if work order is archived.
+     */
+    public function isArchived(): bool
+    {
+        return $this->archive_status === self::STATUS_ARCHIVED;
+    }
+
+    /**
+     * Check if work order is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->archive_status === self::STATUS_ACTIVE && is_null($this->deleted_at);
+    }
+
+    /**
+     * Archive the work order (soft delete with archived status).
+     */
+    public function archive(): bool
+    {
+        $this->archive_status = self::STATUS_ARCHIVED;
+        $this->deleted_by = auth()->id();
+        $this->save();
+        return $this->delete(); // Soft delete
+    }
+
+    /**
+     * Get the deleter of the work order.
+     */
+    public function deleter()
+    {
+        return $this->belongsTo(User::class, 'deleted_by')->withTrashed();
     }
 
     /**

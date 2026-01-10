@@ -15,6 +15,10 @@ class Block extends Model
      *
      * @var array<int, string>
      */
+    // Status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
+
     protected $fillable = [
         'name',
         'management_company',
@@ -31,6 +35,7 @@ class Block extends Model
         'car_spaces',
         'inspection_count',
         'no_of_units',
+        'status',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -171,11 +176,64 @@ class Block extends Model
     }
 
     /**
-     * Scope a query to only include active blocks.
+     * Scope a query to only include active blocks (not deleted and status is active).
      */
     public function scopeActive($query)
     {
-        return $query->whereNull('deleted_at');
+        return $query->whereNull('deleted_at')
+                    ->where('status', self::STATUS_ACTIVE);
+    }
+
+    /**
+     * Scope a query to only include archived blocks.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('status', self::STATUS_ARCHIVED);
+    }
+
+    /**
+     * Check if block has any related entities.
+     * Returns true if block has units, buildings, issues, work orders, inspections, visits, or contractors.
+     */
+    public function hasRelatedEntities(): bool
+    {
+        return $this->units()->count() > 0
+            || $this->buildings()->count() > 0
+            || $this->issues()->count() > 0
+            || $this->workOrders()->count() > 0
+            || $this->blockInspections()->count() > 0
+            || $this->blockVisits()->count() > 0
+            || $this->contractors()->count() > 0
+            || $this->blockInformation()->count() > 0
+            || $this->images()->count() > 0;
+    }
+
+    /**
+     * Check if block is archived.
+     */
+    public function isArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVED;
+    }
+
+    /**
+     * Check if block is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE && is_null($this->deleted_at);
+    }
+
+    /**
+     * Archive the block (soft delete with archived status).
+     */
+    public function archive(): bool
+    {
+        $this->status = self::STATUS_ARCHIVED;
+        $this->deleted_by = auth()->id();
+        $this->save();
+        return $this->delete(); // Soft delete
     }
 
     /**

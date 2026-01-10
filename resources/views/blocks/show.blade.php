@@ -72,8 +72,13 @@
                                         <a href="{{ route('blocks.edit', $block) }}" class="btn btn-light btn-sm">
                                             <i class="ph-pencil me-2"></i>Edit Block
                                         </a>
-                                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" title="Delete Block" dusk="delete-block-{{ $block->id }}">
-                                            <i class="ph-trash me-2"></i>Delete Block
+                                        @php
+                                            $hasRelatedEntities = $block->hasRelatedEntities();
+                                            $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
+                                            $actionIcon = $hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+                                        @endphp
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" title="{{ $actionText }} Block" dusk="{{ strtolower($actionText) }}-block-{{ $block->id }}">
+                                            <i class="{{ $actionIcon }} me-2"></i>{{ $actionText }} Block
                                         </button>
                                         @endadmin
                                         <a href="{{ route('blocks.index') }}" class="btn btn-outline-light btn-sm">
@@ -586,27 +591,44 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-<!-- Delete Block Confirmation Modal -->
+<!-- Delete/Archive Block Confirmation Modal -->
 <div class="modal fade" id="deleteBlockModal" tabindex="-1" aria-labelledby="deleteBlockModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
+                @php
+                    $hasRelatedEntities = $block->hasRelatedEntities();
+                    $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
+                    $actionIcon = $hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+                    $actionColor = $hasRelatedEntities ? 'warning' : 'danger';
+                @endphp
                 <h5 class="modal-title" id="deleteBlockModalLabel">
-                    <i class="ph-warning text-warning me-2"></i>Confirm Delete Block
+                    <i class="ph-warning text-{{ $actionColor }} me-2"></i>Confirm {{ $actionText }} Block
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete <strong>{{ $block->name }}</strong>?</p>
-                <p class="text-muted mb-0">This action cannot be undone. All associated data (units, issues, work orders, etc.) will also be deleted.</p>
+                <p>Are you sure you want to {{ strtolower($actionText) }} <strong>{{ $block->name }}</strong>?</p>
+                @if($hasRelatedEntities)
+                    <div class="alert alert-warning mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This block contains related data (units, buildings, issues, work orders, inspections, site visits, contractors, block information, or images).
+                        <strong>The block will be archived</strong> and can be restored later. The associated data will remain in the database.
+                    </div>
+                @else
+                    <div class="alert alert-danger mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This block has no related data. <strong>This action will permanently delete the block</strong> and cannot be undone. All block data and images will be permanently removed.
+                    </div>
+                @endif
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form id="deleteBlockForm" action="{{ route('blocks.destroy', $block->id) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger" dusk="confirm-delete-block-{{ $block->id }}">
-                        <i class="ph-trash me-1"></i>Yes, Delete Block
+                    <button type="submit" class="btn btn-{{ $actionColor }}" dusk="confirm-{{ strtolower($actionText) }}-block-{{ $block->id }}">
+                        <i class="{{ $actionIcon }} me-1"></i>Yes, {{ $actionText }} Block
                     </button>
                 </form>
             </div>

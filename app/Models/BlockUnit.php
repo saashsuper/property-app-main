@@ -10,6 +10,10 @@ class BlockUnit extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -35,6 +39,7 @@ class BlockUnit extends Model
         'phone_number',
         'letting_agent',
         'misc_info',
+        'status',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -90,6 +95,83 @@ class BlockUnit extends Model
     public function state()
     {
         return $this->belongsTo(State::class);
+    }
+
+    /**
+     * Get the issues for this unit.
+     */
+    public function issues()
+    {
+        return $this->hasMany(BlockIssue::class, 'block_unit_id');
+    }
+
+    /**
+     * Get the work orders for this unit.
+     */
+    public function workOrders()
+    {
+        return $this->hasMany(BlockWorkOrder::class, 'block_unit_id');
+    }
+
+    /**
+     * Get the site visits for this unit.
+     */
+    public function siteVisits()
+    {
+        return $this->hasMany(BlockVisit::class, 'block_unit_id');
+    }
+
+    /**
+     * Scope a query to only include active units (not deleted and status is active).
+     */
+    public function scopeActive($query)
+    {
+        return $query->whereNull('deleted_at')
+                    ->where('status', self::STATUS_ACTIVE);
+    }
+
+    /**
+     * Scope a query to only include archived units.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('status', self::STATUS_ARCHIVED);
+    }
+
+    /**
+     * Check if unit has any related issues.
+     * Returns true if unit has at least one issue.
+     */
+    public function hasIssues(): bool
+    {
+        return $this->issues()->count() > 0;
+    }
+
+    /**
+     * Check if unit is archived.
+     */
+    public function isArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVED;
+    }
+
+    /**
+     * Check if unit is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE && is_null($this->deleted_at);
+    }
+
+    /**
+     * Archive the unit (soft delete with archived status).
+     */
+    public function archive(): bool
+    {
+        $this->status = self::STATUS_ARCHIVED;
+        $this->deleted_by = auth()->id();
+        $this->save();
+        return $this->delete(); // Soft delete
     }
 
     /**

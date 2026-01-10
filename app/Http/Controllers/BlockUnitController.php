@@ -55,6 +55,7 @@ class BlockUnitController extends Controller
         $validated['resident'] = $request->has('resident') ? (bool)$request->resident : false;
         $validated['created_by'] = auth()->id();
         $validated['updated_by'] = auth()->id();
+        $validated['status'] = BlockUnit::STATUS_ACTIVE; // Set default status to active
         BlockUnit::create($validated);
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'message' => 'Unit added successfully!']);
@@ -143,17 +144,44 @@ class BlockUnitController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
+        // Check if unit has any issues (for archive/delete logic)
+        $hasIssues = $blockUnit->hasIssues();
+        $issuesCount = $blockUnit->issues()->count();
+        
         // Return full page view
-        return view('block-units.show', compact('blockUnit', 'activeIssues', 'activeWorkOrders'));
+        return view('block-units.show', compact('blockUnit', 'activeIssues', 'activeWorkOrders', 'hasIssues', 'issuesCount'));
     }
 
+    /**
+     * Remove the specified resource from storage.
+     * 
+     * If unit has no issues, it will be permanently deleted.
+     * If unit has issues, it will be archived (soft deleted with archived status).
+     */
     public function destroy(BlockUnit $blockUnit)
     {
-        $blockUnit->delete();
-        if (request()->ajax() || request()->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Unit deleted successfully!']);
+        // Check if unit has any related issues
+        if ($blockUnit->hasIssues()) {
+            // Unit has issues - only archive it
+            $blockUnit->archive();
+
+            $message = 'Unit has been archived because it contains related issues.';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            return redirect()->back()->with('success', $message);
+        } else {
+            // Unit has no issues - permanently delete
+            $blockUnit->forceDelete();
+
+            $message = 'Unit permanently deleted successfully!';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            return redirect()->back()->with('success', $message);
         }
-        return redirect()->back()->with('success', 'Unit deleted successfully!');
     }
 
     public function createSampleExcel()
@@ -967,14 +995,30 @@ class BlockUnitController extends Controller
     public function getBlockUnits($blockId): \Illuminate\Http\JsonResponse
     {
         try {
-            $blockUnits = BlockUnit::where('block_id', $blockId)
-                ->with(['building', 'unitType'])
+            $units = BlockUnit::with(['building', 'unitType', 'block'])
+                ->where('block_id', $blockId)
+                ->active() // Only get active units
                 ->orderBy('unit_code', 'asc')
-                ->get();
+                ->get()
+                ->map(function ($unit) {
+                    $unitArray = $unit->toArray();
+                    $unitArray['building'] = $unit->building ? [
+                        'id' => $unit->building->id,
+                        'name' => $unit->building->name,
+                    ] : null;
+                    $unitArray['unit_type'] = $unit->unitType ? [
+                        'id' => $unit->unitType->id,
+                        'name' => $unit->unitType->name,
+                    ] : null;
+                    // Add issue count for determining archive vs delete
+                    $unitArray['issues_count'] = $unit->issues()->count();
+                    $unitArray['has_issues'] = $unitArray['issues_count'] > 0;
+                    return $unitArray;
+                });
 
             return response()->json([
                 'success' => true,
-                'data' => $blockUnits
+                'data' => $units
             ]);
         } catch (\Exception $e) {
             return response()->json([

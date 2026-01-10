@@ -153,6 +153,21 @@
                                 <a href="{{ route('block-issues.edit', $blockIssue) }}" class="btn btn-primary btn-sm">
                                     <i class="ph-pencil me-1"></i> Edit
                                 </a>
+                                @php
+                                    $hasWorkOrders = $hasWorkOrders ?? $blockIssue->hasWorkOrders();
+                                    $workOrdersCount = $workOrdersCount ?? $blockIssue->workOrders()->count();
+                                    $actionText = $hasWorkOrders ? 'Archive' : 'Delete';
+                                    $actionIcon = $hasWorkOrders ? 'ph-archive' : 'ph-trash';
+                                    $actionColor = $hasWorkOrders ? 'warning' : 'danger';
+                                @endphp
+                                <button type="button" class="btn btn-{{ $actionColor }} btn-sm" onclick="showDeleteIssueModal({{ $blockIssue->id }}, {
+                                    ref_no: '{{ addslashes($blockIssue->ref_no) }}',
+                                    issue: '{{ addslashes($blockIssue->issue ?? 'N/A') }}',
+                                    has_work_orders: {{ $hasWorkOrders ? 'true' : 'false' }},
+                                    work_orders_count: {{ $workOrdersCount }}
+                                })">
+                                    <i class="{{ $actionIcon }} me-1"></i>{{ $actionText }}
+                                </button>
                                 <a href="{{ route('block-issues.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="ph-arrow-left me-1"></i> Back
                                 </a>
@@ -1947,19 +1962,19 @@
                 const selectedType = $(this).val();
                 
                 if (selectedType === 'inhouse') {
-                    // Show Property Manager, hide Contractor
+                    // Show Property Manager, hide Contract Company
                     $('#propertyManagerFieldContainer').show();
                     $('#contractorFieldContainer').hide();
                     
-                    // Enable Property Manager field and disable Contractor field
+                    // Enable Property Manager field and disable Contract Company field
                     $('#propertyManagerField').prop('required', true).prop('disabled', false);
                     $('#contractorField').prop('required', false).prop('disabled', true).val('');
                 } else {
-                    // Show Contractor, hide Property Manager
+                    // Show Contract Company, hide Property Manager (Outsource)
                     $('#contractorFieldContainer').show();
                     $('#propertyManagerFieldContainer').hide();
                     
-                    // Enable Contractor field and disable Property Manager field
+                    // Enable Contract Company field and disable Property Manager field
                     $('#contractorField').prop('required', true).prop('disabled', false);
                     $('#propertyManagerField').prop('required', false).prop('disabled', true).val('');
                 }
@@ -2212,6 +2227,11 @@
                 $('#createWorkOrderForm input[name="block_issue_id"]').val('{{ $blockIssue->id }}');
                 // Reset work order type to default (Outsource)
                 $('#workOrderType').val('outsource').trigger('change');
+                // Clear form values
+                $('#contractorField').val('');
+                $('#propertyManagerField').val('');
+                // Clear file input
+                $('#workOrderImages').val('');
                 hideWorkOrderAlert();
             }
 
@@ -2251,11 +2271,13 @@
                                     $('#propertyManagerField').val(workOrder.contractor_id || '');
                                 }, 100);
                             } else {
-                                // Set to Outsource and trigger change to show contractor field
+                                // Set to Outsource and trigger change to show contract company field
                                 $('#workOrderType').val('outsource').trigger('change');
-                                // Populate contractor field after change event
+                                // Populate contract company field after change event
                                 setTimeout(() => {
-                                    $('#contractorField').val(workOrder.contractor_id || '');
+                                    // Use contract_company_id if available, otherwise fall back to contractor_id for legacy data
+                                    const companyId = workOrder.contract_company_id || workOrder.contractor_id || '';
+                                    $('#contractorField').val(companyId);
                                 }, 100);
                             }
                             
@@ -3278,17 +3300,17 @@
                         <div class="row">
                             <div class="col-md-6 mb-3" id="contractorFieldContainer">
                                 <label class="form-label">Contract Company <span class="text-danger">*</span></label>
-                                <select class="form-select" name="contractor_id" id="contractorField" required>
+                                <select class="form-select" name="contract_company_id" id="contractorField" required>
                                     <option value="">Select Contract Company</option>
-                                    @if(isset($contractors) && $contractors->count() > 0)
+                                    @if(isset($contractCompanies) && $contractCompanies->count() > 0)
+                                        @foreach($contractCompanies as $company)
+                                            <option value="{{ $company->id }}">{{ $company->company_name }}</option>
+                                        @endforeach
+                                    @elseif(isset($contractors) && $contractors->count() > 0)
                                         @foreach($contractors as $contractor)
                                             <option value="{{ $contractor->id }}">
                                                 {{ $contractor->name }}@if($contractor->code) ({{ $contractor->code }})@endif
                                             </option>
-                                        @endforeach
-                                    @elseif(isset($contractCompanies) && $contractCompanies->count() > 0)
-                                        @foreach($contractCompanies as $company)
-                                            <option value="{{ $company->id }}">{{ $company->company_name }}</option>
                                         @endforeach
                                     @else
                                         <option value="" disabled>No contract companies available</option>
@@ -3332,6 +3354,14 @@
                             </div>
                         </div>
                         
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Upload Photos (Optional)</label>
+                                <input type="file" class="form-control" name="images[]" id="workOrderImages" multiple accept="image/*">
+                                <small class="text-muted">You can upload multiple images (JPEG, PNG, JPG, GIF). Max 2MB each.</small>
+                            </div>
+                        </div>
+                        
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -3344,7 +3374,42 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete/Archive Confirmation Modal for Issue -->
+    <div class="modal fade" id="deleteIssueModal" tabindex="-1" aria-labelledby="deleteIssueModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" id="deleteIssueModalHeader">
+                    <h5 class="modal-title" id="deleteIssueModalLabel">
+                        <i class="ph-warning me-2"></i>Confirm Action
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="deleteIssueModalMessage">Are you sure you want to perform this action?</p>
+                    <div class="alert" id="deleteIssueModalAlert">
+                        <i class="ph-warning me-2"></i>
+                        <span id="deleteIssueModalAlertMessage"></span>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Issue Details:</strong>
+                        <div id="deleteIssueDetails" class="mt-2">
+                            <!-- Issue details will be populated here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn" id="confirmDeleteIssueBtn">
+                        <i class="ph-trash me-1"></i> Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Delete Confirmation Modal (for other items) -->
     <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -3367,4 +3432,171 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // ========================================
+        // ISSUE DELETE/ARCHIVE MODAL
+        // ========================================
+        
+        // Global variable to store the issue ID for deletion
+        let issueToDelete = null;
+        
+        /**
+         * Shows the delete/archive confirmation modal for an issue
+         * 
+         * @param {number} issueId - The ID of the issue to delete/archive
+         * @param {object} issueData - The issue data to display in confirmation
+         */
+        window.showDeleteIssueModal = function(issueId, issueData) {
+            issueToDelete = issueId;
+            
+            const hasWorkOrders = issueData.has_work_orders || false;
+            const workOrdersCount = issueData.work_orders_count || 0;
+            const actionText = hasWorkOrders ? 'Archive' : 'Delete';
+            const actionIcon = hasWorkOrders ? 'ph-archive' : 'ph-trash';
+            const actionColor = hasWorkOrders ? 'warning' : 'danger';
+            
+            // Update modal header
+            const $header = $('#deleteIssueModalHeader');
+            $header.removeClass('bg-danger bg-warning text-white');
+            $header.addClass(hasWorkOrders ? 'bg-warning text-white' : 'bg-danger text-white');
+            
+            // Update modal title
+            $('#deleteIssueModalLabel').html(`<i class="ph-warning me-2"></i>Confirm ${actionText} Issue`);
+            
+            // Update modal message
+            const messageText = hasWorkOrders 
+                ? `Are you sure you want to archive <strong>${issueData.issue || issueData.ref_no || 'this issue'}</strong>?`
+                : `Are you sure you want to permanently delete <strong>${issueData.issue || issueData.ref_no || 'this issue'}</strong>?`;
+            $('#deleteIssueModalMessage').html(messageText);
+            
+            // Update alert message
+            const $alert = $('#deleteIssueModalAlert');
+            $alert.removeClass('alert-danger alert-warning');
+            if (hasWorkOrders) {
+                $alert.addClass('alert-warning');
+                $('#deleteIssueModalAlertMessage').html(
+                    `This issue contains <strong>${workOrdersCount}</strong> related ${workOrdersCount === 1 ? 'work order' : 'work orders'}. ` +
+                    `<strong>The issue will be archived</strong> and can be restored later. The associated work orders will remain in the database.`
+                );
+            } else {
+                $alert.addClass('alert-danger');
+                $('#deleteIssueModalAlertMessage').html(
+                    `This issue has no related work orders. <strong>This action will permanently delete the issue</strong> and cannot be undone. All issue data and images will be permanently removed.`
+                );
+            }
+            
+            // Populate issue details
+            const detailsHtml = `
+                <div class="row">
+                    <div class="col-6"><strong>Ref No:</strong></div>
+                    <div class="col-6">${issueData.ref_no || 'N/A'}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Issue:</strong></div>
+                    <div class="col-6">${issueData.issue || 'N/A'}</div>
+                </div>
+                ${hasWorkOrders ? `
+                <div class="row">
+                    <div class="col-6"><strong>Related Work Orders:</strong></div>
+                    <div class="col-6"><span class="badge bg-warning">${workOrdersCount} ${workOrdersCount === 1 ? 'Work Order' : 'Work Orders'}</span></div>
+                </div>
+                ` : ''}
+            `;
+            $('#deleteIssueDetails').html(detailsHtml);
+            
+            // Update confirm button
+            const $confirmBtn = $('#confirmDeleteIssueBtn');
+            $confirmBtn.removeClass('btn-danger btn-warning');
+            $confirmBtn.addClass(`btn-${actionColor}`);
+            $confirmBtn.html(`<i class="${actionIcon} me-1"></i>Yes, ${actionText} Issue`);
+            
+            // Set up the confirm button to actually delete/archive
+            $confirmBtn.off('click').on('click', function() {
+                deleteIssue(issueId);
+            });
+            
+            // Show the modal
+            $('#deleteIssueModal').modal('show');
+        };
+
+        /**
+         * Deletes/archives an issue via AJAX
+         */
+        function deleteIssue(issueId) {
+            if (!issueId) {
+                return;
+            }
+            
+            // Show loading state
+            const $confirmBtn = $('#confirmDeleteIssueBtn');
+            const originalText = $confirmBtn.html();
+            $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Processing...').prop('disabled', true);
+            
+            $.ajax({
+                url: `/block-issues/${issueId}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    // Hide the modal
+                    $('#deleteIssueModal').modal('hide');
+                    
+                    if (response && response.success) {
+                        // Show success alert with message from response
+                        const message = response.message || 'Issue action completed successfully!';
+                        const alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <i class="ph-check-circle me-2"></i>
+                                ${message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        $('.page-content').prepend(alertHtml);
+                        
+                        // Redirect after a short delay
+                        setTimeout(function() {
+                            window.location.href = '{{ route("block-issues.index") }}';
+                        }, 1500);
+                    } else {
+                        // Show error and reset button
+                        const alertHtml = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <i class="ph-warning me-2"></i>
+                                Error processing issue. Please try again.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        $('.page-content').prepend(alertHtml);
+                        $confirmBtn.html(originalText).prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // Hide the modal
+                    $('#deleteIssueModal').modal('hide');
+                    
+                    // Show error message
+                    let errorMessage = 'Error processing issue. Please try again.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    const alertHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="ph-warning me-2"></i>
+                            ${errorMessage}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    $('.page-content').prepend(alertHtml);
+                    
+                    // Reset button state
+                    $confirmBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        }
+    </script>
 @endsection 

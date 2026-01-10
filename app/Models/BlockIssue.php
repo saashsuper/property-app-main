@@ -10,6 +10,10 @@ class BlockIssue extends Model
 {
     use HasFactory, SoftDeletes;
 
+    // Status constants for archive/active
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -21,7 +25,7 @@ class BlockIssue extends Model
         'title',
         'description',
         'priority',
-        'status',
+        'status', // Archive status: 'active' or 'archived'
         'assigned_to',
         'reported_by',
         'issued_from',
@@ -51,6 +55,7 @@ class BlockIssue extends Model
         'is_mobile',
         'created_by',
         'updated_by',
+        'deleted_by',
         'issue_status_id',
     ];
 
@@ -66,6 +71,7 @@ class BlockIssue extends Model
         'is_mobile' => 'boolean',
         'created_by' => 'integer',
         'updated_by' => 'integer',
+        'deleted_by' => 'integer',
     ];
 
     /**
@@ -258,11 +264,64 @@ class BlockIssue extends Model
     }
 
     /**
-     * Scope for active issues
+     * Scope for active issues (not deleted and status is active).
      */
     public function scopeActive($query)
     {
-        return $query->whereNull('deleted_at');
+        return $query->whereNull('deleted_at')
+                    ->where('status', self::STATUS_ACTIVE);
+    }
+
+    /**
+     * Scope a query to only include archived issues.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('status', self::STATUS_ARCHIVED);
+    }
+
+    /**
+     * Check if issue has any related work orders.
+     * Returns true if issue has at least one work order.
+     */
+    public function hasWorkOrders(): bool
+    {
+        return $this->workOrders()->count() > 0;
+    }
+
+    /**
+     * Check if issue is archived.
+     */
+    public function isArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVED;
+    }
+
+    /**
+     * Check if issue is active.
+     */
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE && is_null($this->deleted_at);
+    }
+
+    /**
+     * Archive the issue (soft delete with archived status).
+     */
+    public function archive(): bool
+    {
+        $this->status = self::STATUS_ARCHIVED;
+        $this->deleted_by = auth()->id();
+        $this->save();
+        return $this->delete(); // Soft delete
+    }
+
+    /**
+     * Get the deleter of the issue.
+     */
+    public function deleter()
+    {
+        return $this->belongsTo(User::class, 'deleted_by')->withTrashed();
     }
 
     /**

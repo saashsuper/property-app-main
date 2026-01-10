@@ -34,33 +34,75 @@
                 event.stopPropagation();
             }
             
+            const isArchived = details.has_been_updated || false;
+            const actionText = isArchived ? 'Archive' : 'Delete';
+            const actionIcon = isArchived ? 'ph-archive' : 'ph-trash';
+            const actionColor = isArchived ? 'warning' : 'danger';
+            
+            // Update modal header and title
+            const modalHeader = document.getElementById('deleteWorkOrderModalHeader');
+            const modalLabel = document.getElementById('deleteWorkOrderModalLabel');
+            const confirmBtn = document.getElementById('confirmDeleteWorkOrderBtn');
+            
+            if (modalHeader) {
+                modalHeader.className = `modal-header bg-${actionColor} text-white`;
+            }
+            if (modalLabel) {
+                modalLabel.innerHTML = `<i class="ph-warning me-2"></i>Confirm ${actionText}`;
+            }
+            
             const container = document.getElementById('deleteWorkOrderDetails');
             if (!container) {
                 console.error('deleteWorkOrderDetails container not found');
                 return false;
             }
             
+            let messageHtml = `<p>Are you sure you want to ${actionText.toLowerCase()} work order <strong>#${details.ref_no || 'N/A'}</strong>?</p>`;
+            if (isArchived) {
+                messageHtml += `
+                    <div class="alert alert-warning mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This work order has been updated (accepted, status changed, or has notes/logs/images/team members).
+                        <strong>The work order will be archived</strong> and can be restored later. The associated data will remain in the database.
+                    </div>`;
+            } else {
+                messageHtml += `
+                    <div class="alert alert-danger mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This work order is still in assigned state with no updates. <strong>This action will permanently delete the work order</strong> and cannot be undone.
+                    </div>`;
+            }
+            
             container.innerHTML = `
-                <div class="row">
-                    <div class="col-5">Reference:</div>
-                    <div class="col-7"><strong>#${details.ref_no || 'N/A'}</strong></div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Title:</div>
-                    <div class="col-7">${details.title || 'N/A'}</div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Priority:</div>
-                    <div class="col-7">${details.priority || 'N/A'}</div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Status:</div>
-                    <div class="col-7">${details.status || 'N/A'}</div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Created Date:</div>
-                    <div class="col-7">${details.created_date || 'N/A'}</div>
+                ${messageHtml}
+                <div class="alert alert-info">
+                    <strong>Work Order Details:</strong>
+                    <div class="row mt-2">
+                        <div class="col-5">Reference:</div>
+                        <div class="col-7"><strong>#${details.ref_no || 'N/A'}</strong></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Title:</div>
+                        <div class="col-7">${details.title || 'N/A'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Priority:</div>
+                        <div class="col-7">${details.priority || 'N/A'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Status:</div>
+                        <div class="col-7">${details.status || 'N/A'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Created Date:</div>
+                        <div class="col-7">${details.created_date || 'N/A'}</div>
+                    </div>
                 </div>`;
+            
+            if (confirmBtn) {
+                confirmBtn.className = `btn btn-${actionColor}`;
+                confirmBtn.innerHTML = `<i class="${actionIcon} me-1"></i> Yes, ${actionText} Work Order`;
+            }
 
             const confirmBtn = document.getElementById('confirmDeleteWorkOrderBtn');
             if (!confirmBtn) {
@@ -246,16 +288,24 @@
                                         <button type="button" class="btn btn-sm btn-outline-warning edit-work-order" data-work-order-id="{{ $workOrder->id }}" title="Edit Work Order">
                                             <i class="ph-pencil"></i>
                                         </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                        @php
+                                            $hasBeenUpdated = $workOrder->hasBeenUpdated();
+                                            $actionText = $hasBeenUpdated ? 'Archive' : 'Delete';
+                                            $actionIcon = $hasBeenUpdated ? 'ph-archive' : 'ph-trash';
+                                            $actionColor = $hasBeenUpdated ? 'warning' : 'danger';
+                                        @endphp
+                                        <button type="button" class="btn btn-sm btn-outline-{{ $actionColor }}"
                                                 onclick="event.preventDefault(); event.stopPropagation(); workOrderShowDeleteConfirmation({{ $workOrder->id }}, {
                                                     ref_no: '{{ $workOrder->ref_no }}',
                                                     title: {{ json_encode(Str::limit($workOrder->blockIssue->issue ?? $workOrder->issue ?? 'N/A', 50)) }},
                                                     priority: {{ json_encode($workOrder->priority_text) }},
                                                     status: {{ json_encode($workOrder->status_text) }},
-                                                    created_date: {{ json_encode($workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A') }}
+                                                    created_date: {{ json_encode($workOrder->created_at ? $workOrder->created_at->format('M d, Y') : 'N/A') }},
+                                                    has_been_updated: {{ json_encode($hasBeenUpdated) }},
+                                                    acceptance_status: {{ json_encode($workOrder->acceptance_status ?? 'pending') }}
                                                 }); return false;"
-                                                title="Delete Work Order">
-                                            <i class="ph-trash"></i>
+                                                title="{{ $actionText }} Work Order">
+                                            <i class="{{ $actionIcon }}"></i> {{ $actionText }}
                                         </button>
                                     </div>
                                 </td>
@@ -394,6 +444,22 @@
                 event.stopPropagation();
             }
             
+            const isArchived = details.has_been_updated || false;
+            const actionText = isArchived ? 'Archive' : 'Delete';
+            const actionIcon = isArchived ? 'ph-archive' : 'ph-trash';
+            const actionColor = isArchived ? 'warning' : 'danger';
+            
+            // Update modal header and title
+            const modalHeader = document.getElementById('deleteWorkOrderModalHeader');
+            const modalLabel = document.getElementById('deleteWorkOrderModalLabel');
+            
+            if (modalHeader) {
+                modalHeader.className = `modal-header bg-${actionColor} text-white`;
+            }
+            if (modalLabel) {
+                modalLabel.innerHTML = `<i class="ph-warning me-2"></i>Confirm ${actionText}`;
+            }
+            
             const container = document.getElementById('deleteWorkOrderDetails');
             if (!container) {
                 console.error('deleteWorkOrderDetails container not found');
@@ -401,29 +467,54 @@
                 return false;
             }
             
+            let messageHtml = `<p>Are you sure you want to ${actionText.toLowerCase()} work order <strong>#${details.ref_no || 'N/A'}</strong>?</p>`;
+            if (isArchived) {
+                messageHtml += `
+                    <div class="alert alert-warning mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This work order has been updated (accepted, status changed, or has notes/logs/images/team members).
+                        <strong>The work order will be archived</strong> and can be restored later. The associated data will remain in the database.
+                    </div>`;
+            } else {
+                messageHtml += `
+                    <div class="alert alert-danger mb-2">
+                        <i class="ph-warning me-2"></i>
+                        This work order is still in assigned state with no updates. <strong>This action will permanently delete the work order</strong> and cannot be undone.
+                    </div>`;
+            }
+            
             container.innerHTML = `
-                <div class="row">
-                    <div class="col-5">Reference:</div>
-                    <div class="col-7"><strong>#${details.ref_no || 'N/A'}</strong></div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Title:</div>
-                    <div class="col-7">${details.title || 'N/A'}</div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Priority:</div>
-                    <div class="col-7">${details.priority || 'N/A'}</div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Status:</div>
-                    <div class="col-7">${details.status || 'N/A'}</div>
-                </div>
-                <div class="row">
-                    <div class="col-5">Created Date:</div>
-                    <div class="col-7">${details.created_date || 'N/A'}</div>
+                ${messageHtml}
+                <div class="alert alert-info">
+                    <strong>Work Order Details:</strong>
+                    <div class="row mt-2">
+                        <div class="col-5">Reference:</div>
+                        <div class="col-7"><strong>#${details.ref_no || 'N/A'}</strong></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Title:</div>
+                        <div class="col-7">${details.title || 'N/A'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Priority:</div>
+                        <div class="col-7">${details.priority || 'N/A'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Status:</div>
+                        <div class="col-7">${details.status || 'N/A'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5">Created Date:</div>
+                        <div class="col-7">${details.created_date || 'N/A'}</div>
+                    </div>
                 </div>`;
 
             const confirmBtn = document.getElementById('confirmDeleteWorkOrderBtn');
+            
+            if (confirmBtn) {
+                confirmBtn.className = `btn btn-${actionColor}`;
+                confirmBtn.innerHTML = `<i class="${actionIcon} me-1"></i> Yes, ${actionText} Work Order`;
+            }
             if (!confirmBtn) {
                 console.error('confirmDeleteWorkOrderBtn not found');
                 alert('Error: Delete confirmation button not found. Please refresh the page.');

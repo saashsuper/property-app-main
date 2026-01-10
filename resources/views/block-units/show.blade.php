@@ -85,13 +85,22 @@
                                         <button type="button" class="btn btn-warning btn-sm text-white" onclick="openUnitModal('edit', {{ $blockUnit->id }})">
                                             <i class="ph-pencil me-2"></i>Edit Unit
                                         </button>
-                                        <button type="button" class="btn btn-danger btn-sm" onclick="showDeleteUnitModal({{ $blockUnit->id }}, {
+                                        @php
+                                            $hasIssues = $hasIssues ?? $blockUnit->hasIssues();
+                                            $issuesCount = $issuesCount ?? $blockUnit->issues()->count();
+                                            $actionText = $hasIssues ? 'Archive' : 'Delete';
+                                            $actionIcon = $hasIssues ? 'ph-archive' : 'ph-trash';
+                                            $actionColor = $hasIssues ? 'warning' : 'danger';
+                                        @endphp
+                                        <button type="button" class="btn btn-{{ $actionColor }} btn-sm" onclick="showDeleteUnitModal({{ $blockUnit->id }}, {
                                             unit_code: '{{ addslashes($blockUnit->unit_code ?? 'N/A') }}',
                                             unit_name: '{{ addslashes($blockUnit->unit_name ?? 'N/A') }}',
                                             owners_name: '{{ addslashes($blockUnit->owners_name ?? 'N/A') }}',
-                                            unit_type: { name: '{{ addslashes($blockUnit->unitType->name ?? 'N/A') }}' }
+                                            unit_type: { name: '{{ addslashes($blockUnit->unitType->name ?? 'N/A') }}' },
+                                            has_issues: {{ $hasIssues ? 'true' : 'false' }},
+                                            issues_count: {{ $issuesCount }}
                                         })">
-                                            <i class="ph-trash me-2"></i>Delete Unit
+                                            <i class="{{ $actionIcon }} me-2"></i>{{ $actionText }} Unit
                                         </button>
                                     </div>
                                 </div>
@@ -623,27 +632,23 @@
 </div>
 @endif
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete/Archive Confirmation Modal -->
 <div class="modal fade" id="deleteUnitModal" tabindex="-1" aria-labelledby="deleteUnitModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
+            <div class="modal-header" id="deleteUnitModalHeader">
                 <h5 class="modal-title" id="deleteUnitModalLabel">
-                    <i class="ph-warning me-2"></i>Confirm Delete
+                    <i class="ph-warning me-2"></i>Confirm Action
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
-                        <i class="ph-warning-circle text-danger" style="font-size: 2rem;"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">Are you sure you want to delete this unit?</h6>
-                        <p class="text-muted mb-0">This action cannot be undone. All unit data will be permanently removed.</p>
-                    </div>
+                <p id="deleteUnitModalMessage">Are you sure you want to perform this action?</p>
+                <div class="alert" id="deleteUnitModalAlert">
+                    <i class="ph-warning me-2"></i>
+                    <span id="deleteUnitModalAlertMessage"></span>
                 </div>
-                <div class="alert alert-warning">
+                <div class="alert alert-info">
                     <strong>Unit Details:</strong>
                     <div id="deleteUnitDetails" class="mt-2">
                         <!-- Unit details will be populated here -->
@@ -654,8 +659,8 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="ph-x me-1"></i> Cancel
                 </button>
-                <button type="button" class="btn btn-danger" id="confirmDeleteUnitBtn">
-                    <i class="ph-trash me-1"></i> Delete Unit
+                <button type="button" class="btn" id="confirmDeleteUnitBtn">
+                    <i class="ph-trash me-1"></i> Confirm
                 </button>
             </div>
         </div>
@@ -670,9 +675,9 @@ $(document).ready(function() {
     let deleteRedirectUrl = null;
 
     /**
-     * Shows the delete confirmation modal with unit details
+     * Shows the delete/archive confirmation modal with unit details
      * 
-     * @param {number} unitId - The ID of the unit to delete
+     * @param {number} unitId - The ID of the unit to delete/archive
      * @param {object} unitData - The unit data to display in confirmation
      */
     window.showDeleteUnitModal = function(unitId, unitData) {
@@ -684,6 +689,42 @@ $(document).ready(function() {
         @else
             deleteRedirectUrl = '{{ route("blocks.index") }}';
         @endif
+        
+        const hasIssues = unitData.has_issues || false;
+        const issuesCount = unitData.issues_count || 0;
+        const actionText = hasIssues ? 'Archive' : 'Delete';
+        const actionIcon = hasIssues ? 'ph-archive' : 'ph-trash';
+        const actionColor = hasIssues ? 'warning' : 'danger';
+        
+        // Update modal header
+        const $header = $('#deleteUnitModalHeader');
+        $header.removeClass('bg-danger bg-warning text-white');
+        $header.addClass(hasIssues ? 'bg-warning text-white' : 'bg-danger text-white');
+        
+        // Update modal title
+        $('#deleteUnitModalLabel').html(`<i class="ph-warning me-2"></i>Confirm ${actionText} Unit`);
+        
+        // Update modal message
+        const messageText = hasIssues 
+            ? `Are you sure you want to archive <strong>${unitData.unit_name || unitData.unit_code || 'this unit'}</strong>?`
+            : `Are you sure you want to permanently delete <strong>${unitData.unit_name || unitData.unit_code || 'this unit'}</strong>?`;
+        $('#deleteUnitModalMessage').html(messageText);
+        
+        // Update alert message
+        const $alert = $('#deleteUnitModalAlert');
+        $alert.removeClass('alert-danger alert-warning');
+        if (hasIssues) {
+            $alert.addClass('alert-warning');
+            $('#deleteUnitModalAlertMessage').html(
+                `This unit contains <strong>${issuesCount}</strong> related ${issuesCount === 1 ? 'issue' : 'issues'}. ` +
+                `<strong>The unit will be archived</strong> and can be restored later. The associated issues will remain in the database.`
+            );
+        } else {
+            $alert.addClass('alert-danger');
+            $('#deleteUnitModalAlertMessage').html(
+                `This unit has no related issues. <strong>This action will permanently delete the unit</strong> and cannot be undone. All unit data will be permanently removed.`
+            );
+        }
         
         // Populate unit details in the modal
         const detailsHtml = `
@@ -703,12 +744,22 @@ $(document).ready(function() {
                 <div class="col-6"><strong>Type:</strong></div>
                 <div class="col-6">${unitData.unit_type?.name || 'N/A'}</div>
             </div>
+            ${hasIssues ? `<div class="row">
+                <div class="col-6"><strong>Related Issues:</strong></div>
+                <div class="col-6"><span class="badge bg-warning">${issuesCount} ${issuesCount === 1 ? 'Issue' : 'Issues'}</span></div>
+            </div>` : ''}
         `;
         
         $('#deleteUnitDetails').html(detailsHtml);
         
-        // Set up the confirm button to actually delete
-        $('#confirmDeleteUnitBtn').off('click').on('click', function() {
+        // Update confirm button
+        const $confirmBtn = $('#confirmDeleteUnitBtn');
+        $confirmBtn.removeClass('btn-danger btn-warning');
+        $confirmBtn.addClass(`btn-${actionColor}`);
+        $confirmBtn.html(`<i class="${actionIcon} me-1"></i>Yes, ${actionText} Unit`);
+        
+        // Set up the confirm button to actually delete/archive
+        $confirmBtn.off('click').on('click', function() {
             deleteUnit();
         });
         
@@ -727,7 +778,7 @@ $(document).ready(function() {
         // Show loading state
         const $confirmBtn = $('#confirmDeleteUnitBtn');
         const originalText = $confirmBtn.html();
-        $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Deleting...').prop('disabled', true);
+        $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Processing...').prop('disabled', true);
         
         $.ajax({
             url: `/block-units/${unitToDelete}`,
@@ -743,11 +794,12 @@ $(document).ready(function() {
                 
                 // Show success message and redirect
                 if (response && response.success) {
-                    // Show success alert
+                    // Show success alert with message from response
+                    const message = response.message || 'Unit action completed successfully!';
                     const alertHtml = `
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="ph-check-circle me-2"></i>
-                            Unit deleted successfully!
+                            ${message}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     `;

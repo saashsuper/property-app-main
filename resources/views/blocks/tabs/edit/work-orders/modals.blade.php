@@ -141,31 +141,19 @@
     </div>
 </div>
 
-<!-- Delete Work Order Modal -->
+<!-- Delete/Archive Work Order Modal -->
 <div class="modal fade" id="deleteWorkOrderModal" tabindex="-1" aria-labelledby="deleteWorkOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
+            <div class="modal-header bg-danger text-white" id="deleteWorkOrderModalHeader">
                 <h5 class="modal-title" id="deleteWorkOrderModalLabel">
-                    <i class="ph-warning me-2"></i>Confirm Delete
+                    <i class="ph-warning me-2"></i>Confirm Action
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="flex-shrink-0">
-                        <i class="ph-warning-circle text-danger" style="font-size: 2rem;"></i>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="mb-1">Are you sure you want to delete this work order?</h6>
-                        <p class="text-muted mb-0">This action cannot be undone. The work order record will be permanently removed.</p>
-                    </div>
-                </div>
-                <div class="alert alert-warning">
-                    <strong>Work Order Details:</strong>
-                    <div id="deleteWorkOrderDetails" class="mt-2">
-                        <!-- Details will be populated by JavaScript -->
-                    </div>
+                <div id="deleteWorkOrderDetails">
+                    <!-- Details will be populated by JavaScript -->
                 </div>
             </div>
             <div class="modal-footer">
