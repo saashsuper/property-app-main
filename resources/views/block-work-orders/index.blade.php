@@ -75,7 +75,7 @@
                                         <th>Issue</th>
                                         <th>Priority</th>
                                         <th>Status</th>
-                                        <th>Contact</th>
+                                        <th>Contractor Company</th>
                                         <th>Deadline</th>
                                         <th>Issued By</th>
                                         <th>Actions</th>
@@ -134,11 +134,23 @@
                                             <span class="badge bg-{{ $color }}">{{ $workOrder->status_text }}</span>
                                         </td>
                                         <td>
-                                            @if($workOrder->contact_name)
-                                                <div>{{ $workOrder->contact_name }}</div>
-                                                @if($workOrder->contact_email)
-                                                    <small class="text-muted">{{ $workOrder->contact_email }}</small>
-                                                @endif
+                                            @php
+                                                // Get contractor company name
+                                                $contractorName = null;
+                                                if ($workOrder->contractCompany) {
+                                                    $contractorName = $workOrder->contractCompany->name ?? null;
+                                                } elseif ($workOrder->contractor) {
+                                                    // Check if contractor is a property manager
+                                                    $isPropertyManager = $workOrder->contractor->userType && $workOrder->contractor->userType->name === 'Property manager';
+                                                    if ($isPropertyManager) {
+                                                        $contractorName = $workOrder->contractor->name . ' (Property Manager)';
+                                                    } else {
+                                                        $contractorName = $workOrder->contractor->name ?? null;
+                                                    }
+                                                }
+                                            @endphp
+                                            @if($contractorName)
+                                                <span class="badge bg-info">{{ $contractorName }}</span>
                                             @else
                                                 <span class="text-muted">N/A</span>
                                             @endif
@@ -241,8 +253,8 @@ $(document).ready(function() {
             { targets: [3], width: '18%' },  // Issue
             { targets: [4], width: '8%' },   // Priority
             { targets: [5], width: '8%' },   // Status
-            { targets: [6], width: '10%' },  // Contact
-            { targets: [7], width: '8%' },   // Deadline
+            { targets: [6], width: '14%' },  // Contractor Company
+            { targets: [7], width: '10%' },  // Deadline
             { targets: [8], width: '12%' },  // Issued By
             { targets: [9], width: '6%' }    // Actions
         ],

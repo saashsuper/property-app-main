@@ -55,36 +55,21 @@ class WorkOrderController extends Controller
             'block',
             'blockUnit',
             'priority',
-            'contractor',
+            'contractCompany', // Use contractCompany instead of contractor
             'images',
-        ]);
+        ])->active(); // Only show active work orders
 
         // Check if user is Contractor Admin
         $isContractorAdmin = $user->userType && $user->userType->name === 'Contractor Admin';
         
         if ($isContractorAdmin && $user->contract_company_id) {
-            // For Contractor Admin: show all work orders for users in the same contract company
-            // Get all user IDs from the same contract company
-            $companyUserIds = \App\Models\User::where('contract_company_id', $user->contract_company_id)
-                ->pluck('id')
-                ->toArray();
-            
-            if (!empty($companyUserIds)) {
-                // Filter work orders where:
-                // 1. contractor_id is in the list of company user IDs, OR
-                // 2. work order has team members from the same company
-                $query->where(function($q) use ($companyUserIds) {
-                    $q->whereIn('contractor_id', $companyUserIds)
-                      ->orWhereHas('teamMembers', function($teamQuery) use ($companyUserIds) {
-                          $teamQuery->whereIn('user_id', $companyUserIds);
-                      });
-                });
-            } else {
-                // No other users in company, only show work orders assigned to this user
-                $query->where('contractor_id', $user->id);
-            }
+            // For Contractor Admin: show all work orders assigned to their contract company
+            // Work orders are assigned to Contractor IDs (from 1_contractors table)
+            // The contract_company_id should match the contractor_id in block_work_orders
+            $query->where('contractor_id', $user->contract_company_id);
         } else {
-            // For regular users: only show work orders assigned to them
+            // For regular users: only show work orders assigned to their user ID
+            // Note: This may not match many work orders if assignments are company-based
             $query->where('contractor_id', $user->id);
         }
 

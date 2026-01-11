@@ -16,6 +16,7 @@ class JobStatusSeeder extends Seeder
             ['name' => 'Cancelled', 'is_updated' => 0],
             ['name' => 'On Hold', 'is_updated' => 1],
             ['name' => 'Rescheduled', 'is_updated' => 1],
+            ['name' => 'Rejected', 'is_updated' => 0],
         ];
 
         foreach ($statuses as $status) {

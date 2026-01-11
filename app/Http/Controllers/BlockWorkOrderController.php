@@ -24,7 +24,7 @@ class BlockWorkOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit', 'notes', 'logs', 'images', 'teamMembers'])->active();
+        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit', 'contractCompany', 'contractor.userType', 'notes', 'logs', 'images', 'teamMembers'])->active();
 
         // Search functionality
         if ($request->filled('search')) {
@@ -1184,5 +1184,214 @@ class BlockWorkOrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Note deleted successfully');
+    }
+
+    /**
+     * Accept a work order (Contractor Admin only)
+     * Only allowed for scheduled work orders (status = 1)
+     */
+    public function accept(Request $request, BlockWorkOrder $blockWorkOrder)
+    {
+        // Get user from request (set by AuthenticateWithSanctum middleware) or fallback to Auth
+        $user = $request->user() ?? Auth::user();
+        
+        if (!$user) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated.'
+                ], 401);
+            }
+            return redirect()->route('login');
+        }
+        
+        // Load userType relationship if not already loaded
+        if (!$user->relationLoaded('userType')) {
+            $user->load('userType');
+        }
+        
+        // Check if user is Contractor Admin
+        if (!$user->hasType('Contractor Admin')) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Contractor Admins can accept work orders.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Only Contractor Admins can accept work orders.');
+        }
+
+        // No need to check if work order is assigned to contractor company
+        // If user can see the work order, it's already assigned to their company
+
+        // Check if work order is scheduled (status = 1)
+        if ($blockWorkOrder->status != 1) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only scheduled work orders (status = 1) can be accepted.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Only scheduled work orders can be accepted.');
+        }
+
+        // Get Accepted status ID
+        $acceptedStatus = \App\Models\JobStatus::where('name', 'Accepted')->first();
+        if (!$acceptedStatus) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Accepted status not found in system. Please contact administrator.'
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Accepted status not found in system. Please contact administrator.');
+        }
+
+        // Store old status before update
+        $oldStatus = $blockWorkOrder->status;
+
+        // Update work order status to Accepted when accepted
+        $blockWorkOrder->update([
+            'status' => $acceptedStatus->id, // Accepted status
+            'rejection_reason' => null, // Clear any previous rejection reason
+            'updated_by' => $user->id,
+        ]);
+
+        // Create log entry
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'status_changed',
+            'Work order accepted by contractor admin - status changed to Accepted',
+            [
+                'field_name' => 'status',
+                'old_value' => $oldStatus,
+                'new_value' => $acceptedStatus->id,
+                'user_id' => $user->id,
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order accepted successfully!',
+                'data' => $blockWorkOrder->fresh()
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Work order accepted successfully!');
+    }
+
+    /**
+     * Reject a work order (Contractor Admin only)
+     * Only allowed for scheduled work orders (status = 1)
+     * Requires a rejection reason
+     */
+    public function reject(Request $request, BlockWorkOrder $blockWorkOrder)
+    {
+        // Get user from request (set by AuthenticateWithSanctum middleware) or fallback to Auth
+        $user = $request->user() ?? Auth::user();
+        
+        if (!$user) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated.'
+                ], 401);
+            }
+            return redirect()->route('login');
+        }
+        
+        // Load userType relationship if not already loaded
+        if (!$user->relationLoaded('userType')) {
+            $user->load('userType');
+        }
+        
+        // Check if user is Contractor Admin
+        if (!$user->hasType('Contractor Admin')) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only Contractor Admins can reject work orders.'
+                ], 403);
+            }
+            return redirect()->back()->with('error', 'Only Contractor Admins can reject work orders.');
+        }
+
+        // No need to check if work order is assigned to contractor company
+        // If user can see the work order, it's already assigned to their company
+
+        // Check if work order is scheduled (status = 1)
+        if ($blockWorkOrder->status != 1) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only scheduled work orders can be rejected.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Only scheduled work orders can be rejected.');
+        }
+
+        // Validate rejection reason
+        $validator = Validator::make($request->all(), [
+            'rejection_reason' => 'required|string|min:10|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            return redirect()->back()
+                ->withErrors($validator)
+                ->with('error', 'Please provide a rejection reason (minimum 10 characters).');
+        }
+
+        // Get Rejected status ID
+        $rejectedStatus = \App\Models\JobStatus::where('name', 'Rejected')->first();
+        if (!$rejectedStatus) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Rejected status not found in system. Please contact administrator.'
+                ], 500);
+            }
+            return redirect()->back()->with('error', 'Rejected status not found in system. Please contact administrator.');
+        }
+
+        // Store old status before update
+        $oldStatus = $blockWorkOrder->status;
+
+        // Update work order status to Rejected when rejected
+        $blockWorkOrder->update([
+            'status' => $rejectedStatus->id, // Rejected status
+            'rejection_reason' => $request->rejection_reason,
+            'updated_by' => $user->id,
+        ]);
+
+        // Create log entry
+        BlockWorkOrderLog::createLog(
+            $blockWorkOrder->id,
+            'status_changed',
+            'Work order rejected by contractor admin - status changed to Rejected: ' . substr($request->rejection_reason, 0, 100),
+            [
+                'field_name' => 'status',
+                'old_value' => $oldStatus,
+                'new_value' => $rejectedStatus->id,
+                'user_id' => $user->id,
+            ]
+        );
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Work order rejected successfully!',
+                'data' => $blockWorkOrder->fresh()
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Work order rejected successfully!');
     }
 }

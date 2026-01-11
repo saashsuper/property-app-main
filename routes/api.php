@@ -76,44 +76,7 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
     // Work Orders
     Route::prefix('work-orders')->group(function () {
         // Get work orders assigned to current user (contractor)
-        Route::get('/my-work-orders', function (\Illuminate\Http\Request $request) {
-            $user = $request->user();
-            $user->load(['userType', 'contractCompany']);
-            
-            $query = \App\Models\BlockWorkOrder::with(['blockUnit', 'priority', 'jobStatus']);
-            
-            // Check if user is Contractor Admin
-            $isContractorAdmin = $user->userType && $user->userType->name === 'Contractor Admin';
-            
-            if ($isContractorAdmin && $user->contract_company_id) {
-                // For Contractor Admin: show all work orders for users in the same contract company
-                // Get all user IDs from the same contract company
-                $companyUserIds = \App\Models\User::where('contract_company_id', $user->contract_company_id)
-                    ->pluck('id')
-                    ->toArray();
-                
-                if (!empty($companyUserIds)) {
-                    // Filter work orders where:
-                    // 1. contractor_id is in the list of company user IDs, OR
-                    // 2. work order has team members from the same company
-                    $query->where(function($q) use ($companyUserIds) {
-                        $q->whereIn('contractor_id', $companyUserIds)
-                          ->orWhereHas('teamMembers', function($teamQuery) use ($companyUserIds) {
-                              $teamQuery->whereIn('user_id', $companyUserIds);
-                          });
-                    });
-                } else {
-                    // No other users in company, only show work orders assigned to this user
-                    $query->where('contractor_id', $user->id);
-                }
-            } else {
-                // For regular users: only show work orders assigned to them
-                $query->where('contractor_id', $user->id);
-            }
-            
-            $workOrders = $query->latest()->paginate(20);
-            return response()->json($workOrders);
-        });
+        Route::get('/my-work-orders', [\App\Http\Controllers\Api\Mobile\WorkOrderController::class, 'myWorkOrders']);
         
         Route::get('/', function () {
             // All work orders (admin/inspector view)
@@ -142,30 +105,57 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         });
         
         // Accept work order (uses controller method)
-        Route::post('/{id}/accept', [\App\Http\Controllers\BlockWorkOrderController::class, 'accept']);
+        Route::post('/{blockWorkOrder}/accept', [\App\Http\Controllers\BlockWorkOrderController::class, 'accept']);
         
         // Reject work order (uses controller method)
-        Route::post('/{id}/reject', [\App\Http\Controllers\BlockWorkOrderController::class, 'reject']);
+        Route::post('/{blockWorkOrder}/reject', [\App\Http\Controllers\BlockWorkOrderController::class, 'reject']);
         
-        // Start work order (update status to "In Progress" - status 2)
-        Route::post('/{id}/start', function (\Illuminate\Http\Request $request, $id) {
-            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+        // Start work order (update status from "Accepted" to "In Progress")
+        Route::post('/{blockWorkOrder}/start', function (\Illuminate\Http\Request $request, \App\Models\BlockWorkOrder $blockWorkOrder) {
+            // Get Accepted and In Progress status IDs
+            $acceptedStatus = \App\Models\JobStatus::where('name', 'Accepted')->first();
+            $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
             
-            // Check if work order has been accepted
-            if ($workOrder->acceptance_status !== 'accepted') {
+            if (!$acceptedStatus || !$inProgressStatus) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Work order must be accepted before it can be started. Current status: ' . ($workOrder->acceptance_status ?? 'pending')
+                    'message' => 'Required job statuses not found in system. Please contact administrator.'
+                ], 500);
+            }
+            
+            // Check if work order is in Accepted status
+            if ($blockWorkOrder->status != $acceptedStatus->id) {
+                $blockWorkOrder->load('jobStatus');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Work order must be accepted before it can be started. Current status: ' . ($blockWorkOrder->jobStatus ? $blockWorkOrder->jobStatus->name : 'Unknown')
                 ], 422);
             }
             
-            // Update status to "In Progress" (status = 2)
-            $workOrder->status = 2; // In Progress
-            $workOrder->updated_by = $request->user()->id;
-            $workOrder->save();
+            // Store old status before update
+            $oldStatus = $blockWorkOrder->status;
+            
+            // Update status to In Progress
+            $blockWorkOrder->update([
+                'status' => $inProgressStatus->id, // In Progress
+                'updated_by' => $request->user() ? $request->user()->id : null,
+            ]);
+            
+            // Create log entry
+            \App\Models\BlockWorkOrderLog::createLog(
+                $blockWorkOrder->id,
+                'status_changed',
+                'Work order started - status changed to In Progress',
+                [
+                    'field_name' => 'status',
+                    'old_value' => $oldStatus,
+                    'new_value' => $inProgressStatus->id,
+                    'user_id' => $request->user() ? $request->user()->id : null,
+                ]
+            );
             
             // Reload with relationships
-            $workOrder->load([
+            $blockWorkOrder->load([
                 'blockUnit',
                 'blockBuilding',
                 'block',
@@ -182,19 +172,19 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             
             return response()->json([
                 'success' => true,
-                'message' => 'Work order started successfully',
-                'data' => $workOrder
+                'message' => 'Work order started successfully!',
+                'data' => $blockWorkOrder
             ]);
         });
         
         // Pause work order (update status to "On Hold")
-        Route::post('/{id}/pause', function (\Illuminate\Http\Request $request, $id) {
-            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
-            
-            // Validate pause reason
+        Route::post('/{blockWorkOrder}/pause', function (\Illuminate\Http\Request $request, \App\Models\BlockWorkOrder $blockWorkOrder) {
+            // Validate pause reason (optional, defaults to generic message)
             $request->validate([
-                'reason' => 'required|string|max:1000',
+                'reason' => 'nullable|string|max:1000',
             ]);
+            
+            $pauseReason = $request->reason ?? 'Work order paused by user';
             
             // Get "On Hold" job status
             $onHoldStatus = \App\Models\JobStatus::where('name', 'On Hold')->first();
@@ -206,45 +196,43 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 ], 404);
             }
             
-            // Get old status for logging
-            $oldStatus = $workOrder->status;
-            $statusLabels = [
-                1 => 'Pending',
-                2 => 'In Progress',
-                3 => 'Completed',
-                4 => 'Cancelled',
-                5 => 'On Hold'
-            ];
-            $oldStatusText = $statusLabels[$oldStatus] ?? 'Unknown';
+            // Load jobStatus if not already loaded
+            if (!$blockWorkOrder->relationLoaded('jobStatus')) {
+                $blockWorkOrder->load('jobStatus');
+            }
             
-            // Update status to "On Hold"
-            $workOrder->status = $onHoldStatus->id;
-            $workOrder->updated_by = $request->user()->id;
-            $workOrder->save();
+            // Store old status before update
+            $oldStatusText = $blockWorkOrder->jobStatus ? $blockWorkOrder->jobStatus->name : 'Unknown';
             
-            // Log status change
+            // Update work order status to "On Hold"
+            $blockWorkOrder->update([
+                'status' => $onHoldStatus->id,
+                'updated_by' => $request->user() ? $request->user()->id : null,
+            ]);
+            
+            // Create log entry
             \App\Models\BlockWorkOrderLog::createLog(
-                $workOrder->id,
+                $blockWorkOrder->id,
                 'paused',
-                "Work order paused. Reason: {$request->reason}",
+                "Work order paused. Reason: {$pauseReason}",
                 [
                     'field_name' => 'status',
                     'old_value' => $oldStatusText,
                     'new_value' => 'On Hold',
-                    'user_id' => $request->user()->id,
+                    'user_id' => $request->user() ? $request->user()->id : null,
                 ]
             );
             
             // Create a note with pause reason
             \App\Models\BlockWorkOrderNote::create([
-                'block_work_order_id' => $workOrder->id,
-                'note' => 'Pause Reason: ' . $request->reason,
+                'block_work_order_id' => $blockWorkOrder->id,
+                'note' => 'Pause Reason: ' . $pauseReason,
                 'note_type' => 'pause_reason',
-                'created_by' => $request->user()->id,
+                'created_by' => $request->user() ? $request->user()->id : null,
             ]);
             
             // Reload with relationships
-            $workOrder->load([
+            $blockWorkOrder->load([
                 'blockUnit',
                 'blockBuilding',
                 'block',
@@ -262,7 +250,7 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             return response()->json([
                 'success' => true,
                 'message' => 'Work order paused successfully',
-                'data' => $workOrder
+                'data' => $blockWorkOrder
             ]);
         });
         

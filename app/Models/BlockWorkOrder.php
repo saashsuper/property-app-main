@@ -39,6 +39,7 @@ class BlockWorkOrder extends Model
         'status', // Job status (integer) - kept for backward compatibility
         'archive_status', // Archive status: 'active' or 'archived' (string)
         'acceptance_status',
+        'rejection_reason',
         'ref_no',
         'repair_category_id',
         'issue',
@@ -298,12 +299,21 @@ class BlockWorkOrder extends Model
      */
     public function getStatusTextAttribute()
     {
+        // Use the jobStatus relationship if available, otherwise fall back to hardcoded mapping
+        if ($this->relationLoaded('jobStatus') && $this->jobStatus) {
+            return $this->jobStatus->name;
+        }
+        
+        // Fallback mapping (should match JobStatus table)
         $statuses = [
-            1 => 'Pending',
+            1 => 'Scheduled',
             2 => 'In Progress',
             3 => 'Completed',
             4 => 'Cancelled',
-            5 => 'On Hold'
+            5 => 'On Hold',
+            6 => 'Rescheduled',
+            7 => 'Rejected',
+            8 => 'Accepted'
         ];
         
         return $statuses[$this->status] ?? 'Unknown';
