@@ -1,13 +1,13 @@
 
 <!-- Work Order Modal (Create/Edit) -->
-<div class="modal fade" id="workOrderModal" tabindex="-1" aria-labelledby="workOrderModalLabel" aria-hidden="true">
+<div class="modal fade" id="createWorkOrderModal" tabindex="-1" aria-labelledby="createWorkOrderModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" style="max-width: 95vw;">
         <div class="modal-content">
             <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                <h5 class="modal-title" id="workOrderModalLabel">Create Work Order</h5>
+                <h5 class="modal-title" id="createWorkOrderModalLabel">Create Work Order</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="workOrderForm" method="POST" action="{{ route('block-work-orders.store') }}" enctype="multipart/form-data">
+            <form id="createWorkOrderForm" method="POST" action="{{ route('block-work-orders.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="work_order_method" value="POST">
                 <input type="hidden" name="block_id" id="work_order_block_id" value="{{ $block->id }}">
@@ -19,7 +19,7 @@
                 <input type="hidden" name="updated_by" value="{{ auth()->id() }}">
                 
                 <div class="modal-body">
-                    <div id="workOrderMessage" class="alert d-none" role="alert"></div>
+                    <div id="createWorkOrderMessage" class="alert d-none" role="alert"></div>
                     
                     <!-- Row 1: Work Order Type, Conditional Dropdown, Priority -->
                     <div class="row mb-3">

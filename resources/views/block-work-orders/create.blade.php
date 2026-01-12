@@ -347,10 +347,15 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
             issueSelect.innerHTML = '<option value="">Select Issue</option>';
-            if (data && data.length > 0) {
-                data.forEach(issue => {
+            
+            // Handle API response format: { success: true, data: [...] }
+            const issues = (response && response.success && response.data) ? response.data : 
+                         (Array.isArray(response) ? response : []);
+            
+            if (issues && issues.length > 0) {
+                issues.forEach(issue => {
                     const option = document.createElement('option');
                     option.value = issue.id;
                     option.textContent = `${issue.ref_no} - ${issue.issue}`;
@@ -359,6 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 issueSelect.disabled = false;
             } else {
                 issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
+                issueSelect.disabled = false;
             }
         })
         .catch(error => {

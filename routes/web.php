@@ -75,22 +75,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('blocks/{block}/images', [App\Http\Controllers\BlockController::class, 'deleteImage'])->name('blocks.images.delete');
     Route::post('blocks/{block}/images/primary', [App\Http\Controllers\BlockController::class, 'setPrimaryImage'])->name('blocks.images.primary');
     
-    // Work Orders
-    Route::resource('work-orders', App\Http\Controllers\WorkOrderController::class)->except(['create', 'store', 'edit', 'update', 'destroy']);
-    Route::post('work-orders/{workOrder}/reassign', [App\Http\Controllers\WorkOrderController::class, 'reassign'])->name('work-orders.reassign');
-    
-    // Work Order management routes (Admin and Super Admin only)
-    Route::middleware(['role:Admin|Super Admin'])->group(function () {
-        Route::get('work-orders/create', [App\Http\Controllers\WorkOrderController::class, 'create'])->name('work-orders.create');
-        Route::post('work-orders', [App\Http\Controllers\WorkOrderController::class, 'store'])->name('work-orders.store');
-        Route::get('work-orders/{workOrder}/edit', [App\Http\Controllers\WorkOrderController::class, 'edit'])->name('work-orders.edit');
-        Route::put('work-orders/{workOrder}', [App\Http\Controllers\WorkOrderController::class, 'update'])->name('work-orders.update');
-        Route::delete('work-orders/{workOrder}', [App\Http\Controllers\WorkOrderController::class, 'destroy'])->name('work-orders.destroy');
-    });
-    
-    Route::get('api/work-orders', [App\Http\Controllers\WorkOrderController::class, 'getWorkOrders'])->name('api.work-orders');
-    Route::get('api/work-orders/{workOrder}', [App\Http\Controllers\WorkOrderController::class, 'getWorkOrder'])->name('api.work-orders.show');
-    
     // Block Work Orders
     Route::resource('block-work-orders', App\Http\Controllers\BlockWorkOrderController::class);
     Route::get('api/block-work-orders', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrders'])->name('api.block-work-orders');

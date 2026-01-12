@@ -186,7 +186,7 @@
                         <i class="ph-printer"></i>
                     </a>
                 </div>
-                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#workOrderModal">
+                <button class="btn btn-primary custom-toggle active" data-bs-toggle="modal" data-bs-target="#createWorkOrderModal">
                     <i class="ph-plus align-bottom me-1"></i> Create Work Order
                 </button>
             </div>

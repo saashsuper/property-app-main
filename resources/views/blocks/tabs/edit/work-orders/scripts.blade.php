@@ -24,6 +24,7 @@
         initializeDataTable();
         bindFormHandlers();
         bindModalEvents();
+        initializeWorkOrderFormHandlers();
         
         // Debounced trigger to avoid duplicate refreshes
         let workOrdersRefreshTimer = null;
@@ -157,13 +158,42 @@
         if (createModal) {
             createModal.addEventListener('show.bs.modal', () => {
                 const msg = document.getElementById('createWorkOrderMessage');
-                if (msg) msg.innerHTML = '';
+                if (msg) {
+                    msg.innerHTML = '';
+                    msg.style.display = 'none';
+                    msg.className = 'alert d-none';
+                }
                 setCurrentDateTime();
                 // Set ref_no to show auto-generated placeholder
                 const refNoField = document.getElementById('ref_no');
                 if (refNoField) {
                     refNoField.value = 'Auto-generated';
                 }
+                
+                // Reset form fields
+                const form = document.getElementById('createWorkOrderForm');
+                if (form) {
+                    // Reset issue select
+                    const issueSelect = document.getElementById('block_issue_id_select');
+                    if (issueSelect) {
+                        issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+                        issueSelect.disabled = true;
+                    }
+                    // Reset hidden fields
+                    const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+                    const blockUnitIdHidden = document.getElementById('work_order_block_unit_id');
+                    const blockBuildingIdHidden = document.getElementById('work_order_block_building_id');
+                    if (blockIssueIdHidden) blockIssueIdHidden.value = '';
+                    if (blockUnitIdHidden) blockUnitIdHidden.value = '';
+                    if (blockBuildingIdHidden) blockBuildingIdHidden.value = '';
+                }
+                
+                // Initialize/Re-initialize form handlers when modal is shown
+                // This ensures handlers are attached even if modal wasn't in DOM on page load
+                // Use setTimeout to ensure modal is fully rendered
+                setTimeout(() => {
+                    initializeWorkOrderFormHandlers();
+                }, 100);
             });
 
             createModal.addEventListener('hidden.bs.modal', () => {
@@ -173,7 +203,12 @@
                     form.classList.remove('was-validated');
                 }
                 const msg = document.getElementById('createWorkOrderMessage');
-                if (msg) msg.innerHTML = '';
+                if (msg) {
+                    msg.innerHTML = '';
+                    msg.style.display = 'none';
+                    msg.className = 'alert d-none';
+                }
+                
             });
         }
 
@@ -261,6 +296,48 @@
         evt.preventDefault();
         const form = evt.currentTarget;
 
+        // Validate work order type assignment
+        const workOrderType = form.querySelector('#work_order_type')?.value;
+        const contractCompanySelect = form.querySelector('#work_order_contract_company_id');
+        const propertyManagerSelect = form.querySelector('#work_order_property_manager_id');
+        
+        if (workOrderType === 'inhouse' && (!propertyManagerSelect || !propertyManagerSelect.value)) {
+            const msgContainer = document.getElementById('createWorkOrderMessage');
+            if (msgContainer) {
+                msgContainer.className = 'alert alert-danger';
+                msgContainer.innerHTML = 'Please select a Property Manager';
+                msgContainer.style.display = 'block';
+            } else {
+                alert('Please select a Property Manager');
+            }
+            return;
+        } else if (workOrderType === 'outsource' && (!contractCompanySelect || !contractCompanySelect.value)) {
+            const msgContainer = document.getElementById('createWorkOrderMessage');
+            if (msgContainer) {
+                msgContainer.className = 'alert alert-danger';
+                msgContainer.innerHTML = 'Please select a Contract Company';
+                msgContainer.style.display = 'block';
+            } else {
+                alert('Please select a Contract Company');
+            }
+            return;
+        }
+
+        // Validate that issue is selected
+        const issueSelect = form.querySelector('#block_issue_id_select');
+        const blockIssueIdHidden = form.querySelector('#work_order_block_issue_id');
+        if ((!issueSelect || !issueSelect.value) && (!blockIssueIdHidden || !blockIssueIdHidden.value)) {
+            const msgContainer = document.getElementById('createWorkOrderMessage');
+            if (msgContainer) {
+                msgContainer.className = 'alert alert-danger';
+                msgContainer.innerHTML = 'Please select an issue';
+                msgContainer.style.display = 'block';
+            } else {
+                alert('Please select an issue');
+            }
+            return;
+        }
+
         const payload = buildPayload(form);
 
         setLoading(form.querySelector('button[type="submit"]'), true, 'Creating...');
@@ -274,7 +351,9 @@
             onError: msg => {
                 const container = document.getElementById('createWorkOrderMessage');
                 if (container) {
-                    container.innerHTML = `<div class="alert alert-danger mb-0">${msg}</div>`;
+                    container.className = 'alert alert-danger';
+                    container.innerHTML = msg;
+                    container.style.display = 'block';
                 } else {
                     showToast('danger', msg);
                 }
@@ -321,6 +400,12 @@
         if (form.id === 'createWorkOrderForm') {
             delete data.ref_no;
         }
+        // Map work_order_unit_id to block_unit_id for backend
+        if (data.work_order_unit_id && !data.block_unit_id) {
+            data.block_unit_id = data.work_order_unit_id;
+        }
+        // Remove work_order_unit_id as backend expects block_unit_id
+        delete data.work_order_unit_id;
         return data;
     }
 
@@ -634,6 +719,187 @@
                 alertDiv.remove();
             }
         }, 5000);
+    }
+
+    /**
+     * Initialize work order form handlers for Location 2 (Block Edit Modal)
+     * Uses a single event delegation handler to avoid duplicate listeners
+     */
+    let workOrderModalChangeHandler = null;
+    
+    function initializeWorkOrderFormHandlers() {
+        const modal = document.getElementById('createWorkOrderModal');
+        if (!modal) {
+            console.log('Modal not found, skipping handler initialization');
+            return;
+        }
+        
+        // Remove existing handler if any
+        if (workOrderModalChangeHandler) {
+            modal.removeEventListener('change', workOrderModalChangeHandler);
+            workOrderModalChangeHandler = null;
+        }
+        
+        const contractCompanyContainer = document.getElementById('contractCompanyFieldContainer');
+        const propertyManagerContainer = document.getElementById('propertyManagerFieldContainer');
+        const contractCompanySelect = document.getElementById('work_order_contract_company_id');
+        const propertyManagerSelect = document.getElementById('work_order_property_manager_id');
+        const unitSelect = document.getElementById('work_order_unit_id');
+        const issueSelect = document.getElementById('block_issue_id_select');
+        const blockUnitIdHidden = document.getElementById('work_order_block_unit_id');
+        const blockBuildingIdHidden = document.getElementById('work_order_block_building_id');
+        const blockIssueIdHidden = document.getElementById('work_order_block_issue_id');
+
+        console.log('Initializing work order form handlers', {
+            unitSelect: !!unitSelect,
+            issueSelect: !!issueSelect
+        });
+
+        // Single event delegation handler for all change events in modal
+        workOrderModalChangeHandler = function(e) {
+            const target = e.target;
+            if (!target) return;
+            
+            // Work Order Type Toggle
+            if (target.id === 'work_order_type') {
+                const selectedType = target.value;
+                
+                if (selectedType === 'inhouse') {
+                    if (propertyManagerContainer) propertyManagerContainer.style.display = 'block';
+                    if (contractCompanyContainer) contractCompanyContainer.style.display = 'none';
+                    if (propertyManagerSelect) {
+                        propertyManagerSelect.required = true;
+                        propertyManagerSelect.removeAttribute('disabled');
+                    }
+                    if (contractCompanySelect) {
+                        contractCompanySelect.required = false;
+                        contractCompanySelect.value = '';
+                    }
+                } else {
+                    if (contractCompanyContainer) contractCompanyContainer.style.display = 'block';
+                    if (propertyManagerContainer) propertyManagerContainer.style.display = 'none';
+                    if (contractCompanySelect) {
+                        contractCompanySelect.required = true;
+                        contractCompanySelect.removeAttribute('disabled');
+                    }
+                    if (propertyManagerSelect) {
+                        propertyManagerSelect.required = false;
+                        propertyManagerSelect.value = '';
+                    }
+                }
+            }
+            
+            // Unit selection - load issues
+            if (target.id === 'work_order_unit_id') {
+                const unitId = target.value;
+                
+                // Sync unit ID to hidden field
+                if (blockUnitIdHidden) {
+                    blockUnitIdHidden.value = unitId;
+                }
+                
+                // Get building ID from selected unit option
+                const selectedOption = target.options[target.selectedIndex];
+                const buildingId = selectedOption.getAttribute('data-building-id');
+                if (buildingId && blockBuildingIdHidden) {
+                    blockBuildingIdHidden.value = buildingId;
+                }
+                
+                // Load issues for selected unit
+                if (!unitId) {
+                    if (issueSelect) {
+                        issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+                        issueSelect.disabled = true;
+                        if (blockIssueIdHidden) blockIssueIdHidden.value = '';
+                    }
+                    return;
+                }
+                
+                if (issueSelect) {
+                    issueSelect.disabled = true;
+                    issueSelect.innerHTML = '<option value="">Loading issues...</option>';
+                }
+                
+                console.log('Loading issues for unit:', unitId);
+                
+                fetch(`/api/block-unit-active-issues?unit_id=${unitId}`, {
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => {
+                    console.log('Response status:', res.status);
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(response => {
+                    console.log('Issues response received:', response);
+                    if (issueSelect) {
+                        issueSelect.innerHTML = '<option value="">Select Issue</option>';
+                        
+                        // Handle API response format: { success: true, data: [...] }
+                        const issues = (response && response.success && response.data) ? response.data : 
+                                     (Array.isArray(response) ? response : []);
+                        
+                        if (issues && Array.isArray(issues) && issues.length > 0) {
+                            issues.forEach(issue => {
+                                const option = document.createElement('option');
+                                option.value = issue.id;
+                                option.textContent = `${issue.ref_no} - ${issue.issue}`;
+                                issueSelect.appendChild(option);
+                            });
+                            issueSelect.disabled = false;
+                            console.log(`Loaded ${issues.length} issues`);
+                        } else {
+                            issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
+                            issueSelect.disabled = false;
+                            console.log('No issues found for unit');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading issues:', error);
+                    if (issueSelect) {
+                        issueSelect.innerHTML = '<option value="">Error loading issues. Please try again.</option>';
+                        issueSelect.disabled = false;
+                    }
+                });
+            }
+            
+            // Issue selection - sync to hidden field
+            if (target.id === 'block_issue_id_select') {
+                if (blockIssueIdHidden) {
+                    blockIssueIdHidden.value = target.value || '';
+                }
+            }
+        };
+        
+        // Attach single event delegation handler
+        modal.addEventListener('change', workOrderModalChangeHandler);
+        
+        // Initialize work order type toggle on load
+        const workOrderTypeSelect = document.getElementById('work_order_type');
+        if (workOrderTypeSelect) {
+            const event = new Event('change', { bubbles: true });
+            workOrderTypeSelect.dispatchEvent(event);
+        }
+        
+        console.log('Work order form handlers initialized');
+    }
+    
+    // Clean up handler when modal is hidden
+    const createModalForReset = document.getElementById('createWorkOrderModal');
+    if (createModalForReset) {
+        createModalForReset.addEventListener('hidden.bs.modal', () => {
+            if (workOrderModalChangeHandler) {
+                createModalForReset.removeEventListener('change', workOrderModalChangeHandler);
+                workOrderModalChangeHandler = null;
+                console.log('Removed work order handlers');
+            }
+        });
     }
 
     // Auto-populate issue description when issue is selected

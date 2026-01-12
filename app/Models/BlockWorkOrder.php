@@ -228,6 +228,7 @@ class BlockWorkOrder extends Model
     /**
      * Check if work order has been updated (accepted or status changed from assigned).
      * Returns true if work order has been updated and should only be archived.
+     * Excludes creation logs and images uploaded during creation.
      */
     public function hasBeenUpdated(): bool
     {
@@ -242,18 +243,54 @@ class BlockWorkOrder extends Model
             return true;
         }
 
-        // Check if work order has notes, logs, images, or team members (has been updated)
-        if ($this->notes()->count() > 0 || 
-            $this->logs()->count() > 0 || 
-            $this->images()->count() > 0 || 
-            $this->teamMembers()->count() > 0) {
+        // Check if work order has notes (any note indicates update)
+        if ($this->notes()->count() > 0) {
+            return true;
+        }
+
+        // Check if work order has team members (indicates update)
+        if ($this->teamMembers()->count() > 0) {
+            return true;
+        }
+
+        // Check for logs excluding creation logs and initial attachment logs
+        // Exclude logs created within 10 seconds of work order creation (creation window)
+        $creationWindowEnd = $this->created_at ? $this->created_at->copy()->addSeconds(10) : null;
+        
+        $nonCreationLogs = $this->logs()
+            ->where('log_type', '!=', 'created')
+            ->when($creationWindowEnd, function($query) use ($creationWindowEnd) {
+                // Exclude attachment_added logs created during creation window
+                return $query->where(function($q) use ($creationWindowEnd) {
+                    $q->where('log_type', '!=', 'attachment_added')
+                      ->orWhere('created_at', '>', $creationWindowEnd);
+                });
+            })
+            ->count();
+        
+        if ($nonCreationLogs > 0) {
+            return true;
+        }
+
+        // Check for images uploaded after creation (not during creation)
+        // Exclude images created within 10 seconds of work order creation
+        $nonCreationImages = $this->images()
+            ->when($creationWindowEnd, function($query) use ($creationWindowEnd) {
+                return $query->where('created_at', '>', $creationWindowEnd);
+            })
+            ->count();
+        
+        if ($nonCreationImages > 0) {
             return true;
         }
 
         // Check if work order has been updated (created_at != updated_at)
-        if ($this->created_at && $this->updated_at && 
-            $this->created_at->ne($this->updated_at)) {
-            return true;
+        // But allow a small time difference (up to 5 seconds) to account for database timing
+        if ($this->created_at && $this->updated_at) {
+            $timeDiff = $this->created_at->diffInSeconds($this->updated_at);
+            if ($timeDiff > 5) {
+                return true;
+            }
         }
 
         return false;

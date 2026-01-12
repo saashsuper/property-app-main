@@ -49,14 +49,6 @@ class IssueStatus extends Model
     }
 
     /**
-     * Get the work orders associated with this status.
-     */
-    public function workOrders()
-    {
-        return $this->hasMany(WorkOrder::class, 'status');
-    }
-
-    /**
      * Get the block work orders associated with this status.
      */
     public function blockWorkOrders()

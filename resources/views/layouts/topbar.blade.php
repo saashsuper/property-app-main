@@ -459,7 +459,7 @@
                             class="position-absolute topbar-badge fs-3xs translate-middle badge rounded-pill bg-info">
                             @php
                                 $notificationCount = 0;
-                                $notificationCount += \App\Models\WorkOrder::where('common_status_id', 1)->count();
+                                $notificationCount += \App\Models\BlockWorkOrder::where('status', 1)->where('archive_status', 1)->count();
                                 $notificationCount += \App\Models\BlockVisit::whereNull('end_date_time')->count();
                                 $notificationCount += \App\Models\BlockIssue::where('issue_status_id', 1)->count();
                                 $notificationCount += \App\Models\Issue::where('status', 1)->count();
@@ -485,7 +485,7 @@
                                         <a href="javascript:void(0);" data-bs-toggle="dropdown"
                                             class="link-secondary fs-md"><i class="ph-dots-three-vertical"></i></a>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="{{ route('work-orders.index') }}">View Work Orders</a></li>
+                                            <li><a class="dropdown-item" href="{{ route('block-work-orders.index') }}">View Work Orders</a></li>
                                             <li><a class="dropdown-item" href="{{ route('block-visits.index') }}">View Site Visits</a></li>
                                             <li><a class="dropdown-item" href="{{ route('block-issues.index') }}">View Issues</a></li>
                                         </ul>
@@ -497,7 +497,8 @@
                         <div class="py-2 ps-2" id="notificationItemsTabContent">
                             <div data-simplebar style="max-height: 300px;" class="pe-2">
                                 @php
-                                    $pendingWorkOrders = \App\Models\WorkOrder::where('common_status_id', 1)
+                                    $pendingWorkOrders = \App\Models\BlockWorkOrder::where('status', 1)
+                                        ->where('archive_status', 1)
                                         ->latest()
                                         ->take(2)
                                         ->get();
@@ -525,9 +526,9 @@
                                                     </span>
                                                 </div>
                                                 <div class="flex-grow-1">
-                                                    <a href="{{ route('work-orders.show', $workOrder->id) }}" class="stretched-link">
+                                                    <a href="{{ route('block-work-orders.show', $workOrder->id) }}" class="stretched-link">
                                                         <h6 class="mt-0 fs-md mb-2 lh-base">
-                                                            <strong>{{ $workOrder->code }}</strong> - {{ Str::limit($workOrder->fault_description, 60) }}
+                                                            <strong>{{ $workOrder->ref_no ?? 'WO-' . str_pad($workOrder->id, 6, '0', STR_PAD_LEFT) }}</strong> - {{ Str::limit($workOrder->issue ?? 'No description', 60) }}
                                                         </h6>
                                                     </a>
                                                     <p class="mb-0 fs-2xs fw-medium text-uppercase text-muted">

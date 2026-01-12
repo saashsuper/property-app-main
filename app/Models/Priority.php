@@ -48,14 +48,6 @@ class Priority extends Model
     }
 
     /**
-     * Get the work orders associated with this priority.
-     */
-    public function workOrders()
-    {
-        return $this->hasMany(WorkOrder::class);
-    }
-
-    /**
      * Get the block work orders associated with this priority.
      */
     public function blockWorkOrders()
