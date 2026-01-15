@@ -124,8 +124,14 @@
                                             </a>
                                             @endif
                                             @if($user->id !== auth()->id() && (!($isContractorAdmin ?? false) || $user->created_by == auth()->id()))
-                                                <button type="button" class="btn btn-sm btn-outline-danger delete-btn" title="Delete User" data-id="{{ $user->id }}">
-                                                    <i class="ph-trash"></i>
+                                                @php
+                                                    $hasRelatedEntities = $user->hasRelatedEntities();
+                                                    $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
+                                                    $actionIcon = $hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+                                                    $actionColor = $hasRelatedEntities ? 'warning' : 'danger';
+                                                @endphp
+                                                <button type="button" class="btn btn-sm btn-outline-{{ $actionColor }} delete-btn" title="{{ $actionText }} User" data-id="{{ $user->id }}" data-has-related="{{ $hasRelatedEntities ? '1' : '0' }}">
+                                                    <i class="{{ $actionIcon }}"></i>
                                                 </button>
                                             @endif
                                         </div>
@@ -154,23 +160,33 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Delete/Archive Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">@lang('translation.confirm-delete')</h5>
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="ph-warning text-danger me-2" id="deleteModalIcon"></i>
+                    <span id="deleteModalTitle">Confirm Delete User</span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                @lang('translation.delete-user-confirmation')
+                <p id="deleteModalMessage">Are you sure you want to delete this user?</p>
+                <div id="deleteModalAlert" class="alert mb-2" style="display: none;">
+                    <i class="ph-warning me-2"></i>
+                    <span id="deleteModalAlertText"></span>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('translation.cancel')</button>
                 <form id="deleteForm" method="POST" style="display: inline;">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger">@lang('translation.delete')</button>
+                    <button type="submit" class="btn" id="deleteModalButton">
+                        <i class="me-1" id="deleteModalButtonIcon"></i>
+                        <span id="deleteModalButtonText">Delete</span>
+                    </button>
                 </form>
             </div>
         </div>
@@ -250,26 +266,54 @@ $(document).ready(function() {
         }
     });
 
-    // Delete confirmation
+    // Delete/Archive confirmation
     const deleteButtons = document.querySelectorAll('.delete-btn');
     const deleteModal = document.getElementById('deleteModal');
     const deleteForm = document.getElementById('deleteForm');
+    const deleteModalTitle = document.getElementById('deleteModalTitle');
+    const deleteModalMessage = document.getElementById('deleteModalMessage');
+    const deleteModalAlert = document.getElementById('deleteModalAlert');
+    const deleteModalAlertText = document.getElementById('deleteModalAlertText');
+    const deleteModalButton = document.getElementById('deleteModalButton');
+    const deleteModalButtonText = document.getElementById('deleteModalButtonText');
+    const deleteModalButtonIcon = document.getElementById('deleteModalButtonIcon');
+    const deleteModalIcon = document.getElementById('deleteModalIcon');
 
     deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
             const userId = this.getAttribute('data-id');
+            const hasRelated = this.getAttribute('data-has-related') === '1';
+            const userName = this.closest('tr').querySelector('h6').textContent.trim();
+            
             deleteForm.action = `{{ url('users') }}/${userId}`;
-            deleteModal.classList.add('show');
-            deleteModal.style.display = 'block';
-        });
-    });
-
-    // Close modal
-    const closeButtons = deleteModal.querySelectorAll('[data-bs-dismiss="modal"]');
-    closeButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            deleteModal.classList.remove('show');
-            deleteModal.style.display = 'none';
+            
+            if (hasRelated) {
+                // Archive mode
+                deleteModalTitle.textContent = 'Confirm Archive User';
+                deleteModalMessage.innerHTML = `Are you sure you want to archive <strong>${userName}</strong>?`;
+                deleteModalAlert.className = 'alert alert-warning mb-2';
+                deleteModalAlert.style.display = 'block';
+                deleteModalAlertText.innerHTML = 'This user contains related data (blocks, issues, work orders, etc.). <strong>The user will be archived</strong> and can be restored later. The associated data will remain in the database.';
+                deleteModalButton.className = 'btn btn-warning';
+                deleteModalButtonText.textContent = 'Archive';
+                deleteModalButtonIcon.className = 'ph-archive me-1';
+                deleteModalIcon.className = 'ph-warning text-warning me-2';
+            } else {
+                // Delete mode
+                deleteModalTitle.textContent = 'Confirm Delete User';
+                deleteModalMessage.innerHTML = `Are you sure you want to delete <strong>${userName}</strong>?`;
+                deleteModalAlert.className = 'alert alert-danger mb-2';
+                deleteModalAlert.style.display = 'block';
+                deleteModalAlertText.innerHTML = 'This user has no related data. <strong>This action will permanently delete the user</strong> and cannot be undone.';
+                deleteModalButton.className = 'btn btn-danger';
+                deleteModalButtonText.textContent = 'Delete';
+                deleteModalButtonIcon.className = 'ph-trash me-1';
+                deleteModalIcon.className = 'ph-warning text-danger me-2';
+            }
+            
+            // Show modal using Bootstrap 5
+            const bsModal = new bootstrap.Modal(deleteModal);
+            bsModal.show();
         });
     });
 });

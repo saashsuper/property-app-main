@@ -305,6 +305,9 @@ class UserController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * If user has no related entities, it will be permanently deleted.
+     * If user has related entities, it will be archived (soft deleted with archived status).
      */
     public function destroy(User $user)
     {
@@ -313,24 +316,64 @@ class UserController extends Controller
         
         // If Contractor Admin, only allow deleting users they created
         if ($isContractorAdmin && $user->created_by !== $currentUser->id) {
+            $errorMessage = 'You can only delete users you created.';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMessage], 403);
+            }
+            
             return redirect()->route('users.index')
-                ->with('error', 'You can only delete users you created.');
+                ->with('error', $errorMessage);
         }
         
         // Prevent deleting own account
         if ($user->id === Auth::id()) {
+            $errorMessage = 'Cannot delete your own account.';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $errorMessage], 403);
+            }
+            
             return redirect()->route('users.index')
-                ->with('error', 'Cannot delete your own account.');
+                ->with('error', $errorMessage);
         }
 
-        // Track who is deleting the user
-        $user->update(['deleted_by' => $currentUser->id]);
-        
-        // Soft delete the user
-        $user->delete();
+        // Check if user has any related entities
+        if ($user->hasRelatedEntities()) {
+            // User has related entities - only archive it
+            // Delete avatar if exists
+            if ($user->avatar) {
+                \Storage::delete('public/' . $user->avatar);
+            }
 
-        return redirect()->route('users.index')
-            ->with('success', 'User deleted successfully!');
+            $user->archive();
+
+            $message = 'User has been archived because it contains related data (blocks, issues, work orders, etc.).';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            
+            return redirect()->route('users.index')
+                ->with('success', $message);
+        } else {
+            // User has no related entities - permanently delete
+            // Delete avatar if exists
+            if ($user->avatar) {
+                \Storage::delete('public/' . $user->avatar);
+            }
+
+            $user->forceDelete();
+
+            $message = 'User permanently deleted successfully!';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            
+            return redirect()->route('users.index')
+                ->with('success', $message);
+        }
     }
 
     /**

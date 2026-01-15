@@ -15,6 +15,10 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
 
+    // Archive status constants
+    const STATUS_ACTIVE = 'active';
+    const STATUS_ARCHIVED = 'archived';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -30,6 +34,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'user_type_id',
         'contract_company_id',
+        'archive_status',
         'created_by',
         'updated_by',
         'deleted_by',
@@ -130,6 +135,102 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Get blocks owned by this user
+     */
+    public function ownedBlocks()
+    {
+        return $this->hasMany(Block::class, 'user_id');
+    }
+
+    /**
+     * Get blocks managed by this user
+     */
+    public function managedBlocks()
+    {
+        return $this->hasMany(Block::class, 'block_manager_id');
+    }
+
+    /**
+     * Get block issues created by this user
+     */
+    public function createdBlockIssues()
+    {
+        return $this->hasMany(BlockIssue::class, 'created_by');
+    }
+
+    /**
+     * Get block issues assigned to this user
+     */
+    public function assignedBlockIssues()
+    {
+        return $this->hasMany(BlockIssue::class, 'assigned_to');
+    }
+
+    /**
+     * Get block issues reported by this user
+     */
+    public function reportedBlockIssues()
+    {
+        return $this->hasMany(BlockIssue::class, 'reported_by');
+    }
+
+    /**
+     * Get block issues issued by this user
+     */
+    public function issuedBlockIssues()
+    {
+        return $this->hasMany(BlockIssue::class, 'issued_by');
+    }
+
+    /**
+     * Get block work orders created by this user
+     */
+    public function createdBlockWorkOrders()
+    {
+        return $this->hasMany(BlockWorkOrder::class, 'created_by');
+    }
+
+    /**
+     * Get block work orders issued by this user
+     */
+    public function issuedBlockWorkOrders()
+    {
+        return $this->hasMany(BlockWorkOrder::class, 'issued_by');
+    }
+
+    /**
+     * Get block work order teams for this user
+     */
+    public function blockWorkOrderTeams()
+    {
+        return $this->hasMany(BlockWorkOrderTeam::class, 'user_id');
+    }
+
+    /**
+     * Get block work order logs for this user
+     */
+    public function blockWorkOrderLogs()
+    {
+        return $this->hasMany(BlockWorkOrderLog::class, 'user_id');
+    }
+
+    /**
+     * Get issue logs for this user
+     */
+    public function issueLogs()
+    {
+        return $this->hasMany(IssueLog::class, 'user_id');
+    }
+
+    /**
+     * Get block issue actions performed by this user
+     */
+    public function blockIssueActions()
+    {
+        return $this->hasMany(BlockIssueAction::class, 'performed_by');
+    }
+
+    /**
      * Check if user is an admin
      */
     public function isAdmin()
@@ -146,10 +247,73 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Scope a query to only include active users
+     * Scope a query to only include active users (not deleted and archive_status is active or null).
      */
     public function scopeActive($query)
     {
-        return $query->whereNull('deleted_at');
+        return $query->whereNull('deleted_at')
+                    ->where(function($q) {
+                        $q->where('archive_status', self::STATUS_ACTIVE)
+                          ->orWhereNull('archive_status'); // Handle existing records without archive_status
+                    });
+    }
+
+    /**
+     * Scope a query to only include archived users.
+     */
+    public function scopeArchived($query)
+    {
+        return $query->where('archive_status', self::STATUS_ARCHIVED);
+    }
+
+    /**
+     * Check if user has any related entities.
+     * Returns true if user has blocks, issues, work orders, or other related data.
+     */
+    public function hasRelatedEntities(): bool
+    {
+        return $this->ownedBlocks()->count() > 0
+            || $this->managedBlocks()->count() > 0
+            || $this->createdBlockIssues()->count() > 0
+            || $this->assignedBlockIssues()->count() > 0
+            || $this->reportedBlockIssues()->count() > 0
+            || $this->issuedBlockIssues()->count() > 0
+            || $this->createdBlockWorkOrders()->count() > 0
+            || $this->issuedBlockWorkOrders()->count() > 0
+            || $this->blockWorkOrderTeams()->count() > 0
+            || $this->blockWorkOrderLogs()->count() > 0
+            || $this->issueLogs()->count() > 0
+            || $this->blockIssueActions()->count() > 0
+            || $this->inspectionTeams()->count() > 0
+            || $this->createdUsers()->count() > 0
+            || $this->updatedUsers()->count() > 0
+            || $this->deletedUsers()->count() > 0;
+    }
+
+    /**
+     * Check if user is archived.
+     */
+    public function isArchived(): bool
+    {
+        return $this->archive_status === self::STATUS_ARCHIVED;
+    }
+
+    /**
+     * Check if user is active.
+     */
+    public function isActive(): bool
+    {
+        return ($this->archive_status === self::STATUS_ACTIVE || is_null($this->archive_status)) && is_null($this->deleted_at);
+    }
+
+    /**
+     * Archive the user (soft delete with archived status).
+     */
+    public function archive(): bool
+    {
+        $this->archive_status = self::STATUS_ARCHIVED;
+        $this->deleted_by = auth()->id();
+        $this->save();
+        return $this->delete(); // Soft delete
     }
 }
