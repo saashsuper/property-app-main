@@ -311,6 +311,15 @@
                                 </td>
                             </tr>
                         @endforeach
+                    @else
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ph-inbox ph-3x mb-3" style="font-size: 3rem;"></i>
+                                    <p class="mb-0">No work orders found.</p>
+                                </div>
+                            </td>
+                        </tr>
                     @endif
                 </tbody>
             </table>

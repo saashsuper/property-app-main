@@ -135,59 +135,78 @@
 
 <script>
 $(document).ready(function() {
-    console.log('Initializing DataTable...');
-    
-    $('#blockVisitsTable').DataTable({
-        responsive: true,
-        scrollX: false,
-        autoWidth: false,
-        processing: true,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
-        order: [[3, 'desc']], // default sort by Scheduled date descending (newest first)
-        columnDefs: [
-            { targets: [7], orderable: false }, // Actions column not sortable
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            search: "Search visits:",
-            lengthMenu: "Show _MENU_ visits per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ visits",
-            infoEmpty: "Showing 0 to 0 of 0 visits",
-            infoFiltered: "(filtered from _MAX_ total visits)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
-            processing: '<i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...'
-        },
-        initComplete: function() {
-            console.log('DataTable initialized, hiding loader...');
-            
-            // Hide loader and show table
+    try {
+        // Check if DataTables is available
+        if (!$.fn.DataTable) {
+            console.error('DataTables library not loaded');
             $('#visits-table-loading').addClass('d-none');
             $('#blockVisitsTable').show();
-            
-            // Style the search box
-            $('.dataTables_filter input')
-                .addClass('form-control')
-                .css({
-                    'width': '300px',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin-left': '10px'
-                });
-            
-            // Style the page length dropdown
-            $('.dataTables_length select')
-                .addClass('form-select')
-                .css({
-                    'width': 'auto',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin': '0 10px'
-                });
-            
-            console.log('Loader hidden, table shown');
+            return;
         }
-    });
+        
+        $('#blockVisitsTable').DataTable({
+            responsive: true,
+            scrollX: false,
+            autoWidth: false,
+            processing: true,
+            dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+            order: [[3, 'desc']], // default sort by Scheduled date descending (newest first)
+            columnDefs: [
+                { targets: [7], orderable: false }, // Actions column not sortable
+            ],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            language: {
+                search: "Search visits:",
+                lengthMenu: "Show _MENU_ visits per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ visits",
+                infoEmpty: "Showing 0 to 0 of 0 visits",
+                infoFiltered: "(filtered from _MAX_ total visits)",
+                zeroRecords: "No site visits found",
+                paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+                processing: '<i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...'
+            },
+            initComplete: function() {
+                // Hide loader and show table
+                $('#visits-table-loading').addClass('d-none');
+                $('#blockVisitsTable').show();
+                
+                // Style the search box
+                $('.dataTables_filter input')
+                    .addClass('form-control')
+                    .css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin-left': '10px'
+                    });
+                
+                // Style the page length dropdown
+                $('.dataTables_length select')
+                    .addClass('form-select')
+                    .css({
+                        'width': 'auto',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin': '0 10px'
+                    });
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        // Fallback: hide loader and show table anyway
+        $('#visits-table-loading').addClass('d-none');
+        $('#blockVisitsTable').show();
+    }
+    
+    // Fallback timeout - if table is still not visible after 3 seconds, force show it
+    setTimeout(function() {
+        if ($('#blockVisitsTable').is(':hidden')) {
+            console.warn('DataTable initialization timeout - forcing table display');
+            $('#visits-table-loading').addClass('d-none');
+            $('#blockVisitsTable').show();
+        }
+    }, 3000);
 });
 </script>
 @endsection

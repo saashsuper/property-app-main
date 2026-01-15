@@ -45,5 +45,10 @@ class BladeServiceProvider extends ServiceProvider
             $roleArray = is_array($roles) ? $roles : explode('|', $roles);
             return in_array($userRole->name, $roleArray);
         });
+
+        // @superAdmin directive
+        Blade::if('superAdmin', function () {
+            return Auth::check() && Auth::user()->hasType('Super Admin');
+        });
     }
 }

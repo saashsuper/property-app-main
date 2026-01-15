@@ -36,7 +36,11 @@
                             <div class="mb-3">
                                 <label for="email" class="form-label">@lang('translation.email') <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                       id="email" name="email" value="{{ old('email', $user->email) }}" required>
+                                       id="email" name="email" value="{{ old('email', $user->email) }}" 
+                                       pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" 
+                                       title="Please enter a valid email address (e.g., user@example.com)" 
+                                       required>
+                                <div class="form-text">Please enter a valid email address (e.g., user@example.com)</div>
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -186,6 +190,52 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+
+    // Email validation
+    const emailInput = document.getElementById('email');
+
+    // Email validation function
+    function validateEmail(email) {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(email);
+    }
+
+    // Real-time email validation
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value.trim();
+            if (email && !validateEmail(email)) {
+                this.setCustomValidity('Please enter a valid email address (e.g., user@example.com)');
+                this.classList.add('is-invalid');
+            } else {
+                this.setCustomValidity('');
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        emailInput.addEventListener('input', function() {
+            const email = this.value.trim();
+            if (email && validateEmail(email)) {
+                this.setCustomValidity('');
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Form submission validation
+        const form = emailInput.closest('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const email = emailInput.value.trim();
+                if (!validateEmail(email)) {
+                    e.preventDefault();
+                    emailInput.focus();
+                    emailInput.classList.add('is-invalid');
+                    emailInput.setCustomValidity('Please enter a valid email address');
+                    return false;
+                }
+            });
+        }
+    }
 
     const userTypeSelect = document.getElementById('user_type_id');
     const contractCompanyWrapper = document.getElementById('contract-company-wrapper');

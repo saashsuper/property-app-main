@@ -238,91 +238,116 @@
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#blockWorkOrdersTable').DataTable({
-        responsive: true,
-        scrollX: false,
-        autoWidth: false,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
-        order: [[0, 'desc']], // default sort by Ref No descending
-        columnDefs: [
-            { targets: [9], orderable: false }, // Actions column
-            { targets: [0], width: '8%' },   // Ref No
-            { targets: [1], width: '12%' },  // Block
-            { targets: [2], width: '10%' },  // Unit
-            { targets: [3], width: '18%' },  // Issue
-            { targets: [4], width: '8%' },   // Priority
-            { targets: [5], width: '8%' },   // Status
-            { targets: [6], width: '14%' },  // Contractor Company
-            { targets: [7], width: '10%' },  // Deadline
-            { targets: [8], width: '12%' },  // Issued By
-            { targets: [9], width: '6%' }    // Actions
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            search: "Search work orders:",
-            lengthMenu: "Show _MENU_ work orders per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ work orders",
-            infoEmpty: "Showing 0 to 0 of 0 work orders",
-            infoFiltered: "(filtered from _MAX_ total work orders)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
-        },
-        initComplete: function() {
-            // Hide loader and show table
+    try {
+        // Check if DataTables is available
+        if (!$.fn.DataTable) {
+            console.error('DataTables library not loaded');
             $('#work-orders-table-loading').addClass('d-none');
             $('#blockWorkOrdersTable').show();
-            
-            // Style the search box
-            $('.dataTables_filter input')
-                .addClass('form-control')
-                .removeClass('mb-3')
-                .css({
-                    'width': '300px',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin-left': '10px',
-                    'margin-bottom': '0 !important'
-                });
-            
-            // Style the page length dropdown
-            $('.dataTables_length select')
-                .addClass('form-select')
-                .css({
-                    'width': 'auto',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin': '0 10px'
-                });
-            
-            // Ensure labels and inputs are on the same line
-            $('.dataTables_length label').css({
-                'display': 'flex',
-                'align-items': 'center',
-                'margin-bottom': '0'
-            });
-            
-            $('.dataTables_filter label').css({
-                'display': 'flex',
-                'align-items': 'center',
-                'margin-bottom': '0'
-            });
+            return;
         }
-    });
 
-    // Update export button states based on table data
-    function updateExportButtons() {
-        var hasData = table.data().count() > 0;
-        $('a[href*="export.pdf"], a[href*="export.excel"], a[href*="export.print"]').toggleClass('disabled', !hasData);
-    }
+        // Initialize DataTable
+        var table = $('#blockWorkOrdersTable').DataTable({
+            responsive: true,
+            scrollX: false,
+            autoWidth: false,
+            dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+            order: [[0, 'desc']], // default sort by Ref No descending
+            columnDefs: [
+                { targets: [9], orderable: false }, // Actions column
+                { targets: [0], width: '8%' },   // Ref No
+                { targets: [1], width: '12%' },  // Block
+                { targets: [2], width: '10%' },  // Unit
+                { targets: [3], width: '18%' },  // Issue
+                { targets: [4], width: '8%' },   // Priority
+                { targets: [5], width: '8%' },   // Status
+                { targets: [6], width: '14%' },  // Contractor Company
+                { targets: [7], width: '10%' },  // Deadline
+                { targets: [8], width: '12%' },  // Issued By
+                { targets: [9], width: '6%' }    // Actions
+            ],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            language: {
+                search: "Search work orders:",
+                lengthMenu: "Show _MENU_ work orders per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ work orders",
+                infoEmpty: "Showing 0 to 0 of 0 work orders",
+                infoFiltered: "(filtered from _MAX_ total work orders)",
+                zeroRecords: "No work orders found",
+                paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+            },
+            initComplete: function() {
+                // Hide loader and show table
+                $('#work-orders-table-loading').addClass('d-none');
+                $('#blockWorkOrdersTable').show();
+                
+                // Style the search box
+                $('.dataTables_filter input')
+                    .addClass('form-control')
+                    .removeClass('mb-3')
+                    .css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin-left': '10px',
+                        'margin-bottom': '0 !important'
+                    });
+                
+                // Style the page length dropdown
+                $('.dataTables_length select')
+                    .addClass('form-select')
+                    .css({
+                        'width': 'auto',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin': '0 10px'
+                    });
+                
+                // Ensure labels and inputs are on the same line
+                $('.dataTables_length label').css({
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'margin-bottom': '0'
+                });
+                
+                $('.dataTables_filter label').css({
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'margin-bottom': '0'
+                });
+            }
+        });
 
-    // Update export buttons on table draw
-    table.on('draw', function() {
+        // Update export button states based on table data
+        function updateExportButtons() {
+            var hasData = table.data().count() > 0;
+            $('a[href*="export.pdf"], a[href*="export.excel"], a[href*="export.print"]').toggleClass('disabled', !hasData);
+        }
+
+        // Update export buttons on table draw
+        table.on('draw', function() {
+            updateExportButtons();
+        });
+
+        // Initial update
         updateExportButtons();
-    });
-
-    // Initial update
-    updateExportButtons();
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        // Fallback: hide loader and show table anyway
+        $('#work-orders-table-loading').addClass('d-none');
+        $('#blockWorkOrdersTable').show();
+    }
+    
+    // Fallback timeout - if table is still not visible after 3 seconds, force show it
+    setTimeout(function() {
+        if ($('#blockWorkOrdersTable').is(':hidden')) {
+            console.warn('DataTable initialization timeout - forcing table display');
+            $('#work-orders-table-loading').addClass('d-none');
+            $('#blockWorkOrdersTable').show();
+        }
+    }, 3000);
 });
 </script>
 @endsection 

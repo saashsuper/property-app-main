@@ -90,6 +90,10 @@ class UserController extends Controller
             'contract_company_id' => 'nullable|exists:contract_companies,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address (e.g., user@example.com).',
+            'email.unique' => 'This email address is already registered. Please use a different email.',
+            'email.max' => 'Email address cannot exceed 191 characters.',
             'password.regex' => 'Password must contain at least one uppercase letter and one special character.',
         ]);
 
@@ -211,6 +215,10 @@ class UserController extends Controller
             'contract_company_id' => 'nullable|exists:contract_companies,id',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address (e.g., user@example.com).',
+            'email.unique' => 'This email address is already registered. Please use a different email.',
+            'email.max' => 'Email address cannot exceed 191 characters.',
             'password.regex' => 'Password must contain at least one uppercase letter and one special character.',
         ]);
 

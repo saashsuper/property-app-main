@@ -54,7 +54,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('blocks', [App\Http\Controllers\BlockController::class, 'index'])->name('blocks.index');
     
     // Block management routes - Admin and Property Management roles
-    Route::middleware(['role:Admin|Super Admin|Property manager|Office Administrator'])->group(function () {
+    // Note: Using Spatie role names (Manager for Property manager, Viewer for Office Administrator)
+    Route::middleware(['role:Admin|Super Admin|Manager|Viewer'])->group(function () {
         Route::get('blocks/create', [App\Http\Controllers\BlockController::class, 'create'])->name('blocks.create');
         Route::post('blocks', [App\Http\Controllers\BlockController::class, 'store'])->name('blocks.store');
         Route::get('blocks/{block}/edit', [App\Http\Controllers\BlockController::class, 'edit'])->name('blocks.edit');

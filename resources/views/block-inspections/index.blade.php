@@ -179,11 +179,6 @@
                                                 <i class="ph-clipboard-text display-4"></i>
                                                 <h5 class="mt-2">No inspections found</h5>
                                                 <p>No block inspections match your current filters.</p>
-                                                @admin
-                                                <a href="{{ route('block-inspections.create') }}" class="btn btn-primary">
-                                                    <i class="ph-plus me-2"></i>Add First Inspection
-                                                </a>
-                                                @endadmin
                                             </div>
                                         </td>
                                     </tr>
@@ -202,53 +197,78 @@
 
 <script>
 $(document).ready(function() {
-    $('#blockInspectionsTable').DataTable({
-        responsive: true,
-        scrollX: false,
-        autoWidth: false,
-        processing: true,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
-        order: [[2, 'desc']], // default sort by Scheduled Date descending
-        columnDefs: [
-            { targets: [8], orderable: false }, // Actions column not sortable (9th column, index 8)
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            search: "Search inspections:",
-            lengthMenu: "Show _MENU_ inspections per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ inspections",
-            infoEmpty: "Showing 0 to 0 of 0 inspections",
-            infoFiltered: "(filtered from _MAX_ total inspections)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
-            processing: '<i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...'
-        },
-        initComplete: function() {
-            // Hide loader and show table
+    try {
+        // Check if DataTables is available
+        if (!$.fn.DataTable) {
+            console.error('DataTables library not loaded');
             $('#inspections-table-loading').addClass('d-none');
             $('#blockInspectionsTable').show();
-            
-            // Style the search box
-            $('.dataTables_filter input')
-                .addClass('form-control')
-                .css({
-                    'width': '300px',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin-left': '10px'
-                });
-            
-            // Style the page length dropdown
-            $('.dataTables_length select')
-                .addClass('form-select')
-                .css({
-                    'width': 'auto',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin': '0 10px'
-                });
+            return;
         }
-    });
+        
+        $('#blockInspectionsTable').DataTable({
+            responsive: true,
+            scrollX: false,
+            autoWidth: false,
+            processing: true,
+            dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+            order: [[2, 'desc']], // default sort by Scheduled Date descending
+            columnDefs: [
+                { targets: [8], orderable: false }, // Actions column not sortable (9th column, index 8)
+            ],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            language: {
+                search: "Search inspections:",
+                lengthMenu: "Show _MENU_ inspections per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ inspections",
+                infoEmpty: "Showing 0 to 0 of 0 inspections",
+                infoFiltered: "(filtered from _MAX_ total inspections)",
+                zeroRecords: "No inspections found",
+                paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" },
+                processing: '<i class="fas fa-spinner fa-spin fa-2x"></i><br>Loading...'
+            },
+            initComplete: function() {
+                // Hide loader and show table
+                $('#inspections-table-loading').addClass('d-none');
+                $('#blockInspectionsTable').show();
+                
+                // Style the search box
+                $('.dataTables_filter input')
+                    .addClass('form-control')
+                    .css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin-left': '10px'
+                    });
+                
+                // Style the page length dropdown
+                $('.dataTables_length select')
+                    .addClass('form-select')
+                    .css({
+                        'width': 'auto',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin': '0 10px'
+                    });
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        // Fallback: hide loader and show table anyway
+        $('#inspections-table-loading').addClass('d-none');
+        $('#blockInspectionsTable').show();
+    }
+    
+    // Fallback timeout - if table is still not visible after 3 seconds, force show it
+    setTimeout(function() {
+        if ($('#blockInspectionsTable').is(':hidden')) {
+            console.warn('DataTable initialization timeout - forcing table display');
+            $('#inspections-table-loading').addClass('d-none');
+            $('#blockInspectionsTable').show();
+        }
+    }, 3000);
 });
 </script>
 @endsection

@@ -319,9 +319,6 @@
                                             <div class="text-muted">
                                                 <i class="ph-warning font-size-24 mb-2"></i>
                                                  <p>@lang('translation.no-block-issues-found')</p>
-                                                <a href="{{ route('block-issues.create') }}" class="btn btn-primary btn-sm">
-                                                     <i class="ph-plus me-1"></i> @lang('translation.create-first-issue')
-                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -1143,75 +1140,102 @@
 
 <script>
 $(document).ready(function() {
-    // Initialize DataTable
-    var table = $('#blockIssuesTable').DataTable({
-        responsive: true,
-        scrollX: false,
-        autoWidth: false,
-        dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
-        order: [[6, 'desc']], // default sort by Reported Date descending
-        columnDefs: [
-            { targets: [7], orderable: false }, // Actions column
-            { targets: [0], width: '10%' },  // Issue ID
-            { targets: [1], width: '20%' },  // Title
-            { targets: [2], width: '15%' },  // Block
-            { targets: [3], width: '12%' },  // Type
-            { targets: [4], width: '10%' },  // Priority
-            { targets: [5], width: '10%' },  // Status
-            { targets: [6], width: '13%' },  // Reported Date
-            { targets: [7], width: '10%' }   // Actions
-        ],
-        pageLength: 10,
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-        language: {
-            search: "Search block issues:",
-            lengthMenu: "Show _MENU_ block issues per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ block issues",
-            infoEmpty: "Showing 0 to 0 of 0 block issues",
-            infoFiltered: "(filtered from _MAX_ total block issues)",
-            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
-        },
-        initComplete: function() {
-            // Hide loader and show table
+    var table;
+    
+    try {
+        // Check if DataTables is available
+        if (!$.fn.DataTable) {
+            console.error('DataTables library not loaded');
             $('#issues-table-loading').addClass('d-none');
             $('#blockIssuesTable').show();
-            
-            // Style the search box
-            $('.dataTables_filter input')
-                .addClass('form-control')
-                .removeClass('mb-3')
-                .css({
-                    'width': '300px',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin-left': '10px',
-                    'margin-bottom': '0 !important'
-                });
-            
-            // Style the page length dropdown
-            $('.dataTables_length select')
-                .addClass('form-select')
-                .css({
-                    'width': 'auto',
-                    'height': '38px',
-                    'font-size': '14px',
-                    'margin': '0 10px'
-                });
-            
-            // Ensure labels and inputs are on the same line
-            $('.dataTables_length label').css({
-                'display': 'flex',
-                'align-items': 'center',
-                'margin-bottom': '0'
-            });
-            
-            $('.dataTables_filter label').css({
-                'display': 'flex',
-                'align-items': 'center',
-                'margin-bottom': '0'
-            });
+            return;
         }
-    });
+        
+        // Initialize DataTable
+        table = $('#blockIssuesTable').DataTable({
+            responsive: true,
+            scrollX: false,
+            autoWidth: false,
+            dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
+            order: [[6, 'desc']], // default sort by Reported Date descending
+            columnDefs: [
+                { targets: [7], orderable: false }, // Actions column
+                { targets: [0], width: '10%' },  // Issue ID
+                { targets: [1], width: '20%' },  // Title
+                { targets: [2], width: '15%' },  // Block
+                { targets: [3], width: '12%' },  // Type
+                { targets: [4], width: '10%' },  // Priority
+                { targets: [5], width: '10%' },  // Status
+                { targets: [6], width: '13%' },  // Reported Date
+                { targets: [7], width: '10%' }   // Actions
+            ],
+            pageLength: 10,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            language: {
+                search: "Search block issues:",
+                lengthMenu: "Show _MENU_ block issues per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ block issues",
+                infoEmpty: "Showing 0 to 0 of 0 block issues",
+                infoFiltered: "(filtered from _MAX_ total block issues)",
+                zeroRecords: "No block issues found",
+                paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
+            },
+            initComplete: function() {
+                // Hide loader and show table
+                $('#issues-table-loading').addClass('d-none');
+                $('#blockIssuesTable').show();
+                
+                // Style the search box
+                $('.dataTables_filter input')
+                    .addClass('form-control')
+                    .removeClass('mb-3')
+                    .css({
+                        'width': '300px',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin-left': '10px',
+                        'margin-bottom': '0 !important'
+                    });
+                
+                // Style the page length dropdown
+                $('.dataTables_length select')
+                    .addClass('form-select')
+                    .css({
+                        'width': 'auto',
+                        'height': '38px',
+                        'font-size': '14px',
+                        'margin': '0 10px'
+                    });
+                
+                // Ensure labels and inputs are on the same line
+                $('.dataTables_length label').css({
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'margin-bottom': '0'
+                });
+                
+                $('.dataTables_filter label').css({
+                    'display': 'flex',
+                    'align-items': 'center',
+                    'margin-bottom': '0'
+                });
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing DataTable:', error);
+        // Fallback: hide loader and show table anyway
+        $('#issues-table-loading').addClass('d-none');
+        $('#blockIssuesTable').show();
+    }
+    
+    // Fallback timeout - if table is still not visible after 3 seconds, force show it
+    setTimeout(function() {
+        if ($('#blockIssuesTable').is(':hidden')) {
+            console.warn('DataTable initialization timeout - forcing table display');
+            $('#issues-table-loading').addClass('d-none');
+            $('#blockIssuesTable').show();
+        }
+    }, 3000);
 
     // Toggle search panel
     $('#toggleSearchBtn').on('click', function() {
@@ -1225,6 +1249,8 @@ $(document).ready(function() {
 
     // Search functionality
     $('#searchIssuesBtn').on('click', function() {
+        if (!table) return;
+        
         var blockId = $('#search_block_id').val();
         var status = $('#search_status').val();
         var priority = $('#search_priority').val();
@@ -1240,12 +1266,16 @@ $(document).ready(function() {
 
     // Clear search
     $('#clearSearchBtn').on('click', function() {
+        if (!table) return;
+        
         $('#searchIssuesForm')[0].reset();
         table.search('').draw();
     });
 
     // Show all
     $('#showAllBtn').on('click', function() {
+        if (!table) return;
+        
         $('#searchIssuesForm')[0].reset();
         table.search('').draw();
         $('#searchIssuesPanel').slideUp();

@@ -173,10 +173,51 @@
     max-width: none;
 }
 
+/* Left align all table headers and cells */
+#blockInformationTable th,
+#blockInformationTable td {
+    text-align: left !important;
+}
+
 /* Grey out disabled options in selects for consistent appearance */
 select.form-select option:disabled {
     color: #6c757d;
     background-color: #f8f9fa;
+}
+
+/* DataTables Sorting Icons - Match the implementation from blocks index (using Material Design Icons like global SCSS) */
+#blockInformationTable thead th.sorting,
+#blockInformationTable thead th.sorting_asc,
+#blockInformationTable thead th.sorting_desc,
+#blockInformationTable thead th.sorting_asc_disabled,
+#blockInformationTable thead th.sorting_desc_disabled {
+    position: relative;
+}
+
+#blockInformationTable thead th.sorting:before,
+#blockInformationTable thead th.sorting_asc:before,
+#blockInformationTable thead th.sorting_desc:before,
+#blockInformationTable thead th.sorting_asc_disabled:before,
+#blockInformationTable thead th.sorting_desc_disabled:before {
+    content: "\f0360";
+    position: absolute;
+    right: 0.5rem;
+    top: 12px;
+    font-size: 0.875rem;
+    font-family: "Material Design Icons";
+}
+
+#blockInformationTable thead th.sorting:after,
+#blockInformationTable thead th.sorting_asc:after,
+#blockInformationTable thead th.sorting_desc:after,
+#blockInformationTable thead th.sorting_asc_disabled:after,
+#blockInformationTable thead th.sorting_desc_disabled:after {
+    content: "\f035d";
+    position: absolute;
+    right: 0.5rem;
+    top: 18px;
+    font-size: 0.875rem;
+    font-family: "Material Design Icons";
 }
 </style>
 @endpush

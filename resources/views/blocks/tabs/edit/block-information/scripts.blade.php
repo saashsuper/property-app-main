@@ -133,7 +133,7 @@ $(document).ready(function() {
                     order: [[2, 'desc']],      // Default sort by added date descending
                     columnDefs: [
                         { targets: [4], orderable: false }, // Actions column (last column) not sortable
-                        { targets: '_all', className: 'text-center' } // Center align all columns
+                        { targets: '_all', className: 'text-start' } // Left align all columns
                     ],
                     pageLength: 25,            // Default page size
                     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]], // Page size options

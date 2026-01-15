@@ -173,6 +173,7 @@
                     </li>
                     @endif
 
+                    @superAdmin
                     <li class="nav-item">
                         <a class="{{ getMenuClasses(null, ['users.*', 'user-types.*', 'contract-companies.*']) }}" href="#sidebarUsers" data-bs-toggle="collapse"
                             role="button" aria-expanded="{{ hasActiveChild(['users.*', 'user-types.*', 'contract-companies.*']) ? 'true' : 'false' }}" aria-controls="sidebarUsers">
@@ -183,12 +184,6 @@
                                 <li class="nav-item">
                                     <a href="{{ route('users.index') }}" class="{{ getSubmenuClasses('users.index') }}">@lang('translation.list-users')</a>
                                 </li>
-                                @if(auth()->user()->hasType('Contractor Admin'))
-                                <li class="nav-item">
-                                    <a href="{{ route('users.create') }}" class="{{ getSubmenuClasses('users.create') }}">@lang('translation.create-user')</a>
-                                </li>
-                                @else
-                                @admin
                                 <li class="nav-item">
                                     <a href="{{ route('users.create') }}" class="{{ getSubmenuClasses('users.create') }}">@lang('translation.create-user')</a>
                                 </li>
@@ -201,11 +196,10 @@
                                 <li class="nav-item">
                                     <a href="{{ route('contract-companies.index') }}" class="{{ getSubmenuClasses('contract-companies.*') }}">Contract Companies</a>
                                 </li>
-                                @endadmin
-                                @endif
                             </ul>
                         </div>
                     </li>
+                    @endsuperAdmin
 
 
                 </ul>
