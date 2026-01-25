@@ -3,7 +3,38 @@
     Create Block Issue - PROMAN
 @endsection
 @section('css')
-    <!-- add your css here -->
+    <style>
+        /* Dropzone styling – aligned with block-visits create & block-issues show */
+        #blockIssueImageDropzone.dropzone {
+            min-height: 96px !important;
+            border: 2px dashed rgba(102, 126, 234, 0.45) !important;
+            border-radius: 12px !important;
+            background: #f8f9ff !important;
+            transition: all 0.25s ease-in-out;
+        }
+        #blockIssueImageDropzone.dropzone:hover,
+        #blockIssueImageDropzone.dropzone.dz-drag-hover {
+            border-color: #667eea !important;
+            background: #eef1ff !important;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15) !important;
+        }
+        #blockIssueImageDropzone .dz-message {
+            padding: 15px 8px !important;
+            margin: 0 !important;
+            text-align: center !important;
+            color: #4b5563 !important;
+        }
+        #blockIssueImageDropzone .dz-message h5 {
+            margin: 6px 0 3px 0 !important;
+            font-size: 0.9rem !important;
+            color: #1f2937 !important;
+        }
+        #blockIssueImageDropzone .dz-message p {
+            margin: 0 !important;
+            font-size: 0.75rem !important;
+            line-height: 1.3 !important;
+        }
+    </style>
 @endsection
 @section('content')
 <div class="page-content">
@@ -32,7 +63,8 @@
                         <h4 class="card-title">Create New Block Issue</h4>
                     </div>
                     <div class="card-body">
-                        <form action="{{ route('block-issues.store') }}" method="POST" enctype="multipart/form-data">
+                        <div id="formAlert" class="alert d-none mb-3" role="alert"></div>
+                        <form id="blockIssueCreateForm" action="{{ route('block-issues.store') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             
                             <div class="row">
@@ -189,14 +221,21 @@
                                     @enderror
                                 </div>
 
-                                <!-- Row 5: File Upload -->
+                                <!-- Row 5: Dropzone Image Upload -->
                                 <div class="col-12 mb-3">
-                                    <label for="images" class="form-label">Upload Images</label>
-                                    <input type="file" class="form-control @error('images.*') is-invalid @enderror" 
-                                           id="images" name="images[]" multiple accept="image/*">
-                                    <small class="form-text text-muted">You can select multiple images. Maximum file size: 2MB each.</small>
+                                    <label class="form-label">Upload Images</label>
+                                    <small class="text-muted d-block mb-2">Drop images here or click to upload. Max 10 files, 2MB each. Images only.</small>
+                                    <div id="blockIssueImageDropzone" class="dropzone">
+                                        <div class="dz-message text-center">
+                                            <div class="mb-2 text-primary">
+                                                <i class="ph-cloud-arrow-up fs-1"></i>
+                                            </div>
+                                            <h5 class="fw-semibold mb-1">Drop images here or click to upload</h5>
+                                            <p class="text-muted mb-0 small">Supports JPEG, PNG, GIF • up to 2MB each (max 10 files)</p>
+                                        </div>
+                                    </div>
                                     @error('images.*')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -321,6 +360,7 @@
 let blockAutoComplete = null;
 let unitAutoCompleteInstance = null;
 let cachedUnitsForBlock = [];
+let blockIssueImageDropzone = null;
 
 function initBlockAutoComplete(blocksData) {
     if (blockAutoComplete && typeof blockAutoComplete.unInit === 'function') {
@@ -566,6 +606,143 @@ document.addEventListener('DOMContentLoaded', function() {
             const hiddenContact = document.getElementById('contact_details_hidden');
             if (hiddenContact) {
                 hiddenContact.value = this.value || '';
+            }
+        });
+    }
+    
+    // --- Dropzone image upload (aligned with block-visits create & block-issues show) ---
+    const form = document.getElementById('blockIssueCreateForm');
+    const alertBox = document.getElementById('formAlert');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    const storeUrl = form ? form.getAttribute('action') : '{{ route("block-issues.store") }}';
+    const showBaseUrl = @json(route('block-issues.index'));
+    
+    const setAlert = (type, message) => {
+        if (!alertBox) return;
+        alertBox.classList.remove('d-none', 'alert-success', 'alert-danger', 'alert-warning', 'alert-info');
+        alertBox.classList.add('alert-' + type);
+        alertBox.innerHTML = message;
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    const clearAlert = () => {
+        if (alertBox) {
+            alertBox.classList.add('d-none');
+            alertBox.innerHTML = '';
+        }
+    };
+    const resetValidation = () => {
+        if (!form) return;
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback.dynamic').forEach(el => el.remove());
+    };
+    const addValidationErrors = (errors) => {
+        if (!form || !errors) return;
+        Object.entries(errors).forEach(([field, messages]) => {
+            const input = form.querySelector('[name="' + field + '"]');
+            if (input) {
+                input.classList.add('is-invalid');
+                let feedback = input.nextElementSibling;
+                if (!feedback || !feedback.classList.contains('invalid-feedback')) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback dynamic';
+                    input.parentNode.appendChild(feedback);
+                }
+                feedback.textContent = Array.isArray(messages) ? messages[0] : messages;
+            }
+        });
+    };
+    
+    if (typeof Dropzone !== 'undefined') {
+        Dropzone.autoDiscover = false;
+        const dzEl = document.getElementById('blockIssueImageDropzone');
+        if (dzEl && dzEl.dropzone) {
+            dzEl.dropzone.destroy();
+        }
+        blockIssueImageDropzone = new Dropzone('#blockIssueImageDropzone', {
+            url: storeUrl,
+            autoProcessQueue: false,
+            paramName: 'images',
+            uploadMultiple: true,
+            parallelUploads: 10,
+            maxFiles: 10,
+            maxFilesize: 2,
+            acceptedFiles: 'image/*',
+            addRemoveLinks: true,
+            clickable: true,
+            dictDefaultMessage: 'Drop images here or click to upload',
+            dictRemoveFile: 'Remove',
+            dictCancelUpload: 'Cancel',
+            dictUploadCanceled: 'Upload canceled',
+            dictInvalidFileType: "You can't upload files of this type.",
+            dictFileTooBig: 'File is too big. Max filesize: 2MB.',
+            dictMaxFilesExceeded: 'You can not upload more than 10 files.',
+            dictResponseError: 'Server responded with an error.',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            }
+        });
+    }
+    
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            clearAlert();
+            resetValidation();
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="ph-spinner-gap ph-spin me-1"></i> Creating...';
+            }
+            try {
+                const formData = new FormData(form);
+                if (blockIssueImageDropzone && blockIssueImageDropzone.getAcceptedFiles().length > 0) {
+                    blockIssueImageDropzone.getAcceptedFiles().forEach(function(file) {
+                        formData.append('images[]', file);
+                    });
+                }
+                const response = await fetch(storeUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    if (data.errors) {
+                        addValidationErrors(data.errors);
+                        setAlert('danger', data.message || 'Please review the highlighted fields and try again.');
+                    } else {
+                        setAlert('danger', data.message || 'Failed to create block issue.');
+                    }
+                    return;
+                }
+                setAlert('success', data.message || 'Block issue created successfully!');
+                form.reset();
+                if (blockIssueImageDropzone) {
+                    blockIssueImageDropzone.removeAllFiles(true);
+                }
+                setTimeout(function() {
+                    if (data.data && data.data.id) {
+                        window.location.href = '{{ url("block-issues") }}/' + data.data.id;
+                    } else {
+                        window.location.href = showBaseUrl;
+                    }
+                }, 900);
+            } catch (err) {
+                console.error(err);
+                setAlert('danger', err.message || 'Something went wrong while creating the block issue.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                }
             }
         });
     }

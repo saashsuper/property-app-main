@@ -101,6 +101,8 @@ class ExportController extends Controller
             return $this->getUserTypesData($request);
         case 'users':
             return $this->getUsersData($request);
+        case 'contract-companies':
+            return $this->getContractCompaniesData($request);
             default:
                 return [];
         }
@@ -138,6 +140,7 @@ class ExportController extends Controller
             'block-inspections' => 'Block Inspections',
             'user-types' => 'User Types',
             'users' => 'Users',
+            'contract-companies' => 'Contract Companies',
         ];
 
         return $titles[$type] ?? ucfirst(str_replace('-', ' ', $type));
@@ -450,31 +453,78 @@ class ExportController extends Controller
     {
         $query = \App\Models\User::with(['userType'])->active();
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhereHas('userType', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
-                  });
-            });
+        if ($request->filled('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
         }
 
         if ($request->filled('user_type_id')) {
             $query->where('user_type_id', $request->user_type_id);
         }
 
-        $users = $query->orderBy('created_at', 'desc')->get();
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhereHas('userType', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $users = $query->orderBy('updated_at', 'desc')->get();
 
         return $users->map(function ($user) {
+            $contractorTypes = ['Contractor', 'Contractor Admin', 'Contractor User'];
+            $isContractorType = $user->userType && in_array($user->userType->name, $contractorTypes);
             return [
                 'ID' => $user->id,
                 'Name' => $user->name,
                 'Email' => $user->email,
                 'User Type' => $user->userType->name ?? 'N/A',
+                'Contractor' => $isContractorType ? $user->userType->name : 'No',
                 'Email Verified' => $user->email_verified_at ? 'Yes' : 'No',
                 'Created Date' => $user->created_at->format('M d, Y'),
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get contract companies data for export (respects status + search filters)
+     */
+    private function getContractCompaniesData(Request $request)
+    {
+        $query = \App\Models\ContractCompany::query()->with(['creator', 'updater']);
+
+        $status = $request->get('status', 'active');
+        if ($status === 'archived') {
+            $query->onlyTrashed()->where('archive_status', \App\Models\ContractCompany::STATUS_ARCHIVED);
+        } elseif ($status === 'all') {
+            $query->withTrashed();
+        } else {
+            $query->active();
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('company_name', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%")
+                  ->orWhere('website', 'like', "%{$search}%");
+            });
+        }
+
+        $companies = $query->orderBy('updated_at', 'desc')->get();
+
+        return $companies->map(function ($company) {
+            return [
+                'ID' => $company->id,
+                'Company Name' => $company->company_name,
+                'Address' => $company->address ?? 'N/A',
+                'Phone Number' => $company->phone_number ?? 'N/A',
+                'Website' => $company->website ?? 'N/A',
+                'Created Date' => $company->created_at->format('M d, Y'),
             ];
         })->toArray();
     }

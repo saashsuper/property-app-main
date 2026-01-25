@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BlockIssueController extends Controller
 {
@@ -26,7 +27,7 @@ class BlockIssueController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus', 'blockUnit', 'workOrders']);
+        $query = BlockIssue::with(['block', 'reportedBy', 'assignedTo', 'creator', 'priority', 'issueStatus', 'blockUnit', 'workOrders', 'relatedSiteVisits', 'actions']);
 
         // Search functionality
         if ($request->filled('search')) {
@@ -394,12 +395,24 @@ class BlockIssueController extends Controller
     public function destroy(BlockIssue $blockIssue)
     {
         try {
-            // Check if issue has any related work orders
-            if ($blockIssue->hasWorkOrders()) {
-                // Issue has work orders - only archive it
+            // Check if issue has any related entities (work orders, site visits, or actions)
+            if ($blockIssue->hasRelatedEntities()) {
+                // Issue has related entities - only archive it
                 $blockIssue->archive();
 
-                $message = 'Issue has been archived because it contains related work orders.';
+                $relatedEntities = [];
+                if ($blockIssue->hasWorkOrders()) {
+                    $relatedEntities[] = 'work orders';
+                }
+                if ($blockIssue->hasSiteVisits()) {
+                    $relatedEntities[] = 'site visits';
+                }
+                if ($blockIssue->hasActions()) {
+                    $relatedEntities[] = 'actions';
+                }
+                
+                $entitiesText = implode(', ', $relatedEntities);
+                $message = 'Issue has been archived because it contains related ' . $entitiesText . '.';
                 
                 if (request()->ajax() || request()->wantsJson()) {
                     return response()->json(['success' => true, 'message' => $message]);
@@ -925,7 +938,7 @@ class BlockIssueController extends Controller
     public function storeAction(Request $request, BlockIssue $blockIssue)
     {
         $validator = Validator::make($request->all(), [
-            'action_type' => 'required|string|max:50',
+            'action_type' => ['required', 'string', Rule::in(array_keys(BlockIssueAction::ACTION_TYPES))],
             'description' => 'required|string|max:1000',
             'notes' => 'nullable|string|max:2000',
             'performed_by' => 'required|exists:users,id',

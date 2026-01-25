@@ -64,15 +64,14 @@ class BlockIssueAction extends Model
 
     // Action type constants
     const ACTION_TYPES = [
-        'inspection' => 'Inspection',
-        'repair' => 'Repair',
-        'follow_up' => 'Follow Up',
-        'resolved' => 'Resolved',
-        'escalated' => 'Escalated',
-        'maintenance' => 'Maintenance',
-        'assessment' => 'Assessment',
-        'communication' => 'Communication',
-        'documentation' => 'Documentation'
+        'site_visit' => 'Site Visit',
+        'phone_contact' => 'Phone Contact',
+        'email' => 'Email',
+        'letter' => 'Letter',
+        'in_person_visit' => 'In person visit',
+        'clean_up' => 'Clean up',
+        'minor_repairs' => 'Minor repairs',
+        'other' => 'Other'
     ];
 
     // Status constants

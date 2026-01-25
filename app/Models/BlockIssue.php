@@ -290,6 +290,33 @@ class BlockIssue extends Model
     }
 
     /**
+     * Check if issue has any related site visits.
+     * Returns true if issue has at least one site visit.
+     */
+    public function hasSiteVisits(): bool
+    {
+        return $this->relatedSiteVisits()->count() > 0;
+    }
+
+    /**
+     * Check if issue has any related actions.
+     * Returns true if issue has at least one action.
+     */
+    public function hasActions(): bool
+    {
+        return $this->actions()->count() > 0;
+    }
+
+    /**
+     * Check if issue has any related entities (work orders, site visits, or actions).
+     * Returns true if issue has at least one related entity.
+     */
+    public function hasRelatedEntities(): bool
+    {
+        return $this->hasWorkOrders() || $this->hasSiteVisits() || $this->hasActions();
+    }
+
+    /**
      * Check if issue is archived.
      */
     public function isArchived(): bool

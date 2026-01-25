@@ -14,13 +14,24 @@ class ContractCompanyController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ContractCompany::with(['creator', 'updater']);
+        $query = ContractCompany::query()->with(['creator', 'updater']);
+
+        // Filter by status (all | active | archived)
+        $status = $request->get('status', 'active');
+        if ($status === 'archived') {
+            $query->onlyTrashed()->where('archive_status', ContractCompany::STATUS_ARCHIVED);
+        } elseif ($status === 'all') {
+            $query->withTrashed();
+        } else {
+            $query->active();
+        }
 
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('company_name', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
                   ->orWhere('phone_number', 'like', "%{$search}%")
                   ->orWhere('website', 'like', "%{$search}%");
             });
@@ -113,13 +124,44 @@ class ContractCompanyController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     * 
+     * If company has no related entities, it will be permanently deleted.
+     * If company has related entities, it will be archived (soft deleted with archived status).
      */
     public function destroy(ContractCompany $contractCompany)
     {
-        $contractCompany->update(['deleted_by' => Auth::id()]);
-        $contractCompany->delete();
-
-        return redirect()->route('contract-companies.index')
-            ->with('success', 'Contract company deleted successfully!');
+        // Check if company has any related entities
+        if ($contractCompany->hasRelatedEntities()) {
+            // Company has related entities - only archive it
+            $contractCompany->archive();
+            
+            $message = 'Contract company archived successfully. It can be restored later if needed.';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
+            
+            return redirect()->route('contract-companies.index')
+                ->with('success', $message);
+        } else {
+            // No related entities - permanently delete
+            $contractCompany->update(['deleted_by' => Auth::id()]);
+            $contractCompany->forceDelete();
+            
+            $message = 'Contract company deleted successfully!';
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => $message
+                ]);
+            }
+            
+            return redirect()->route('contract-companies.index')
+                ->with('success', $message);
+        }
     }
 }

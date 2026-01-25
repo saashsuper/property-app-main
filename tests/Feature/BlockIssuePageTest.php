@@ -285,7 +285,7 @@ class BlockIssuePageTest extends TestCase
     {
         $actionData = [
             'block_issue_id' => $this->blockIssue->id,
-            'action_type' => 'inspection',
+            'action_type' => 'site_visit',
             'description' => 'Test action description',
             'status' => 'pending', // Default status
             'action_date' => now()->format('Y-m-d H:i:s'),
@@ -302,7 +302,7 @@ class BlockIssuePageTest extends TestCase
         // Assert action was created with pending status
         $this->assertDatabaseHas('block_issue_actions', [
             'block_issue_id' => $this->blockIssue->id,
-            'action_type' => 'inspection',
+            'action_type' => 'site_visit',
             'status' => 'pending',
         ]);
     }
@@ -312,7 +312,7 @@ class BlockIssuePageTest extends TestCase
     {
         $actionData = [
             'block_issue_id' => $this->blockIssue->id,
-            'action_type' => 'repair',
+            'action_type' => 'minor_repairs',
             'description' => 'Test repair action',
             'status' => 'pending',
             'action_date' => now()->format('Y-m-d H:i:s'),
@@ -327,7 +327,7 @@ class BlockIssuePageTest extends TestCase
         // Assert action was created without cost
         $this->assertDatabaseHas('block_issue_actions', [
             'block_issue_id' => $this->blockIssue->id,
-            'action_type' => 'repair',
+            'action_type' => 'minor_repairs',
             'cost' => null,
         ]);
     }

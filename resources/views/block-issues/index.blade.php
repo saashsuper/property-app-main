@@ -303,12 +303,35 @@
                                                 <button class="btn btn-outline-info" onclick="openPhotoUploadModal({{ $issue->id }})" title="Upload Photos">
                                                     <i class="ph-camera"></i>
                                                 </button>
-                                                <button class="btn btn-outline-danger" 
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#confirmDeleteModal"
-                                                        data-action="{{ route('block-issues.destroy', $issue) }}"
-                                                        data-ref="{{ $issue->ref_no }}" title="Delete">
-                                                    <i class="ph-trash"></i>
+                                                @php
+                                                    // Check if issue has related entities (work orders, site visits, or actions) to determine archive vs delete
+                                                    $hasWorkOrders = $issue->hasWorkOrders();
+                                                    $hasSiteVisits = $issue->hasSiteVisits();
+                                                    $hasActions = $issue->hasActions();
+                                                    $hasRelatedEntities = $hasWorkOrders || $hasSiteVisits || $hasActions;
+                                                    
+                                                    $workOrdersCount = $issue->workOrders ? $issue->workOrders->count() : ($hasWorkOrders ? $issue->workOrders()->count() : 0);
+                                                    $siteVisitsCount = $issue->relatedSiteVisits ? $issue->relatedSiteVisits->count() : ($hasSiteVisits ? $issue->relatedSiteVisits()->count() : 0);
+                                                    $actionsCount = $issue->actions ? $issue->actions->count() : ($hasActions ? $issue->actions()->count() : 0);
+                                                    
+                                                    $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
+                                                    $actionIcon = $hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+                                                    $actionColor = $hasRelatedEntities ? 'warning' : 'danger';
+                                                @endphp
+                                                <button class="btn btn-outline-{{ $actionColor }}" 
+                                                        title="{{ $actionText }}"
+                                                        onclick="showDeleteIssueModal({{ $issue->id }}, {
+                                                            ref_no: '{{ addslashes($issue->ref_no) }}',
+                                                            issue: '{{ addslashes($issue->issue ?? 'N/A') }}',
+                                                            has_related_entities: {{ $hasRelatedEntities ? 'true' : 'false' }},
+                                                            has_work_orders: {{ $hasWorkOrders ? 'true' : 'false' }},
+                                                            has_site_visits: {{ $hasSiteVisits ? 'true' : 'false' }},
+                                                            has_actions: {{ $hasActions ? 'true' : 'false' }},
+                                                            work_orders_count: {{ $workOrdersCount }},
+                                                            site_visits_count: {{ $siteVisitsCount }},
+                                                            actions_count: {{ $actionsCount }}
+                                                        })">
+                                                    <i class="{{ $actionIcon }}"></i>
                                                 </button>
                                             </div>
                                         </td>
@@ -345,24 +368,36 @@
     </div>
 </div>
 
-<!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+<!-- Delete/Archive Confirmation Modal for Issue -->
+    <div class="modal fade" id="deleteIssueModal" tabindex="-1" aria-labelledby="deleteIssueModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmDeleteLabel">@lang('translation.confirm-deletion')</h5>
+                <div class="modal-header" id="deleteIssueModalHeader">
+                    <h5 class="modal-title" id="deleteIssueModalLabel">
+                        <i class="ph-warning me-2"></i>Confirm Action
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @lang('translation.confirm-deletion-text', ['ref' => '<strong id="deleteRef"></strong>'])
+                    <p id="deleteIssueModalMessage">Are you sure you want to perform this action?</p>
+                    <div class="alert" id="deleteIssueModalAlert">
+                        <i class="ph-warning me-2"></i>
+                        <span id="deleteIssueModalAlertMessage"></span>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Issue Details:</strong>
+                        <div id="deleteIssueDetails" class="mt-2">
+                            <!-- Issue details will be populated here -->
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@lang('translation.cancel')</button>
-                    <form id="deleteForm" method="POST" action="#">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">@lang('translation.delete-verb')</button>
-                    </form>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ph-x me-1"></i> Cancel
+                    </button>
+                    <button type="button" class="btn" id="confirmDeleteIssueBtn">
+                        <i class="ph-trash me-1"></i> Confirm
+                    </button>
                 </div>
             </div>
         </div>
@@ -1129,6 +1164,187 @@
             showPhotoMessage('warning', 'Dropzone not initialized. Try opening the upload modal first.');
         }
     };
+    
+    // ========================================
+    // ISSUE DELETE/ARCHIVE MODAL
+    // ========================================
+    
+    // Global variable to store the issue ID for deletion
+    let issueToDelete = null;
+    
+    /**
+     * Shows the delete/archive confirmation modal for an issue
+     * 
+     * @param {number} issueId - The ID of the issue to delete/archive
+     * @param {object} issueData - The issue data to display in confirmation
+     */
+    window.showDeleteIssueModal = function(issueId, issueData) {
+        issueToDelete = issueId;
+        
+        const hasRelatedEntities = issueData.has_related_entities || false;
+        const hasWorkOrders = issueData.has_work_orders || false;
+        const hasSiteVisits = issueData.has_site_visits || false;
+        const hasActions = issueData.has_actions || false;
+        const workOrdersCount = issueData.work_orders_count || 0;
+        const siteVisitsCount = issueData.site_visits_count || 0;
+        const actionsCount = issueData.actions_count || 0;
+        
+        const actionText = hasRelatedEntities ? 'Archive' : 'Delete';
+        const actionIcon = hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+        const actionColor = hasRelatedEntities ? 'warning' : 'danger';
+        
+        // Update modal header
+        const $header = $('#deleteIssueModalHeader');
+        $header.removeClass('bg-danger bg-warning text-white');
+        $header.addClass(hasRelatedEntities ? 'bg-warning text-white' : 'bg-danger text-white');
+        
+        // Update modal title
+        $('#deleteIssueModalLabel').html(`<i class="ph-warning me-2"></i>Confirm ${actionText} Issue`);
+        
+        // Update modal message
+        const messageText = hasRelatedEntities 
+            ? `Are you sure you want to archive <strong>${issueData.issue || issueData.ref_no || 'this issue'}</strong>?`
+            : `Are you sure you want to permanently delete <strong>${issueData.issue || issueData.ref_no || 'this issue'}</strong>?`;
+        $('#deleteIssueModalMessage').html(messageText);
+        
+        // Update alert message
+        const $alert = $('#deleteIssueModalAlert');
+        $alert.removeClass('alert-danger alert-warning');
+        if (hasRelatedEntities) {
+            $alert.addClass('alert-warning');
+            
+            // Build list of related entities
+            const relatedEntities = [];
+            if (hasWorkOrders) {
+                relatedEntities.push(`${workOrdersCount} ${workOrdersCount === 1 ? 'work order' : 'work orders'}`);
+            }
+            if (hasSiteVisits) {
+                relatedEntities.push(`${siteVisitsCount} ${siteVisitsCount === 1 ? 'site visit' : 'site visits'}`);
+            }
+            if (hasActions) {
+                relatedEntities.push(`${actionsCount} ${actionsCount === 1 ? 'action' : 'actions'}`);
+            }
+            
+            const entitiesText = relatedEntities.join(', ');
+            $('#deleteIssueModalAlertMessage').html(
+                `This issue contains <strong>${entitiesText}</strong>. ` +
+                `<strong>The issue will be archived</strong> and can be restored later. The associated entities will remain in the database.`
+            );
+        } else {
+            $alert.addClass('alert-danger');
+            $('#deleteIssueModalAlertMessage').html(
+                `This issue has no related entities (work orders, site visits, or actions). <strong>This action will permanently delete the issue</strong> and cannot be undone. All issue data and images will be permanently removed.`
+            );
+        }
+        
+        // Populate issue details
+        let detailsHtml = `
+            <div class="row">
+                <div class="col-6"><strong>Ref No:</strong></div>
+                <div class="col-6">${issueData.ref_no || 'N/A'}</div>
+            </div>
+            <div class="row">
+                <div class="col-6"><strong>Issue:</strong></div>
+                <div class="col-6">${issueData.issue || 'N/A'}</div>
+            </div>
+        `;
+        
+        if (hasRelatedEntities) {
+            detailsHtml += '<div class="row mt-2"><div class="col-12"><strong>Related Entities:</strong></div></div>';
+            if (hasWorkOrders) {
+                detailsHtml += `
+                    <div class="row">
+                        <div class="col-6"><strong>Work Orders:</strong></div>
+                        <div class="col-6"><span class="badge bg-warning">${workOrdersCount} ${workOrdersCount === 1 ? 'Work Order' : 'Work Orders'}</span></div>
+                    </div>
+                `;
+            }
+            if (hasSiteVisits) {
+                detailsHtml += `
+                    <div class="row">
+                        <div class="col-6"><strong>Site Visits:</strong></div>
+                        <div class="col-6"><span class="badge bg-info">${siteVisitsCount} ${siteVisitsCount === 1 ? 'Site Visit' : 'Site Visits'}</span></div>
+                    </div>
+                `;
+            }
+            if (hasActions) {
+                detailsHtml += `
+                    <div class="row">
+                        <div class="col-6"><strong>Actions:</strong></div>
+                        <div class="col-6"><span class="badge bg-secondary">${actionsCount} ${actionsCount === 1 ? 'Action' : 'Actions'}</span></div>
+                    </div>
+                `;
+            }
+        }
+        
+        $('#deleteIssueDetails').html(detailsHtml);
+        
+        // Update confirm button
+        const $confirmBtn = $('#confirmDeleteIssueBtn');
+        $confirmBtn.removeClass('btn-danger btn-warning');
+        $confirmBtn.addClass(`btn-${actionColor}`);
+        $confirmBtn.html(`<i class="${actionIcon} me-1"></i>Yes, ${actionText} Issue`);
+        
+        // Set up the confirm button to actually delete/archive
+        $confirmBtn.off('click').on('click', function() {
+            deleteIssue(issueId);
+        });
+        
+        // Show the modal
+        $('#deleteIssueModal').modal('show');
+    };
+
+    /**
+     * Deletes/archives an issue via AJAX
+     */
+    function deleteIssue(issueId) {
+        if (!issueId) {
+            return;
+        }
+        
+        // Show loading state
+        const $confirmBtn = $('#confirmDeleteIssueBtn');
+        const originalText = $confirmBtn.html();
+        $confirmBtn.html('<i class="ph-spinner-gap ph-spin me-1"></i> Processing...').prop('disabled', true);
+        
+        $.ajax({
+            url: `/block-issues/${issueId}`,
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                // Hide the modal
+                $('#deleteIssueModal').modal('hide');
+                
+                if (response && response.success) {
+                    // Show success message
+                    const message = response.message || 'Issue processed successfully';
+                    alert(message);
+                    
+                    // Reload the page to reflect changes
+                    location.reload();
+                } else {
+                    alert('An error occurred. Please try again.');
+                }
+            },
+            error: function(xhr) {
+                $('#deleteIssueModal').modal('hide');
+                
+                let errorMessage = 'An error occurred while processing the request.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                alert(errorMessage);
+            },
+            complete: function() {
+                // Restore button state
+                $confirmBtn.html(originalText).prop('disabled', false);
+            }
+        });
+    }
     </script>
 @endsection
 

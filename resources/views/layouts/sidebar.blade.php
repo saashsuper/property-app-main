@@ -122,6 +122,26 @@
                     </li>
                     @endif
 
+                    @if(!auth()->user()->hasType('Contractor Admin'))
+                    <li class="nav-item">
+                        <a class="{{ getMenuClasses(null, ['block-issues.*', 'issues.*']) }}" href="#sidebarIssues" data-bs-toggle="collapse"
+                            role="button" aria-expanded="{{ hasActiveChild(['block-issues.*', 'issues.*']) ? 'true' : 'false' }}" aria-controls="sidebarIssues">
+                            <i class="ph-warning"></i> <span>@lang('translation.issues')</span>
+                        </a>
+                        <div class="{{ getDropdownClasses(['block-issues.*', 'issues.*']) }}" id="sidebarIssues">
+                            <ul class="nav nav-sm flex-column">
+                                <li class="nav-item">
+                                    <a href="{{ route('block-issues.index') }}" class="{{ getSubmenuClasses('block-issues.index') }}">@lang('translation.block-issues')</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('block-issues.create') }}" class="{{ getSubmenuClasses('block-issues.create') }}">@lang('translation.create-block-issue')</a>
+                                </li>
+                                {{-- Hidden General Issues and Create Issue submenu items --}}
+                            </ul>
+                        </div>
+                    </li>
+                    @endif
+
                     <li class="nav-item">
                         <a class="{{ getMenuClasses(null, ['block-work-orders.*']) }}" href="#sidebarWorkOrders" data-bs-toggle="collapse"
                             role="button" aria-expanded="{{ hasActiveChild(['block-work-orders.*']) ? 'true' : 'false' }}" aria-controls="sidebarWorkOrders">
@@ -152,24 +172,6 @@
                         <a class="{{ getMenuClasses('block-inspections.*') }}" href="{{ route('block-inspections.index') }}">
                             <i class="ph-clipboard-text"></i> <span>@lang('translation.block-inspections')</span>
                         </a>
-                    </li>
-
-                    <li class="nav-item">
-                        <a class="{{ getMenuClasses(null, ['block-issues.*', 'issues.*']) }}" href="#sidebarIssues" data-bs-toggle="collapse"
-                            role="button" aria-expanded="{{ hasActiveChild(['block-issues.*', 'issues.*']) ? 'true' : 'false' }}" aria-controls="sidebarIssues">
-                            <i class="ph-warning"></i> <span>@lang('translation.issues')</span>
-                        </a>
-                        <div class="{{ getDropdownClasses(['block-issues.*', 'issues.*']) }}" id="sidebarIssues">
-                            <ul class="nav nav-sm flex-column">
-                                <li class="nav-item">
-                                    <a href="{{ route('block-issues.index') }}" class="{{ getSubmenuClasses('block-issues.index') }}">@lang('translation.block-issues')</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('block-issues.create') }}" class="{{ getSubmenuClasses('block-issues.create') }}">@lang('translation.create-block-issue')</a>
-                                </li>
-                                {{-- Hidden General Issues and Create Issue submenu items --}}
-                            </ul>
-                        </div>
                     </li>
                     @endif
 

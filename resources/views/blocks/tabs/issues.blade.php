@@ -48,19 +48,31 @@
                                             <i class="ph-pencil"></i>
                                         </a>
                                         @php
-                                            // Use the hasWorkOrders() method which is more efficient
+                                            // Check if issue has related entities (work orders, site visits, or actions) to determine archive vs delete
                                             $hasWorkOrders = $issue->hasWorkOrders();
-                                            $workOrdersCount = $issue->workOrders ? $issue->workOrders->count() : $issue->workOrders()->count();
-                                            $actionText = $hasWorkOrders ? 'Archive' : 'Delete';
-                                            $actionIcon = $hasWorkOrders ? 'ph-archive' : 'ph-trash';
-                                            $actionColor = $hasWorkOrders ? 'warning' : 'danger';
+                                            $hasSiteVisits = $issue->hasSiteVisits();
+                                            $hasActions = $issue->hasActions();
+                                            $hasRelatedEntities = $hasWorkOrders || $hasSiteVisits || $hasActions;
+                                            
+                                            $workOrdersCount = $issue->workOrders ? $issue->workOrders->count() : ($hasWorkOrders ? $issue->workOrders()->count() : 0);
+                                            $siteVisitsCount = $issue->relatedSiteVisits ? $issue->relatedSiteVisits->count() : ($hasSiteVisits ? $issue->relatedSiteVisits()->count() : 0);
+                                            $actionsCount = $issue->actions ? $issue->actions->count() : ($hasActions ? $issue->actions()->count() : 0);
+                                            
+                                            $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
+                                            $actionIcon = $hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+                                            $actionColor = $hasRelatedEntities ? 'warning' : 'danger';
                                         @endphp
                                         <button type="button" class="btn btn-sm btn-outline-{{ $actionColor }}" title="{{ $actionText }} Issue" 
                                                 onclick="showDeleteIssueModal({{ $issue->id }}, {
                                                     ref_no: '{{ addslashes($issue->ref_no) }}',
                                                     issue: '{{ addslashes($issue->issue ?? 'N/A') }}',
+                                                    has_related_entities: {{ $hasRelatedEntities ? 'true' : 'false' }},
                                                     has_work_orders: {{ $hasWorkOrders ? 'true' : 'false' }},
-                                                    work_orders_count: {{ $workOrdersCount }}
+                                                    has_site_visits: {{ $hasSiteVisits ? 'true' : 'false' }},
+                                                    has_actions: {{ $hasActions ? 'true' : 'false' }},
+                                                    work_orders_count: {{ $workOrdersCount }},
+                                                    site_visits_count: {{ $siteVisitsCount }},
+                                                    actions_count: {{ $actionsCount }}
                                                 })">
                                             <i class="{{ $actionIcon }}"></i> {{ $actionText }}
                                         </button>

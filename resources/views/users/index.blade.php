@@ -7,12 +7,13 @@
 
 <style>
 /* Users-specific column widths */
-#users-table th:nth-child(1) { width: 20%; } /* Name */
-#users-table th:nth-child(2) { width: 25%; } /* Email */
-#users-table th:nth-child(3) { width: 15%; } /* User Type */
-#users-table th:nth-child(4) { width: 15%; } /* Email Verified */
-#users-table th:nth-child(5) { width: 15%; } /* Created At */
-#users-table th:nth-child(6) { width: 10%; } /* Actions */
+#users-table th:nth-child(1) { width: 18%; } /* Name */
+#users-table th:nth-child(2) { width: 22%; } /* Email */
+#users-table th:nth-child(3) { width: 14%; } /* User Type */
+#users-table th:nth-child(4) { width: 10%; } /* Contractor */
+#users-table th:nth-child(5) { width: 12%; } /* Email Verified */
+#users-table th:nth-child(6) { width: 12%; } /* Created At */
+#users-table th:nth-child(7) { width: 12%; } /* Actions */
 </style>
 @endsection
 
@@ -26,33 +27,83 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="card-title mb-0">@lang('translation.list-users')</h4>
-                    <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center mb-3 gap-3">
+                    <h6 class="mb-0 fw-bold text-white px-3 py-2 rounded flex-grow-1"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 38px;">
+                        @lang('translation.list-users')
+                    </h6>
+                    <button class="btn btn-outline-primary btn-sm" id="toggleSearchBtn" title="Search & Filter">
+                        <i class="ph-funnel"></i>
+                    </button>
+                    <div class="d-flex align-items-center gap-2">
                         <!-- Export Buttons -->
                         <div class="btn-group" role="group">
-                            <a href="{{ route('export.pdf', 'users') }}?{{ http_build_query(request()->query()) }}" 
+                            <a href="{{ route('export.pdf', 'users') }}?{{ http_build_query(request()->query()) }}"
                                class="btn btn-outline-danger btn-sm" title="Export to PDF">
                                 <i class="ph-file-pdf"></i>
                             </a>
-                            <a href="{{ route('export.excel', 'users') }}?{{ http_build_query(request()->query()) }}" 
+                            <a href="{{ route('export.excel', 'users') }}?{{ http_build_query(request()->query()) }}"
                                class="btn btn-outline-success btn-sm" title="Export to Excel">
                                 <i class="ph-file-xls"></i>
                             </a>
-                            <a href="{{ route('export.print', 'users') }}?{{ http_build_query(request()->query()) }}" 
+                            <a href="{{ route('export.print', 'users') }}?{{ http_build_query(request()->query()) }}"
                                class="btn btn-outline-secondary btn-sm" title="Print" target="_blank">
                                 <i class="ph-printer"></i>
                             </a>
                         </div>
-
                         <!-- Add Button -->
-                        <a href="{{ route('users.create') }}" class="btn btn-primary">
-                            <i class="ph-plus me-2"></i>@lang('translation.create-user')
+                        <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
+                            <i class="ph-plus me-1"></i>@lang('translation.create-user')
                         </a>
                     </div>
                 </div>
             </div>
-            <div class="card-body mb-3">
+            <div class="card-body">
+                <!-- Search & Filter Panel (hidden by default) -->
+                <div id="searchFilterPanel" class="card mb-3" style="display: none;">
+                    <div class="p-2 bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="ph-magnifying-glass me-2"></i>
+                            Search & Filter
+                        </h6>
+                        <button type="button" class="btn btn-sm" id="closeSearchHeaderBtn" title="Close">
+                            <i class="ph-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <form id="searchFilterForm" method="GET" action="{{ route('users.index') }}" class="row g-3">
+                            <!-- Name Filter -->
+                            <div class="col-md-4 mb-3">
+                                <label for="search_name" class="form-label">@lang('translation.name')</label>
+                                <input type="text" class="form-control" id="search_name" name="name"
+                                    value="{{ request('name') }}"
+                                    placeholder="@lang('translation.name')">
+                            </div>
+                            <!-- User Type Filter -->
+                            <div class="col-md-4 mb-3">
+                                <label for="search_user_type_id" class="form-label">@lang('translation.user-type')</label>
+                                <select class="form-select" id="search_user_type_id" name="user_type_id">
+                                    <option value="">All User Types</option>
+                                    @foreach($userTypes ?? [] as $ut)
+                                        <option value="{{ $ut->id }}" {{ request('user_type_id') == $ut->id ? 'selected' : '' }}>{{ $ut->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-footer">
+                        <button type="button" class="btn btn-primary" id="searchFilterBtn">
+                            <i class="ph-magnifying-glass me-1"></i> Search
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="clearSearchBtn">
+                            <i class="ph-x me-1"></i> Clear
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="showAllBtn">
+                            <i class="ph-list me-1"></i> Show All
+                        </button>
+                    </div>
+                </div>
+
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="ph-check-circle me-2"></i>
@@ -82,6 +133,7 @@
                                 <th>@lang('translation.name')</th>
                                 <th>@lang('translation.email')</th>
                                 <th>@lang('translation.user-type')</th>
+                                <th>Contractor</th>
                                 <th>@lang('translation.email-verified')</th>
                                 <th>@lang('translation.created-at')</th>
                                 <th>@lang('translation.actions')</th>
@@ -104,6 +156,13 @@
                                         @else
                                             <span class="badge bg-secondary">-</span>
                                         @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $contractorTypes = ['Contractor', 'Contractor Admin', 'Contractor User'];
+                                            $isContractorType = $user->userType && in_array($user->userType->name, $contractorTypes);
+                                        @endphp
+                                        {{ $isContractorType ? $user->userType->name : 'No' }}
                                     </td>
                                     <td>
                                         @if($user->email_verified_at)
@@ -139,7 +198,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">
+                                    <td colspan="7" class="text-center">
                                         <div class="py-4">
                                             <i class="ph-users ph-3x text-muted mb-3"></i>
                                             <h5>@lang('translation.no-users-found')</h5>
@@ -199,6 +258,29 @@
 
 <script>
 $(document).ready(function() {
+    // Filter panel (refer block-issues / contract-companies pattern)
+    $('#toggleSearchBtn').on('click', function() {
+        $('#searchFilterPanel').slideToggle();
+    });
+    $('#closeSearchHeaderBtn').on('click', function() {
+        $('#searchFilterPanel').slideUp();
+    });
+    $('#searchFilterBtn').on('click', function() {
+        $('#searchFilterForm').submit();
+    });
+    $('#clearSearchBtn').on('click', function() {
+        $('#searchFilterForm')[0].reset();
+        window.location.href = '{{ route('users.index') }}';
+    });
+    $('#showAllBtn').on('click', function() {
+        $('#searchFilterForm')[0].reset();
+        window.location.href = '{{ route('users.index') }}';
+        $('#searchFilterPanel').slideUp();
+    });
+    @if(request()->filled('name') || request()->filled('user_type_id'))
+    $('#searchFilterPanel').show();
+    @endif
+
     $('#users-table').DataTable({
         responsive: true,
         scrollX: false,
@@ -206,13 +288,14 @@ $(document).ready(function() {
         dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
         order: [[0, 'asc']], // default sort by Name
         columnDefs: [
-            { targets: [5], orderable: false }, // Actions (last column)
-            { targets: [0], width: '20%' }, // Name
-            { targets: [1], width: '25%' }, // Email
-            { targets: [2], width: '15%' }, // User Type
-            { targets: [3], width: '15%' }, // Email Verified
-            { targets: [4], width: '15%' }, // Created At
-            { targets: [5], width: '10%' }  // Actions
+            { targets: [6], orderable: false }, // Actions (last column)
+            { targets: [0], width: '18%' }, // Name
+            { targets: [1], width: '22%' }, // Email
+            { targets: [2], width: '14%' }, // User Type
+            { targets: [3], width: '10%' }, // Contractor
+            { targets: [4], width: '12%' }, // Email Verified
+            { targets: [5], width: '12%' }, // Created At
+            { targets: [6], width: '12%' }  // Actions
         ],
         pageLength: 10,
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],

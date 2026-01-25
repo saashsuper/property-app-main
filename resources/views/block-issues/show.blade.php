@@ -155,16 +155,28 @@
                                 </a>
                                 @php
                                     $hasWorkOrders = $hasWorkOrders ?? $blockIssue->hasWorkOrders();
+                                    $hasSiteVisits = $blockIssue->hasSiteVisits();
+                                    $hasActions = $blockIssue->hasActions();
+                                    $hasRelatedEntities = $hasWorkOrders || $hasSiteVisits || $hasActions;
+                                    
                                     $workOrdersCount = $workOrdersCount ?? $blockIssue->workOrders()->count();
-                                    $actionText = $hasWorkOrders ? 'Archive' : 'Delete';
-                                    $actionIcon = $hasWorkOrders ? 'ph-archive' : 'ph-trash';
-                                    $actionColor = $hasWorkOrders ? 'warning' : 'danger';
+                                    $siteVisitsCount = $blockIssue->relatedSiteVisits()->count();
+                                    $actionsCount = $blockIssue->actions()->count();
+                                    
+                                    $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
+                                    $actionIcon = $hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+                                    $actionColor = $hasRelatedEntities ? 'warning' : 'danger';
                                 @endphp
                                 <button type="button" class="btn btn-{{ $actionColor }} btn-sm" onclick="showDeleteIssueModal({{ $blockIssue->id }}, {
                                     ref_no: '{{ addslashes($blockIssue->ref_no) }}',
                                     issue: '{{ addslashes($blockIssue->issue ?? 'N/A') }}',
+                                    has_related_entities: {{ $hasRelatedEntities ? 'true' : 'false' }},
                                     has_work_orders: {{ $hasWorkOrders ? 'true' : 'false' }},
-                                    work_orders_count: {{ $workOrdersCount }}
+                                    has_site_visits: {{ $hasSiteVisits ? 'true' : 'false' }},
+                                    has_actions: {{ $hasActions ? 'true' : 'false' }},
+                                    work_orders_count: {{ $workOrdersCount }},
+                                    site_visits_count: {{ $siteVisitsCount }},
+                                    actions_count: {{ $actionsCount }}
                                 })">
                                     <i class="{{ $actionIcon }} me-1"></i>{{ $actionText }}
                                 </button>
@@ -3062,12 +3074,9 @@
                                 <label for="action_type" class="form-label">Action Type <span class="text-danger">*</span></label>
                                 <select class="form-select" id="action_type" name="action_type" required>
                                     <option value="">Select Action Type</option>
-                                    <option value="inspection">Inspection</option>
-                                    <option value="maintenance">Maintenance</option>
-                                    <option value="repair">Repair</option>
-                                    <option value="replacement">Replacement</option>
-                                    <option value="cleaning">Cleaning</option>
-                                    <option value="other">Other</option>
+                                    @foreach (\App\Models\BlockIssueAction::ACTION_TYPES as $key => $value)
+                                        <option value="{{ $key }}">{{ $value }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -3450,22 +3459,28 @@
         window.showDeleteIssueModal = function(issueId, issueData) {
             issueToDelete = issueId;
             
+            const hasRelatedEntities = issueData.has_related_entities || false;
             const hasWorkOrders = issueData.has_work_orders || false;
+            const hasSiteVisits = issueData.has_site_visits || false;
+            const hasActions = issueData.has_actions || false;
             const workOrdersCount = issueData.work_orders_count || 0;
-            const actionText = hasWorkOrders ? 'Archive' : 'Delete';
-            const actionIcon = hasWorkOrders ? 'ph-archive' : 'ph-trash';
-            const actionColor = hasWorkOrders ? 'warning' : 'danger';
+            const siteVisitsCount = issueData.site_visits_count || 0;
+            const actionsCount = issueData.actions_count || 0;
+            
+            const actionText = hasRelatedEntities ? 'Archive' : 'Delete';
+            const actionIcon = hasRelatedEntities ? 'ph-archive' : 'ph-trash';
+            const actionColor = hasRelatedEntities ? 'warning' : 'danger';
             
             // Update modal header
             const $header = $('#deleteIssueModalHeader');
             $header.removeClass('bg-danger bg-warning text-white');
-            $header.addClass(hasWorkOrders ? 'bg-warning text-white' : 'bg-danger text-white');
+            $header.addClass(hasRelatedEntities ? 'bg-warning text-white' : 'bg-danger text-white');
             
             // Update modal title
             $('#deleteIssueModalLabel').html(`<i class="ph-warning me-2"></i>Confirm ${actionText} Issue`);
             
             // Update modal message
-            const messageText = hasWorkOrders 
+            const messageText = hasRelatedEntities 
                 ? `Are you sure you want to archive <strong>${issueData.issue || issueData.ref_no || 'this issue'}</strong>?`
                 : `Are you sure you want to permanently delete <strong>${issueData.issue || issueData.ref_no || 'this issue'}</strong>?`;
             $('#deleteIssueModalMessage').html(messageText);
@@ -3473,21 +3488,35 @@
             // Update alert message
             const $alert = $('#deleteIssueModalAlert');
             $alert.removeClass('alert-danger alert-warning');
-            if (hasWorkOrders) {
+            if (hasRelatedEntities) {
                 $alert.addClass('alert-warning');
+                
+                // Build list of related entities
+                const relatedEntities = [];
+                if (hasWorkOrders) {
+                    relatedEntities.push(`${workOrdersCount} ${workOrdersCount === 1 ? 'work order' : 'work orders'}`);
+                }
+                if (hasSiteVisits) {
+                    relatedEntities.push(`${siteVisitsCount} ${siteVisitsCount === 1 ? 'site visit' : 'site visits'}`);
+                }
+                if (hasActions) {
+                    relatedEntities.push(`${actionsCount} ${actionsCount === 1 ? 'action' : 'actions'}`);
+                }
+                
+                const entitiesText = relatedEntities.join(', ');
                 $('#deleteIssueModalAlertMessage').html(
-                    `This issue contains <strong>${workOrdersCount}</strong> related ${workOrdersCount === 1 ? 'work order' : 'work orders'}. ` +
-                    `<strong>The issue will be archived</strong> and can be restored later. The associated work orders will remain in the database.`
+                    `This issue contains <strong>${entitiesText}</strong>. ` +
+                    `<strong>The issue will be archived</strong> and can be restored later. The associated entities will remain in the database.`
                 );
             } else {
                 $alert.addClass('alert-danger');
                 $('#deleteIssueModalAlertMessage').html(
-                    `This issue has no related work orders. <strong>This action will permanently delete the issue</strong> and cannot be undone. All issue data and images will be permanently removed.`
+                    `This issue has no related entities (work orders, site visits, or actions). <strong>This action will permanently delete the issue</strong> and cannot be undone. All issue data and images will be permanently removed.`
                 );
             }
             
             // Populate issue details
-            const detailsHtml = `
+            let detailsHtml = `
                 <div class="row">
                     <div class="col-6"><strong>Ref No:</strong></div>
                     <div class="col-6">${issueData.ref_no || 'N/A'}</div>
@@ -3496,13 +3525,36 @@
                     <div class="col-6"><strong>Issue:</strong></div>
                     <div class="col-6">${issueData.issue || 'N/A'}</div>
                 </div>
-                ${hasWorkOrders ? `
-                <div class="row">
-                    <div class="col-6"><strong>Related Work Orders:</strong></div>
-                    <div class="col-6"><span class="badge bg-warning">${workOrdersCount} ${workOrdersCount === 1 ? 'Work Order' : 'Work Orders'}</span></div>
-                </div>
-                ` : ''}
             `;
+            
+            if (hasRelatedEntities) {
+                detailsHtml += '<div class="row mt-2"><div class="col-12"><strong>Related Entities:</strong></div></div>';
+                if (hasWorkOrders) {
+                    detailsHtml += `
+                        <div class="row">
+                            <div class="col-6"><strong>Work Orders:</strong></div>
+                            <div class="col-6"><span class="badge bg-warning">${workOrdersCount} ${workOrdersCount === 1 ? 'Work Order' : 'Work Orders'}</span></div>
+                        </div>
+                    `;
+                }
+                if (hasSiteVisits) {
+                    detailsHtml += `
+                        <div class="row">
+                            <div class="col-6"><strong>Site Visits:</strong></div>
+                            <div class="col-6"><span class="badge bg-info">${siteVisitsCount} ${siteVisitsCount === 1 ? 'Site Visit' : 'Site Visits'}</span></div>
+                        </div>
+                    `;
+                }
+                if (hasActions) {
+                    detailsHtml += `
+                        <div class="row">
+                            <div class="col-6"><strong>Actions:</strong></div>
+                            <div class="col-6"><span class="badge bg-secondary">${actionsCount} ${actionsCount === 1 ? 'Action' : 'Actions'}</span></div>
+                        </div>
+                    `;
+                }
+            }
+            
             $('#deleteIssueDetails').html(detailsHtml);
             
             // Update confirm button
