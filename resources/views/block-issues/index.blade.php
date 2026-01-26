@@ -258,7 +258,7 @@
                                     <tr>
                                         <td>
                                             <a href="{{ route('block-issues.show', $issue) }}" class="text-decoration-none">
-                                                <b>#{{ $issue->ref_no }}</b>
+                                                <b>{{ $issue->ref_no }}</b>
                                             </a>
                                         </td>
                                         <td>{{ $issue->issue ?? 'N/A' }}</td>

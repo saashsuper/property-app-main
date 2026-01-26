@@ -129,37 +129,28 @@ class BlockIssue extends Model
     {
         parent::boot();
 
-        static::creating(function ($blockIssue) {
+        static::created(function ($blockIssue) {
             if (empty($blockIssue->ref_no)) {
-                $blockIssue->ref_no = self::generateRefNo();
+                $blockIssue->ref_no = self::generateRefNo($blockIssue->id);
+                $blockIssue->saveQuietly(); // Save without triggering events
             }
         });
     }
 
     /**
      * Generate a unique reference number
+     * Format: YYMM + ID (e.g., 2601 + 1 = 26011)
+     * 
+     * @param int $id The database ID of the issue
+     * @return string
      */
-    protected static function generateRefNo()
+    protected static function generateRefNo($id)
     {
-        $year = date('Y');
-        $month = date('m');
+        $year = date('y'); // 2-digit year
+        $month = date('m'); // 2-digit month
         
-        // Get the last issue number for this month
-        $lastIssue = self::where('ref_no', 'like', "{$year}-{$month}-%")
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        if ($lastIssue) {
-            // Extract the number part and increment
-            $parts = explode('-', $lastIssue->ref_no);
-            $lastNumber = (int) end($parts);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-        
-        // Format: 2025-10-001
-        return sprintf('%s-%s-%03d', $year, $month, $newNumber);
+        // Format: YYMM + ID
+        return $year . $month . $id;
     }
 
     /**
@@ -372,6 +363,9 @@ class BlockIssue extends Model
      */
     public function getStatusTextAttribute()
     {
+        // Use the issueStatus relationship if loaded, otherwise use issue_status_id
+        $statusId = $this->issueStatus?->value ?? $this->issue_status_id;
+        
         $statuses = [
             1 => 'Created',
             2 => 'In Progress',
@@ -380,7 +374,7 @@ class BlockIssue extends Model
             5 => 'Invoiced'
         ];
 
-        return $statuses[$this->status ?? $this->issue_status_id] ?? 'Unknown';
+        return $statuses[$statusId] ?? 'Unknown';
     }
 
     /**
@@ -404,6 +398,9 @@ class BlockIssue extends Model
      */
     public function getStatusColorAttribute()
     {
+        // Use the issueStatus relationship if loaded, otherwise use issue_status_id
+        $statusId = $this->issueStatus?->value ?? $this->issue_status_id;
+        
         $colors = [
             1 => 'warning',    // Created - btn-warning (yellow)
             2 => 'primary',    // In Progress - btn-primary (blue)
@@ -412,6 +409,6 @@ class BlockIssue extends Model
             5 => 'dark'        // Invoiced - btn-dark (dark gray/black)
         ];
 
-        return $colors[$this->status ?? $this->issue_status_id] ?? 'secondary';
+        return $colors[$statusId] ?? 'secondary';
     }
 }
