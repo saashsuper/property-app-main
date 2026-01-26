@@ -142,8 +142,16 @@ class BlockInspection extends Model
     {
         parent::boot();
 
-        static::created(function ($blockInspection) {
+        // Set temporary placeholder if ref_no is empty (required for NOT NULL field)
+        static::creating(function ($blockInspection) {
             if (empty($blockInspection->ref_no)) {
+                $blockInspection->ref_no = 'TEMP'; // Temporary placeholder
+            }
+        });
+
+        // Generate actual ref_no after record is created (to access ID)
+        static::created(function ($blockInspection) {
+            if ($blockInspection->ref_no === 'TEMP' || empty($blockInspection->ref_no)) {
                 $blockInspection->ref_no = self::generateRefNo($blockInspection->id);
                 $blockInspection->saveQuietly(); // Save without triggering events
             }

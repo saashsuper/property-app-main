@@ -81,8 +81,16 @@ class BlockVisit extends Model
     {
         parent::boot();
 
-        static::created(function ($blockVisit) {
+        // Set temporary placeholder if ref_no is empty (required for NOT NULL field)
+        static::creating(function ($blockVisit) {
             if (empty($blockVisit->ref_no)) {
+                $blockVisit->ref_no = 'TEMP'; // Temporary placeholder
+            }
+        });
+
+        // Generate actual ref_no after record is created (to access ID)
+        static::created(function ($blockVisit) {
+            if ($blockVisit->ref_no === 'TEMP' || empty($blockVisit->ref_no)) {
                 $blockVisit->ref_no = self::generateRefNo($blockVisit->id);
                 $blockVisit->saveQuietly(); // Save without triggering events
             }

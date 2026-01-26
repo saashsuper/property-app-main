@@ -212,8 +212,16 @@ class BlockWorkOrder extends Model
     {
         parent::boot();
 
-        static::created(function ($blockWorkOrder) {
+        // Set temporary placeholder if ref_no is empty (required for NOT NULL field)
+        static::creating(function ($blockWorkOrder) {
             if (empty($blockWorkOrder->ref_no)) {
+                $blockWorkOrder->ref_no = 'TEMP'; // Temporary placeholder
+            }
+        });
+
+        // Generate actual ref_no after record is created (to access ID)
+        static::created(function ($blockWorkOrder) {
+            if ($blockWorkOrder->ref_no === 'TEMP' || empty($blockWorkOrder->ref_no)) {
                 $blockWorkOrder->ref_no = self::generateRefNo($blockWorkOrder->id);
                 $blockWorkOrder->saveQuietly(); // Save without triggering events
             }

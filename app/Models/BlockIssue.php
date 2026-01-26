@@ -129,8 +129,16 @@ class BlockIssue extends Model
     {
         parent::boot();
 
-        static::created(function ($blockIssue) {
+        // Set temporary placeholder if ref_no is empty (required for NOT NULL field)
+        static::creating(function ($blockIssue) {
             if (empty($blockIssue->ref_no)) {
+                $blockIssue->ref_no = 'TEMP'; // Temporary placeholder
+            }
+        });
+
+        // Generate actual ref_no after record is created (to access ID)
+        static::created(function ($blockIssue) {
+            if ($blockIssue->ref_no === 'TEMP' || empty($blockIssue->ref_no)) {
                 $blockIssue->ref_no = self::generateRefNo($blockIssue->id);
                 $blockIssue->saveQuietly(); // Save without triggering events
             }

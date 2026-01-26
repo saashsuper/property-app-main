@@ -43,8 +43,16 @@ class Issue extends Model
     {
         parent::boot();
 
-        static::created(function ($issue) {
+        // Set temporary placeholder if ref_no is empty (required for NOT NULL field)
+        static::creating(function ($issue) {
             if (empty($issue->ref_no)) {
+                $issue->ref_no = 'TEMP'; // Temporary placeholder
+            }
+        });
+
+        // Generate actual ref_no after record is created (to access ID)
+        static::created(function ($issue) {
+            if ($issue->ref_no === 'TEMP' || empty($issue->ref_no)) {
                 $issue->ref_no = self::generateRefNo($issue->id);
                 $issue->saveQuietly(); // Save without triggering events
             }
