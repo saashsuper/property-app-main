@@ -73,6 +73,37 @@ class BlockVisit extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    /**
+     * Boot method to automatically generate ref_no
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($blockVisit) {
+            if (empty($blockVisit->ref_no)) {
+                $blockVisit->ref_no = self::generateRefNo($blockVisit->id);
+                $blockVisit->saveQuietly(); // Save without triggering events
+            }
+        });
+    }
+
+    /**
+     * Generate a unique reference number
+     * Format: YYMM + ID (e.g., 2601 + 1 = 26011)
+     * 
+     * @param int $id The database ID of the visit
+     * @return string
+     */
+    protected static function generateRefNo($id)
+    {
+        $year = date('y'); // 2-digit year
+        $month = date('m'); // 2-digit month
+        
+        // Format: YYMM + ID
+        return $year . $month . $id;
+    }
 }
 
 

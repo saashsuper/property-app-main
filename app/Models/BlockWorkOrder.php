@@ -206,6 +206,37 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Boot method to automatically generate ref_no
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($blockWorkOrder) {
+            if (empty($blockWorkOrder->ref_no)) {
+                $blockWorkOrder->ref_no = self::generateRefNo($blockWorkOrder->id);
+                $blockWorkOrder->saveQuietly(); // Save without triggering events
+            }
+        });
+    }
+
+    /**
+     * Generate a unique reference number
+     * Format: YYMM + ID (e.g., 2601 + 1 = 26011)
+     * 
+     * @param int $id The database ID of the work order
+     * @return string
+     */
+    protected static function generateRefNo($id)
+    {
+        $year = date('y'); // 2-digit year
+        $month = date('m'); // 2-digit month
+        
+        // Format: YYMM + ID
+        return $year . $month . $id;
+    }
+
+    /**
      * Scope a query to only include active work orders (not deleted and archive_status is active or null).
      */
     public function scopeActive($query)

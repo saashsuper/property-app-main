@@ -136,21 +136,33 @@ class BlockInspection extends Model
     }
 
     /**
-     * Generate reference number.
+     * Boot method to automatically generate ref_no
      */
-    public static function generateRefNo()
+    protected static function boot()
     {
-        $prefix = 'INSP';
-        $year = date('Y');
-        $month = date('m');
+        parent::boot();
+
+        static::created(function ($blockInspection) {
+            if (empty($blockInspection->ref_no)) {
+                $blockInspection->ref_no = self::generateRefNo($blockInspection->id);
+                $blockInspection->saveQuietly(); // Save without triggering events
+            }
+        });
+    }
+
+    /**
+     * Generate a unique reference number
+     * Format: YYMM + ID (e.g., 2601 + 1 = 26011)
+     * 
+     * @param int $id The database ID of the inspection
+     * @return string
+     */
+    protected static function generateRefNo($id)
+    {
+        $year = date('y'); // 2-digit year
+        $month = date('m'); // 2-digit month
         
-        $lastInspection = self::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        $sequence = $lastInspection ? intval(substr($lastInspection->ref_no, -4)) + 1 : 1;
-        
-        return $prefix . $year . $month . str_pad($sequence, 4, '0', STR_PAD_LEFT);
+        // Format: YYMM + ID
+        return $year . $month . $id;
     }
 }

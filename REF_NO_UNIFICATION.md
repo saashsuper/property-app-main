@@ -22,9 +22,9 @@ This document describes the unification of reference number (ref_no) generation 
 ### Implementation Scope
 - ✅ **BlockIssue**: Implemented in `BlockIssue::generateRefNo()`
 - ✅ **Issue**: Implemented in `Issue::generateRefNo()` (model boot method)
-- ❌ **BlockWorkOrder**: Not modified (keeps existing format)
-- ❌ **BlockVisit**: Not modified (keeps existing format)
-- ❌ **BlockInspection**: Not modified (keeps existing format)
+- ✅ **BlockWorkOrder**: Implemented in `BlockWorkOrder::generateRefNo()` (model boot method)
+- ✅ **BlockVisit**: Implemented in `BlockVisit::generateRefNo()` (model boot method)
+- ✅ **BlockInspection**: Implemented in `BlockInspection::generateRefNo()` (model boot method)
 
 ## Technical Details
 
@@ -42,6 +42,9 @@ This document describes the unification of reference number (ref_no) generation 
 ### Code Locations
 - `app/Models/BlockIssue.php` - `generateRefNo()` method (called in `created` event)
 - `app/Models/Issue.php` - `generateRefNo()` method (called in `created` event)
+- `app/Models/BlockWorkOrder.php` - `generateRefNo()` method (called in `created` event)
+- `app/Models/BlockVisit.php` - `generateRefNo()` method (called in `created` event)
+- `app/Models/BlockInspection.php` - `generateRefNo()` method (called in `created` event)
 
 ## Display Locations
 The ref_no is displayed in various views:
@@ -49,6 +52,8 @@ The ref_no is displayed in various views:
 - Issue detail/show pages
 - Block issue pages
 - Work order pages (showing related issue ref_no)
+- Site visit pages
+- Inspection pages
 - API responses
 - Export files
 - Notifications and alerts
@@ -77,7 +82,10 @@ The ref_no is displayed in various views:
 - Only new issues created after implementation will use the new format
 - Search functionality continues to work with both old and new formats
 
+## Implementation Complete
+All entities (Issues, BlockIssues, Work Orders, Visits, and Inspections) now use the unified YYMM + ID format for ref_no generation.
+
 ## Future Considerations
-- Consider extending this format to other entities (Work Orders, Visits, Inspections) if needed
 - Monitor for any conflicts or issues with the new format
 - Consider adding validation to ensure ref_no uniqueness if not already enforced
+- Update any tests that rely on the old ref_no format
