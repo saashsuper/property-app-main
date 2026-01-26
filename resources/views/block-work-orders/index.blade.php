@@ -86,7 +86,7 @@
                                     <tr>
                                         <td>
                                             <a href="{{ route('block-work-orders.show', $workOrder) }}" class="text-decoration-none">
-                                                <strong>#{{ $workOrder->ref_no }}</strong>
+                                                <strong>{{ $workOrder->ref_no }}</strong>
                                             </a>
                                         </td>
                                         <td>{{ $workOrder->block->name ?? 'N/A' }}</td>

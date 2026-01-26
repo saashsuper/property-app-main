@@ -1957,16 +1957,80 @@
                 // and would override the correct type when editing
             });
             
+            // Work Order Dropzone Handling
+            let workOrderDropzone = null;
+            
+            // Initialize Dropzone when modal is shown
+            $('#createWorkOrderModal').on('shown.bs.modal', function() {
+                if (!workOrderDropzone) {
+                    initializeWorkOrderDropzone();
+                }
+            });
+            
+            // Initialize Work Order Dropzone
+            function initializeWorkOrderDropzone() {
+                // Disable auto discover to prevent conflicts
+                Dropzone.autoDiscover = false;
+                
+                // Ensure element is clean
+                const dropzoneElement = document.getElementById('workOrderDropzone');
+                if (dropzoneElement && dropzoneElement.dropzone) {
+                    dropzoneElement.dropzone.destroy();
+                }
+                
+                workOrderDropzone = new Dropzone("#workOrderDropzone", {
+                    url: "#", // Placeholder, we'll handle upload manually
+                    paramName: "images",
+                    uploadMultiple: true,
+                    parallelUploads: 10,
+                    maxFiles: 10,
+                    maxFilesize: 2, // 2MB per file
+                    acceptedFiles: "image/jpeg,image/png,image/jpg,image/gif",
+                    addRemoveLinks: true,
+                    clickable: true,
+                    autoProcessQueue: false, // Don't auto-upload
+                    dictDefaultMessage: "Drop files here or click to upload",
+                    dictRemoveFile: "Remove",
+                    dictCancelUpload: "Cancel",
+                    dictUploadCanceled: "Upload canceled",
+                    dictInvalidFileType: "You can't upload files of this type.",
+                    dictFileTooBig: "File is too big. Max filesize: 2MB.",
+                    dictMaxFilesExceeded: "You can not upload more than 10 files.",
+                    dictResponseError: "Server responded with an error.",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    init: function() {
+                        const dz = this;
+                        
+                        // Custom styling
+                        this.on("addedfile", function(file) {
+                            const preview = file.previewElement;
+                            $(preview).addClass('dz-image-preview-custom');
+                        });
+                        
+                        // Handle individual file errors
+                        this.on("error", function(file, errorMessage) {
+                            showWorkOrderAlert('error', errorMessage);
+                        });
+                    }
+                });
+            }
+            
+            // Clear dropzone when modal is closed
+            $('#createWorkOrderModal').on('hidden.bs.modal', function() {
+                // Remove PUT method field if exists (for next open)
+                $('#createWorkOrderForm').find('input[name="_method"]').remove();
+                // Clear dropzone files
+                if (workOrderDropzone) {
+                    workOrderDropzone.removeAllFiles(true);
+                }
+            });
+            
             // Handle "Raise Work Order" button click (for creating new work orders)
             $('button[data-bs-target="#createWorkOrderModal"]').on('click', function() {
                 // Reset to create mode (default to Outsource)
                 resetWorkOrderModalToCreateMode();
-            });
-            
-            // Clean up when modal is closed
-            $('#createWorkOrderModal').on('hidden.bs.modal', function() {
-                // Remove PUT method field if exists (for next open)
-                $('#createWorkOrderForm').find('input[name="_method"]').remove();
             });
             
             // Handle Work Order Type toggle
@@ -2016,11 +2080,22 @@
                     '<i class="ph-spinner-gap ph-spin me-1"></i> Creating...';
                 submitBtn.prop('disabled', true).html(loadingText);
                 
+                // Create FormData from form
+                const formData = new FormData(form[0]);
+                
+                // Append files from Dropzone to FormData
+                if (workOrderDropzone && workOrderDropzone.files.length > 0) {
+                    const acceptedFiles = workOrderDropzone.getAcceptedFiles();
+                    acceptedFiles.forEach(function(file, index) {
+                        formData.append('images[]', file);
+                    });
+                }
+                
                 // Submit form via AJAX
                 $.ajax({
                     url: form.attr('action'),
                     method: 'POST',
-                    data: new FormData(form[0]),
+                    data: formData,
                     processData: false,
                     contentType: false,
                     headers: {
@@ -2242,8 +2317,10 @@
                 // Clear form values
                 $('#contractorField').val('');
                 $('#propertyManagerField').val('');
-                // Clear file input
-                $('#workOrderImages').val('');
+                // Clear dropzone files
+                if (workOrderDropzone) {
+                    workOrderDropzone.removeAllFiles(true);
+                }
                 hideWorkOrderAlert();
             }
 
@@ -2316,6 +2393,11 @@
                             }
                             
                             $('#createWorkOrderForm textarea[name="comment"]').val(workOrder.comment || '');
+                            
+                            // Clear dropzone files when editing (existing images are shown separately)
+                            if (workOrderDropzone) {
+                                workOrderDropzone.removeAllFiles(true);
+                            }
                             
                             // Show modal
                             $('#createWorkOrderModal').modal('show');
@@ -3366,10 +3448,51 @@
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Upload Photos (Optional)</label>
-                                <input type="file" class="form-control" name="images[]" id="workOrderImages" multiple accept="image/*">
-                                <small class="text-muted">You can upload multiple images (JPEG, PNG, JPG, GIF). Max 2MB each.</small>
+                                <small class="text-muted d-block mb-2">Upload multiple images</small>
+                                <div id="workOrderDropzone" class="dropzone">
+                                    <div class="dz-message">
+                                        <div class="mb-2">
+                                            <i class="ph-cloud-upload display-4 text-muted"></i>
+                                        </div>
+                                        <h5>Drop files here or click to upload</h5>
+                                        <p class="text-muted font-size-14 mb-0">
+                                            <strong>Requirements:</strong><br>
+                                            • Maximum 10 files<br>
+                                            • Each file max 2MB<br>
+                                            • Formats: JPEG, PNG, JPG, GIF
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                        
+                        <!-- Work Order Dropzone Custom Styles -->
+                        <style>
+                            #workOrderDropzone.dropzone {
+                                min-height: 120px !important;
+                                border: 2px dashed #ccc !important;
+                                border-radius: 6px !important;
+                                background: #fafafa;
+                            }
+                            
+                            #workOrderDropzone .dz-message {
+                                padding: 20px !important;
+                                margin: 0 !important;
+                            }
+                            
+                            #workOrderDropzone.dz-drag-hover {
+                                border-color: #198754 !important;
+                                background: #d1e7dd !important;
+                            }
+                            
+                            #workOrderDropzone .dz-preview {
+                                margin: 10px !important;
+                            }
+                            
+                            #workOrderDropzone .dz-preview .dz-image {
+                                border-radius: 4px !important;
+                            }
+                        </style>
                         
                     </div>
                     <div class="modal-footer">

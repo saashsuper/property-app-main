@@ -233,9 +233,9 @@ class BlockIssueController extends Controller
             ->orderBy('action_date', 'desc')
             ->get();
 
-        // Load data needed for site visit modal - only contractor admin users
+        // Load data needed for site visit modal - only Property Manager users
         $users = User::whereHas('userType', function($q) { 
-            $q->where('name', 'Contractor Admin'); 
+            $q->where('name', 'Property manager'); 
         })->orderBy('name')->get();
         
         // Load contract companies for work order modal (using Contractor model as it's what BlockWorkOrder uses)
@@ -313,7 +313,12 @@ class BlockIssueController extends Controller
             ->orderBy('action_date', 'desc')
             ->get();
 
-        return view('block-issues.edit', compact('blockIssue', 'blocks', 'units', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses', 'issueTypes', 'actions'));
+        // Load Property Manager users for site visit dropdown
+        $propertyManagers = User::whereHas('userType', function($q) { 
+            $q->where('name', 'Property manager'); 
+        })->orderBy('name')->get();
+
+        return view('block-issues.edit', compact('blockIssue', 'blocks', 'units', 'users', 'priorities', 'issue_status', 'workOrders', 'siteVisits', 'relatedSiteVisits', 'jobReasons', 'jobStatuses', 'issueTypes', 'actions', 'propertyManagers'));
     }
 
     /**

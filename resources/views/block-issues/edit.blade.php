@@ -1006,7 +1006,7 @@
                                             class="text-danger">*</span></label>
                                     <select class="form-select" id="site_visit_user_id" name="user_id" required>
                                         <option value="">Select a user</option>
-                                        @foreach ($users as $user)
+                                        @foreach ($propertyManagers ?? [] as $user)
                                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                                         @endforeach
                                     </select>
