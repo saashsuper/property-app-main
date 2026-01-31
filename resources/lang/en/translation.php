@@ -383,7 +383,7 @@ return [
     "create-issue" => "Create Issue",
 
     // Block Issues (list)
-    "block-issues-management" => "Block Issues Management",
+    "block-issues-management" => "Block Issues List",
     "create-block-issue-btn" => "Create Block Issue",
     "search-issues" => "Search issues...",
     "all-blocks" => "All Blocks",

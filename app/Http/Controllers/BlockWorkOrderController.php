@@ -882,6 +882,68 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
+     * Download work order images as a ZIP file.
+     */
+    public function downloadImages(BlockWorkOrder $blockWorkOrder)
+    {
+        $blockWorkOrder->load('images');
+
+        if ($blockWorkOrder->images->isEmpty()) {
+            return redirect()->back()
+                ->with('error', 'No images found for this work order.');
+        }
+
+        $zipFileName = 'work-order-' . Str::slug($blockWorkOrder->ref_no) . '-images.zip';
+        $tempDir = storage_path('app/temp');
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        $zipPath = $tempDir . '/' . uniqid('wo_images_', true) . '.zip';
+
+        $zip = new \ZipArchive();
+        if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()
+                ->with('error', 'Unable to create download archive.');
+        }
+
+        $disk = Storage::disk('public');
+        $addedCount = 0;
+
+        foreach ($blockWorkOrder->images as $index => $image) {
+            if (empty($image->image_path) || empty($image->image_name)) {
+                continue;
+            }
+            $relativePath = rtrim($image->image_path, '/') . '/' . $image->image_name;
+            if (!$disk->exists($relativePath)) {
+                continue;
+            }
+            $fullPath = $disk->path($relativePath);
+            if (!is_readable($fullPath)) {
+                continue;
+            }
+            $extension = pathinfo($image->image_name, PATHINFO_EXTENSION);
+            $entryName = ($index + 1) . '_' . pathinfo($image->image_name, PATHINFO_FILENAME) . ($extension ? '.' . $extension : '');
+            if ($zip->addFile($fullPath, $entryName)) {
+                $addedCount++;
+            }
+        }
+
+        $zip->close();
+
+        if ($addedCount === 0) {
+            if (file_exists($zipPath)) {
+                @unlink($zipPath);
+            }
+            return redirect()->back()
+                ->with('error', 'No image files could be found to download.');
+        }
+
+        return response()->download($zipPath, $zipFileName, [
+            'Content-Type' => 'application/zip',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
      * Upload photos for completed work order (admin only)
      */
     public function uploadPhotos(Request $request, BlockWorkOrder $blockWorkOrder)

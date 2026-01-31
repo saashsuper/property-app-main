@@ -175,6 +175,16 @@
                                                 <a href="{{ route('block-work-orders.show', $workOrder) }}" class="btn btn-sm btn-outline-primary" title="View">
                                                     <i class="ph-eye"></i>
                                                 </a>
+                                                @if($workOrder->images && $workOrder->images->isNotEmpty())
+                                                <a href="{{ route('block-work-orders.download-images', $workOrder) }}" class="btn btn-sm btn-outline-secondary" title="Download images (ZIP)">
+                                                    <i class="ph-image"></i>
+                                                </a>
+                                                @endif
+                                                @if($workOrder->status == 3)
+                                                <a href="{{ route('block-work-orders.download-work-docket', $workOrder) }}" class="btn btn-sm btn-outline-success" title="Download Work Docket">
+                                                    <i class="ph-download"></i>
+                                                </a>
+                                                @endif
                                                 @if(!auth()->user()->hasType('Contractor Admin'))
                                                 <a href="{{ route('block-work-orders.edit', $workOrder) }}" class="btn btn-sm btn-outline-warning" title="Edit">
                                                     <i class="ph-pencil"></i>
@@ -190,7 +200,7 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-outline-{{ $actionColor }}" title="{{ $actionText }}">
-                                                        <i class="{{ $actionIcon }}"></i> {{ $actionText }}
+                                                        <i class="{{ $actionIcon }}"></i>
                                                     </button>
                                                 </form>
                                                 @endif

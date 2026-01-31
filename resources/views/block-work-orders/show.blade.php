@@ -786,7 +786,7 @@
                             </div>
 
                 <!-- Images -->
-                <div class="row">
+                <div class="row" id="work-order-images">
                     <div class="col-12 mb-3">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -1552,7 +1552,7 @@
                 workOrderPhotoDropzone = null;
             }
         });
-        
+
         // Initialize Work Order Photo Dropzone
         function initializeWorkOrderPhotoDropzone() {
             // Disable auto discover to prevent conflicts

@@ -76,16 +76,17 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('blocks/{block}/images', [App\Http\Controllers\BlockController::class, 'deleteImage'])->name('blocks.images.delete');
     Route::post('blocks/{block}/images/primary', [App\Http\Controllers\BlockController::class, 'setPrimaryImage'])->name('blocks.images.primary');
     
-    // Block Work Orders
-    Route::resource('block-work-orders', App\Http\Controllers\BlockWorkOrderController::class);
+    // Block Work Orders (specific routes before resource so they match first)
+    Route::get('block-work-orders/{blockWorkOrder}/download-work-docket', [App\Http\Controllers\BlockWorkOrderController::class, 'downloadWorkDocket'])->name('block-work-orders.download-work-docket');
+    Route::get('block-work-orders/{blockWorkOrder}/download-images', [App\Http\Controllers\BlockWorkOrderController::class, 'downloadImages'])->name('block-work-orders.download-images');
     Route::get('api/block-work-orders', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrders'])->name('api.block-work-orders');
     Route::get('api/block-work-orders/{blockWorkOrder}', [App\Http\Controllers\BlockWorkOrderController::class, 'getBlockWorkOrder'])->name('api.block-work-orders.show');
     Route::get('block-work-orders/block/{blockId}', [App\Http\Controllers\BlockWorkOrderController::class, 'getWorkOrdersByBlock'])->name('block-work-orders.by-block');
     Route::post('block-work-orders/{blockWorkOrder}/reassign', [App\Http\Controllers\BlockWorkOrderController::class, 'reassign'])->name('block-work-orders.reassign');
     Route::post('block-work-orders/{blockWorkOrder}/accept', [App\Http\Controllers\BlockWorkOrderController::class, 'accept'])->name('block-work-orders.accept');
     Route::post('block-work-orders/{blockWorkOrder}/reject', [App\Http\Controllers\BlockWorkOrderController::class, 'reject'])->name('block-work-orders.reject');
-    Route::get('block-work-orders/{blockWorkOrder}/download-work-docket', [App\Http\Controllers\BlockWorkOrderController::class, 'downloadWorkDocket'])->name('block-work-orders.download-work-docket');
     Route::post('block-work-orders/{blockWorkOrder}/regenerate-docket', [App\Http\Controllers\BlockWorkOrderController::class, 'regenerateDocket'])->name('block-work-orders.regenerate-docket');
+    Route::resource('block-work-orders', App\Http\Controllers\BlockWorkOrderController::class);
     
     // Block Work Order Photos (for completed work orders - admin only)
     Route::post('block-work-orders/{blockWorkOrder}/photos', [App\Http\Controllers\BlockWorkOrderController::class, 'uploadPhotos'])->name('block-work-orders.upload-photos');
