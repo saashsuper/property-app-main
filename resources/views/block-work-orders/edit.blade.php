@@ -441,19 +441,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const existingUnitId = {{ $blockWorkOrder->block_unit_id }};
                 const existingIssueId = {{ $blockWorkOrder->block_issue_id ?? 'null' }};
                 if (existingUnitId) {
-                    // Wait a bit for the select to be ready, then set value
+                    // Wait for unit select to be fully populated and rendered
                     setTimeout(() => {
                         unitSelect.value = existingUnitId;
-                        // Trigger change to update building ID
-                        const event = new Event('change', { bubbles: true });
-                        unitSelect.dispatchEvent(event);
-                        // Load issues and select the existing issue
-                        if (existingIssueId) {
-                            loadIssuesForUnit(existingUnitId, existingIssueId);
-                        } else {
-                            loadIssuesForUnit(existingUnitId);
+                        // Update building ID from selected unit
+                        const selectedOption = unitSelect.options[unitSelect.selectedIndex];
+                        if (selectedOption) {
+                            const buildingId = selectedOption.getAttribute('data-building-id');
+                            if (buildingId) {
+                                document.getElementById('block_building_id').value = buildingId;
+                            }
                         }
-                    }, 100);
+                        // Delay before loading issues so unit dropdown is fully ready
+                        setTimeout(() => {
+                            loadIssuesForUnit(existingUnitId, existingIssueId || null);
+                        }, 800);
+                    }, 400);
                 }
                 @endif
             } else {
@@ -481,23 +484,29 @@ document.addEventListener('DOMContentLoaded', function() {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(res => res.json())
-        .then(data => {
+        .then(response => {
             issueSelect.innerHTML = '<option value="">Select Issue</option>';
-            if (data && data.length > 0) {
-                data.forEach(issue => {
+
+            // Handle API response format: { success: true, data: [...] }
+            const issues = (response && response.success && response.data) ? response.data :
+                         (Array.isArray(response) ? response : []);
+
+            if (issues && issues.length > 0) {
+                issues.forEach(issue => {
                     const option = document.createElement('option');
                     option.value = issue.id;
                     option.textContent = `${issue.ref_no} - ${issue.issue}`;
                     issueSelect.appendChild(option);
                 });
                 issueSelect.disabled = false;
-                
+
                 // Select the issue if provided (for edit mode)
                 if (selectIssueId) {
                     issueSelect.value = selectIssueId;
                 }
             } else {
                 issueSelect.innerHTML = '<option value="">No issues found for this unit</option>';
+                issueSelect.disabled = false;
             }
         })
         .catch(error => {
@@ -515,14 +524,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Unit change handler
     unitSelect.addEventListener('change', function() {
-        loadIssuesForUnit(this.value);
-        
+        const unitId = this.value;
+
         // Auto-populate building ID from unit (if available)
         const selectedOption = this.options[this.selectedIndex];
-        const buildingId = selectedOption.getAttribute('data-building-id');
+        const buildingId = selectedOption ? selectedOption.getAttribute('data-building-id') : null;
         if (buildingId) {
             document.getElementById('block_building_id').value = buildingId;
         }
+
+        if (!unitId) {
+            issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+            issueSelect.disabled = true;
+            return;
+        }
+
+        // Clear issues until loaded
+        issueSelect.innerHTML = '<option value="">Loading issues...</option>';
+        issueSelect.disabled = true;
+
+        // Delay loading issues so unit selection is fully complete before fetching
+        setTimeout(() => {
+            loadIssuesForUnit(unitId);
+        }, 600);
     });
     
     // Issue change handler - auto-populate building_id from issue

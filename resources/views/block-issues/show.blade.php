@@ -1008,7 +1008,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>Work Order #</th>
-                                            <th>Assigned User</th>
+                                            <th>Contractor Company</th>
                                             <th>Priority</th>
                                             <th>Status</th>
                                             <th>Issued By</th>
@@ -1025,12 +1025,11 @@
                                                     </a>
                                                 </td>
                                                 <td>
-                                                    @if($workOrder->contractCompany)
-                                                        <strong>{{ $workOrder->contractCompany->name }}</strong>
-                                                        <br><small class="text-muted">{{ $workOrder->contractCompany->code }}</small>
-                                                    @elseif($workOrder->contractor)
-                                                        <strong>{{ $workOrder->contractor->name }}</strong>
-                                                        <br><small class="text-muted">{{ $workOrder->contractor->email }}</small>
+                                                    @php
+                                                        $contractorName = $workOrder->getContractorCompanyDisplayName();
+                                                    @endphp
+                                                    @if($contractorName)
+                                                        <strong>{{ $contractorName }}</strong>
                                                     @else
                                                         <span class="text-muted">Not assigned</span>
                                                     @endif

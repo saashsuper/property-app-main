@@ -135,19 +135,7 @@
                                         </td>
                                         <td>
                                             @php
-                                                // Get contractor company name
-                                                $contractorName = null;
-                                                if ($workOrder->contractCompany) {
-                                                    $contractorName = $workOrder->contractCompany->name ?? null;
-                                                } elseif ($workOrder->contractor) {
-                                                    // Check if contractor is a property manager
-                                                    $isPropertyManager = $workOrder->contractor->userType && $workOrder->contractor->userType->name === 'Property manager';
-                                                    if ($isPropertyManager) {
-                                                        $contractorName = $workOrder->contractor->name . ' (Property Manager)';
-                                                    } else {
-                                                        $contractorName = $workOrder->contractor->name ?? null;
-                                                    }
-                                                }
+                                                $contractorName = $workOrder->getContractorCompanyDisplayName();
                                             @endphp
                                             @if($contractorName)
                                                 <span class="badge bg-info">{{ $contractorName }}</span>

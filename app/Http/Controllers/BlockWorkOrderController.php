@@ -24,7 +24,7 @@ class BlockWorkOrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit', 'contractCompany', 'contractor.userType', 'notes', 'logs', 'images', 'teamMembers'])->active();
+        $query = BlockWorkOrder::with(['block', 'blockIssue', 'issuedBy', 'creator', 'blockUnit', 'contractCompany', 'contractCompanyEntity', 'contractor.userType', 'notes', 'logs', 'images', 'teamMembers'])->active();
 
         // Search functionality
         if ($request->filled('search')) {
@@ -226,7 +226,7 @@ class BlockWorkOrderController extends Controller
 
         // Create issue log entry
         if ($workOrder->block_issue_id) {
-            $contractor = $workOrder->contractCompany ? $workOrder->contractCompany->name : ($workOrder->contractor ? $workOrder->contractor->name : 'contractor');
+            $contractor = $workOrder->getContractorCompanyDisplayName() ?? 'contractor';
             IssueLog::createLog(
                 $workOrder->block_issue_id,
                 'work_order_created',

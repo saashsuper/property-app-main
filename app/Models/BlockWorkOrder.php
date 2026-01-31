@@ -118,11 +118,44 @@ class BlockWorkOrder extends Model
     }
 
     /**
-     * Get the contract company for the work order.
+     * Get the contract company (1_contractors table) for the work order.
+     * @deprecated For work orders created via create/edit form, contractor_id may store contract_companies.id; use contractCompanyEntity() or getContractorCompanyDisplayName() instead.
      */
     public function contractCompany()
     {
         return $this->belongsTo(Contractor::class, 'contractor_id');
+    }
+
+    /**
+     * Get the contract company (contract_companies table) when contractor_id stores a contract_company_id.
+     */
+    public function contractCompanyEntity()
+    {
+        return $this->belongsTo(ContractCompany::class, 'contractor_id');
+    }
+
+    /**
+     * Resolve the contractor company display name for list/show views.
+     * contractor_id may store: users.id (property manager), contract_companies.id (contract company), or 1_contractors.id (legacy).
+     */
+    public function getContractorCompanyDisplayName(): ?string
+    {
+        if (!$this->contractor_id) {
+            return null;
+        }
+        // 1) Property manager (User) – form uses property_manager_id
+        if ($this->contractor && $this->contractor->userType && $this->contractor->userType->name === 'Property manager') {
+            return $this->contractor->name . ' (Property Manager)';
+        }
+        // 2) Contract company (contract_companies) – form uses contract_company_id
+        if ($this->contractCompanyEntity) {
+            return $this->contractCompanyEntity->company_name ?? null;
+        }
+        // 3) Legacy contractor (1_contractors)
+        if ($this->contractCompany) {
+            return $this->contractCompany->name ?? null;
+        }
+        return null;
     }
 
     /**

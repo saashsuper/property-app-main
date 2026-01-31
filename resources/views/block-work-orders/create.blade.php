@@ -382,14 +382,28 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Unit change handler
     unitSelect.addEventListener('change', function() {
-        loadIssuesForUnit(this.value);
-        
+        const unitId = this.value;
+
         // Auto-populate building ID from unit (if available)
         const selectedOption = this.options[this.selectedIndex];
-        const buildingId = selectedOption.getAttribute('data-building-id');
+        const buildingId = selectedOption ? selectedOption.getAttribute('data-building-id') : null;
         if (buildingId) {
             document.getElementById('block_building_id').value = buildingId;
         }
+
+        if (!unitId) {
+            issueSelect.innerHTML = '<option value="">Select a unit first to see issues</option>';
+            issueSelect.disabled = true;
+            return;
+        }
+
+        issueSelect.innerHTML = '<option value="">Loading issues...</option>';
+        issueSelect.disabled = true;
+
+        // Delay loading issues so unit selection is fully complete before fetching
+        setTimeout(() => {
+            loadIssuesForUnit(unitId);
+        }, 600);
     });
     
     // Issue change handler - auto-populate building_id from issue
