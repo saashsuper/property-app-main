@@ -1010,8 +1010,11 @@
                                             <th>Work Order #</th>
                                             <th>Contractor Company</th>
                                             <th>Priority</th>
+                                            <th>Start Date & Time</th>
+                                            <th>End Date & Time</th>
+                                            <th>Deadline Date</th>
                                             <th>Status</th>
-                                            <th>Issued By</th>
+                                            <th>Created By</th>
                                             <th>Created Date</th>
                                             <th>Actions</th>
                                         </tr>
@@ -1044,18 +1047,39 @@
                                                     @endif
                                                 </td>
                                                 <td>
+                                                    @if($workOrder->preferred_start_date_time)
+                                                        {{ $workOrder->preferred_start_date_time->format('M d, Y H:i') }}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($workOrder->preferred_end_date_time)
+                                                        {{ $workOrder->preferred_end_date_time->format('M d, Y H:i') }}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($workOrder->deadline_date)
+                                                        {{ $workOrder->deadline_date->format('M d, Y') }}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
+                                                <td>
                                                     <span class="badge bg-{{ $workOrder->status_color ?? 'secondary' }}">{{ $workOrder->status_text ?? 'Unknown' }}</span>
                                                 </td>
                                                 <td>
                                                     <div class="d-flex align-items-center">
                                                         <div class="avatar-xs me-2">
                                                             <div class="avatar-title rounded-circle bg-primary">
-                                                                {{ substr($workOrder->issuedBy->name ?? 'N/A', 0, 1) }}
+                                                                {{ substr($workOrder->creator->name ?? 'N/A', 0, 1) }}
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <div class="fw-medium">{{ $workOrder->issuedBy->name ?? 'N/A' }}</div>
-                                                            <small class="text-muted">{{ $workOrder->issuedBy->email ?? '' }}</small>
+                                                            <div class="fw-medium">{{ $workOrder->creator->name ?? 'N/A' }}</div>
+                                                            <small class="text-muted">{{ $workOrder->creator->email ?? '' }}</small>
                                                         </div>
                                                     </div>
                                                 </td>

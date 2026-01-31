@@ -76,8 +76,10 @@
                                         <th>Priority</th>
                                         <th>Status</th>
                                         <th>Contractor Company</th>
+                                        <th>Start Date & Time</th>
+                                        <th>End Date & Time</th>
                                         <th>Deadline</th>
-                                        <th>Issued By</th>
+                                        <th>Created By</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -144,6 +146,20 @@
                                             @endif
                                         </td>
                                         <td>
+                                            @if($workOrder->preferred_start_date_time)
+                                                {{ $workOrder->preferred_start_date_time->format('M d, Y H:i') }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($workOrder->preferred_end_date_time)
+                                                {{ $workOrder->preferred_end_date_time->format('M d, Y H:i') }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
                                             @if($workOrder->deadline_date)
                                                 {{ $workOrder->deadline_date->format('M d, Y') }}
                                             @else
@@ -151,7 +167,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div>{{ $workOrder->issuedBy->name ?? 'N/A' }}</div>
+                                            <div>{{ $workOrder->creator->name ?? 'N/A' }}</div>
                                             <small class="text-muted">{{ $workOrder->created_at->format('M d, Y') }}</small>
                                         </td>
                                         <td>
@@ -183,7 +199,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="10" class="text-center py-4">
+                                        <td colspan="12" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="fas fa-inbox fa-3x mb-3"></i>
                                                 <p>No work orders found. 
@@ -243,7 +259,7 @@ $(document).ready(function() {
             dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
             order: [[0, 'desc']], // default sort by Ref No descending
             columnDefs: [
-                { targets: [9], orderable: false }, // Actions column
+                { targets: [11], orderable: false }, // Actions column
                 { targets: [0], width: '8%' },   // Ref No
                 { targets: [1], width: '12%' },  // Block
                 { targets: [2], width: '10%' },  // Unit
@@ -251,9 +267,11 @@ $(document).ready(function() {
                 { targets: [4], width: '8%' },   // Priority
                 { targets: [5], width: '8%' },   // Status
                 { targets: [6], width: '14%' },  // Contractor Company
-                { targets: [7], width: '10%' },  // Deadline
-                { targets: [8], width: '12%' },  // Issued By
-                { targets: [9], width: '6%' }    // Actions
+                { targets: [7], width: '12%' },  // Start Date & Time
+                { targets: [8], width: '12%' },  // End Date & Time
+                { targets: [9], width: '10%' },  // Deadline
+                { targets: [10], width: '12%' },  // Created By
+                { targets: [11], width: '6%' }    // Actions
             ],
             pageLength: 10,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
