@@ -10,9 +10,11 @@ use App\Models\BlockIssue;
 use App\Models\BlockUnit;
 use App\Models\BlockBuilding;
 use App\Models\IssueLog;
+use App\Notifications\WorkOrderAssignedNotification;
 use App\Services\WorkDocketService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -237,6 +239,9 @@ class BlockWorkOrderController extends Controller
                 ]
             );
         }
+
+        // Send push notification to Contractor Admin users when assigned to their company
+        $this->notifyContractorAdminsOfAssignment($workOrder, 'assigned');
 
         // Check if this is an AJAX request (for modal submissions from block edit page)
         if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
@@ -631,6 +636,11 @@ class BlockWorkOrderController extends Controller
             }
         }
 
+        // Send push notification when contractor assignment changed
+        if (isset($data['contractor_id'])) {
+            $this->notifyContractorAdminsOfAssignment($blockWorkOrder->fresh(), 'updated');
+        }
+
         // Check if this is an AJAX request
         if ($request->ajax()) {
             return response()->json([
@@ -830,6 +840,9 @@ class BlockWorkOrderController extends Controller
             'note_type' => 'reassignment',
             'created_by' => $user->id,
         ]);
+
+        // Send push notification to the newly assigned Contractor Admin
+        $this->notifyContractorAdminsOfAssignment($blockWorkOrder->fresh(), 'reassigned');
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -1322,10 +1335,11 @@ class BlockWorkOrderController extends Controller
         );
 
         if ($request->ajax() || $request->wantsJson()) {
+            $updated = $blockWorkOrder->fresh()->load('jobStatus');
             return response()->json([
                 'success' => true,
                 'message' => 'Work order accepted successfully!',
-                'data' => $blockWorkOrder->fresh()
+                'data' => $updated,
             ]);
         }
 
@@ -1444,5 +1458,61 @@ class BlockWorkOrderController extends Controller
         }
 
         return redirect()->back()->with('success', 'Work order rejected successfully!');
+    }
+
+    /**
+     * Send web push notification to Contractor Admin users when a work order is assigned to their company.
+     * Called on store, update (contractor changed), and reassign.
+     */
+    private function notifyContractorAdminsOfAssignment(BlockWorkOrder $workOrder, string $action = 'assigned'): void
+    {
+        if (! $workOrder->contractor_id) {
+            Log::debug('Push notification skipped: no contractor_id on work order', ['work_order_id' => $workOrder->id]);
+            return;
+        }
+
+        $users = $this->getContractorAdminsWithPushSubscriptions($workOrder->contractor_id);
+        if ($users->isEmpty()) {
+            Log::info('Push notification skipped: no Contractor Admin users with push subscriptions', [
+                'work_order_id' => $workOrder->id,
+                'contractor_id' => $workOrder->contractor_id,
+            ]);
+            return;
+        }
+
+        foreach ($users as $user) {
+            try {
+                $user->notify(new WorkOrderAssignedNotification($workOrder, $action));
+                Log::info('Push notification sent', ['user_id' => $user->id, 'work_order_id' => $workOrder->id]);
+            } catch (\Throwable $e) {
+                Log::error('Push notification failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
+        }
+    }
+
+    /**
+     * Get Contractor Admin users with push subscriptions to notify.
+     * contractor_id can be: contract_company_id (outsource) or Contractor Admin user id (reassign).
+     */
+    private function getContractorAdminsWithPushSubscriptions(int $contractorId): \Illuminate\Support\Collection
+    {
+        // Case 1: contractor_id is a Contractor Admin user id (e.g. from reassign)
+        $user = \App\Models\User::with(['userType', 'pushSubscriptions'])->find($contractorId);
+        if ($user && $user->userType?->name === 'Contractor Admin' && $user->pushSubscriptions->isNotEmpty() && $user->is_active) {
+            return collect([$user]);
+        }
+
+        // Case 2: contractor_id is a contract_company_id - get Contractor Admins of that company with push subscriptions
+        $contractCompany = \App\Models\ContractCompany::find($contractorId);
+        if ($contractCompany) {
+            return \App\Models\User::where('contract_company_id', $contractorId)
+                ->whereHas('userType', fn ($q) => $q->where('name', 'Contractor Admin'))
+                ->whereHas('pushSubscriptions')
+                ->where('is_active', true)
+                ->with('pushSubscriptions')
+                ->get();
+        }
+
+        return collect();
     }
 }

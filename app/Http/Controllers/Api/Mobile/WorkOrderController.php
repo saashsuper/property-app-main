@@ -55,7 +55,8 @@ class WorkOrderController extends Controller
             'block',
             'blockUnit',
             'priority',
-            'contractCompany', // Use contractCompany instead of contractor
+            'contractCompany',
+            'jobStatus',
             'images',
         ])->active(); // Only show active work orders
 
@@ -96,6 +97,7 @@ class WorkOrderController extends Controller
             'blockBuilding',
             'priority',
             'contractor',
+            'jobStatus',
             'issuedBy',
             'images',
             'blockIssue',
@@ -318,7 +320,8 @@ class WorkOrderController extends Controller
             }
         }
 
-        // Reload with relationships (exact same pattern as resume/pause)
+        // Refresh from DB to include pdf_path/pdf_name set by work docket generation
+        $workOrder->refresh();
         $workOrder->load([
             'blockUnit',
             'blockBuilding',

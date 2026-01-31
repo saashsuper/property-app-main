@@ -11,6 +11,7 @@ class JobStatusSeeder extends Seeder
     {
         $statuses = [
             ['name' => 'Scheduled', 'is_updated' => 1],
+            ['name' => 'Accepted', 'is_updated' => 1],
             ['name' => 'In Progress', 'is_updated' => 1],
             ['name' => 'Completed', 'is_updated' => 1],
             ['name' => 'Cancelled', 'is_updated' => 0],

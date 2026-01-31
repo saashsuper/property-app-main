@@ -72,10 +72,52 @@ class LoginController extends Controller
 
     /**
      * API Logout - for mobile app
+     * currentAccessToken() is null when authenticated via session (no Bearer token)
      */
     public function apiLogout(\Illuminate\Http\Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $token = $user->currentAccessToken();
+        if ($token) {
+            $token->delete();
+        }
         return response()->json(['success' => true, 'message' => 'Logged out']);
+    }
+
+    /**
+     * API Update FCM Token - deprecated (PWA uses Web Push now).
+     * Kept for backward compatibility, no-op.
+     */
+    public function updateFcmToken(\Illuminate\Http\Request $request)
+    {
+        return response()->json(['success' => true, 'message' => 'Use update-push-subscription for web push']);
+    }
+
+    /**
+     * API Update Push Subscription - for web push notifications (PWA)
+     * Receives subscription from navigator.serviceWorker.pushManager.subscribe()
+     */
+    public function updatePushSubscription(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'endpoint' => 'required|string|max:500',
+            'keys' => 'required|array',
+            'keys.p256dh' => 'required|string',
+            'keys.auth' => 'required|string',
+            'contentEncoding' => 'nullable|string|in:aes128gcm,aesgcm',
+        ]);
+
+        $user = $request->user();
+        $keys = $request->input('keys');
+        $contentEncoding = $request->input('contentEncoding', 'aesgcm');
+
+        $user->updatePushSubscription(
+            $request->input('endpoint'),
+            $keys['p256dh'] ?? null,
+            $keys['auth'] ?? null,
+            $contentEncoding
+        );
+
+        return response()->json(['success' => true, 'message' => 'Push subscription updated']);
     }
 }

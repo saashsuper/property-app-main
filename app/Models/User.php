@@ -9,11 +9,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Models\UserType;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles, HasPushSubscriptions;
 
     // Archive status constants
     const STATUS_ACTIVE = 'active';
@@ -34,6 +35,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_active',
         'user_type_id',
         'contract_company_id',
+        'fcm_token',
         'archive_status',
         'created_by',
         'updated_by',

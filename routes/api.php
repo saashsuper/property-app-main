@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Route;
 // Public Routes
 Route::prefix('auth')->group(function () {
     Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'apiLogin']);
+    Route::get('/vapid-public-key', function () {
+        return response()->json(['publicKey' => config('webpush.vapid.public_key')]);
+    });
 });
 
 // Protected Routes (require authentication)
@@ -58,6 +61,8 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             ]);
         });
         Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'apiLogout']);
+        Route::post('/update-fcm-token', [\App\Http\Controllers\Auth\LoginController::class, 'updateFcmToken']);
+        Route::post('/update-push-subscription', [\App\Http\Controllers\Auth\LoginController::class, 'updatePushSubscription']);
     });
     
     // Dashboard

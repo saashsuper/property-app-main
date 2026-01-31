@@ -20,7 +20,7 @@ class RealUserSeeder extends Seeder
                 'name' => 'Admin User',
                 'email' => 'admin@proman.com',
                 'email_verified_at' => now(),
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('P@ssword123'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
