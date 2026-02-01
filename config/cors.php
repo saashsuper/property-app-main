@@ -26,15 +26,19 @@ return [
         'http://127.0.0.1:3000',
         'https://localhost:5173',
         'https://proman.ddev.site:8443',
+        'https://absolute.saashmagna.com',
+        'https://apmapp.saashmagna.com',
+        'https://saashmagna.com',
+        'https://www.saashmagna.com',
         env('APP_URL'),
-        env('PWA_URL', 'http://localhost:5173'),
-        // Add production PWA URL if needed
+        env('PWA_URL'),
         env('PWA_PRODUCTION_URL'),
     ]),
 
     'allowed_origins_patterns' => [
         '/^https?:\/\/localhost:\d+$/',
         '/^https?:\/\/127\.0\.0\.1:\d+$/',
+        '/^https?:\/\/.*\.saashmagna\.com$/',
     ],
 
     'allowed_headers' => ['*'],
