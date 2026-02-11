@@ -165,27 +165,41 @@ class PermissionsSeeder extends Seeder
         ];
         $contractor->syncPermissions($contractorPermissions);
 
-        // Viewer permissions
+        // Viewer permissions (Office Administrator) - edit and related permissions enabled, same as Manager except user management
         $viewerPermissions = [
-            'blocks.view',
-            'block-buildings.view',
-            'block-units.view',
-            'block-contractors.view',
-            'block-information.view',
-            'block-images.view',
-            
-            'block-issues.view',
-            'block-inspections.view',
-            'block-visits.view',
-            
-            'work-orders.view',
-            'block-work-orders.view',
-            
-            'issues.view',
-            'issue-logs.view',
-            
-            'dashboard.view',
-            'reports.view',
+            // Blocks - all except delete
+            'blocks.view', 'blocks.create', 'blocks.edit', 'blocks.export',
+            'block-buildings.view', 'block-buildings.create', 'block-buildings.edit',
+            'block-units.view', 'block-units.create', 'block-units.edit',
+            'block-contractors.view', 'block-contractors.create', 'block-contractors.edit',
+            'block-information.view', 'block-information.create', 'block-information.edit',
+            'block-images.view', 'block-images.upload', 'block-images.delete',
+
+            // Issues - full access
+            'block-issues.view', 'block-issues.create', 'block-issues.edit', 'block-issues.assign', 'block-issues.resolve',
+            'block-issue-actions.view', 'block-issue-actions.create', 'block-issue-actions.edit',
+            'issues.view', 'issues.create', 'issues.edit', 'issues.assign',
+            'issue-logs.view', 'issue-logs.create',
+
+            // Inspections - approve access
+            'block-inspections.view', 'block-inspections.create', 'block-inspections.edit', 'block-inspections.approve',
+            'block-inspection-teams.view', 'block-inspection-teams.create', 'block-inspection-teams.edit',
+            'block-inspection-assets.view', 'block-inspection-assets.create', 'block-inspection-assets.edit',
+
+            // Visits
+            'block-visits.view', 'block-visits.create', 'block-visits.edit',
+            'block-visit-results.view', 'block-visit-results.create', 'block-visit-results.edit',
+
+            // Work Orders - approve and complete
+            'work-orders.view', 'work-orders.create', 'work-orders.edit', 'work-orders.approve', 'work-orders.complete',
+            'block-work-orders.view', 'block-work-orders.create', 'block-work-orders.edit',
+
+            // Reports and Dashboard (no user management for Office Administrator)
+            'reports.view', 'reports.export',
+            'dashboard.view', 'dashboard.view-analytics',
+
+            // Settings - view only
+            'settings.view',
         ];
         $viewer->syncPermissions($viewerPermissions);
 

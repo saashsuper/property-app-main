@@ -68,10 +68,12 @@
                                         <span class="text-white-50">{{ $block->created_at ? $block->created_at->format('h:i A') : 'N/A' }}</span>
                                     </div>
                                     <div class="d-flex gap-2">
-                                        @admin
+                                        @can('blocks.edit')
                                         <a href="{{ route('blocks.edit', $block) }}" class="btn btn-light btn-sm">
                                             <i class="ph-pencil me-2"></i>Edit Block
                                         </a>
+                                        @endcan
+                                        @can('blocks.delete')
                                         @php
                                             $hasRelatedEntities = $block->hasRelatedEntities();
                                             $actionText = $hasRelatedEntities ? 'Archive' : 'Delete';
@@ -80,7 +82,7 @@
                                         <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" title="{{ $actionText }} Block" dusk="{{ strtolower($actionText) }}-block-{{ $block->id }}">
                                             <i class="{{ $actionIcon }} me-2"></i>{{ $actionText }} Block
                                         </button>
-                                        @endadmin
+                                        @endcan
                                         <a href="{{ route('blocks.index') }}" class="btn btn-outline-light btn-sm">
                                             <i class="ph-list me-2"></i>Block List
                                         </a>

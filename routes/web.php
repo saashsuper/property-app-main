@@ -190,18 +190,18 @@ Route::get('block-visits/block/{blockId}', [App\Http\Controllers\BlockVisitContr
 // API Routes for address fields
 Route::get('api/states/{countryId}', [App\Http\Controllers\BlockController::class, 'getStatesByCountry']);
 
-// Block Building Management Routes
+// Block Building Management Routes - Admin, Property manager, Office Administrator
 Route::middleware(['auth'])->group(function () {
-    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin|Super Admin');
+    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin|Super Admin|Manager|Viewer');
 });
 
-// Block Unit Management Routes
+// Block Unit Management Routes - Admin, Property manager, Office Administrator
 Route::middleware(['auth'])->group(function () {
-    Route::resource('block-units', BlockUnitController::class)->middleware('role:Admin|Super Admin');
-    Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload')->middleware('role:Admin|Super Admin');
-    Route::get('block-units/template/{block_id}', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template')->middleware('role:Admin|Super Admin');
-    Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin|Super Admin');
-    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin|Super Admin');
+    Route::resource('block-units', BlockUnitController::class)->middleware('role:Admin|Super Admin|Manager|Viewer');
+    Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload')->middleware('role:Admin|Super Admin|Manager|Viewer');
+    Route::get('block-units/template/{block_id}', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template')->middleware('role:Admin|Super Admin|Manager|Viewer');
+    Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin|Super Admin|Manager|Viewer');
+    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin|Super Admin|Manager|Viewer');
 });
 
 // Specific routes that must come before catch-all

@@ -153,6 +153,23 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+
+                                <!-- Default Contact Details (after Contact method row) -->
+                                <input type="hidden" id="contact_details_hidden" name="contact_details" value="{{ old('contact_details') }}">
+                                <div class="col-12 mb-3">
+                                    <label for="default_contact_details" class="form-label">Default Contact Details</label>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
+                                        <label class="form-check-label" for="use_default_contact">
+                                            Use default contact details
+                                        </label>
+                                    </div>
+                                    <textarea class="form-control @error('default_contact_details') is-invalid @enderror" 
+                                              id="default_contact_details" name="default_contact_details" rows="5" placeholder="Enter default contact information..." readonly>{{ old('default_contact_details') }}</textarea>
+                                    @error('default_contact_details')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 
                                 <!-- Row 3: Left column (Category), Right two columns (Problem Overview and Issue Details) -->
                                 <div class="col-md-4 mb-3">
@@ -200,25 +217,6 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     </div>
-                                </div>
-
-                                <!-- Hidden contact_details to satisfy backend validation; synced from default_contact_details -->
-                                <input type="hidden" id="contact_details_hidden" name="contact_details" value="{{ old('contact_details') }}">
-                                
-                                <!-- Row 4: Default Contact Details -->
-                                <div class="col-12 mb-3">
-                                    <label for="default_contact_details" class="form-label">Default Contact Details</label>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
-                                        <label class="form-check-label" for="use_default_contact">
-                                            Use default contact details
-                                        </label>
-                                    </div>
-                                    <textarea class="form-control @error('default_contact_details') is-invalid @enderror" 
-                                              id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly>{{ old('default_contact_details') }}</textarea>
-                                    @error('default_contact_details')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
 
                                 <!-- Row 5: Dropzone Image Upload -->

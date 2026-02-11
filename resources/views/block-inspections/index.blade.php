@@ -35,11 +35,11 @@
                                 </a>
                             </div>
                             <!-- Add Button -->
-                            @admin
+                            @can('block-inspections.create')
                             <a href="{{ route('block-inspections.create') }}" class="btn btn-primary">
                                 <i class="ph-plus me-1"></i>Add Inspection
                             </a>
-                            @endadmin
+                            @endcan
                         </div>
                     </div>
                 </div>
