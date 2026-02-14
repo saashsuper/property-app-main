@@ -91,7 +91,7 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
             return response()->json($workOrders);
         });
         
-        Route::get('/{id}', function ($id) {
+        Route::get('/{id}', function (\Illuminate\Http\Request $request, $id) {
             $workOrder = \App\Models\BlockWorkOrder::with([
                 'blockUnit',
                 'blockBuilding',
@@ -104,8 +104,12 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'contractor',
                 'issuedBy',
                 'creator',
-                'updater'
+                'updater',
+                'teamMembers',
             ])->findOrFail($id);
+            // For accepted jobs, only team members can change status; expose so PWA can show/hide controls
+            $user = $request->user();
+            $workOrder->setAttribute('is_team_member', $user ? $workOrder->isUserTeamMember($user) : false);
             return response()->json($workOrder);
         });
         
@@ -116,7 +120,20 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         Route::post('/{blockWorkOrder}/reject', [\App\Http\Controllers\BlockWorkOrderController::class, 'reject']);
         
         // Start work order (update status from "Accepted" to "In Progress")
+        // For accepted jobs, only team members can change status
         Route::post('/{blockWorkOrder}/start', function (\Illuminate\Http\Request $request, \App\Models\BlockWorkOrder $blockWorkOrder) {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
+            $blockWorkOrder->load('teamMembers');
+            if (!$blockWorkOrder->isUserTeamMember($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only team members can change work order status after it has been accepted.',
+                ], 403);
+            }
+
             // Get Accepted and In Progress status IDs
             $acceptedStatus = \App\Models\JobStatus::where('name', 'Accepted')->first();
             $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
@@ -183,7 +200,20 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         });
         
         // Pause work order (update status to "On Hold")
+        // For accepted jobs, only team members can change status
         Route::post('/{blockWorkOrder}/pause', function (\Illuminate\Http\Request $request, \App\Models\BlockWorkOrder $blockWorkOrder) {
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
+            $blockWorkOrder->load('teamMembers');
+            if (!$blockWorkOrder->isUserTeamMember($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only team members can change work order status after it has been accepted.',
+                ], 403);
+            }
+
             // Validate pause reason (optional, defaults to generic message)
             $request->validate([
                 'reason' => 'nullable|string|max:1000',
@@ -260,8 +290,19 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
         });
         
         // Resume work order (update status from "On Hold" to "In Progress")
+        // For accepted jobs, only team members can change status
         Route::post('/{id}/resume', function (\Illuminate\Http\Request $request, $id) {
-            $workOrder = \App\Models\BlockWorkOrder::findOrFail($id);
+            $user = $request->user();
+            if (!$user) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
+            $workOrder = \App\Models\BlockWorkOrder::with('teamMembers')->findOrFail($id);
+            if (!$workOrder->isUserTeamMember($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Only team members can change work order status after it has been accepted.',
+                ], 403);
+            }
             
             // Get "In Progress" job status
             $inProgressStatus = \App\Models\JobStatus::where('name', 'In Progress')->first();
@@ -1328,6 +1369,116 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
     
     // Block Issues
     Route::prefix('block-issues')->group(function () {
+        // Create issue - POST (must be before /{id})
+        Route::post('/', function (\Illuminate\Http\Request $request) {
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'block_id' => 'required|exists:blocks,id',
+                'assigned_to' => 'required|exists:users,id',
+                'reported_by' => 'nullable|exists:users,id',
+                'issue' => 'required|string|max:255',
+                'issue_type' => 'required|string|max:100',
+                'priority_id' => 'required|integer|min:1|max:5',
+                'contact_details' => 'required|string|max:500',
+                'contact_method_id' => 'required|exists:contact_methods,id',
+                'issue_details' => 'nullable|string',
+                'block_unit_id' => ['nullable', 'exists:block_units,id', \Illuminate\Validation\Rule::exists('block_units', 'id')->where('block_id', $request->block_id)],
+            ]);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+            try {
+                $reportedBy = $request->reported_by ?: auth()->id() ?: $request->assigned_to;
+                $data = [
+                    'block_id' => $request->block_id,
+                    'assigned_to' => $request->assigned_to,
+                    'reported_by' => $reportedBy,
+                    'issue' => $request->issue,
+                    'issue_type' => $request->issue_type,
+                    'priority_id' => $request->priority_id,
+                    'issue_status_id' => 1,
+                    'status' => \App\Models\BlockIssue::STATUS_ACTIVE,
+                    'contact_details' => $request->contact_details,
+                    'contact_method_id' => $request->contact_method_id,
+                    'issue_details' => $request->issue_details,
+                    'block_unit_id' => $request->block_unit_id ?: null,
+                    'created_by' => auth()->id() ?: $reportedBy,
+                    'updated_by' => auth()->id() ?: $reportedBy,
+                    'issued_by' => auth()->id() ?: $reportedBy,
+                ];
+                $blockIssue = \App\Models\BlockIssue::create($data);
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $image) {
+                        $imageName = time() . '_' . \Illuminate\Support\Str::random(10) . '.' . $image->getClientOriginalExtension();
+                        $imagePath = 'block-issues/images';
+                        $image->storeAs('public/' . $imagePath, $imageName);
+                        \App\Models\BlockIssueImage::create([
+                            'block_issue_id' => $blockIssue->id,
+                            'image_path' => $imagePath,
+                            'image_name' => $imageName,
+                            's3_status' => false,
+                        ]);
+                    }
+                }
+                return response()->json(['success' => true, 'message' => 'Issue created successfully', 'data' => $blockIssue]);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'Failed to create issue: ' . $e->getMessage()], 500);
+            }
+        });
+        
+        // Create form lookup data
+        Route::get('/create-data', function () {
+            $contactMethods = \App\Models\ContactMethod::orderBy('name')->get(['id', 'name']);
+            $issueTypes = \App\Models\IssueType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            $propertyManagers = \App\Models\User::whereHas('userType', fn($q) => $q->where('name', 'Property manager'))
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']);
+            $users = \App\Models\User::orderBy('name')->get(['id', 'name', 'email']);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'contact_methods' => $contactMethods,
+                    'issue_types' => $issueTypes,
+                    'property_managers' => $propertyManagers,
+                    'users' => $users,
+                ]
+            ]);
+        });
+        
+        // Get issues assigned to property manager
+        Route::get('/my-issues', function () {
+            $user = auth()->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                    'data' => []
+                ], 401);
+            }
+            
+            // Get issues where property manager is assigned or where the block belongs to this PM
+            $issues = \App\Models\BlockIssue::with([
+                'block',
+                'blockUnit',
+                'priority',
+                'issueStatus',
+                'issuedBy'
+            ])
+            ->where(function($query) use ($user) {
+                $query->where('assigned_to_id', $user->id)
+                      ->orWhereHas('block', function($q) use ($user) {
+                          $q->where('block_manager_id', $user->id);
+                      });
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $issues
+            ]);
+        });
+        
         Route::get('/{id}', function ($id) {
             $blockIssue = \App\Models\BlockIssue::with([
                 'block',
@@ -1345,7 +1496,10 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
                 'images'
             ])->findOrFail($id);
             
-            return response()->json($blockIssue);
+            return response()->json([
+                'success' => true,
+                'data' => $blockIssue
+            ]);
         });
         
         Route::get('/{id}/photos', function ($id) {
@@ -1361,14 +1515,244 @@ Route::middleware(\App\Http\Middleware\AuthenticateWithSanctum::class)->group(fu
     
     // Blocks
     Route::prefix('blocks')->group(function () {
+        // Get blocks assigned to property manager (using block_manager_id)
+        Route::get('/my-blocks', function (\Illuminate\Http\Request $request) {
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated',
+                    'data' => []
+                ], 401);
+            }
+            
+            $blocks = \App\Models\Block::with(['units', 'blockManager', 'state', 'country'])
+                ->where('block_manager_id', $user->id)
+                ->withCount(['units', 'blockIssues as issues_count', 'blockWorkOrders as work_orders_count'])
+                ->orderBy('name')
+                ->get()
+                ->map(function($block) {
+                    return [
+                        'id' => $block->id,
+                        'name' => $block->name,
+                        'address' => $block->address1,
+                        'city' => $block->state ? $block->state->name : null,
+                        'state' => $block->state ? $block->state->name : null,
+                        'zip_code' => null,
+                        'country' => $block->country ? $block->country->name : null,
+                        'description' => $block->management_company,
+                        'status' => $block->status === 'active' ? 1 : 0,
+                        'property_manager_id' => $block->block_manager_id,
+                        'property_manager' => $block->blockManager ? [
+                            'id' => $block->blockManager->id,
+                            'name' => $block->blockManager->name,
+                            'email' => $block->blockManager->email,
+                        ] : null,
+                        'units_count' => $block->units_count ?? 0,
+                        'issues_count' => $block->issues_count ?? 0,
+                        'work_orders_count' => $block->work_orders_count ?? 0,
+                        'created_at' => $block->created_at,
+                        'updated_at' => $block->updated_at,
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $blocks
+            ]);
+        });
+        
         Route::get('/', function () {
             $blocks = \App\Models\Block::with(['units'])->get();
             return response()->json($blocks);
         });
         
         Route::get('/{id}', function ($id) {
-            $block = \App\Models\Block::with(['units', 'buildings'])->findOrFail($id);
-            return response()->json($block);
+            $block = \App\Models\Block::with(['units', 'buildings', 'blockManager', 'state', 'country'])
+                ->withCount(['units', 'blockIssues as issues_count', 'blockWorkOrders as work_orders_count'])
+                ->findOrFail($id);
+            
+            // Transform for API response (flatten nested objects to strings for frontend)
+            $data = [
+                'id' => $block->id,
+                'name' => $block->name,
+                'address' => $block->address1,
+                'city' => $block->state ? $block->state->name : null,
+                'state' => $block->state ? $block->state->name : null,
+                'state_name' => $block->state ? $block->state->name : null,
+                'zip_code' => null,
+                'country' => $block->country ? $block->country->name : null,
+                'description' => $block->management_company,
+                'status' => $block->status === 'active' ? 1 : 0,
+                'property_manager_id' => $block->block_manager_id,
+                'property_manager' => $block->blockManager ? [
+                    'id' => $block->blockManager->id,
+                    'name' => $block->blockManager->name,
+                    'email' => $block->blockManager->email,
+                ] : null,
+                'units_count' => $block->units_count ?? 0,
+                'issues_count' => $block->issues_count ?? 0,
+                'work_orders_count' => $block->work_orders_count ?? 0,
+                'created_at' => $block->created_at,
+                'updated_at' => $block->updated_at,
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        });
+        
+        // Get issues for a specific block
+        Route::get('/{id}/issues', function ($id) {
+            $issues = \App\Models\BlockIssue::with([
+                'blockUnit',
+                'priority',
+                'issueStatus',
+                'issuedBy',
+                'assignedTo'
+            ])
+            ->withCount([
+                'workOrders as active_work_orders_count' => function ($q) {
+                    $q->where('status', '!=', 3); // Exclude Completed
+                },
+            ])
+            ->where('block_id', $id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $issues
+            ]);
+        });
+        
+        // Get unit details (full info, issues, work orders) - must be before /{id}/units
+        Route::get('/{blockId}/units/{unitId}', function ($blockId, $unitId) {
+            $unit = \App\Models\BlockUnit::with([
+                'block', 'building', 'unitType', 'state', 'country'
+            ])
+                ->where('block_id', $blockId)
+                ->where('id', $unitId)
+                ->firstOrFail();
+            
+            $issues = \App\Models\BlockIssue::with(['priority', 'issueStatus', 'issuedBy', 'assignedTo'])
+                ->withCount([
+                    'workOrders as active_work_orders_count' => function ($q) {
+                        $q->where('status', '!=', 3); // Exclude Completed
+                    },
+                ])
+                ->where('block_unit_id', $unitId)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($issue) {
+                    return [
+                        'id' => $issue->id,
+                        'issue' => $issue->issue,
+                        'title' => $issue->title,
+                        'issue_details' => $issue->issue_details,
+                        'priority' => $issue->priority ? ['id' => $issue->priority->id, 'name' => $issue->priority->name] : null,
+                        'issue_status' => $issue->issueStatus ? ['id' => $issue->issueStatus->id, 'name' => $issue->issueStatus->label ?? $issue->issueStatus->value] : null,
+                        'assigned_to' => $issue->assignedTo ? ['id' => $issue->assignedTo->id, 'name' => $issue->assignedTo->name] : null,
+                        'active_work_orders_count' => $issue->active_work_orders_count ?? 0,
+                    ];
+                });
+            
+            $workOrders = \App\Models\BlockWorkOrder::with(['priority', 'jobStatus', 'contractor'])
+                ->where('block_unit_id', $unitId)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($wo) {
+                    return [
+                        'id' => $wo->id,
+                        'ref_no' => $wo->ref_no,
+                        'issue' => $wo->issue,
+                        'job_status' => $wo->jobStatus ? ['id' => $wo->jobStatus->id, 'name' => $wo->jobStatus->name] : null,
+                        'priority' => $wo->priority ? ['id' => $wo->priority->id, 'name' => $wo->priority->name] : null,
+                        'contractor' => $wo->contractor ? ['id' => $wo->contractor->id, 'name' => $wo->contractor->name] : null,
+                    ];
+                });
+            
+            $data = [
+                'id' => $unit->id,
+                'block_id' => $unit->block_id,
+                'unit_code' => $unit->unit_code,
+                'unit_name' => $unit->unit_name,
+                'owners_name' => $unit->owners_name,
+                'salutation' => $unit->salutation,
+                'email' => $unit->email,
+                'mobile_no' => $unit->mobile_no,
+                'phone_number' => $unit->phone_number,
+                'address1' => $unit->address1,
+                'address2' => $unit->address2,
+                'address3' => $unit->address3,
+                'letting_agent' => $unit->letting_agent,
+                'misc_info' => $unit->misc_info,
+                'resident' => $unit->resident,
+                'status' => $unit->status,
+                'block' => $unit->block ? [
+                    'id' => $unit->block->id,
+                    'name' => $unit->block->name,
+                    'address' => $unit->block->address1,
+                ] : null,
+                'building' => $unit->building ? ['id' => $unit->building->id, 'name' => $unit->building->name] : null,
+                'unit_type' => $unit->unitType ? ['id' => $unit->unitType->id, 'name' => $unit->unitType->name] : null,
+                'state' => $unit->state ? $unit->state->name : null,
+                'country' => $unit->country ? $unit->country->name : null,
+                'zip' => $unit->zip,
+                'issues' => $issues->values()->all(),
+                'work_orders' => $workOrders->values()->all(),
+                'created_at' => $unit->created_at,
+                'updated_at' => $unit->updated_at,
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        });
+        
+        // Get paginated units for a block (descending by created_at)
+        Route::get('/{id}/units', function ($id) {
+            $perPage = request()->get('per_page', 10);
+            $units = \App\Models\BlockUnit::where('block_id', $id)
+                ->withCount([
+                    'issues as active_issues_count' => function ($q) {
+                        $q->where('status', 'active')->whereNull('deleted_at');
+                    },
+                    'workOrders as active_work_orders_count' => function ($q) {
+                        $q->where('status', '!=', 3); // Exclude Completed
+                    },
+                ])
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+            
+            $items = $units->getCollection()->map(function ($unit) {
+                return [
+                    'id' => $unit->id,
+                    'block_id' => $unit->block_id,
+                    'unit_code' => $unit->unit_code,
+                    'unit_name' => $unit->unit_name,
+                    'active_issues_count' => $unit->active_issues_count ?? 0,
+                    'active_work_orders_count' => $unit->active_work_orders_count ?? 0,
+                    'created_at' => $unit->created_at,
+                    'updated_at' => $unit->updated_at,
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $items,
+                'meta' => [
+                    'current_page' => $units->currentPage(),
+                    'last_page' => $units->lastPage(),
+                    'per_page' => $units->perPage(),
+                    'total' => $units->total(),
+                    'from' => $units->firstItem(),
+                    'to' => $units->lastItem(),
+                ]
+            ]);
         });
     });
     

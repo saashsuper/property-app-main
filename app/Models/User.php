@@ -233,11 +233,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Check if user is an admin
+     * Check if user is admin (by user type or Spatie role). Used for @admin directive and completed work order notes/photos.
      */
     public function isAdmin()
     {
-        return $this->userType && in_array($this->userType->name, ['Admin', 'Super Admin']);
+        if ($this->userType && in_array($this->userType->name, ['Admin', 'Super Admin'])) {
+            return true;
+        }
+        return $this->hasAnyRole(['Admin', 'Super Admin']);
     }
 
     /**

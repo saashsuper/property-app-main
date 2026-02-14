@@ -224,7 +224,8 @@ class WorkOrderController extends Controller
     }
 
     /**
-     * Mark work order as complete
+     * Mark work order as complete.
+     * For accepted jobs, only team members can change status.
      */
     public function complete(Request $request, $id): JsonResponse
     {
@@ -232,8 +233,20 @@ class WorkOrderController extends Controller
             'comment' => 'nullable|string',
         ]);
 
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+        }
+
         // Find work order explicitly like resume/pause do
-        $workOrder = BlockWorkOrder::findOrFail($id);
+        $workOrder = BlockWorkOrder::with('teamMembers')->findOrFail($id);
+
+        if (!$workOrder->isUserTeamMember($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Only team members can change work order status after it has been accepted.',
+            ], 403);
+        }
 
         // Get "Completed" job status
         $completedStatus = \App\Models\JobStatus::where('name', 'Completed')->first();

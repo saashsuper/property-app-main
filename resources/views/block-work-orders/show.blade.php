@@ -263,7 +263,7 @@
                                         <span class="text-white-50">{{ $blockWorkOrder->created_at ? $blockWorkOrder->created_at->format('h:i A') : 'N/A' }}</span>
                                             </div>
                                     <div class="d-flex gap-2">
-                                        @if($blockWorkOrder->status == 3 && $blockWorkOrder->pdf_path && $blockWorkOrder->pdf_name)
+                                        @if(($isCompletedWorkOrder ?? false) && $blockWorkOrder->pdf_path && $blockWorkOrder->pdf_name)
                                             <a href="{{ route('block-work-orders.download-work-docket', $blockWorkOrder) }}" 
                                                class="btn btn-light btn-sm" 
                                                title="Download Work Docket">
@@ -271,7 +271,7 @@
                                             </a>
                                         @endif
                                         @admin
-                                            @if($blockWorkOrder->status == 3)
+                                            @if($isCompletedWorkOrder ?? false)
                                                 <form action="{{ route('block-work-orders.regenerate-docket', $blockWorkOrder) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to regenerate the work docket? The old PDF will be replaced.');">
                                                     @csrf
                                                     @method('POST')
@@ -281,7 +281,7 @@
                                                 </form>
                                             @endif
                                         @endadmin
-                                        @if($blockWorkOrder->status != 3)
+                                        @if(!($isCompletedWorkOrder ?? false))
                                             <a href="{{ route('block-work-orders.edit', $blockWorkOrder) }}" class="btn btn-light btn-sm">
                                                 <i class="ph-pencil me-2"></i>Edit Work Order
                                             </a>
@@ -299,7 +299,7 @@
         </div>
 
         <!-- Completed Status Alert -->
-        @if($blockWorkOrder->status == 3)
+        @if($isCompletedWorkOrder ?? false)
         <div class="row">
             <div class="col-12">
                 <div class="alert alert-success d-flex align-items-center" role="alert">
@@ -716,7 +716,7 @@
                                     Notes @if($blockWorkOrder->notes) ({{ $blockWorkOrder->notes->count() }}) @endif
                                 </h6>
                                 @admin
-                                    @if($blockWorkOrder->status == 3)
+                                    @if($isCompletedWorkOrder ?? false)
                                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
                                             <i class="ph-plus me-1"></i>Add Note
                                         </button>
@@ -747,7 +747,7 @@
                                                     <div class="note-content text-muted" style="white-space: pre-wrap;">{{ $note->note }}</div>
                                                 </div>
                                                 @admin
-                                                    @if($blockWorkOrder->status == 3)
+                                                    @if($isCompletedWorkOrder ?? false)
                                                         <div class="ms-2">
                                                             <button type="button" class="btn btn-sm btn-outline-primary edit-note-btn" 
                                                                     data-note-id="{{ $note->id }}" 
@@ -772,11 +772,11 @@
                                         <i class="ph-notes fs-1 mb-2"></i>
                                         <p class="mb-0">No notes added yet</p>
                                         @admin
-                                            @if($blockWorkOrder->status == 3)
+                                            @if($isCompletedWorkOrder ?? false)
                                                 <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addNoteModal">
                                                     <i class="ph-plus me-1"></i>Add Note
                                                 </button>
-                                                @endif
+                                            @endif
                                         @endadmin
                                             </div>
                                 @endif
@@ -795,7 +795,7 @@
                                     Images @if($blockWorkOrder->images) ({{ $blockWorkOrder->images->count() }}) @endif
                                 </h6>
                                 @admin
-                                    @if($blockWorkOrder->status == 3)
+                                    @if($isCompletedWorkOrder ?? false)
                                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
                                             <i class="ph-plus me-1"></i>Add Photos
                                         </button>
@@ -811,7 +811,7 @@
                                             <img src="{{ $image->image_url }}" class="work-order-thumbnail" alt="Work Order Image" loading="lazy">
                                         </div>
                                         @admin
-                                            @if($blockWorkOrder->status == 3)
+                                            @if($isCompletedWorkOrder ?? false)
                                                 <div class="position-absolute top-0 end-0 m-1">
                                                     <button type="button" class="btn btn-danger btn-sm remove-photo-btn-thumbnail" 
                                                             data-image-id="{{ $image->id }}" 
@@ -831,7 +831,7 @@
                                     <i class="ph-images fs-1 mb-2"></i>
                                     <p class="mb-0">No images uploaded yet</p>
                                     @admin
-                                        @if($blockWorkOrder->status == 3)
+                                        @if($isCompletedWorkOrder ?? false)
                                             <button type="button" class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#uploadPhotosModal">
                                                 <i class="ph-plus me-1"></i>Add Photos
                                             </button>
@@ -848,7 +848,7 @@
             <!-- Right Column - Sidebar -->
             <div class="col-lg-4">
                 <!-- Work Docket Card (if completed) -->
-                @if($blockWorkOrder->status == 3)
+                @if($isCompletedWorkOrder ?? false)
                     @if($blockWorkOrder->pdf_path && $blockWorkOrder->pdf_name)
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-body">
@@ -1165,7 +1165,7 @@
                             Quick Actions
                         </h6>
                         <div class="d-grid gap-2">
-                                @if($blockWorkOrder->status != 3)
+                                @if(!($isCompletedWorkOrder ?? false))
                                     <a href="{{ route('block-work-orders.edit', $blockWorkOrder) }}" class="btn btn-primary btn-sm">
                                         <i class="ph-pencil me-2"></i>Edit Work Order
                                     </a>
@@ -1208,7 +1208,7 @@
 
 <!-- Upload Photos Modal (for completed work orders - admin only) -->
 @admin
-    @if($blockWorkOrder->status == 3)
+    {{-- Modal always rendered for admin; buttons only shown when completed --}}
     <div class="modal fade" id="uploadPhotosModal" tabindex="-1" aria-labelledby="uploadPhotosModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -1265,7 +1265,7 @@
                                             @endif
                                             @if($blockWorkOrder->jobStatus)
                                                 <span class="badge rounded-pill 
-                                                    @if($blockWorkOrder->status == 3) bg-success
+                                                    @if($isCompletedWorkOrder ?? false) bg-success
                                                     @else bg-secondary
                                                     @endif fw-semibold">
                                                     Status: {{ $blockWorkOrder->jobStatus->name ?? 'Completed' }}
@@ -1434,12 +1434,11 @@
             background: rgba(220, 53, 69, 1);
         }
     </style>
-                        @endif
 @endadmin
 
 <!-- Add/Edit Note Modal (for completed work orders - admin only) -->
 @admin
-    @if($blockWorkOrder->status == 3)
+    {{-- Modal always rendered for admin; buttons only shown when completed --}}
     <div class="modal fade" id="addNoteModal" tabindex="-1" aria-labelledby="addNoteModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1468,7 +1467,6 @@
     </div>
 </div>
     </div>
-    @endif
 @endadmin
 
 <!-- Delete Photo Confirmation Modal -->
@@ -1520,7 +1518,7 @@
 
 <script>
     const workOrderId = {{ $blockWorkOrder->id }};
-    const isCompleted = {{ $blockWorkOrder->status == 3 ? 'true' : 'false' }};
+    const isCompleted = {{ ($isCompletedWorkOrder ?? false) ? 'true' : 'false' }};
     const isAdmin = {{ auth()->user()->isAdmin() ? 'true' : 'false' }};
     const apiToken = '{{ csrf_token() }}';
     let workOrderPhotoDropzone = null;
@@ -1533,9 +1531,104 @@
     }
 
     @admin
-        @if($blockWorkOrder->status == 3)
+        {{-- Note/photo handlers: always run for admin so they work on completed work orders (buttons/modals only rendered when completed) --}}
+        // --- Note handlers first (run before jQuery/Dropzone; use delegation so clicks are never blocked) ---
+        (function initNoteHandlers() {
+            var addNoteFormEl = document.getElementById('addNoteForm');
+            var saveNoteBtnEl = document.getElementById('saveNoteBtn');
+            if (addNoteFormEl && saveNoteBtnEl) {
+                addNoteFormEl.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    saveNoteBtnEl.click();
+                });
+                function submitAddNote() {
+                    var noteContent = document.getElementById('noteContent').value.trim();
+                    var noteId = document.getElementById('editNoteId').value;
+                    var errorDiv = document.getElementById('addNoteError');
+                    var successDiv = document.getElementById('addNoteSuccess');
+                    if (!noteContent) {
+                        if (errorDiv) { errorDiv.textContent = 'Please enter a note'; errorDiv.classList.remove('d-none'); }
+                        return;
+                    }
+                    if (errorDiv) errorDiv.classList.add('d-none');
+                    if (successDiv) successDiv.classList.add('d-none');
+                    saveNoteBtnEl.disabled = true;
+                    saveNoteBtnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+                    var url = noteId ? '{{ route("block-work-orders.update-note", [$blockWorkOrder, "note" => 0]) }}'.replace('0', noteId) : '{{ route("block-work-orders.add-note", $blockWorkOrder) }}';
+                    var method = noteId ? 'PUT' : 'POST';
+                    fetch(url, { method: method, headers: { 'X-CSRF-TOKEN': apiToken, 'Accept': 'application/json', 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ note: noteContent }) })
+                        .then(function(r) { if (!r.ok && !(r.headers.get('content-type') || '').includes('application/json')) throw new Error('Server returned non-JSON'); return r.json(); })
+                        .then(function(data) {
+                            if (data.success) {
+                                if (successDiv) { successDiv.textContent = data.message || 'Note saved successfully'; successDiv.classList.remove('d-none'); }
+                                setTimeout(function() { location.reload(); }, 1000);
+                            } else {
+                                if (errorDiv) { errorDiv.textContent = data.message || 'Failed to save note'; errorDiv.classList.remove('d-none'); }
+                            }
+                        })
+                        .catch(function(err) {
+                            if (errorDiv) { errorDiv.textContent = err.message || 'An error occurred while saving note'; errorDiv.classList.remove('d-none'); }
+                        })
+                        .finally(function() {
+                            saveNoteBtnEl.disabled = false;
+                            saveNoteBtnEl.innerHTML = '<i class="ph-check me-1"></i>Save Note';
+                        });
+                }
+                saveNoteBtnEl.addEventListener('click', submitAddNote);
+            }
+            var addNoteModalEl = document.getElementById('addNoteModal');
+            if (addNoteModalEl) {
+                addNoteModalEl.addEventListener('hidden.bs.modal', function() {
+                    var editId = document.getElementById('editNoteId');
+                    var content = document.getElementById('noteContent');
+                    var label = document.getElementById('addNoteModalLabel');
+                    if (editId) editId.value = '';
+                    if (content) content.value = '';
+                    if (label) label.textContent = 'Add Note';
+                    ['addNoteError','addNoteSuccess'].forEach(function(id) { var el = document.getElementById(id); if (el) el.classList.add('d-none'); });
+                });
+            }
+            // Event delegation: catch edit/remove note clicks on document so nothing can block them
+            document.body.addEventListener('click', function(e) {
+                var editBtn = e.target && (e.target.closest ? e.target.closest('.edit-note-btn') : (e.target.classList && e.target.classList.contains('edit-note-btn') ? e.target : null));
+                if (editBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var noteId = editBtn.getAttribute('data-note-id');
+                    var noteContent = editBtn.getAttribute('data-note-content');
+                    var editId = document.getElementById('editNoteId');
+                    var content = document.getElementById('noteContent');
+                    var label = document.getElementById('addNoteModalLabel');
+                    if (editId) editId.value = noteId || '';
+                    if (content) content.value = noteContent || '';
+                    if (label) label.textContent = 'Edit Note';
+                    ['addNoteError','addNoteSuccess'].forEach(function(id) { var el = document.getElementById(id); if (el) el.classList.add('d-none'); });
+                    var modalEl = document.getElementById('addNoteModal');
+                    if (modalEl && typeof bootstrap !== 'undefined') { var m = new bootstrap.Modal(modalEl); m.show(); }
+                    return;
+                }
+                var removeBtn = e.target && (e.target.closest ? e.target.closest('.remove-note-btn') : (e.target.classList && e.target.classList.contains('remove-note-btn') ? e.target : null));
+                if (removeBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var noteId = removeBtn.getAttribute('data-note-id');
+                    if (!confirm('Are you sure you want to delete this note?')) return;
+                    removeBtn.disabled = true;
+                    removeBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    fetch('{{ route("block-work-orders.delete-note", [$blockWorkOrder, "note" => 0]) }}'.replace('0', noteId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': apiToken, 'Accept': 'application/json', 'Content-Type': 'application/json' }, credentials: 'same-origin' })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.success) location.reload();
+                            else { alert(data.message || 'Failed to delete note'); removeBtn.disabled = false; removeBtn.innerHTML = '<i class="ph-trash"></i>'; }
+                        })
+                        .catch(function() { alert('An error occurred while deleting note'); removeBtn.disabled = false; removeBtn.innerHTML = '<i class="ph-trash"></i>'; });
+                }
+            }, true);
+        })();
+        // --- End note handlers ---
         
-        // Initialize Dropzone when photo upload modal is shown
+        // Initialize Dropzone when photo upload modal is shown (requires jQuery)
+        if (typeof $ !== 'undefined') {
         $('#uploadPhotosModal').on('shown.bs.modal', function() {
             // Destroy existing dropzone if it exists
             if (workOrderPhotoDropzone) {
@@ -1712,17 +1805,22 @@
             }
         }
         
-        // Clear all files
-        document.getElementById('clearWorkOrderPhotosBtn').addEventListener('click', function() {
-            if (workOrderPhotoDropzone) {
-                workOrderPhotoDropzone.removeAllFiles(true);
-            }
-            // Clear any photo upload messages
-            document.getElementById('uploadPhotosMessage').classList.add('d-none');
-        });
+        // Clear all files (only when photo modal exists - completed work order)
+        var clearWorkOrderPhotosBtnEl = document.getElementById('clearWorkOrderPhotosBtn');
+        if (clearWorkOrderPhotosBtnEl) {
+            clearWorkOrderPhotosBtnEl.addEventListener('click', function() {
+                if (workOrderPhotoDropzone) {
+                    workOrderPhotoDropzone.removeAllFiles(true);
+                }
+                var msgEl = document.getElementById('uploadPhotosMessage');
+                if (msgEl) msgEl.classList.add('d-none');
+            });
+        }
         
         // Upload photos when submit button is clicked
-        document.getElementById('uploadWorkOrderPhotosBtn').addEventListener('click', function() {
+        var uploadWorkOrderPhotosBtnEl = document.getElementById('uploadWorkOrderPhotosBtn');
+        if (uploadWorkOrderPhotosBtnEl) {
+        uploadWorkOrderPhotosBtnEl.addEventListener('click', function() {
             console.log('Upload button clicked');
             console.log('Dropzone instance:', workOrderPhotoDropzone);
             console.log('Files in dropzone:', workOrderPhotoDropzone ? workOrderPhotoDropzone.files.length : 0);
@@ -1753,8 +1851,9 @@
                 showWorkOrderPhotoMessage('warning', 'Please select photos to upload.');
             }
         });
+        }
 
-        // Remove Photo - Show Confirmation Modal
+        // Remove Photo - Show Confirmation Modal (only when completed - elements exist)
         let photoToDelete = { id: null, name: '' };
         
         document.querySelectorAll('.remove-photo-btn-thumbnail').forEach(btn => {
@@ -1773,8 +1872,10 @@
             });
         });
         
-        // Confirm Delete Photo
-        document.getElementById('confirmDeletePhotoBtn').addEventListener('click', function() {
+        // Confirm Delete Photo (only when modal exists - completed work order)
+        var confirmDeletePhotoBtnEl = document.getElementById('confirmDeletePhotoBtn');
+        if (confirmDeletePhotoBtnEl) {
+        confirmDeletePhotoBtnEl.addEventListener('click', function() {
             const btn = this;
             const originalHTML = btn.innerHTML;
             
@@ -1811,128 +1912,9 @@
                 btn.innerHTML = originalHTML;
             });
         });
+        }
+        } // end if (typeof $ !== 'undefined')
 
-        // Add Note
-        document.getElementById('saveNoteBtn').addEventListener('click', function() {
-            const noteContent = document.getElementById('noteContent').value.trim();
-            const noteId = document.getElementById('editNoteId').value;
-            const errorDiv = document.getElementById('addNoteError');
-            const successDiv = document.getElementById('addNoteSuccess');
-            
-            if (!noteContent) {
-                errorDiv.textContent = 'Please enter a note';
-                errorDiv.classList.remove('d-none');
-                return;
-            }
-            
-            errorDiv.classList.add('d-none');
-            successDiv.classList.add('d-none');
-            this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
-            
-            const url = noteId 
-                ? '{{ route("block-work-orders.update-note", [$blockWorkOrder, "note" => 0]) }}'.replace('0', noteId)
-                : '{{ route("block-work-orders.add-note", $blockWorkOrder) }}';
-            const method = noteId ? 'PUT' : 'POST';
-            
-            fetch(url, {
-                method: method,
-                headers: {
-                    'X-CSRF-TOKEN': apiToken,
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ note: noteContent })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    successDiv.textContent = data.message || 'Note saved successfully';
-                    successDiv.classList.remove('d-none');
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1000);
-                } else {
-                    errorDiv.textContent = data.message || 'Failed to save note';
-                    errorDiv.classList.remove('d-none');
-                }
-            })
-            .catch(error => {
-                errorDiv.textContent = 'An error occurred while saving note';
-                errorDiv.classList.remove('d-none');
-            })
-            .finally(() => {
-                this.disabled = false;
-                this.innerHTML = '<i class="ph-check me-1"></i>Save Note';
-            });
-        });
-
-        // Edit Note
-        document.querySelectorAll('.edit-note-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const noteId = this.getAttribute('data-note-id');
-                const noteContent = this.getAttribute('data-note-content');
-                
-                document.getElementById('editNoteId').value = noteId;
-                document.getElementById('noteContent').value = noteContent;
-                document.getElementById('addNoteModalLabel').textContent = 'Edit Note';
-                document.getElementById('addNoteError').classList.add('d-none');
-                document.getElementById('addNoteSuccess').classList.add('d-none');
-                
-                var modal = new bootstrap.Modal(document.getElementById('addNoteModal'));
-                modal.show();
-            });
-        });
-
-        // Reset add note modal when closed
-        document.getElementById('addNoteModal').addEventListener('hidden.bs.modal', function() {
-            document.getElementById('editNoteId').value = '';
-            document.getElementById('noteContent').value = '';
-            document.getElementById('addNoteModalLabel').textContent = 'Add Note';
-            document.getElementById('addNoteError').classList.add('d-none');
-            document.getElementById('addNoteSuccess').classList.add('d-none');
-        });
-
-        // Remove Note
-        document.querySelectorAll('.remove-note-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const noteId = this.getAttribute('data-note-id');
-                
-                if (!confirm('Are you sure you want to delete this note?')) {
-                    return;
-                }
-                
-                this.disabled = true;
-                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-                
-                fetch('{{ route("block-work-orders.delete-note", [$blockWorkOrder, "note" => 0]) }}'.replace('0', noteId), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': apiToken,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert(data.message || 'Failed to delete note');
-                        this.disabled = false;
-                        this.innerHTML = '<i class="ph-trash"></i>';
-                    }
-                })
-                .catch(error => {
-                    alert('An error occurred while deleting note');
-                    this.disabled = false;
-                    this.innerHTML = '<i class="ph-trash"></i>';
-                });
-            });
-        });
-        @endif
     @endadmin
 
     @if(!auth()->user()->hasType('Contractor Admin'))

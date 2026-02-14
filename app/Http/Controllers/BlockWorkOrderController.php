@@ -22,6 +22,31 @@ use Illuminate\Support\Str;
 class BlockWorkOrderController extends Controller
 {
     /**
+     * Check if work order is in "Completed" status (by JobStatus name or legacy status 3).
+     */
+    private function isWorkOrderCompleted(BlockWorkOrder $blockWorkOrder): bool
+    {
+        $completedStatusId = \App\Models\JobStatus::where('name', 'Completed')->value('id');
+        return ($completedStatusId !== null && (int) $blockWorkOrder->status === (int) $completedStatusId)
+            || (int) $blockWorkOrder->status === 3;
+    }
+
+    /**
+     * Check if current user can manage notes/photos on completed work orders (admin by type or Spatie role).
+     */
+    private function canAdminManageCompletedWorkOrder(): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdmin()) {
+            return true;
+        }
+        return $user->hasAnyRole(['Admin', 'Super Admin']);
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
@@ -320,7 +345,8 @@ class BlockWorkOrderController extends Controller
         }
         
         $hasBeenUpdated = $blockWorkOrder->hasBeenUpdated();
-        return view('block-work-orders.show', compact('blockWorkOrder', 'hasBeenUpdated'));
+        $isCompletedWorkOrder = $this->isWorkOrderCompleted($blockWorkOrder);
+        return view('block-work-orders.show', compact('blockWorkOrder', 'hasBeenUpdated', 'isCompletedWorkOrder'));
     }
 
     /**
@@ -349,8 +375,8 @@ class BlockWorkOrderController extends Controller
      */
     public function update(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        $isCompleted = $blockWorkOrder->status == 3;
-        $isAdmin = auth()->user()->isAdmin();
+        $isCompleted = $this->isWorkOrderCompleted($blockWorkOrder);
+        $isAdmin = $this->canAdminManageCompletedWorkOrder();
         
         // If completed and not admin, prevent editing
         if ($isCompleted && !$isAdmin) {
@@ -957,12 +983,11 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Upload photos for completed work order (admin only)
+     * Upload photos for completed work order (admin only).
      */
     public function uploadPhotos(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        // Check if work order is completed and user is admin
-        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+        if (!$this->isWorkOrderCompleted($blockWorkOrder) || !$this->canAdminManageCompletedWorkOrder()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -1033,12 +1058,11 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Delete photo from completed work order (admin only)
+     * Delete photo from completed work order (admin only).
      */
     public function deletePhoto(Request $request, BlockWorkOrder $blockWorkOrder, BlockWorkOrderImage $photo)
     {
-        // Check if work order is completed and user is admin
-        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+        if (!$this->isWorkOrderCompleted($blockWorkOrder) || !$this->canAdminManageCompletedWorkOrder()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -1091,12 +1115,11 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Add note to completed work order (admin only)
+     * Add note to completed work order (admin only).
      */
     public function addNote(Request $request, BlockWorkOrder $blockWorkOrder)
     {
-        // Check if work order is completed and user is admin
-        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+        if (!$this->isWorkOrderCompleted($blockWorkOrder) || !$this->canAdminManageCompletedWorkOrder()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -1141,12 +1164,11 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Update note in completed work order (admin only)
+     * Update note in completed work order (admin only).
      */
     public function updateNote(Request $request, BlockWorkOrder $blockWorkOrder, \App\Models\BlockWorkOrderNote $note)
     {
-        // Check if work order is completed and user is admin
-        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+        if (!$this->isWorkOrderCompleted($blockWorkOrder) || !$this->canAdminManageCompletedWorkOrder()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -1199,12 +1221,11 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Delete note from completed work order (admin only)
+     * Delete note from completed work order (admin only).
      */
     public function deleteNote(Request $request, BlockWorkOrder $blockWorkOrder, \App\Models\BlockWorkOrderNote $note)
     {
-        // Check if work order is completed and user is admin
-        if ($blockWorkOrder->status != 3 || !auth()->user()->isAdmin()) {
+        if (!$this->isWorkOrderCompleted($blockWorkOrder) || !$this->canAdminManageCompletedWorkOrder()) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
@@ -1251,7 +1272,7 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Accept a work order (Contractor Admin only)
+     * Accept a work order (any contractor or company member)
      * Only allowed for scheduled work orders (status = 1)
      */
     public function accept(Request $request, BlockWorkOrder $blockWorkOrder)
@@ -1274,15 +1295,15 @@ class BlockWorkOrderController extends Controller
             $user->load('userType');
         }
         
-        // Check if user is Contractor Admin
-        if (!$user->hasType('Contractor Admin')) {
+        // Any contractor or company member can accept: Contractor Admin or Contractor User
+        if (!$user->userType || !in_array($user->userType->name, ['Contractor Admin', 'Contractor User'])) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only Contractor Admins can accept work orders.'
+                    'message' => 'Only contractors or company members can accept work orders.'
                 ], 403);
             }
-            return redirect()->back()->with('error', 'Only Contractor Admins can accept work orders.');
+            return redirect()->back()->with('error', 'Only contractors or company members can accept work orders.');
         }
 
         // No need to check if work order is assigned to contractor company
@@ -1325,7 +1346,7 @@ class BlockWorkOrderController extends Controller
         BlockWorkOrderLog::createLog(
             $blockWorkOrder->id,
             'status_changed',
-            'Work order accepted by contractor admin - status changed to Accepted',
+            'Work order accepted - status changed to Accepted',
             [
                 'field_name' => 'status',
                 'old_value' => $oldStatus,
@@ -1347,7 +1368,7 @@ class BlockWorkOrderController extends Controller
     }
 
     /**
-     * Reject a work order (Contractor Admin only)
+     * Reject a work order (any contractor or company member)
      * Only allowed for scheduled work orders (status = 1)
      * Requires a rejection reason
      */
@@ -1371,15 +1392,15 @@ class BlockWorkOrderController extends Controller
             $user->load('userType');
         }
         
-        // Check if user is Contractor Admin
-        if (!$user->hasType('Contractor Admin')) {
+        // Any contractor or company member can reject: Contractor Admin or Contractor User
+        if (!$user->userType || !in_array($user->userType->name, ['Contractor Admin', 'Contractor User'])) {
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only Contractor Admins can reject work orders.'
+                    'message' => 'Only contractors or company members can reject work orders.'
                 ], 403);
             }
-            return redirect()->back()->with('error', 'Only Contractor Admins can reject work orders.');
+            return redirect()->back()->with('error', 'Only contractors or company members can reject work orders.');
         }
 
         // No need to check if work order is assigned to contractor company

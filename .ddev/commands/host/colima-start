@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## #ddev-generated: If you want to edit and own this file, remove this line.
+## Description: Ensure Colima (Docker) is running and Docker context is set to colima for DDEV
+## Usage: colima-start
+## Example: "ddev colima-start" then "ddev start"
+
+set -e
+
+echo "Checking Docker (Colima)..."
+
+if docker ps >/dev/null 2>&1; then
+    echo "Docker is running."
+else
+    echo "Docker is not running. Starting Colima (this may take 1-2 minutes)..."
+    colima start
+fi
+
+if [ "$(docker context show 2>/dev/null)" != "colima" ]; then
+    echo "Setting Docker context to colima..."
+    docker context use colima
+fi
+
+echo ""
+echo "Colima is ready. Run: ddev start"

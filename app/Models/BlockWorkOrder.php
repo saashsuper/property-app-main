@@ -207,6 +207,19 @@ class BlockWorkOrder extends Model
     }
 
     /**
+     * Check if the given user is a team member of this work order.
+     * Team member = the work order's contractor (when contractor_id is a user id) or a user in block_work_order_teams.
+     * For an accepted job, only team members may change status (start, pause, resume, complete).
+     */
+    public function isUserTeamMember(User $user): bool
+    {
+        if ($this->contractor_id === (int) $user->id) {
+            return true;
+        }
+        return $this->teamMembers()->where('user_id', $user->id)->exists();
+    }
+
+    /**
      * Get the user who issued the work order.
      */
     public function issuedBy()

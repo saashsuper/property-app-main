@@ -80,6 +80,14 @@ class Block extends Model
     }
 
     /**
+     * Get the property manager for the block.
+     */
+    public function propertyManager()
+    {
+        return $this->belongsTo(User::class, 'property_manager_id')->withTrashed();
+    }
+
+    /**
      * Get the country that owns the block.
      */
     public function country()
@@ -123,6 +131,14 @@ class Block extends Model
      * Get the issues for the block.
      */
     public function issues()
+    {
+        return $this->hasMany(BlockIssue::class);
+    }
+
+    /**
+     * Get the block issues for this block (alias for issues).
+     */
+    public function blockIssues()
     {
         return $this->hasMany(BlockIssue::class);
     }
@@ -264,6 +280,14 @@ class Block extends Model
         }
         
         return null;
+    }
+
+    /**
+     * Get the address attribute (maps to address1 for API).
+     */
+    public function getAddressAttribute()
+    {
+        return $this->attributes['address1'] ?? null;
     }
 
     /**

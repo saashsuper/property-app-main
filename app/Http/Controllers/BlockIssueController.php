@@ -116,7 +116,7 @@ class BlockIssueController extends Controller
             'contact_method_id' => 'required|exists:contact_methods,id',
             'issue_details' => 'nullable|string',
             'default_contact_details' => 'nullable|string',
-            'block_unit_id' => 'required|exists:block_units,id',
+            'block_unit_id' => ['nullable', 'exists:block_units,id', Rule::exists('block_units', 'id')->where('block_id', $request->block_id)],
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -147,7 +147,7 @@ class BlockIssueController extends Controller
                 'contact_method_id' => $request->contact_method_id_hidden ?: $request->contact_method_id,
                 'issue_details' => $request->issue_details,
                 'default_contact_details' => $request->default_contact_details,
-                'block_unit_id' => $request->block_unit_id_hidden ?: $request->block_unit_id,
+                'block_unit_id' => $request->block_unit_id_hidden ?: $request->block_unit_id ?: null,
                 'reported_by' => Auth::id(),
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),

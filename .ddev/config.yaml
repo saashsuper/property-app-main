@@ -1,3 +1,5 @@
+# DDEV config for proman
+# Docker: Use Colima on macOS. Run "ddev colima-start" then "ddev start". See .ddev/COLIMA.md
 name: proman
 type: laravel
 docroot: public
