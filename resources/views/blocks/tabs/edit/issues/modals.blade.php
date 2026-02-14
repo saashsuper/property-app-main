@@ -38,7 +38,7 @@
                             <!-- Full Width Form Fields -->
                             <div class="col-12">
                                 <div class="row">
-                                    <!-- Row 1: Unit Selection, Contact Method, Assigned To -->
+                                    <!-- Row 1: Unit Selection, Category, Assigned To -->
                                     <div class="col-md-4 mb-3">
                                         <label for="issue_block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
                                         <div class="autoComplete_wrapper" id="unitAutoCompleteWrapper">
@@ -54,11 +54,12 @@
                                     </div>
                                     <input type="hidden" id="created_issue_id" name="created_issue_id" value="">
                                     <div class="col-md-4 mb-3">
-                                        <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="contact_method_id" name="contact_method_id" required>
-                                            <option value="">Select Contact Method</option>
-                                            @foreach ($contactMethods as $contactMethod)
-                                                <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
+                                        <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="issue_type" name="issue_type" required>
+                                            <option value="">{{ __('translation.select-issue-category') }}</option>
+                                            @foreach ($issueTypes as $issueType)
+                                                <option value="{{ $issueType->name }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -74,14 +75,13 @@
                                         </select>
                                     </div>
 
-                                    <!-- Row 2: Category, Priority, Problem Overview -->
+                                    <!-- Row 2: Contact Method, Priority, Reported By -->
                                     <div class="col-md-4 mb-3">
-                                        <label for="issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="issue_type" name="issue_type" required>
-                                            <option value="">{{ __('translation.select-issue-category') }}</option>
-                                            @foreach ($issueTypes as $issueType)
-                                                <option value="{{ $issueType->name }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                        <label for="contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="contact_method_id" name="contact_method_id" required>
+                                            <option value="">Select Contact Method</option>
+                                            @foreach ($contactMethods as $contactMethod)
+                                                <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -96,24 +96,14 @@
                                             <option value="5">Critical</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="issue" name="issue" required>
-                                    </div>
-
-                                    <!-- Row 3: Dynamic Contact Details based on Contact Method -->
-                                    <div class="col-md-6 mb-3" id="contact_details_container">
+                                    <div class="col-md-4 mb-3" id="contact_details_container">
                                         <label for="contact_details" class="form-label">Reported By <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="contact_details" name="contact_details" placeholder="Enter contact details..." required>
                                         <div class="form-text">Please provide relevant contact information</div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="issue_details" class="form-label">Issue Details</label>
-                                        <textarea class="form-control" id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
-                                    </div>
 
-                                    <!-- Row 4: Default Contact Details -->
-                                    <div class="col-12 mb-2">
+                                    <!-- Row 3: Default Contact Details -->
+                                    <div class="col-12 mb-3">
                                         <label for="default_contact_details" class="form-label">Default Contact Details</label>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="checkbox" id="use_default_contact" checked>
@@ -121,7 +111,19 @@
                                                 Use default contact details
                                             </label>
                                         </div>
-                                        <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly></textarea>
+                                        <textarea class="form-control" id="default_contact_details" name="default_contact_details" rows="3" placeholder="Enter default contact information..." readonly></textarea>
+                                    </div>
+
+                                    <!-- Row 4: Problem Overview -->
+                                    <div class="col-12 mb-2">
+                                        <label for="issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="issue" name="issue" required>
+                                    </div>
+
+                                    <!-- Row 5: Issue Details -->
+                                    <div class="col-12 mb-3">
+                                        <label for="issue_details" class="form-label">Issue Details</label>
+                                        <textarea class="form-control" id="issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
                                     </div>
                                 </div>
                             </div>
