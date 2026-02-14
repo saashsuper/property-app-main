@@ -246,6 +246,7 @@
                                         <th>Issue ID</th>
                                         <th>Title</th>
                                         <th>Block</th>
+                                        <th>Unit</th>
                                         <th>Type</th>
                                         <th>Priority</th>
                                         <th>Status</th>
@@ -265,6 +266,13 @@
                                         <td>
                                             @if($issue->block)
                                                 {{ $issue->block->name }}
+                                            @else
+                                                <span class="text-muted">N/A</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($issue->blockUnit)
+                                                {{ $issue->blockUnit->unit_name }}
                                             @else
                                                 <span class="text-muted">N/A</span>
                                             @endif
@@ -338,7 +346,7 @@
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <div class="text-muted">
                                                 <i class="ph-warning font-size-24 mb-2"></i>
                                                  <p>@lang('translation.no-block-issues-found')</p>
@@ -490,7 +498,7 @@
         <div class="modal-dialog modal-xl" style="max-width: 95vw;">
             <div class="modal-content">
                 <div class="modal-header bg-gradient-primary text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; border-bottom: none;">
-                    <h5 class="modal-title" id="editIssueModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Issue</h5>
+                    <h5 class="modal-title" id="editIssueModalLabel" style="color: white !important; padding-bottom: 15px;">Edit Issue <span id="editIssueModalSubtitle" class="fw-normal opacity-90"></span></h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) brightness(100) !important; margin-bottom: 10px; font-weight: bold;"></button>
                 </div>
                 <form id="editIssueForm" method="POST" action="#" enctype="multipart/form-data">
@@ -507,21 +515,22 @@
                             <!-- Full Width Form Fields -->
                             <div class="col-12">
                                 <div class="row">
-                                    <!-- Row 1: Contact Method, Unit Selection, Assigned To -->
-                                    <div class="col-md-4 mb-3">
-                                        <label for="edit_contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="edit_contact_method_id" name="contact_method_id" required>
-                                            <option value="">Select Contact Method</option>
-                                            @foreach ($contactMethods ?? [] as $contactMethod)
-                                                <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    <!-- Row 1: Unit Selection, Category, Assigned To -->
                                     <div class="col-md-4 mb-3">
                                         <label for="edit_block_unit_id" class="form-label">Unit Selection <span class="text-danger">*</span></label>
                                         <select class="form-select" id="edit_block_unit_id" name="block_unit_id" required>
                                             <option value="">Select Unit</option>
                                             <!-- Units will be loaded dynamically -->
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="edit_issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="edit_issue_type" name="issue_type" required>
+                                            <option value="">{{ __('translation.select-issue-category') }}</option>
+                                            @foreach ($issueTypes ?? [] as $issueType)
+                                                <option value="{{ $issueType->name }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                            @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-4 mb-3">
@@ -536,14 +545,13 @@
                                         </select>
                                     </div>
 
-                                    <!-- Row 2: Category, Priority, Problem Overview -->
+                                    <!-- Row 2: Contact Method, Priority, Problem Overview -->
                                     <div class="col-md-4 mb-3">
-                                        <label for="edit_issue_type" class="form-label">{{ __('translation.issue-category') }} <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="edit_issue_type" name="issue_type" required>
-                                            <option value="">{{ __('translation.select-issue-category') }}</option>
-                                            @foreach ($issueTypes ?? [] as $issueType)
-                                                <option value="{{ $issueType->name }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $issueType->name)) }}</option>
+                                        <label for="edit_contact_method_id" class="form-label">Contact Method <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="edit_contact_method_id" name="contact_method_id" required>
+                                            <option value="">Select Contact Method</option>
+                                            @foreach ($contactMethods ?? [] as $contactMethod)
+                                                <option value="{{ $contactMethod->id }}">{{ $contactMethod->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -558,24 +566,14 @@
                                             <option value="5">Critical</option>
                                         </select>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <label for="edit_issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="edit_issue" name="issue" required>
-                                    </div>
-
-                                    <!-- Row 3: Dynamic Contact Details based on Contact Method -->
-                                    <div class="col-md-6 mb-3" id="edit_contact_details_container">
+                                    <div class="col-md-4 mb-3" id="edit_contact_details_container">
                                         <label for="edit_contact_details" class="form-label">Reported from <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" id="edit_contact_details" name="contact_details" placeholder="Enter contact details..." required>
                                         <div class="form-text">Please provide relevant contact information</div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label for="edit_issue_details" class="form-label">Issue Details</label>
-                                        <textarea class="form-control" id="edit_issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
-                                    </div>
 
-                                    <!-- Row 4: Default Contact Details -->
-                                    <div class="col-12 mb-2">
+                                    <!-- Row 3: Default Contact Details -->
+                                    <div class="col-12 mb-3">
                                         <label for="edit_default_contact_details" class="form-label">Default Contact Details</label>
                                         <div class="form-check mb-2">
                                             <input class="form-check-input" type="checkbox" id="edit_use_default_contact" checked>
@@ -583,10 +581,22 @@
                                                 Use default contact details
                                             </label>
                                         </div>
-                                        <textarea class="form-control" id="edit_default_contact_details" name="default_contact_details" rows="2" placeholder="Enter default contact information..." readonly></textarea>
+                                        <textarea class="form-control" id="edit_default_contact_details" name="default_contact_details" rows="3" placeholder="Enter default contact information..." readonly></textarea>
                                     </div>
 
-                                    <!-- Row 5: File Upload -->
+                                    <!-- Row 4: Problem Overview -->
+                                    <div class="col-12 mb-2">
+                                        <label for="edit_issue" class="form-label">{{ __('translation.problem-overview') }} <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="edit_issue" name="issue" required>
+                                    </div>
+
+                                    <!-- Row 5: Issue Details -->
+                                    <div class="col-12 mb-3">
+                                        <label for="edit_issue_details" class="form-label">Issue Details</label>
+                                        <textarea class="form-control" id="edit_issue_details" name="issue_details" rows="2" placeholder="Describe the issue in detail..."></textarea>
+                                    </div>
+
+                                    <!-- Row 6: File Upload -->
                                     <div class="col-12 mb-3">
                                         <label for="edit_images" class="form-label">Upload Images</label>
                                         <input type="file" class="form-control" id="edit_images" name="images[]" multiple accept="image/*">
@@ -813,31 +823,78 @@
             console.log('Issue data loaded:', data);
             if (data.success) {
                 const issue = data.data;
+                const blockId = issue.block_id || (issue.block && issue.block.id);
+                const unitSelect = document.getElementById('edit_block_unit_id');
                 
-                // Update modal for edit mode
-                document.getElementById('editIssueModalLabel').textContent = 'Edit Issue';
+                // Update modal header: Edit Issue + Issue ID + Block name (same row)
+                const refNo = issue.ref_no || ('#' + issueId);
+                const blockName = (issue.block && issue.block.name) ? issue.block.name : (issue.block_name || 'N/A');
+                const subtitleEl = document.getElementById('editIssueModalSubtitle');
+                if (subtitleEl) {
+                    subtitleEl.textContent = '— ' + refNo + ' · ' + blockName;
+                }
                 document.getElementById('editIssueSubmitBtn').innerHTML = '<i class="ph-check me-1"></i> Update';
                 document.getElementById('editIssueForm').setAttribute('action', `/block-issues/${issueId}`);
                 
-                // Populate form fields after modal is shown
-                const editModal = document.getElementById('editIssueModal');
-                editModal.addEventListener('shown.bs.modal', function() {
-                    document.getElementById('edit_contact_method_id').value = issue.contact_method_id || '';
-                    document.getElementById('edit_block_unit_id').value = issue.block_unit_id || '';
-                    document.getElementById('edit_assigned_to').value = issue.assigned_to?.id || issue.assigned_to || '';
-                    document.getElementById('edit_issue_type').value = issue.issue_type || '';
-                    document.getElementById('edit_priority_id').value = issue.priority_id || '';
-                    document.getElementById('edit_issue').value = issue.issue || '';
-                    document.getElementById('edit_contact_details').value = issue.contact_details || '';
-                    document.getElementById('edit_issue_details').value = issue.issue_details || '';
+                // Load units for the issue's block, then show modal and populate form
+                function showEditModalWithForm() {
+                    const editModal = document.getElementById('editIssueModal');
+                    editModal.addEventListener('shown.bs.modal', function() {
+                        document.getElementById('edit_contact_method_id').value = issue.contact_method_id || '';
+                        document.getElementById('edit_block_unit_id').value = issue.block_unit_id || '';
+                        document.getElementById('edit_assigned_to').value = issue.assigned_to?.id || issue.assigned_to || '';
+                        document.getElementById('edit_issue_type').value = issue.issue_type || '';
+                        document.getElementById('edit_priority_id').value = issue.priority_id || '';
+                        document.getElementById('edit_issue').value = issue.issue || '';
+                        document.getElementById('edit_contact_details').value = issue.contact_details || '';
+                        document.getElementById('edit_issue_details').value = issue.issue_details || '';
+                        
+                        editModal.removeEventListener('shown.bs.modal', arguments.callee);
+                    }, { once: true });
                     
-                    // Remove the event listener to prevent multiple triggers
-                    editModal.removeEventListener('shown.bs.modal', arguments.callee);
-                }, { once: true });
+                    const modal = new bootstrap.Modal(document.getElementById('editIssueModal'));
+                    modal.show();
+                }
                 
-                // Show the modal
-                const modal = new bootstrap.Modal(document.getElementById('editIssueModal'));
-                modal.show();
+                if (blockId) {
+                    unitSelect.innerHTML = '<option value="">Loading units...</option>';
+                    unitSelect.disabled = true;
+                    fetch(`/block-units/block/${blockId}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.json())
+                    .then(unitsResp => {
+                        unitSelect.innerHTML = '<option value="">Select Unit</option>';
+                        const units = unitsResp.data && Array.isArray(unitsResp.data) ? unitsResp.data : [];
+                        units.forEach(unit => {
+                            const option = document.createElement('option');
+                            option.value = unit.id;
+                            const unitLabel = (unit.unit_code || '') + (unit.unit_name && unit.unit_name !== unit.unit_code ? ' - ' + unit.unit_name : '') + (unit.unit_type && unit.unit_type.name ? ' (' + unit.unit_type.name + ')' : '');
+                            option.textContent = unitLabel || ('Unit #' + unit.id);
+                            unitSelect.appendChild(option);
+                        });
+                        unitSelect.disabled = false;
+                        if (issue.block_unit_id) unitSelect.value = issue.block_unit_id;
+                        showEditModalWithForm();
+                    })
+                    .catch(err => {
+                        console.error('Error loading units:', err);
+                        unitSelect.innerHTML = '<option value="">Select Unit</option>';
+                        unitSelect.disabled = false;
+                        if (issue.block_unit_id) {
+                            const opt = document.createElement('option');
+                            opt.value = issue.block_unit_id;
+                            opt.textContent = (issue.block_unit && issue.block_unit.unit_name) ? issue.block_unit.unit_name : ('Unit #' + issue.block_unit_id);
+                            unitSelect.appendChild(opt);
+                            unitSelect.value = issue.block_unit_id;
+                        }
+                        showEditModalWithForm();
+                    });
+                } else {
+                    unitSelect.innerHTML = '<option value="">Select Unit</option>';
+                    unitSelect.disabled = false;
+                    showEditModalWithForm();
+                }
             } else {
                 showEditMessage('danger', 'Error loading issue data');
             }
@@ -1373,17 +1430,18 @@ $(document).ready(function() {
             scrollX: false,
             autoWidth: false,
             dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
-            order: [[6, 'desc']], // default sort by Reported Date descending
+            order: [[7, 'desc']], // default sort by Reported Date descending
             columnDefs: [
-                { targets: [7], orderable: false }, // Actions column
+                { targets: [8], orderable: false }, // Actions column
                 { targets: [0], width: '10%' },  // Issue ID
-                { targets: [1], width: '20%' },  // Title
-                { targets: [2], width: '15%' },  // Block
-                { targets: [3], width: '12%' },  // Type
-                { targets: [4], width: '10%' },  // Priority
-                { targets: [5], width: '10%' },  // Status
-                { targets: [6], width: '13%' },  // Reported Date
-                { targets: [7], width: '10%' }   // Actions
+                { targets: [1], width: '18%' },  // Title
+                { targets: [2], width: '12%' },  // Block
+                { targets: [3], width: '12%' },  // Unit
+                { targets: [4], width: '10%' },  // Type
+                { targets: [5], width: '10%' },  // Priority
+                { targets: [6], width: '10%' },  // Status
+                { targets: [7], width: '13%' },  // Reported Date
+                { targets: [8], width: '10%' }   // Actions
             ],
             pageLength: 10,
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
