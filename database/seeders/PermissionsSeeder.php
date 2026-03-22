@@ -72,6 +72,7 @@ class PermissionsSeeder extends Seeder
         $inspector = Role::firstOrCreate(['name' => 'Inspector']);
         $contractor = Role::firstOrCreate(['name' => 'Contractor']);
         $viewer = Role::firstOrCreate(['name' => 'Viewer']);
+        $blockManagerRole = Role::firstOrCreate(['name' => 'Block Manager']);
 
         // Super Admin and Admin get all permissions
         $superAdmin->syncPermissions(Permission::all());
@@ -202,6 +203,9 @@ class PermissionsSeeder extends Seeder
             'settings.view',
         ];
         $viewer->syncPermissions($viewerPermissions);
+
+        // Block Manager: same block / unit / issue / work-order access as Property Manager (Manager role)
+        $blockManagerRole->syncPermissions($managerPermissions);
 
         $this->command->info('Permissions and roles created successfully!');
     }

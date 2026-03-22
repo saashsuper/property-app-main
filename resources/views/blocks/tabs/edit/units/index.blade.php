@@ -49,11 +49,25 @@
                         <th>Resident</th>
                         <th>Mobile</th>
                         <th>Letting Agent</th>
+                        <th class="all">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @if($block->units && $block->units->count() > 0)
                         @foreach($block->units as $unit)
+                            @php
+                                $issuesCount = (int) ($unit->issues_count ?? 0);
+                                $hasUnitIssues = $issuesCount > 0;
+                                $unitTypeName = $unit->unitType->name ?? 'N/A';
+                                $deletePayload = json_encode([
+                                    'unit_code' => $unit->unit_code ?? 'N/A',
+                                    'unit_name' => $unit->unit_name ?? 'N/A',
+                                    'owners_name' => $unit->owners_name ?? 'N/A',
+                                    'unit_type' => ['name' => $unitTypeName],
+                                    'has_issues' => $hasUnitIssues,
+                                    'issues_count' => $issuesCount,
+                                ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT);
+                            @endphp
                             <tr>
                                 <td>
                                     <a href="{{ route('block-units.show', $unit) }}" class="text-primary text-decoration-none fw-semibold" title="View Unit Details">
@@ -61,12 +75,29 @@
                                     </a>
                                 </td>
                                 <td>{{ $unit->unit_name ?? 'N/A' }}</td>
-                                <td>{{ $unit->unitType->name ?? 'N/A' }}</td>
+                                <td>{{ $unitTypeName }}</td>
                                 <td>{{ $unit->owners_name ?? 'N/A' }}</td>
                                 <td>{{ $unit->email ?? 'N/A' }}</td>
                                 <td>{{ $unit->resident ? 'Yes' : 'No' }}</td>
                                 <td>{{ $unit->mobile_no ?? 'N/A' }}</td>
                                 <td>{{ $unit->letting_agent ?? 'N/A' }}</td>
+                                <td class="all text-nowrap">
+                                    <a href="{{ route('block-units.show', $unit) }}" class="btn btn-sm btn-outline-info" title="View Unit Details">
+                                        <i class="ph-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editUnit({{ $unit->id }})" title="Edit Unit">
+                                        <i class="ph-pencil"></i>
+                                    </button>
+                                    @if($hasUnitIssues)
+                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="unitShowDeleteConfirmation({{ $unit->id }}, {!! $deletePayload !!})" title="Archive Unit">
+                                            <i class="ph-archive"></i>
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="unitShowDeleteConfirmation({{ $unit->id }}, {!! $deletePayload !!})" title="Delete Unit">
+                                            <i class="ph-trash"></i>
+                                        </button>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     @endif

@@ -67,5 +67,7 @@ class Kernel extends HttpKernel
         'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        'staff_or_assigned_block_manager' => \App\Http\Middleware\EnsureStaffOrAssignedBlockManager::class,
+        'can_manage_block_units' => \App\Http\Middleware\EnsureCanManageBlockUnits::class,
     ];
 }

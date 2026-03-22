@@ -392,7 +392,9 @@ class BlockController extends Controller
             'country',
             'state',
             'buildings',
-            'units.unitType',
+            'units' => function ($query) {
+                $query->with('unitType')->withCount('issues');
+            },
             'contractors',
             'issues.workOrders', // Eager load workOrders relationship for archive/delete logic
             'blockVisits.team.user',

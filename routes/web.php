@@ -55,9 +55,13 @@ Route::middleware(['auth'])->group(function () {
     
     // Block management routes - Admin and Property Management roles
     // Note: Using Spatie role names (Manager for Property manager, Viewer for Office Administrator)
-    Route::middleware(['role:Admin|Super Admin|Manager|Viewer'])->group(function () {
+    Route::middleware(['role:Admin|Super Admin|Manager|Viewer|Block Manager'])->group(function () {
         Route::get('blocks/create', [App\Http\Controllers\BlockController::class, 'create'])->name('blocks.create');
         Route::post('blocks', [App\Http\Controllers\BlockController::class, 'store'])->name('blocks.store');
+    });
+
+    // Edit/update/delete: staff roles or user assigned as this block's block_manager_id
+    Route::middleware(['staff_or_assigned_block_manager'])->group(function () {
         Route::get('blocks/{block}/edit', [App\Http\Controllers\BlockController::class, 'edit'])->name('blocks.edit');
         Route::put('blocks/{block}', [App\Http\Controllers\BlockController::class, 'update'])->name('blocks.update');
         Route::delete('blocks/{block}', [App\Http\Controllers\BlockController::class, 'destroy'])->name('blocks.destroy');
@@ -180,7 +184,6 @@ Route::get('block-information/block/{blockId}', [App\Http\Controllers\BlockInfor
 Route::get('block-information/get-by-block/{blockId}', [App\Http\Controllers\BlockInformationController::class, 'getByBlock'])->name('block-information.get-by-block');
 
 
-Route::get('block-units/block/{blockId}', [App\Http\Controllers\BlockUnitController::class, 'getBlockUnits'])->name('block-units.by-block');
 Route::get('block-contractors/block/{blockId}', [App\Http\Controllers\BlockContractorController::class, 'getBlockContractors'])->name('block-contractors.by-block');
     Route::get('block-buildings/block/{blockId}', [App\Http\Controllers\BlockBuildingController::class, 'getBlockBuildings'])->name('block-buildings.by-block');
     // Allow read-only show for buildings (units show route reverted)
@@ -192,16 +195,24 @@ Route::get('api/states/{countryId}', [App\Http\Controllers\BlockController::clas
 
 // Block Building Management Routes - Admin, Property manager, Office Administrator
 Route::middleware(['auth'])->group(function () {
-    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin|Super Admin|Manager|Viewer');
+    Route::resource('block-buildings', BlockBuildingController::class)->middleware('role:Admin|Super Admin|Manager|Viewer|Block Manager');
 });
 
-// Block Unit Management Routes - Admin, Property manager, Office Administrator
+// Block Unit Management Routes - staff roles, Block Manager role, or assigned block_manager_id for that block
 Route::middleware(['auth'])->group(function () {
-    Route::resource('block-units', BlockUnitController::class)->middleware('role:Admin|Super Admin|Manager|Viewer');
-    Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload')->middleware('role:Admin|Super Admin|Manager|Viewer');
-    Route::get('block-units/template/{block_id}', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template')->middleware('role:Admin|Super Admin|Manager|Viewer');
-    Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin|Super Admin|Manager|Viewer');
-    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin|Super Admin|Manager|Viewer');
+    // Register before resource so paths are not captured as {block_unit}
+    Route::get('block-units/create-sample', [BlockUnitController::class, 'createSampleExcel'])->name('block-units.create-sample')->middleware('role:Admin|Super Admin|Manager|Viewer|Block Manager');
+    Route::get('block-units/test-phpspreadsheet', [BlockUnitController::class, 'testPhpSpreadsheet'])->name('block-units.test-phpspreadsheet')->middleware('role:Admin|Super Admin|Manager|Viewer|Block Manager');
+
+    Route::get('block-units/block/{blockId}', [BlockUnitController::class, 'getBlockUnits'])
+        ->name('block-units.by-block')
+        ->middleware('can_manage_block_units');
+
+    Route::middleware(['can_manage_block_units'])->group(function () {
+        Route::post('block-units/upload', [BlockUnitController::class, 'upload'])->name('block-units.upload');
+        Route::get('block-units/template/{block_id}', [BlockUnitController::class, 'downloadTemplate'])->name('block-units.template');
+        Route::resource('block-units', BlockUnitController::class);
+    });
 });
 
 // Specific routes that must come before catch-all

@@ -143,7 +143,7 @@ $(document).ready(function() {
                     dom: '<"d-flex justify-content-between align-items-center mb-3"<"d-flex align-items-center"l><"d-flex align-items-center"f>>rt<"d-flex justify-content-between align-items-center mt-3"<"d-flex align-items-center"i><"d-flex align-items-center"p>>',
                     order: [[0, 'asc']],       // Default sort by first column (Unit Code) ascending
                     columnDefs: [
-                        { targets: [8], orderable: false } // Actions column (last column) not sortable
+                        { targets: [8], orderable: false, responsivePriority: 1 } // Actions: keep visible in responsive mode
                     ],
                     pageLength: 10,            // Default page size
                     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]], // Page size options
